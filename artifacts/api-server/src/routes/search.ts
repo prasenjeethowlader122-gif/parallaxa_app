@@ -1,0 +1,74 @@
+import { Router } from "express";
+import { db } from "@workspace/db";
+import { usersTable, postsTable, hashtagsTable, likesTable, savedPostsTable } from "@workspace/db";
+import { like, sql } from "drizzle-orm";
+import { authenticate, type AuthRequest } from "../middleware/authenticate";
+
+const router = Router();
+
+router.get("/search", authenticate, async (req: AuthRequest, res) => {
+  try {
+    const q = String(req.query.q ?? "").trim();
+    const type = String(req.query.type ?? "all");
+    if (!q) {
+      res.json({ users: [], posts: [], hashtags: [] });
+      return;
+    }
+    const pattern = `%${q}%`;
+
+    let users: any[] = [];
+    let posts: any[] = [];
+    let hashtags: any[] = [];
+
+    if (type === "all" || type === "users") {
+      const rows = await db
+        .select()
+        .from(usersTable)
+        .where(sql`${usersTable.username} ILIKE ${pattern} OR ${usersTable.displayName} ILIKE ${pattern}`)
+        .limit(10);
+      users = rows.map((u) => ({
+        id: u.id,
+        username: u.username,
+        displayName: u.displayName,
+        avatarUrl: u.avatarUrl,
+        isVerified: u.isVerified,
+        isFollowing: false,
+      }));
+    }
+
+    if (type === "all" || type === "posts") {
+      const rows = await db
+        .select()
+        .from(postsTable)
+        .where(sql`${postsTable.content} ILIKE ${pattern}`)
+        .limit(10);
+      posts = await Promise.all(rows.map(async (p) => {
+        const [author] = await db.select().from(usersTable).where(sql`${usersTable.id} = ${p.userId}`).limit(1);
+        const [liked] = await db.select().from(likesTable).where(sql`${likesTable.userId} = ${req.userId} AND ${likesTable.postId} = ${p.id}`).limit(1);
+        const [saved] = await db.select().from(savedPostsTable).where(sql`${savedPostsTable.userId} = ${req.userId} AND ${savedPostsTable.postId} = ${p.id}`).limit(1);
+        return {
+          id: p.id,
+          author: author ? { id: author.id, username: author.username, displayName: author.displayName, avatarUrl: author.avatarUrl, isVerified: author.isVerified, isFollowing: false } : null,
+          content: p.content, imageUrl: p.imageUrl, videoUrl: p.videoUrl, location: p.location,
+          hashtags: [], likesCount: p.likesCount, commentsCount: p.commentsCount,
+          isLiked: !!liked, isSaved: !!saved, createdAt: p.createdAt,
+        };
+      }));
+    }
+
+    if (type === "all" || type === "hashtags") {
+      const rows = await db
+        .select()
+        .from(hashtagsTable)
+        .where(like(hashtagsTable.name, `%${q.replace(/^#/, "")}%`))
+        .limit(10);
+      hashtags = rows.map((h) => ({ name: h.name, postCount: h.postCount }));
+    }
+
+    res.json({ users, posts, hashtags });
+  } catch (err) {
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
+export default router;
