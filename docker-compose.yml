@@ -22,10 +22,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        # Replace with your actual Render service URL after first deploy
-        # e.g. EXPO_PUBLIC_DOMAIN: your-service.onrender.com
-        EXPO_PUBLIC_DOMAIN: ${EXPO_PUBLIC_DOMAIN:-localhost:8080}
     container_name: socialapp_api
     ports:
       - "8080:8080"

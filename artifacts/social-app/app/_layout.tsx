@@ -16,12 +16,14 @@ import { setBaseUrl } from "@workspace/api-client-react";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { getApiBaseUrl } from "@/lib/apiUrl";
 
 SplashScreen.preventAutoHideAsync();
 
-if (process.env.EXPO_PUBLIC_DOMAIN) {
-  setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
-}
+// Works in all environments:
+// - Replit dev / EAS mobile: uses EXPO_PUBLIC_DOMAIN env var
+// - Docker/Render production web: uses window.location.origin (same origin as API)
+setBaseUrl(getApiBaseUrl());
 
 const queryClient = new QueryClient({
   defaultOptions: {

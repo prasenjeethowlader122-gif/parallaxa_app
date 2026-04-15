@@ -32,9 +32,8 @@ export default function RegisterScreen() {
     }
     setIsLoading(true);
     try {
-      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
-        ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
-        : "";
+      const { getApiBaseUrl } = await import("@/lib/apiUrl");
+      const baseUrl = getApiBaseUrl();
       const response = await fetch(`${baseUrl}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
