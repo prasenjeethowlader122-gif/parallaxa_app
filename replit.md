@@ -79,7 +79,7 @@ Auth: JWT Bearer token, 30-day expiry
 - `DATABASE_URL` — PostgreSQL connection string (auto-set by Replit)
 - `JWT_SECRET` — JWT signing secret (defaults to dev value)
 - `PORT` — server port (auto-set by Replit, defaults to 8080)
-- `EXPO_PUBLIC_DOMAIN` — API base domain for Expo app (auto-set)
+- `EXPO_PUBLIC_DOMAIN` — API base domain for Expo native app (set for EAS mobile builds only; web uses `window.location.origin` at runtime)
 
 ## Development
 
@@ -90,3 +90,37 @@ pnpm --filter @workspace/social-app run dev   # Expo app
 pnpm --filter @workspace/db run push          # Push schema changes
 pnpm --filter @workspace/api-spec run codegen # Regenerate API client
 ```
+
+## Docker / Render Deployment
+
+The Expo web app is **pre-built locally** and committed to the repo. Docker never runs `expo export` — it just copies the static files.
+
+### Workflow for every deploy
+
+1. Make your code changes
+2. Rebuild the web export (if frontend changed):
+   ```bash
+   pnpm --filter @workspace/social-app exec expo export --platform web --output-dir web-export
+   ```
+3. Commit `artifacts/social-app/web-export/` alongside your code changes
+4. Push to GitHub → Render auto-deploys
+
+### Environment variables needed on Render
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Render Postgres internal URL |
+| `JWT_SECRET` | any long random string |
+| `PORT` | `8080` |
+
+### First deploy only — run DB migrations
+
+Open the Render Shell and run:
+```bash
+pnpm --filter @workspace/db run push
+```
+
+### How the web app finds the API in production
+
+The web app uses `window.location.origin` at runtime — no build-time domain needed.
+All `/api/*` calls are relative to the same Render URL, so everything works automatically.
