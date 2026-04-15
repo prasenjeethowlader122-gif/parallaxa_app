@@ -1,5 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { db } from "@workspace/db";
+import { sql } from "drizzle-orm";
 
 const rawPort = process.env["PORT"];
 
@@ -14,6 +16,18 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+// Verify DB connection and schema on startup — logs clearly if migrations haven't been run
+async function checkDb() {
+  try {
+    await db.execute(sql`SELECT 1`);
+    logger.info("Database connection OK");
+  } catch (err) {
+    logger.error({ err }, "DATABASE CONNECTION FAILED — check DATABASE_URL and run: pnpm --filter @workspace/db run push");
+  }
+}
+
+checkDb();
 
 app.listen(port, (err) => {
   if (err) {

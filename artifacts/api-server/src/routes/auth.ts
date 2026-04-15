@@ -4,6 +4,7 @@ import { usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { generateId, generateToken, hashPassword, comparePassword } from "../lib/auth";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
+import { logger } from "../lib/logger";
 
 const router = Router();
 
@@ -60,6 +61,7 @@ router.post("/auth/register", async (req, res) => {
       },
     });
   } catch (err) {
+    logger.error({ err }, "register error");
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
 });
@@ -100,6 +102,7 @@ router.post("/auth/login", async (req, res) => {
       },
     });
   } catch (err) {
+    logger.error({ err }, "login error");
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
 });
@@ -134,6 +137,7 @@ router.get("/auth/me", authenticate, async (req: AuthRequest, res) => {
       createdAt: user.createdAt,
     });
   } catch (err) {
+    logger.error({ err }, "auth/me error");
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
 });
