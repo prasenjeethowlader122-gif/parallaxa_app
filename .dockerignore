@@ -2,13 +2,15 @@ node_modules
 .git
 .gitignore
 *.md
-artifacts/social-app
 artifacts/mockup-sandbox
 attached_assets
 .local
-dist
 coverage
 *.log
 .env
 .env.*
 !.env.example
+artifacts/social-app/node_modules
+artifacts/social-app/.expo
+artifacts/social-app/static-build
+artifacts/social-app/dist

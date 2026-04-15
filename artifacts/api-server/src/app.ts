@@ -1,6 +1,8 @@
 import express, { type Express, type Request, type Response } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
+import path from "path";
+import fs from "fs";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
@@ -29,73 +31,43 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (_req: Request, res: Response) => {
-  res.json({
-    name: "Pulse API",
-    version: "1.0.0",
-    status: "ok",
-    docs: "/api/health",
-    endpoints: {
-      auth: [
-        "POST /api/auth/register",
-        "POST /api/auth/login",
-        "POST /api/auth/logout",
-        "GET  /api/auth/me",
-      ],
-      users: [
-        "GET    /api/users/suggested",
-        "GET    /api/users/:userId",
-        "PUT    /api/users/:userId",
-        "GET    /api/users/:userId/posts",
-        "GET    /api/users/:userId/followers",
-        "GET    /api/users/:userId/following",
-        "POST   /api/users/:userId/follow",
-        "DELETE /api/users/:userId/follow",
-      ],
-      posts: [
-        "POST   /api/posts",
-        "GET    /api/posts/:postId",
-        "DELETE /api/posts/:postId",
-        "GET    /api/feed",
-        "GET    /api/explore",
-      ],
-      stories: [
-        "GET    /api/stories",
-        "POST   /api/stories",
-        "DELETE /api/stories/:storyId",
-        "POST   /api/stories/:storyId/view",
-      ],
-      interactions: [
-        "POST   /api/posts/:postId/like",
-        "DELETE /api/posts/:postId/like",
-        "POST   /api/posts/:postId/save",
-        "DELETE /api/posts/:postId/save",
-        "GET    /api/posts/:postId/comments",
-        "POST   /api/posts/:postId/comments",
-        "DELETE /api/comments/:commentId",
-      ],
-      notifications: [
-        "GET  /api/notifications",
-        "POST /api/notifications/read",
-        "GET  /api/notifications/unread-count",
-      ],
-      messages: [
-        "GET  /api/conversations",
-        "POST /api/conversations/start",
-        "GET  /api/conversations/:conversationId",
-        "GET  /api/conversations/:conversationId/messages",
-        "POST /api/conversations/:conversationId/messages",
-      ],
-      search: ["GET /api/search?q=&type=all|users|posts|hashtags"],
-      saved: ["GET /api/saved"],
-    },
-  });
-});
-
+// ── API routes ─────────────────────────────────────────────────────────────────
 app.use("/api", router);
 
-app.use((_req: Request, res: Response) => {
-  res.status(404).json({ error: "Not Found", message: "Route not found" });
-});
+// ── Serve Expo web build (production) ─────────────────────────────────────────
+const publicDir = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "public");
+const hasWebBuild = fs.existsSync(publicDir) && fs.existsSync(path.join(publicDir, "index.html"));
+
+if (hasWebBuild) {
+  // Serve static assets (_expo/, assets/, favicon, etc.)
+  app.use(express.static(publicDir));
+
+  // SPA fallback — serve index.html for all non-API routes
+  app.get(/^(?!\/api).*$/, (_req: Request, res: Response) => {
+    res.sendFile(path.join(publicDir, "index.html"));
+  });
+} else {
+  // No web build present — show API info
+  app.get("/", (_req: Request, res: Response) => {
+    res.json({
+      name: "Pulse API",
+      version: "1.0.0",
+      status: "ok",
+      note: "No web build found. Set EXPO_PUBLIC_DOMAIN and rebuild Docker image to include the web app.",
+      endpoints: {
+        auth: ["POST /api/auth/register", "POST /api/auth/login", "GET /api/auth/me"],
+        posts: ["GET /api/feed", "GET /api/explore", "POST /api/posts"],
+        stories: ["GET /api/stories", "POST /api/stories"],
+        users: ["GET /api/users/:userId", "POST /api/users/:userId/follow"],
+        messages: ["GET /api/conversations", "POST /api/conversations/start"],
+        search: ["GET /api/search?q="],
+      },
+    });
+  });
+
+  app.use((_req: Request, res: Response) => {
+    res.status(404).json({ error: "Not Found", message: "Route not found" });
+  });
+}
 
 export default app;
