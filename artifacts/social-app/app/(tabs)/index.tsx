@@ -45,7 +45,7 @@ export default function FeedScreen() {
       }}
     >
       <View className="flex-row justify-between items-center px-5 mb-2">
-        <Image source={require('@/assets/images/parallaxa-logo.svg')} style={{ width: 40, height: 40 }} />
+        <Image source={require('@/assets/images/placeholder-logo.svg')} style={{ width: 50, height: 50 }} />
        
         <View className="flex-row gap-3">
             <TouchableOpacity className="p-2"><HugeiconsIcon icon={Search01Icon} size={22} color={colors.foreground} /></TouchableOpacity>

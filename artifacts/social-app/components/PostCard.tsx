@@ -91,7 +91,7 @@ export function PostCard({
       {/* Sidebar Avatar */}
       <View className="mr-3">
         <TouchableOpacity onPress={navigateToProfile}>
-          <UserAvatar uri={author.avatarUrl} size={48} />
+          <UserAvatar uri={author.avatarUrl} size={28} />
         </TouchableOpacity>
       </View>
 
@@ -134,15 +134,7 @@ export function PostCard({
         )}
 
         {/* Hashtags */}
-        {hashtags.length > 0 && (
-          <View className="flex-row flex-wrap mb-2">
-            {hashtags.map((tag, idx) => (
-              <Text key={`${id}-${idx}`} className="text-[#1d9bf0] mr-1.5 text-[15px]">
-                #{tag}
-              </Text>
-            ))}
-          </View>
-        )}
+        
 
         {/* Media */}
         {imageUrl && (
@@ -156,7 +148,7 @@ export function PostCard({
         )}
 
         {/* Action Bar */}
-        <View className="flex-row justify-between items-center pr-6 mt-1">
+        <View className="flex-row justify-between items-center w-full mt-1">
           {/* Reply */}
           <TouchableOpacity 
             onPress={() => onComment?.(id)}
