@@ -3,7 +3,7 @@ RUN apk add --no-cache git python3 make g++
 RUN npm install -g pnpm
 WORKDIR /app
 
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml ./
 COPY lib/db/package.json ./lib/db/
 COPY lib/api-spec/package.json ./lib/api-spec/
 COPY lib/api-zod/package.json ./lib/api-zod/
@@ -11,7 +11,7 @@ COPY lib/api-client-react/package.json ./lib/api-client-react/
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY artifacts/social-app/package.json ./artifacts/social-app/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # ── Build Expo web ─────────────────────────────────────────────────────────────
 FROM deps AS expo-builder
@@ -34,14 +34,14 @@ FROM node:24-alpine AS runner
 RUN npm install -g pnpm
 WORKDIR /app
 
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml ./
 COPY lib/db/package.json ./lib/db/
 COPY lib/api-spec/package.json ./lib/api-spec/
 COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/api-client-react/package.json ./lib/api-client-react/
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --prod
 
 COPY --from=api-builder /app/artifacts/api-server/dist ./artifacts/api-server/dist
 
