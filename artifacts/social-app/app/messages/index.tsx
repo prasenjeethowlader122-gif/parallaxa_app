@@ -2,8 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator, FlatList, Platform, RefreshControl,
-  StyleSheet, Text, TouchableOpacity, View,
+  ActivityIndicator, FlatList, Platform, RefreshControl, Text, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetConversations } from "@workspace/api-client-react";
@@ -31,19 +30,27 @@ export default function MessagesScreen() {
   const conversations = Array.isArray(data) ? data : [];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPadding + 12, borderBottomColor: colors.border, backgroundColor: colors.background }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+      <View
+        className="flex-row justify-between items-center px-4 pb-3"
+        style={{
+          paddingTop: topPadding + 12,
+          backgroundColor: colors.background,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} className="p-1">
           <Feather name="arrow-left" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.foreground }]}>Messages</Text>
-        <TouchableOpacity style={styles.newBtn}>
+        <Text className="text-xl font-bold" style={{ color: colors.foreground }}>Messages</Text>
+        <TouchableOpacity className="p-1">
           <Feather name="edit" size={22} color={colors.foreground} />
         </TouchableOpacity>
       </View>
 
       {isLoading ? (
-        <View style={styles.loadingContainer}>
+        <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
@@ -70,22 +77,9 @@ export default function MessagesScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
           }
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={conversations.length === 0 ? styles.emptyContainer : undefined}
+          contentContainerStyle={conversations.length === 0 ? { flexGrow: 1 } : undefined}
         />
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  backBtn: { padding: 4 },
-  title: { fontSize: 20, fontWeight: "700" },
-  newBtn: { padding: 4 },
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  emptyContainer: { flexGrow: 1 },
-});

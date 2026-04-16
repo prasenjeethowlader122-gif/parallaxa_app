@@ -2,20 +2,13 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  ActivityIndicator,
-  ScrollView,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  ScrollView, Text, TextInput, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { useColors } from "@/hooks/useColors";
+import { getApiBaseUrl } from "@/lib/apiUrl";
 
 export default function LoginScreen() {
   const colors = useColors();
@@ -35,7 +28,6 @@ export default function LoginScreen() {
     }
     setIsLoading(true);
     try {
-      const { getApiBaseUrl } = await import("@/lib/apiUrl");
       const baseUrl = getApiBaseUrl();
       const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: "POST",
@@ -48,45 +40,48 @@ export default function LoginScreen() {
         return;
       }
       await login(data.token, data.user);
-    } catch (err) {
+    } catch {
       Alert.alert("Error", "Could not connect to server. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const topPt = insets.top + (Platform.OS === "web" ? 67 : 0) + 40;
+  const bottomPb = insets.bottom + 40;
+
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      className="flex-1 bg-white dark:bg-black"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 0) + 40,
-            paddingBottom: insets.bottom + 40,
-          },
-        ]}
+        contentContainerStyle={{ paddingHorizontal: 32, paddingTop: topPt, paddingBottom: bottomPb }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Logo */}
-        <View style={styles.logoContainer}>
-          <View style={[styles.logoCircle, { backgroundColor: colors.primary }]}>
+        <View className="items-center mb-10">
+          <View className="w-20 h-20 rounded-full bg-primary items-center justify-center mb-4">
             <Feather name="camera" size={36} color="#FFFFFF" />
           </View>
-          <Text style={[styles.appName, { color: colors.foreground }]}>Pulse</Text>
-          <Text style={[styles.tagline, { color: colors.mutedForeground }]}>
+          <Text className="text-4xl font-bold -tracking-wide" style={{ color: colors.foreground }}>
+            Pulse
+          </Text>
+          <Text className="text-[15px] mt-1" style={{ color: colors.mutedForeground }}>
             Share your moments
           </Text>
         </View>
 
         {/* Form */}
-        <View style={styles.form}>
-          <View style={[styles.inputContainer, { borderColor: colors.border, backgroundColor: colors.input }]}>
+        <View className="gap-3">
+          <View
+            className="flex-row items-center border rounded-xl px-3.5 h-[50px] gap-2.5"
+            style={{ borderColor: colors.border, backgroundColor: colors.input }}
+          >
             <Feather name="mail" size={18} color={colors.mutedForeground} />
             <TextInput
-              style={[styles.input, { color: colors.foreground }]}
+              className="flex-1 text-[15px]"
+              style={{ color: colors.foreground }}
               placeholder="Email"
               placeholderTextColor={colors.mutedForeground}
               value={email}
@@ -97,10 +92,14 @@ export default function LoginScreen() {
             />
           </View>
 
-          <View style={[styles.inputContainer, { borderColor: colors.border, backgroundColor: colors.input }]}>
+          <View
+            className="flex-row items-center border rounded-xl px-3.5 h-[50px] gap-2.5"
+            style={{ borderColor: colors.border, backgroundColor: colors.input }}
+          >
             <Feather name="lock" size={18} color={colors.mutedForeground} />
             <TextInput
-              style={[styles.input, { color: colors.foreground }]}
+              className="flex-1 text-[15px]"
+              style={{ color: colors.foreground }}
               placeholder="Password"
               placeholderTextColor={colors.mutedForeground}
               value={password}
@@ -113,7 +112,7 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.loginBtn, { backgroundColor: colors.primary }]}
+            className="h-[50px] rounded-xl bg-primary items-center justify-center mt-1"
             onPress={handleLogin}
             disabled={isLoading}
             activeOpacity={0.85}
@@ -121,65 +120,32 @@ export default function LoginScreen() {
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={[styles.loginBtnText, { color: colors.primaryForeground }]}>Log in</Text>
+              <Text className="text-base font-bold text-white">Log in</Text>
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.forgotBtn}>
-            <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot password?</Text>
+          <TouchableOpacity className="items-center py-2">
+            <Text className="text-sm font-medium text-primary">Forgot password?</Text>
           </TouchableOpacity>
         </View>
 
         {/* Divider */}
-        <View style={styles.dividerRow}>
-          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-          <Text style={[styles.dividerText, { color: colors.mutedForeground }]}>OR</Text>
-          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+        <View className="flex-row items-center my-6 gap-3">
+          <View className="flex-1 h-px" style={{ backgroundColor: colors.border }} />
+          <Text className="text-[13px] font-semibold" style={{ color: colors.mutedForeground }}>OR</Text>
+          <View className="flex-1 h-px" style={{ backgroundColor: colors.border }} />
         </View>
 
         {/* Sign up */}
-        <View style={styles.signupRow}>
-          <Text style={[styles.signupText, { color: colors.mutedForeground }]}>
+        <View className="flex-row justify-center items-center">
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
             Don't have an account?
           </Text>
           <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
-            <Text style={[styles.signupLink, { color: colors.primary }]}> Sign up</Text>
+            <Text className="text-sm font-bold text-primary"> Sign up</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { paddingHorizontal: 32 },
-  logoContainer: { alignItems: "center", marginBottom: 40 },
-  logoCircle: {
-    width: 80, height: 80, borderRadius: 40,
-    justifyContent: "center", alignItems: "center", marginBottom: 16,
-  },
-  appName: { fontSize: 36, fontWeight: "700", letterSpacing: -1 },
-  tagline: { fontSize: 15, marginTop: 4 },
-  form: { gap: 12 },
-  inputContainer: {
-    flexDirection: "row", alignItems: "center",
-    borderWidth: 1, borderRadius: 12,
-    paddingHorizontal: 14, height: 50, gap: 10,
-  },
-  input: { flex: 1, fontSize: 15 },
-  loginBtn: {
-    height: 50, borderRadius: 12,
-    justifyContent: "center", alignItems: "center",
-    marginTop: 4,
-  },
-  loginBtnText: { fontSize: 16, fontWeight: "700" },
-  forgotBtn: { alignItems: "center", paddingVertical: 8 },
-  forgotText: { fontSize: 14, fontWeight: "500" },
-  dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: 24, gap: 12 },
-  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth },
-  dividerText: { fontSize: 13, fontWeight: "600" },
-  signupRow: { flexDirection: "row", justifyContent: "center", alignItems: "center" },
-  signupText: { fontSize: 14 },
-  signupLink: { fontSize: 14, fontWeight: "700" },
-});

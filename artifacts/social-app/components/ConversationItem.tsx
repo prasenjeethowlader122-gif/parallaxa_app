@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "./UserAvatar";
@@ -44,38 +44,43 @@ export function ConversationItem({ id, participant, lastMessage, unreadCount, my
       : lastMessage.content ?? "Sent a photo"
     : "Say hi!";
 
+  const hasUnread = unreadCount > 0;
+
   return (
     <TouchableOpacity
-      style={styles.container}
+      className="flex-row items-center px-4 py-2.5"
       onPress={() => router.push(`/messages/${id}` as any)}
       activeOpacity={0.7}
     >
       <UserAvatar uri={participant.avatarUrl} size={52} />
-      <View style={styles.content}>
-        <View style={styles.topRow}>
-          <Text style={[styles.name, { color: colors.foreground }, unreadCount > 0 && styles.bold]}>
+      <View className="flex-1 ml-3">
+        <View className="flex-row justify-between items-center mb-0.5">
+          <Text
+            className={`text-[15px] ${hasUnread ? "font-bold" : "font-medium"}`}
+            style={{ color: colors.foreground }}
+          >
             {participant.username}
           </Text>
           {lastMessage && (
-            <Text style={[styles.time, { color: colors.mutedForeground }]}>
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               {timeAgo(lastMessage.createdAt)}
             </Text>
           )}
         </View>
-        <View style={styles.bottomRow}>
+        <View className="flex-row justify-between items-center">
           <Text
-            style={[
-              styles.preview,
-              { color: unreadCount > 0 ? colors.foreground : colors.mutedForeground },
-              unreadCount > 0 && styles.bold,
-            ]}
+            className={`text-sm flex-1 mr-2 ${hasUnread ? "font-bold" : ""}`}
+            style={{ color: hasUnread ? colors.foreground : colors.mutedForeground }}
             numberOfLines={1}
           >
             {lastMsgText}
           </Text>
-          {unreadCount > 0 && (
-            <View style={[styles.badge, { backgroundColor: colors.primary }]}>
-              <Text style={styles.badgeText}>{unreadCount}</Text>
+          {hasUnread && (
+            <View
+              className="min-w-[20px] h-5 rounded-full px-1.5 items-center justify-center"
+              style={{ backgroundColor: colors.primary }}
+            >
+              <Text className="text-white text-[11px] font-bold">{unreadCount}</Text>
             </View>
           )}
         </View>
@@ -83,55 +88,3 @@ export function ConversationItem({ id, participant, lastMessage, unreadCount, my
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  content: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 3,
-  },
-  bottomRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  name: {
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  time: {
-    fontSize: 12,
-  },
-  preview: {
-    fontSize: 14,
-    flex: 1,
-    marginRight: 8,
-  },
-  bold: {
-    fontWeight: "700",
-  },
-  badge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  badgeText: {
-    color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-});

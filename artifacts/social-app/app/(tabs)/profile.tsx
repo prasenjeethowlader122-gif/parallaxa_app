@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator, Dimensions, FlatList, Image, Platform,
-  RefreshControl, StyleSheet, Text, TouchableOpacity, View,
+  RefreshControl, Text, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetUserPosts } from "@workspace/api-client-react";
@@ -40,57 +40,66 @@ export default function ProfileScreen() {
   const Header = () => (
     <View>
       {/* Navbar */}
-      <View style={[styles.navbar, { paddingTop: topPadding + 12, borderBottomColor: colors.border, backgroundColor: colors.background }]}>
-        <Text style={[styles.navUsername, { color: colors.foreground }]}>{user?.username}</Text>
-        <View style={styles.navRight}>
-          <TouchableOpacity onPress={() => router.push("/settings" as any)} style={styles.navBtn}>
+      <View
+        className="flex-row justify-between items-center px-4 pb-3"
+        style={{
+          paddingTop: topPadding + 12,
+          backgroundColor: colors.background,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <Text className="text-xl font-bold" style={{ color: colors.foreground }}>{user?.username}</Text>
+        <View className="flex-row gap-1">
+          <TouchableOpacity onPress={() => router.push("/settings" as any)} className="p-1">
             <Feather name="menu" size={24} color={colors.foreground} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Profile info */}
-      <View style={styles.profileInfo}>
-        <View style={styles.avatarSection}>
+      <View className="p-4">
+        <View className="flex-row items-center mb-3">
           <UserAvatar uri={user?.avatarUrl} size={84} />
-          <View style={styles.statsRow}>
+          <View className="flex-1 flex-row justify-around ml-3">
             {[
               { label: "Posts", value: user?.postsCount ?? 0 },
               { label: "Followers", value: user?.followersCount ?? 0 },
               { label: "Following", value: user?.followingCount ?? 0 },
             ].map(({ label, value }) => (
-              <View key={label} style={styles.statItem}>
-                <Text style={[styles.statValue, { color: colors.foreground }]}>
+              <View key={label} className="items-center">
+                <Text className="text-lg font-bold" style={{ color: colors.foreground }}>
                   {value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}
                 </Text>
-                <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{label}</Text>
+                <Text className="text-[13px] mt-0.5" style={{ color: colors.mutedForeground }}>{label}</Text>
               </View>
             ))}
           </View>
         </View>
 
-        <Text style={[styles.displayName, { color: colors.foreground }]}>{user?.displayName}</Text>
-        {user?.bio && <Text style={[styles.bio, { color: colors.foreground }]}>{user.bio}</Text>}
-        {user?.website && (
-          <Text style={[styles.website, { color: colors.primary }]}>{user.website}</Text>
-        )}
+        <Text className="text-[15px] font-semibold mb-1" style={{ color: colors.foreground }}>{user?.displayName}</Text>
+        {user?.bio && <Text className="text-sm leading-[19px] mb-1" style={{ color: colors.foreground }}>{user.bio}</Text>}
+        {user?.website && <Text className="text-sm font-medium mb-3 text-primary">{user.website}</Text>}
 
-        <View style={styles.actionButtons}>
+        <View className="flex-row gap-2">
           <TouchableOpacity
-            style={[styles.editBtn, { borderColor: colors.border }]}
+            className="flex-1 h-[34px] border rounded-lg items-center justify-center"
+            style={{ borderColor: colors.border }}
             onPress={() => router.push("/edit-profile" as any)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.editBtnText, { color: colors.foreground }]}>Edit profile</Text>
+            <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>Edit profile</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.shareBtn, { borderColor: colors.border }]}
+            className="w-[34px] h-[34px] border rounded-lg items-center justify-center"
+            style={{ borderColor: colors.border }}
             activeOpacity={0.7}
           >
             <Feather name="user-plus" size={16} color={colors.foreground} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.shareBtn, { borderColor: colors.border }]}
+            className="w-[34px] h-[34px] border rounded-lg items-center justify-center"
+            style={{ borderColor: colors.border }}
             onPress={() => logout()}
             activeOpacity={0.7}
           >
@@ -100,11 +109,14 @@ export default function ProfileScreen() {
       </View>
 
       {/* Tabs */}
-      <View style={[styles.tabsContainer, { borderTopColor: colors.border, borderBottomColor: colors.border }]}>
+      <View
+        className="flex-row"
+        style={{ borderTopWidth: 0.5, borderBottomWidth: 0.5, borderColor: colors.border }}
+      >
         {["posts", "saved"].map((tab) => (
           <TouchableOpacity
             key={tab}
-            style={styles.tab}
+            className="flex-1 h-11 items-center justify-center relative"
             onPress={() => setActiveTab(tab as "posts" | "saved")}
           >
             <Feather
@@ -113,7 +125,7 @@ export default function ProfileScreen() {
               color={activeTab === tab ? colors.foreground : colors.mutedForeground}
             />
             {activeTab === tab && (
-              <View style={[styles.tabIndicator, { backgroundColor: colors.foreground }]} />
+              <View className="absolute top-0 left-0 right-0 h-px" style={{ backgroundColor: colors.foreground }} />
             )}
           </TouchableOpacity>
         ))}
@@ -122,7 +134,7 @@ export default function ProfileScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <FlatList
         data={posts}
         keyExtractor={(item: any) => item.id}
@@ -131,12 +143,12 @@ export default function ProfileScreen() {
           <TouchableOpacity
             onPress={() => router.push(`/post/${item.id}` as any)}
             activeOpacity={0.85}
-            style={[styles.gridItem, { backgroundColor: colors.muted }]}
+            style={{ width: ITEM, height: ITEM, margin: 0.5, backgroundColor: colors.muted }}
           >
             {item.imageUrl ? (
-              <Image source={{ uri: item.imageUrl }} style={styles.gridImage} />
+              <Image source={{ uri: item.imageUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
             ) : (
-              <View style={styles.gridTextPost}>
+              <View className="w-full h-full items-center justify-center">
                 <Feather name="type" size={16} color={colors.mutedForeground} />
               </View>
             )}
@@ -145,7 +157,7 @@ export default function ProfileScreen() {
         ListHeaderComponent={<Header />}
         ListEmptyComponent={
           isLoading ? (
-            <View style={styles.loadingContainer}>
+            <View className="p-10 items-center">
               <ActivityIndicator size="large" color={colors.primary} />
             </View>
           ) : (
@@ -167,42 +179,3 @@ export default function ProfileScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  navbar: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  navUsername: { fontSize: 20, fontWeight: "700" },
-  navRight: { flexDirection: "row", gap: 4 },
-  navBtn: { padding: 4 },
-  profileInfo: { padding: 16 },
-  avatarSection: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  statsRow: { flex: 1, flexDirection: "row", justifyContent: "space-around", marginLeft: 12 },
-  statItem: { alignItems: "center" },
-  statValue: { fontSize: 18, fontWeight: "700" },
-  statLabel: { fontSize: 13, marginTop: 2 },
-  displayName: { fontSize: 15, fontWeight: "600", marginBottom: 4 },
-  bio: { fontSize: 14, lineHeight: 19, marginBottom: 4 },
-  website: { fontSize: 14, fontWeight: "500", marginBottom: 12 },
-  actionButtons: { flexDirection: "row", gap: 8 },
-  editBtn: {
-    flex: 1, height: 34, borderWidth: 1, borderRadius: 8,
-    justifyContent: "center", alignItems: "center",
-  },
-  editBtnText: { fontSize: 14, fontWeight: "600" },
-  shareBtn: {
-    width: 34, height: 34, borderWidth: 1, borderRadius: 8,
-    justifyContent: "center", alignItems: "center",
-  },
-  tabsContainer: {
-    flexDirection: "row", borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  tab: { flex: 1, height: 44, justifyContent: "center", alignItems: "center", position: "relative" },
-  tabIndicator: { position: "absolute", top: 0, left: 0, right: 0, height: 1 },
-  gridItem: { width: ITEM, height: ITEM, margin: 0.5 },
-  gridImage: { width: "100%", height: "100%", resizeMode: "cover" },
-  gridTextPost: { width: "100%", height: "100%", justifyContent: "center", alignItems: "center" },
-  loadingContainer: { padding: 40, alignItems: "center" },
-});

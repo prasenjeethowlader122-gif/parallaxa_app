@@ -2,8 +2,8 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert, KeyboardAvoidingView, Platform, ScrollView,
-  StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  ScrollView, Text, TextInput, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUpdateUser } from "@workspace/api-client-react";
@@ -29,17 +29,12 @@ export default function EditProfileScreen() {
         Alert.alert("Success", "Profile updated!");
         router.back();
       },
-      onError: (err: any) => {
-        Alert.alert("Error", err?.message ?? "Failed to update profile");
-      },
+      onError: (err: any) => Alert.alert("Error", err?.message ?? "Failed to update profile"),
     },
   });
 
   const handleSave = () => {
-    if (!displayName.trim()) {
-      Alert.alert("Error", "Display name is required");
-      return;
-    }
+    if (!displayName.trim()) { Alert.alert("Error", "Display name is required"); return; }
     updateUserMutation({
       userId: user?.id ?? "",
       data: {
@@ -53,16 +48,32 @@ export default function EditProfileScreen() {
 
   const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
 
+  const fields = [
+    { label: "Name", value: displayName, setter: setDisplayName, multiline: false },
+    { label: "Bio", value: bio, setter: setBio, multiline: true },
+    { label: "Website", value: website, setter: setWebsite, multiline: false },
+    { label: "Avatar URL", value: avatarUrl, setter: setAvatarUrl, multiline: false },
+  ];
+
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View style={[styles.header, { paddingTop: topPadding + 12, borderBottomColor: colors.border, backgroundColor: colors.background }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.cancelBtn}>
+      <View
+        className="flex-row justify-between items-center px-4 pb-3"
+        style={{
+          paddingTop: topPadding + 12,
+          backgroundColor: colors.background,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} className="p-1">
           <Feather name="x" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.foreground }]}>Edit profile</Text>
+        <Text className="text-[17px] font-bold" style={{ color: colors.foreground }}>Edit profile</Text>
         <TouchableOpacity onPress={handleSave} disabled={isPending}>
           {isPending ? (
             <ActivityIndicator size="small" color={colors.primary} />
@@ -72,22 +83,30 @@ export default function EditProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.avatarSection}>
+      <ScrollView contentContainerStyle={{ padding: 20 }} keyboardShouldPersistTaps="handled">
+        <View className="items-center mb-7">
           <UserAvatar uri={avatarUrl || user?.avatarUrl} size={80} />
-          <Text style={[styles.changePhotoText, { color: colors.primary }]}>Change photo</Text>
+          <Text className="text-sm font-semibold mt-2.5 text-primary">Change photo</Text>
         </View>
 
-        {[
-          { label: "Name", value: displayName, setter: setDisplayName, multiline: false },
-          { label: "Bio", value: bio, setter: setBio, multiline: true },
-          { label: "Website", value: website, setter: setWebsite, multiline: false },
-          { label: "Avatar URL", value: avatarUrl, setter: setAvatarUrl, multiline: false },
-        ].map(({ label, value, setter, multiline }) => (
-          <View key={label} style={[styles.field, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>{label}</Text>
+        {fields.map(({ label, value, setter, multiline }) => (
+          <View
+            key={label}
+            className="py-3.5 mb-1"
+            style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
+          >
+            <Text
+              className="text-xs font-semibold uppercase tracking-wide mb-1.5"
+              style={{ color: colors.mutedForeground }}
+            >
+              {label}
+            </Text>
             <TextInput
-              style={[styles.fieldInput, { color: colors.foreground }, multiline && { minHeight: 70, textAlignVertical: "top" }]}
+              className="text-base"
+              style={[
+                { color: colors.foreground },
+                multiline ? { minHeight: 70, textAlignVertical: "top" } : {},
+              ]}
               value={value}
               onChangeText={setter}
               multiline={multiline}
@@ -100,19 +119,3 @@ export default function EditProfileScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  cancelBtn: { padding: 4 },
-  title: { fontSize: 17, fontWeight: "700" },
-  content: { padding: 20 },
-  avatarSection: { alignItems: "center", marginBottom: 28 },
-  changePhotoText: { fontSize: 14, fontWeight: "600", marginTop: 10 },
-  field: { paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, marginBottom: 4 },
-  fieldLabel: { fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 },
-  fieldInput: { fontSize: 16 },
-});

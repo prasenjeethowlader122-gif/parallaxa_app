@@ -2,15 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+  ActivityIndicator, FlatList, Platform, RefreshControl, ScrollView, Text, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetFeed, useGetStories, useLikePost, useUnlikePost, useSavePost, useUnsavePost } from "@workspace/api-client-react";
@@ -51,23 +43,32 @@ export default function FeedScreen() {
   };
 
   const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
+  const posts = feedData?.posts ?? [];
 
   const StoriesHeader = () => (
     <View>
-      {/* Navbar */}
-      <View style={[styles.navbar, { paddingTop: topPadding, backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <Text style={[styles.brand, { color: colors.foreground }]}>Pulse</Text>
-        <View style={styles.navActions}>
-          <TouchableOpacity onPress={() => router.push("/messages" as any)} style={styles.navBtn}>
+      <View
+        className="flex-row justify-between items-center px-4 pb-3"
+        style={{
+          paddingTop: topPadding,
+          backgroundColor: colors.background,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <Text className="text-[26px] font-bold -tracking-tight" style={{ color: colors.foreground }}>
+          Pulse
+        </Text>
+        <View className="flex-row gap-1">
+          <TouchableOpacity onPress={() => router.push("/messages" as any)} className="p-1.5">
             <Feather name="send" size={24} color={colors.foreground} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Stories */}
       {storiesData && storiesData.length > 0 && (
-        <View style={[styles.storiesContainer, { borderBottomColor: colors.border }]}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storiesContent}>
+        <View className="py-2.5" style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 8 }}>
             <StoryCircle
               userId={user?.id ?? ""}
               username="Your story"
@@ -92,10 +93,8 @@ export default function FeedScreen() {
     </View>
   );
 
-  const posts = feedData?.posts ?? [];
-
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <FlatList
         data={posts}
         keyExtractor={(item: any) => item.id}
@@ -119,7 +118,7 @@ export default function FeedScreen() {
         ListHeaderComponent={<StoriesHeader />}
         ListEmptyComponent={
           feedLoading ? (
-            <View style={styles.loadingContainer}>
+            <View className="p-10 items-center">
               <ActivityIndicator size="large" color={colors.primary} />
             </View>
           ) : (
@@ -136,30 +135,8 @@ export default function FeedScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
         }
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={posts.length === 0 ? styles.emptyContainer : undefined}
+        contentContainerStyle={posts.length === 0 ? { flexGrow: 1 } : undefined}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  navbar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  brand: { fontSize: 26, fontWeight: "700", letterSpacing: -0.5 },
-  navActions: { flexDirection: "row", gap: 4 },
-  navBtn: { padding: 6 },
-  storiesContainer: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 10,
-  },
-  storiesContent: { paddingHorizontal: 8 },
-  loadingContainer: { padding: 40, alignItems: "center" },
-  emptyContainer: { flexGrow: 1 },
-});

@@ -2,8 +2,8 @@ import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useRef } from "react";
 import {
-  FlatList, KeyboardAvoidingView, Platform,
-  StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator,
+  ActivityIndicator, FlatList, KeyboardAvoidingView, Platform,
+  Text, TextInput, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetMessages, useGetConversation, useSendMessage } from "@workspace/api-client-react";
@@ -23,20 +23,12 @@ export default function ConversationScreen() {
   const { data: convoData } = useGetConversation({ conversationId: id });
   const { data: messagesData, refetch } = useGetMessages({ conversationId: id });
   const { mutate: sendMessage, isPending } = useSendMessage({
-    mutation: {
-      onSuccess: () => {
-        setMessage("");
-        refetch();
-      },
-    },
+    mutation: { onSuccess: () => { setMessage(""); refetch(); } },
   });
 
   const handleSend = () => {
     if (!message.trim()) return;
-    sendMessage({
-      conversationId: id,
-      data: { content: message.trim() },
-    });
+    sendMessage({ conversationId: id, data: { content: message.trim() } });
   };
 
   const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
@@ -50,24 +42,33 @@ export default function ConversationScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* Header */}
-      <View style={[styles.header, { paddingTop: topPadding + 12, borderBottomColor: colors.border, backgroundColor: colors.background }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+      <View
+        className="flex-row items-center px-3 pb-3"
+        style={{
+          paddingTop: topPadding + 12,
+          backgroundColor: colors.background,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} className="p-1 mr-1">
           <Feather name="arrow-left" size={24} color={colors.foreground} />
         </TouchableOpacity>
         {participant && (
           <TouchableOpacity
-            style={styles.participantInfo}
+            className="flex-1 flex-row items-center gap-2.5"
             onPress={() => router.push(`/profile/${participant.id}` as any)}
           >
             <UserAvatar uri={participant.avatarUrl} size={36} />
-            <Text style={[styles.participantName, { color: colors.foreground }]}>{participant.username}</Text>
+            <Text className="text-base font-semibold" style={{ color: colors.foreground }}>{participant.username}</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity style={styles.infoBtn}>
+        <TouchableOpacity className="p-1">
           <Feather name="info" size={22} color={colors.foreground} />
         </TouchableOpacity>
       </View>
@@ -81,42 +82,45 @@ export default function ConversationScreen() {
         renderItem={({ item }: { item: any }) => {
           const isMine = item.senderId === user?.id;
           return (
-            <View style={[styles.msgRow, isMine ? styles.msgRowMine : styles.msgRowTheirs]}>
-              {!isMine && participant && (
-                <UserAvatar uri={participant.avatarUrl} size={28} />
-              )}
-              <View style={styles.msgBubbleWrapper}>
-                <View style={[
-                  styles.bubble,
-                  {
-                    backgroundColor: isMine ? colors.primary : colors.muted,
-                  },
-                ]}>
-                  <Text style={[styles.bubbleText, { color: isMine ? "#FFFFFF" : colors.foreground }]}>
+            <View className={`flex-row items-end mb-1.5 gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
+              {!isMine && participant && <UserAvatar uri={participant.avatarUrl} size={28} />}
+              <View style={{ maxWidth: "70%" }}>
+                <View
+                  className="px-3.5 py-2.5 rounded-[20px]"
+                  style={{ backgroundColor: isMine ? colors.primary : colors.muted }}
+                >
+                  <Text className="text-[15px] leading-5" style={{ color: isMine ? "#FFFFFF" : colors.foreground }}>
                     {item.content}
                   </Text>
                 </View>
-                <Text style={[styles.msgTime, { color: colors.mutedForeground }]}>{timeLabel(item.createdAt)}</Text>
+                <Text className="text-[11px] mt-0.5 mx-1.5" style={{ color: colors.mutedForeground }}>
+                  {timeLabel(item.createdAt)}
+                </Text>
               </View>
             </View>
           );
         }}
-        contentContainerStyle={styles.messagesList}
+        contentContainerStyle={{ padding: 12, gap: 8, flexGrow: 1, justifyContent: "flex-end" }}
         showsVerticalScrollIndicator={false}
       />
 
       {/* Input */}
-      <View style={[
-        styles.inputContainer,
-        {
+      <View
+        className="px-3 pt-2"
+        style={{
+          borderTopWidth: 0.5,
           borderTopColor: colors.border,
           backgroundColor: colors.background,
           paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 8),
-        },
-      ]}>
-        <View style={[styles.inputRow, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+        }}
+      >
+        <View
+          className="flex-row items-center rounded-3xl px-3.5 py-1.5"
+          style={{ backgroundColor: colors.muted, borderColor: colors.border, borderWidth: 0.5 }}
+        >
           <TextInput
-            style={[styles.input, { color: colors.foreground }]}
+            className="flex-1 text-[15px] max-h-[100px]"
+            style={{ color: colors.foreground }}
             placeholder="Message..."
             placeholderTextColor={colors.mutedForeground}
             value={message}
@@ -127,7 +131,8 @@ export default function ConversationScreen() {
           <TouchableOpacity
             onPress={handleSend}
             disabled={isPending || !message.trim()}
-            style={[styles.sendBtn, { backgroundColor: message.trim() ? colors.primary : colors.muted }]}
+            className="w-[34px] h-[34px] rounded-full items-center justify-center ml-2"
+            style={{ backgroundColor: message.trim() ? colors.primary : colors.muted }}
           >
             {isPending ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
@@ -140,38 +145,3 @@ export default function ConversationScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: "row", alignItems: "center",
-    paddingHorizontal: 12, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  backBtn: { padding: 4, marginRight: 4 },
-  participantInfo: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10 },
-  participantName: { fontSize: 16, fontWeight: "600" },
-  infoBtn: { padding: 4 },
-  messagesList: { padding: 12, gap: 8, flexGrow: 1, justifyContent: "flex-end" },
-  msgRow: { flexDirection: "row", alignItems: "flex-end", marginBottom: 6, gap: 8 },
-  msgRowMine: { justifyContent: "flex-end" },
-  msgRowTheirs: { justifyContent: "flex-start" },
-  msgBubbleWrapper: { maxWidth: "70%" },
-  bubble: {
-    paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20,
-  },
-  bubbleText: { fontSize: 15, lineHeight: 20 },
-  msgTime: { fontSize: 11, marginTop: 3, marginHorizontal: 6 },
-  inputContainer: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 12, paddingTop: 8,
-  },
-  inputRow: {
-    flexDirection: "row", alignItems: "center",
-    borderRadius: 24, paddingHorizontal: 14, paddingVertical: 6, borderWidth: StyleSheet.hairlineWidth,
-  },
-  input: { flex: 1, fontSize: 15, maxHeight: 100 },
-  sendBtn: {
-    width: 34, height: 34, borderRadius: 17,
-    justifyContent: "center", alignItems: "center", marginLeft: 8,
-  },
-});

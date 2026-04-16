@@ -1,3 +1,5 @@
+import "../global.css";
+
 import {
   Inter_400Regular,
   Inter_500Medium,

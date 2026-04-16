@@ -2,12 +2,13 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert, KeyboardAvoidingView, Platform, ScrollView,
-  StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  ScrollView, Text, TextInput, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { useColors } from "@/hooks/useColors";
+import { getApiBaseUrl } from "@/lib/apiUrl";
 
 export default function RegisterScreen() {
   const colors = useColors();
@@ -32,7 +33,6 @@ export default function RegisterScreen() {
     }
     setIsLoading(true);
     try {
-      const { getApiBaseUrl } = await import("@/lib/apiUrl");
       const baseUrl = getApiBaseUrl();
       const response = await fetch(`${baseUrl}/api/auth/register`, {
         method: "POST",
@@ -57,39 +57,48 @@ export default function RegisterScreen() {
     }
   };
 
+  const topPt = insets.top + (Platform.OS === "web" ? 67 : 0) + 20;
+  const bottomPb = insets.bottom + 40;
+
+  const fields = [
+    { icon: "user" as const, placeholder: "Full name", value: displayName, setter: setDisplayName, autoCapitalize: "words" as const },
+    { icon: "at-sign" as const, placeholder: "Username", value: username, setter: setUsername, autoCapitalize: "none" as const },
+    { icon: "mail" as const, placeholder: "Email", value: email, setter: setEmail, autoCapitalize: "none" as const, keyboard: "email-address" as const },
+  ];
+
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      className="flex-1 bg-white dark:bg-black"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: insets.top + (Platform.OS === "web" ? 67 : 0) + 20, paddingBottom: insets.bottom + 40 },
-        ]}
+        contentContainerStyle={{ paddingHorizontal: 28, paddingTop: topPt, paddingBottom: bottomPb }}
         keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => router.back()} className="mb-6">
           <Feather name="arrow-left" size={24} color={colors.foreground} />
         </TouchableOpacity>
 
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.foreground }]}>Create account</Text>
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+        <View className="mb-8">
+          <Text className="text-[28px] font-bold mb-1.5" style={{ color: colors.foreground }}>
+            Create account
+          </Text>
+          <Text className="text-[15px]" style={{ color: colors.mutedForeground }}>
             Join Pulse today
           </Text>
         </View>
 
-        <View style={styles.form}>
-          {[
-            { icon: "user" as const, placeholder: "Full name", value: displayName, setter: setDisplayName, autoCapitalize: "words" as const },
-            { icon: "at-sign" as const, placeholder: "Username", value: username, setter: setUsername, autoCapitalize: "none" as const },
-            { icon: "mail" as const, placeholder: "Email", value: email, setter: setEmail, autoCapitalize: "none" as const, keyboard: "email-address" as const },
-          ].map(({ icon, placeholder, value, setter, autoCapitalize, keyboard }) => (
-            <View key={placeholder} style={[styles.inputContainer, { borderColor: colors.border, backgroundColor: colors.input }]}>
+        <View className="gap-3">
+          {fields.map(({ icon, placeholder, value, setter, autoCapitalize, keyboard }) => (
+            <View
+              key={placeholder}
+              className="flex-row items-center border rounded-xl px-3.5 h-[50px] gap-2.5"
+              style={{ borderColor: colors.border, backgroundColor: colors.input }}
+            >
               <Feather name={icon} size={18} color={colors.mutedForeground} />
               <TextInput
-                style={[styles.input, { color: colors.foreground }]}
+                className="flex-1 text-[15px]"
+                style={{ color: colors.foreground }}
                 placeholder={placeholder}
                 placeholderTextColor={colors.mutedForeground}
                 value={value}
@@ -101,10 +110,14 @@ export default function RegisterScreen() {
             </View>
           ))}
 
-          <View style={[styles.inputContainer, { borderColor: colors.border, backgroundColor: colors.input }]}>
+          <View
+            className="flex-row items-center border rounded-xl px-3.5 h-[50px] gap-2.5"
+            style={{ borderColor: colors.border, backgroundColor: colors.input }}
+          >
             <Feather name="lock" size={18} color={colors.mutedForeground} />
             <TextInput
-              style={[styles.input, { color: colors.foreground }]}
+              className="flex-1 text-[15px]"
+              style={{ color: colors.foreground }}
               placeholder="Password (min 6 chars)"
               placeholderTextColor={colors.mutedForeground}
               value={password}
@@ -114,7 +127,7 @@ export default function RegisterScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.registerBtn, { backgroundColor: colors.primary }]}
+            className="h-[50px] rounded-xl bg-primary items-center justify-center mt-2"
             onPress={handleRegister}
             disabled={isLoading}
             activeOpacity={0.85}
@@ -122,44 +135,20 @@ export default function RegisterScreen() {
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={[styles.registerBtnText, { color: colors.primaryForeground }]}>Create account</Text>
+              <Text className="text-base font-bold text-white">Create account</Text>
             )}
           </TouchableOpacity>
         </View>
 
-        <View style={styles.loginRow}>
-          <Text style={[styles.loginText, { color: colors.mutedForeground }]}>
+        <View className="flex-row justify-center items-center mt-8">
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
             Already have an account?
           </Text>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={[styles.loginLink, { color: colors.primary }]}> Log in</Text>
+            <Text className="text-sm font-bold text-primary"> Log in</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { paddingHorizontal: 28 },
-  backBtn: { marginBottom: 24 },
-  header: { marginBottom: 32 },
-  title: { fontSize: 28, fontWeight: "700", marginBottom: 6 },
-  subtitle: { fontSize: 15 },
-  form: { gap: 12 },
-  inputContainer: {
-    flexDirection: "row", alignItems: "center",
-    borderWidth: 1, borderRadius: 12,
-    paddingHorizontal: 14, height: 50, gap: 10,
-  },
-  input: { flex: 1, fontSize: 15 },
-  registerBtn: {
-    height: 50, borderRadius: 12,
-    justifyContent: "center", alignItems: "center", marginTop: 8,
-  },
-  registerBtnText: { fontSize: 16, fontWeight: "700" },
-  loginRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 32 },
-  loginText: { fontSize: 14 },
-  loginLink: { fontSize: 14, fontWeight: "700" },
-});

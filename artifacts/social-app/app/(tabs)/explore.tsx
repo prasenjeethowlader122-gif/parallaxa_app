@@ -2,16 +2,8 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Dimensions,
-  FlatList,
-  Image,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  ActivityIndicator,
+  ActivityIndicator, Dimensions, FlatList, Image, Platform,
+  Text, TextInput, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetExplorePosts, useSearch } from "@workspace/api-client-react";
@@ -44,23 +36,29 @@ export default function ExploreScreen() {
   };
 
   const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
-
   const isSearching = debouncedQuery.length > 1;
   const posts = exploreData?.posts ?? [];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       {/* Search bar */}
       <View
-        style={[
-          styles.searchHeader,
-          { paddingTop: topPadding + 12, backgroundColor: colors.background, borderBottomColor: colors.border },
-        ]}
+        className="px-4 pb-3"
+        style={{
+          paddingTop: topPadding + 12,
+          backgroundColor: colors.background,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
       >
-        <View style={[styles.searchBar, { backgroundColor: colors.muted }]}>
+        <View
+          className="flex-row items-center rounded-xl px-3 h-10 gap-2"
+          style={{ backgroundColor: colors.muted }}
+        >
           <Feather name="search" size={16} color={colors.mutedForeground} />
           <TextInput
-            style={[styles.searchInput, { color: colors.foreground }]}
+            className="flex-1 text-[15px]"
+            style={{ color: colors.foreground }}
             placeholder="Search users, tags, posts..."
             placeholderTextColor={colors.mutedForeground}
             value={query}
@@ -87,14 +85,15 @@ export default function ExploreScreen() {
             if (item._type === "user") {
               return (
                 <TouchableOpacity
-                  style={[styles.searchResultRow, { borderBottomColor: colors.border }]}
+                  className="flex-row items-center px-4 py-3 gap-3"
+                  style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
                   onPress={() => router.push(`/profile/${item.id}` as any)}
                   activeOpacity={0.7}
                 >
                   <UserAvatar uri={item.avatarUrl} size={44} />
-                  <View style={styles.resultInfo}>
-                    <Text style={[styles.resultTitle, { color: colors.foreground }]}>{item.username}</Text>
-                    <Text style={[styles.resultSub, { color: colors.mutedForeground }]}>{item.displayName}</Text>
+                  <View className="flex-1">
+                    <Text className="text-[15px] font-semibold" style={{ color: colors.foreground }}>{item.username}</Text>
+                    <Text className="text-[13px] mt-0.5" style={{ color: colors.mutedForeground }}>{item.displayName}</Text>
                   </View>
                 </TouchableOpacity>
               );
@@ -102,15 +101,19 @@ export default function ExploreScreen() {
             if (item._type === "hashtag") {
               return (
                 <TouchableOpacity
-                  style={[styles.searchResultRow, { borderBottomColor: colors.border }]}
+                  className="flex-row items-center px-4 py-3 gap-3"
+                  style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
                   activeOpacity={0.7}
                 >
-                  <View style={[styles.hashtagIcon, { backgroundColor: colors.muted }]}>
+                  <View
+                    className="w-11 h-11 rounded-full items-center justify-center"
+                    style={{ backgroundColor: colors.muted }}
+                  >
                     <Feather name="hash" size={22} color={colors.foreground} />
                   </View>
-                  <View style={styles.resultInfo}>
-                    <Text style={[styles.resultTitle, { color: colors.foreground }]}>#{item.name}</Text>
-                    <Text style={[styles.resultSub, { color: colors.mutedForeground }]}>{item.postCount} posts</Text>
+                  <View className="flex-1">
+                    <Text className="text-[15px] font-semibold" style={{ color: colors.foreground }}>#{item.name}</Text>
+                    <Text className="text-[13px] mt-0.5" style={{ color: colors.mutedForeground }}>{item.postCount} posts</Text>
                   </View>
                 </TouchableOpacity>
               );
@@ -118,13 +121,16 @@ export default function ExploreScreen() {
             if (item._type === "post" && item.imageUrl) {
               return (
                 <TouchableOpacity
-                  style={[styles.searchResultRow, { borderBottomColor: colors.border }]}
+                  className="flex-row items-center px-4 py-3 gap-3"
+                  style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
                   onPress={() => router.push(`/post/${item.id}` as any)}
                   activeOpacity={0.7}
                 >
-                  <Image source={{ uri: item.imageUrl }} style={styles.searchPostThumb} />
-                  <View style={styles.resultInfo}>
-                    <Text style={[styles.resultTitle, { color: colors.foreground }]} numberOfLines={2}>{item.content ?? "Post"}</Text>
+                  <Image source={{ uri: item.imageUrl }} className="w-11 h-11 rounded-md" resizeMode="cover" />
+                  <View className="flex-1">
+                    <Text className="text-[15px] font-semibold" style={{ color: colors.foreground }} numberOfLines={2}>
+                      {item.content ?? "Post"}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               );
@@ -145,12 +151,12 @@ export default function ExploreScreen() {
               <TouchableOpacity
                 onPress={() => router.push(`/post/${item.id}` as any)}
                 activeOpacity={0.85}
-                style={[styles.gridItem, { width: size, height: size }]}
+                style={{ width: size, height: size, margin: 0.5 }}
               >
                 {item.imageUrl ? (
-                  <Image source={{ uri: item.imageUrl }} style={styles.gridImage} />
+                  <Image source={{ uri: item.imageUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
                 ) : (
-                  <View style={[styles.gridPlaceholder, { backgroundColor: colors.muted }]}>
+                  <View className="w-full h-full items-center justify-center" style={{ backgroundColor: colors.muted }}>
                     <Feather name="image" size={20} color={colors.mutedForeground} />
                   </View>
                 )}
@@ -159,7 +165,7 @@ export default function ExploreScreen() {
           }}
           ListEmptyComponent={
             isLoading ? (
-              <View style={styles.loadingContainer}>
+              <View className="p-16 items-center">
                 <ActivityIndicator size="large" color={colors.primary} />
               </View>
             ) : null
@@ -171,41 +177,3 @@ export default function ExploreScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  searchHeader: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 40,
-    gap: 8,
-  },
-  searchInput: { flex: 1, fontSize: 15 },
-  gridItem: { margin: 0.5 },
-  gridImage: { width: "100%", height: "100%", resizeMode: "cover" },
-  gridPlaceholder: { width: "100%", height: "100%", justifyContent: "center", alignItems: "center" },
-  loadingContainer: { padding: 60, alignItems: "center" },
-  searchResultRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 12,
-  },
-  resultInfo: { flex: 1 },
-  resultTitle: { fontSize: 15, fontWeight: "600" },
-  resultSub: { fontSize: 13, marginTop: 2 },
-  hashtagIcon: {
-    width: 44, height: 44, borderRadius: 22,
-    justifyContent: "center", alignItems: "center",
-  },
-  searchPostThumb: { width: 44, height: 44, borderRadius: 6, resizeMode: "cover" },
-});

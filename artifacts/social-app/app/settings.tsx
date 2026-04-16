@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
@@ -17,13 +17,7 @@ export default function SettingsScreen() {
   const handleLogout = () => {
     Alert.alert("Log out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
-      {
-        text: "Log out",
-        style: "destructive",
-        onPress: async () => {
-          await logout();
-        },
-      },
+      { text: "Log out", style: "destructive", onPress: async () => { await logout(); } },
     ]);
   };
 
@@ -37,63 +31,49 @@ export default function SettingsScreen() {
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPadding + 12, borderBottomColor: colors.border, backgroundColor: colors.background }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+      <View
+        className="flex-row justify-between items-center px-4 pb-3"
+        style={{
+          paddingTop: topPadding + 12,
+          backgroundColor: colors.background,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} className="p-1">
           <Feather name="arrow-left" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.foreground }]}>Settings</Text>
+        <Text className="text-[17px] font-bold" style={{ color: colors.foreground }}>Settings</Text>
         <View style={{ width: 36 }} />
       </View>
 
-      <View style={styles.content}>
+      <View className="mt-2">
         {options.map(({ icon, label, onPress }) => (
           <TouchableOpacity
             key={label}
-            style={[styles.option, { borderBottomColor: colors.border }]}
+            className="flex-row items-center px-5 py-4 gap-3.5"
+            style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
             onPress={onPress}
             activeOpacity={0.7}
           >
             <Feather name={icon} size={20} color={colors.foreground} />
-            <Text style={[styles.optionLabel, { color: colors.foreground }]}>{label}</Text>
+            <Text className="flex-1 text-base" style={{ color: colors.foreground }}>{label}</Text>
             <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
         ))}
 
         <TouchableOpacity
-          style={[styles.option, { borderBottomColor: colors.border }]}
+          className="flex-row items-center px-5 py-4 gap-3.5"
+          style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
           onPress={handleLogout}
           activeOpacity={0.7}
         >
           <Feather name="log-out" size={20} color={colors.destructive} />
-          <Text style={[styles.optionLabel, { color: colors.destructive }]}>Log out</Text>
+          <Text className="flex-1 text-base" style={{ color: colors.destructive }}>Log out</Text>
           <View style={{ width: 18 }} />
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  backBtn: { padding: 4 },
-  title: { fontSize: 17, fontWeight: "700" },
-  content: { marginTop: 8 },
-  option: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 14,
-  },
-  optionLabel: { flex: 1, fontSize: 16 },
-});

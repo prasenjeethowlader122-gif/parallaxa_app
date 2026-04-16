@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator, Dimensions, FlatList, Image,
-  Platform, RefreshControl, StyleSheet, Text, TouchableOpacity, View,
+  Platform, RefreshControl, Text, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetUser, useGetUserPosts, useFollowUser, useUnfollowUser } from "@workspace/api-client-react";
@@ -11,6 +11,7 @@ import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
 import { EmptyState } from "@/components/EmptyState";
+import { getApiBaseUrl } from "@/lib/apiUrl";
 
 const { width } = Dimensions.get("window");
 const ITEM = (width - 2) / 3;
@@ -48,69 +49,78 @@ export default function UserProfileScreen() {
   const Header = () => (
     <View>
       {/* Navbar */}
-      <View style={[styles.navbar, { paddingTop: topPadding + 12, borderBottomColor: colors.border, backgroundColor: colors.background }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+      <View
+        className="flex-row justify-between items-center px-4 pb-3"
+        style={{
+          paddingTop: topPadding + 12,
+          backgroundColor: colors.background,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} className="p-1">
           <Feather name="arrow-left" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.navUsername, { color: colors.foreground }]}>{profile?.username ?? ""}</Text>
-        <TouchableOpacity style={styles.moreBtn}>
+        <Text className="text-lg font-bold" style={{ color: colors.foreground }}>{profile?.username ?? ""}</Text>
+        <TouchableOpacity className="p-1">
           <Feather name="more-horizontal" size={24} color={colors.foreground} />
         </TouchableOpacity>
       </View>
 
       {isLoading ? (
-        <View style={styles.loadingContainer}>
+        <View className="p-16 items-center">
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : profile ? (
-        <View style={styles.profileInfo}>
-          <View style={styles.avatarSection}>
+        <View className="p-4">
+          <View className="flex-row items-center mb-3.5">
             <UserAvatar uri={profile.avatarUrl} size={84} />
-            <View style={styles.statsRow}>
+            <View className="flex-1 flex-row justify-around ml-3">
               {[
                 { label: "Posts", value: profile.postsCount },
                 { label: "Followers", value: profile.followersCount },
                 { label: "Following", value: profile.followingCount },
               ].map(({ label, value }) => (
-                <View key={label} style={styles.statItem}>
-                  <Text style={[styles.statValue, { color: colors.foreground }]}>
+                <View key={label} className="items-center">
+                  <Text className="text-lg font-bold" style={{ color: colors.foreground }}>
                     {value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}
                   </Text>
-                  <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{label}</Text>
+                  <Text className="text-[13px] mt-0.5" style={{ color: colors.mutedForeground }}>{label}</Text>
                 </View>
               ))}
             </View>
           </View>
 
-          <View style={styles.nameRow}>
-            <Text style={[styles.displayName, { color: colors.foreground }]}>{profile.displayName}</Text>
+          <View className="flex-row items-center gap-1.5 mb-1">
+            <Text className="text-[15px] font-semibold" style={{ color: colors.foreground }}>{profile.displayName}</Text>
             {profile.isVerified && <Feather name="check-circle" size={15} color={colors.primary} />}
           </View>
-          {profile.bio && <Text style={[styles.bio, { color: colors.foreground }]}>{profile.bio}</Text>}
-          {profile.website && <Text style={[styles.website, { color: colors.primary }]}>{profile.website}</Text>}
+          {profile.bio && <Text className="text-sm leading-[19px] mb-1" style={{ color: colors.foreground }}>{profile.bio}</Text>}
+          {profile.website && <Text className="text-sm font-medium mb-3 text-primary">{profile.website}</Text>}
 
           {!isOwnProfile && (
-            <View style={styles.actionRow}>
+            <View className="flex-row gap-2">
               <TouchableOpacity
-                style={[
-                  styles.followBtn,
-                  {
-                    backgroundColor: profile.isFollowing ? colors.background : colors.primary,
-                    borderColor: profile.isFollowing ? colors.border : colors.primary,
-                    borderWidth: 1,
-                  },
-                ]}
+                className="flex-1 h-[34px] rounded-lg items-center justify-center border"
+                style={{
+                  backgroundColor: profile.isFollowing ? colors.background : colors.primary,
+                  borderColor: profile.isFollowing ? colors.border : colors.primary,
+                }}
                 onPress={handleFollow}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.followBtnText, { color: profile.isFollowing ? colors.foreground : "#FFFFFF" }]}>
+                <Text
+                  className="text-sm font-bold"
+                  style={{ color: profile.isFollowing ? colors.foreground : "#FFFFFF" }}
+                >
                   {profile.isFollowing ? "Following" : "Follow"}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.msgBtn, { borderColor: colors.border }]}
+                className="flex-1 h-[34px] border rounded-lg items-center justify-center"
+                style={{ borderColor: colors.border }}
                 onPress={async () => {
-                  const baseUrl = process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "";
+                  const baseUrl = getApiBaseUrl();
                   const res = await fetch(`${baseUrl}/api/conversations/start`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", Authorization: `Bearer ${me?.id}` },
@@ -123,7 +133,7 @@ export default function UserProfileScreen() {
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.msgBtnText, { color: colors.foreground }]}>Message</Text>
+                <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>Message</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -131,14 +141,17 @@ export default function UserProfileScreen() {
       ) : null}
 
       {/* Grid header */}
-      <View style={[styles.gridHeader, { borderTopColor: colors.border, borderBottomColor: colors.border }]}>
+      <View
+        className="h-11 items-center justify-center"
+        style={{ borderTopWidth: 0.5, borderBottomWidth: 0.5, borderColor: colors.border }}
+      >
         <Feather name="grid" size={22} color={colors.foreground} />
       </View>
     </View>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <FlatList
         data={posts}
         keyExtractor={(item: any) => item.id}
@@ -147,12 +160,12 @@ export default function UserProfileScreen() {
           <TouchableOpacity
             onPress={() => router.push(`/post/${item.id}` as any)}
             activeOpacity={0.85}
-            style={[styles.gridItem, { backgroundColor: colors.muted }]}
+            style={{ width: ITEM, height: ITEM, margin: 0.5, backgroundColor: colors.muted }}
           >
             {item.imageUrl ? (
-              <Image source={{ uri: item.imageUrl }} style={styles.gridImage} />
+              <Image source={{ uri: item.imageUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
             ) : (
-              <View style={[styles.textPostPlaceholder, { backgroundColor: colors.muted }]}>
+              <View className="w-full h-full items-center justify-center">
                 <Feather name="type" size={16} color={colors.mutedForeground} />
               </View>
             )}
@@ -172,43 +185,3 @@ export default function UserProfileScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  navbar: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  backBtn: { padding: 4 },
-  navUsername: { fontSize: 18, fontWeight: "700" },
-  moreBtn: { padding: 4 },
-  loadingContainer: { padding: 60, alignItems: "center" },
-  profileInfo: { padding: 16 },
-  avatarSection: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  statsRow: { flex: 1, flexDirection: "row", justifyContent: "space-around", marginLeft: 12 },
-  statItem: { alignItems: "center" },
-  statValue: { fontSize: 18, fontWeight: "700" },
-  statLabel: { fontSize: 13, marginTop: 2 },
-  nameRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
-  displayName: { fontSize: 15, fontWeight: "600" },
-  bio: { fontSize: 14, lineHeight: 19, marginBottom: 4 },
-  website: { fontSize: 14, fontWeight: "500", marginBottom: 12 },
-  actionRow: { flexDirection: "row", gap: 8 },
-  followBtn: {
-    flex: 1, height: 34, borderRadius: 8,
-    justifyContent: "center", alignItems: "center",
-  },
-  followBtnText: { fontSize: 14, fontWeight: "700" },
-  msgBtn: {
-    flex: 1, height: 34, borderWidth: 1, borderRadius: 8,
-    justifyContent: "center", alignItems: "center",
-  },
-  msgBtnText: { fontSize: 14, fontWeight: "600" },
-  gridHeader: {
-    height: 44, justifyContent: "center", alignItems: "center",
-    borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  gridItem: { width: ITEM, height: ITEM, margin: 0.5 },
-  gridImage: { width: "100%", height: "100%", resizeMode: "cover" },
-  textPostPlaceholder: { width: "100%", height: "100%", justifyContent: "center", alignItems: "center" },
-});

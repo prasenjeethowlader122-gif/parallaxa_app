@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "./UserAvatar";
@@ -48,10 +48,8 @@ export function NotificationItem({ type, fromUser, post, commentContent, isRead,
 
   return (
     <TouchableOpacity
-      style={[
-        styles.container,
-        { backgroundColor: isRead ? "transparent" : `${colors.primary}10` },
-      ]}
+      className="flex-row items-center px-4 py-3"
+      style={{ backgroundColor: isRead ? "transparent" : `${colors.primary}12` }}
       onPress={() => {
         if (type === "follow") router.push(`/profile/${fromUser.id}` as any);
         else if (post) router.push(`/post/${post.id}` as any);
@@ -59,55 +57,28 @@ export function NotificationItem({ type, fromUser, post, commentContent, isRead,
       activeOpacity={0.7}
     >
       <UserAvatar uri={fromUser.avatarUrl} size={44} />
-      <View style={styles.content}>
-        <Text style={[styles.text, { color: colors.foreground }]}>
-          <Text style={styles.username}>{fromUser.username} </Text>
+      <View className="flex-1 mx-3">
+        <Text className="text-sm leading-5" style={{ color: colors.foreground }}>
+          <Text className="font-semibold">{fromUser.username} </Text>
           {getMessage()}
         </Text>
-        <Text style={[styles.time, { color: colors.mutedForeground }]}>{timeAgo(createdAt)}</Text>
+        <Text className="text-xs mt-0.5" style={{ color: colors.mutedForeground }}>
+          {timeAgo(createdAt)}
+        </Text>
       </View>
       {post?.imageUrl && (
-        <Image source={{ uri: post.imageUrl }} style={[styles.thumbnail, { borderColor: colors.border }]} />
+        <Image
+          source={{ uri: post.imageUrl }}
+          className="w-11 h-11 rounded-md"
+          style={{ borderColor: colors.border, borderWidth: 0.5 }}
+        />
       )}
       {!isRead && (
-        <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />
+        <View
+          className="w-2 h-2 rounded-full ml-2"
+          style={{ backgroundColor: colors.primary }}
+        />
       )}
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  content: {
-    flex: 1,
-    marginHorizontal: 12,
-  },
-  text: {
-    fontSize: 14,
-    lineHeight: 19,
-  },
-  username: {
-    fontWeight: "600",
-  },
-  time: {
-    fontSize: 12,
-    marginTop: 3,
-  },
-  thumbnail: {
-    width: 44,
-    height: 44,
-    borderRadius: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginLeft: 8,
-  },
-});

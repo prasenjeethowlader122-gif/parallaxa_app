@@ -44,8 +44,13 @@ A full-stack Instagram-inspired social media platform with a React Native / Expo
 - **Color palette**: Instagram-inspired
   - Primary: `#0095F6` (blue)
   - Accent: `#E91E8C` (pink)
-  - Dark mode: supported
+  - Dark mode: supported (NativeWind `dark:` variants + `useColorScheme`)
 - **Font**: Inter (via expo-google-fonts)
+- **Styling**: NativeWind v4 (`nativewind@^4.1.0` + `tailwindcss@3.4.17`)
+  - All components and screens use `className` prop (Tailwind classes)
+  - `useColors()` hook kept for icon `color` props, `RefreshControl.tintColor`, `ActivityIndicator.color`, and truly dynamic inline styles
+  - Custom Tailwind tokens: `primary`, `accent`, `story`, `destructive` in `tailwind.config.js`
+  - Config: `tailwind.config.js`, `global.css`, `babel.config.js` (preset), `metro.config.js` (withNativeWind)
 
 ## Database (PostgreSQL via Drizzle ORM)
 

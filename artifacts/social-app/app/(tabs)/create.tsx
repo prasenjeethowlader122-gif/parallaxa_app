@@ -2,8 +2,8 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert, KeyboardAvoidingView, Platform, ScrollView,
-  StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  ScrollView, Text, TextInput, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCreatePost } from "@workspace/api-client-react";
@@ -21,17 +21,12 @@ export default function CreateScreen() {
   const { mutate: createPost, isPending } = useCreatePost({
     mutation: {
       onSuccess: () => {
-        setContent("");
-        setImageUrl("");
-        setLocation("");
-        setHashtags("");
+        setContent(""); setImageUrl(""); setLocation(""); setHashtags("");
         Alert.alert("Posted!", "Your post is now live.", [
           { text: "OK", onPress: () => router.push("/(tabs)" as any) },
         ]);
       },
-      onError: (err: any) => {
-        Alert.alert("Error", err?.message ?? "Could not create post");
-      },
+      onError: (err: any) => Alert.alert("Error", err?.message ?? "Could not create post"),
     },
   });
 
@@ -40,10 +35,7 @@ export default function CreateScreen() {
       Alert.alert("Error", "Add a caption or image URL to post");
       return;
     }
-    const tags = hashtags
-      .split(/[\s,#]+/)
-      .map((t) => t.trim().toLowerCase())
-      .filter(Boolean);
+    const tags = hashtags.split(/[\s,#]+/).map((t) => t.trim().toLowerCase()).filter(Boolean);
     createPost({
       data: {
         content: content.trim() || undefined,
@@ -58,31 +50,48 @@ export default function CreateScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       {/* Header */}
-      <View style={[styles.header, { paddingTop: topPadding + 12, borderBottomColor: colors.border, backgroundColor: colors.background }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
-          <Text style={[styles.cancelText, { color: colors.mutedForeground }]}>Cancel</Text>
+      <View
+        className="flex-row justify-between items-center px-4 pb-3"
+        style={{
+          paddingTop: topPadding + 12,
+          backgroundColor: colors.background,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} className="p-1">
+          <Text className="text-[15px]" style={{ color: colors.mutedForeground }}>Cancel</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>New post</Text>
-        <TouchableOpacity onPress={handlePost} disabled={isPending} style={[styles.postBtn, { backgroundColor: colors.primary }]}>
+        <Text className="text-[17px] font-bold" style={{ color: colors.foreground }}>New post</Text>
+        <TouchableOpacity
+          onPress={handlePost}
+          disabled={isPending}
+          className="px-4 py-1.5 rounded-lg bg-primary items-center min-w-[60px]"
+        >
           {isPending ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Text style={styles.postBtnText}>Share</Text>
+            <Text className="text-white text-[15px] font-bold">Share</Text>
           )}
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {/* Image URL input */}
-        <View style={[styles.section, { borderBottomColor: colors.border }]}>
-          <View style={[styles.inputRow, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+      <ScrollView className="p-4" contentContainerStyle={{ gap: 4 }} keyboardShouldPersistTaps="handled">
+        {/* Image URL */}
+        <View className="mb-4 pb-4" style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+          <View
+            className="flex-row items-center rounded-[10px] px-3 py-2.5 gap-2"
+            style={{ backgroundColor: colors.muted, borderColor: colors.border, borderWidth: 0.5 }}
+          >
             <Feather name="image" size={18} color={colors.mutedForeground} />
             <TextInput
-              style={[styles.urlInput, { color: colors.foreground }]}
+              className="flex-1 text-sm"
+              style={{ color: colors.foreground }}
               placeholder="Image URL (optional)"
               placeholderTextColor={colors.mutedForeground}
               value={imageUrl}
@@ -94,9 +103,10 @@ export default function CreateScreen() {
         </View>
 
         {/* Caption */}
-        <View style={[styles.section, { borderBottomColor: colors.border }]}>
+        <View className="mb-4 pb-4" style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
           <TextInput
-            style={[styles.captionInput, { color: colors.foreground }]}
+            className="text-base leading-[22px] min-h-[100px] mb-2"
+            style={{ color: colors.foreground, textAlignVertical: "top" }}
             placeholder="Write a caption..."
             placeholderTextColor={colors.mutedForeground}
             value={content}
@@ -104,14 +114,20 @@ export default function CreateScreen() {
             multiline
             maxLength={2200}
           />
-          <Text style={[styles.charCount, { color: colors.mutedForeground }]}>{content.length}/2200</Text>
+          <Text className="text-xs text-right" style={{ color: colors.mutedForeground }}>
+            {content.length}/2200
+          </Text>
         </View>
 
         {/* Location */}
-        <View style={[styles.optionRow, { borderBottomColor: colors.border }]}>
+        <View
+          className="flex-row items-center py-4 gap-3"
+          style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
+        >
           <Feather name="map-pin" size={18} color={colors.foreground} />
           <TextInput
-            style={[styles.optionInput, { color: colors.foreground }]}
+            className="flex-1 text-[15px]"
+            style={{ color: colors.foreground }}
             placeholder="Add location"
             placeholderTextColor={colors.mutedForeground}
             value={location}
@@ -120,10 +136,14 @@ export default function CreateScreen() {
         </View>
 
         {/* Hashtags */}
-        <View style={[styles.optionRow, { borderBottomColor: colors.border }]}>
+        <View
+          className="flex-row items-center py-4 gap-3"
+          style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
+        >
           <Feather name="hash" size={18} color={colors.foreground} />
           <TextInput
-            style={[styles.optionInput, { color: colors.foreground }]}
+            className="flex-1 text-[15px]"
+            style={{ color: colors.foreground }}
             placeholder="Add hashtags (e.g. travel food)"
             placeholderTextColor={colors.mutedForeground}
             value={hashtags}
@@ -133,57 +153,18 @@ export default function CreateScreen() {
         </View>
 
         {/* Tips */}
-        <View style={styles.tipsContainer}>
-          <Text style={[styles.tipsTitle, { color: colors.mutedForeground }]}>Tips</Text>
-          <Text style={[styles.tipsText, { color: colors.mutedForeground }]}>
-            • Use a direct image URL ending in .jpg, .png, or .gif{"\n"}
-            • Add hashtags to reach more people{"\n"}
-            • Tag a location to connect with local communities
+        <View className="mt-6 p-4 rounded-xl" style={{ backgroundColor: "#00000008" }}>
+          <Text
+            className="text-[13px] font-semibold mb-2 uppercase tracking-wide"
+            style={{ color: colors.mutedForeground }}
+          >
+            Tips
+          </Text>
+          <Text className="text-[13px] leading-5" style={{ color: colors.mutedForeground }}>
+            {"• Use a direct image URL ending in .jpg, .png, or .gif\n• Add hashtags to reach more people\n• Tag a location to connect with local communities"}
           </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  headerBtn: { padding: 4 },
-  cancelText: { fontSize: 15 },
-  headerTitle: { fontSize: 17, fontWeight: "700" },
-  postBtn: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 8, minWidth: 60, alignItems: "center" },
-  postBtnText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
-  content: { padding: 16, gap: 4 },
-  section: { marginBottom: 4, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: 8,
-  },
-  urlInput: { flex: 1, fontSize: 14 },
-  captionInput: { fontSize: 16, lineHeight: 22, minHeight: 100, textAlignVertical: "top", marginBottom: 8 },
-  charCount: { fontSize: 12, textAlign: "right" },
-  optionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 12,
-  },
-  optionInput: { flex: 1, fontSize: 15 },
-  tipsContainer: { marginTop: 24, padding: 16, borderRadius: 12, backgroundColor: "#00000008" },
-  tipsTitle: { fontSize: 13, fontWeight: "600", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 },
-  tipsText: { fontSize: 13, lineHeight: 20 },
-});

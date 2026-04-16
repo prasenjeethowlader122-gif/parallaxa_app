@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator, Dimensions, FlatList, Image, KeyboardAvoidingView,
-  Platform, StyleSheet, Text, TextInput, TouchableOpacity, View,
+  Platform, Text, TextInput, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -27,9 +27,7 @@ export default function PostDetailScreen() {
   const { data: post, isLoading: postLoading } = useGetPost({ postId: id });
   const { data: commentsData, refetch: refetchComments } = useGetComments({ postId: id });
   const { mutate: createComment, isPending } = useCreateComment({
-    mutation: {
-      onSuccess: () => { setComment(""); refetchComments(); },
-    },
+    mutation: { onSuccess: () => { setComment(""); refetchComments(); } },
   });
   const { mutate: likePost } = useLikePost();
   const { mutate: unlikePost } = useUnlikePost();
@@ -68,7 +66,7 @@ export default function PostDetailScreen() {
 
   if (postLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+      <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.background }}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -79,79 +77,104 @@ export default function PostDetailScreen() {
   const PostHeader = () => (
     <View>
       {/* Nav */}
-      <View style={[styles.navbar, { paddingTop: topPadding + 12, borderBottomColor: colors.border, backgroundColor: colors.background }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+      <View
+        className="flex-row justify-between items-center px-4 pb-3"
+        style={{
+          paddingTop: topPadding + 12,
+          backgroundColor: colors.background,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} className="p-1">
           <Feather name="arrow-left" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.navTitle, { color: colors.foreground }]}>Post</Text>
+        <Text className="text-[17px] font-bold" style={{ color: colors.foreground }}>Post</Text>
         <View style={{ width: 36 }} />
       </View>
 
       {/* Author */}
       {author && (
         <TouchableOpacity
-          style={styles.authorRow}
+          className="flex-row items-center gap-2.5 p-3"
           onPress={() => router.push(`/profile/${author.id}` as any)}
           activeOpacity={0.8}
         >
           <UserAvatar uri={author.avatarUrl} size={36} />
-          <Text style={[styles.authorName, { color: colors.foreground }]}>{author.username}</Text>
+          <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>{author.username}</Text>
           {author.isVerified && <Feather name="check-circle" size={14} color={colors.primary} />}
         </TouchableOpacity>
       )}
 
       {/* Image */}
       {(post as any)?.imageUrl && (
-        <Image source={{ uri: (post as any).imageUrl }} style={[styles.image, { width }]} />
+        <Image
+          source={{ uri: (post as any).imageUrl }}
+          style={{ width, height: width, resizeMode: "cover", backgroundColor: "#F0F0F0" }}
+        />
       )}
 
       {/* Actions */}
-      <View style={[styles.actionsRow, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={handleLike} style={styles.actionBtn}>
+      <View
+        className="flex-row items-center px-3 py-2.5 gap-2"
+        style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
+      >
+        <TouchableOpacity onPress={handleLike} className="p-1 mr-2">
           <Feather name="heart" size={24} color={isLiked ? colors.destructive : colors.foreground} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity className="p-1 mr-2">
           <Feather name="message-circle" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity className="p-1">
           <Feather name="send" size={22} color={colors.foreground} />
         </TouchableOpacity>
       </View>
 
-      <Text style={[styles.likesText, { color: colors.foreground }]}>
+      <Text className="font-bold px-3.5 py-1.5 text-sm" style={{ color: colors.foreground }}>
         {likesCount.toLocaleString()} likes
       </Text>
 
       {(post as any)?.content && (
-        <View style={styles.captionRow}>
-          <Text style={[styles.caption, { color: colors.foreground }]}>
-            <Text style={styles.captionUsername}>{author?.username} </Text>
+        <View className="px-3.5 pb-2">
+          <Text className="text-sm leading-5" style={{ color: colors.foreground }}>
+            <Text className="font-bold">{author?.username} </Text>
             {(post as any).content}
           </Text>
         </View>
       )}
 
-      <Text style={[styles.sectionHeader, { color: colors.mutedForeground }]}>Comments</Text>
+      <Text
+        className="text-[13px] font-semibold p-3.5 uppercase tracking-wide"
+        style={{ color: colors.mutedForeground }}
+      >
+        Comments
+      </Text>
     </View>
   );
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <FlatList
         data={comments}
         keyExtractor={(item: any) => item.id}
         renderItem={({ item }: { item: any }) => (
-          <View style={[styles.commentRow, { borderBottomColor: colors.border }]}>
+          <View
+            className="flex-row items-start gap-2.5 px-3.5 py-2.5"
+            style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
+          >
             <UserAvatar uri={item.author?.avatarUrl} size={32} />
-            <View style={styles.commentContent}>
-              <Text style={[styles.commentText, { color: colors.foreground }]}>
-                <Text style={styles.commentUsername}>{item.author?.username} </Text>
+            <View className="flex-1">
+              <Text className="text-sm leading-[19px]" style={{ color: colors.foreground }}>
+                <Text className="font-semibold">{item.author?.username} </Text>
                 {item.content}
               </Text>
-              <Text style={[styles.commentTime, { color: colors.mutedForeground }]}>{timeAgo(item.createdAt)}</Text>
+              <Text className="text-[11px] mt-0.5" style={{ color: colors.mutedForeground }}>
+                {timeAgo(item.createdAt)}
+              </Text>
             </View>
           </View>
         )}
@@ -160,70 +183,33 @@ export default function PostDetailScreen() {
       />
 
       {/* Comment input */}
-      <View style={[styles.commentInputContainer, {
-        borderTopColor: colors.border,
-        backgroundColor: colors.background,
-        paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 8),
-      }]}>
+      <View
+        className="flex-row items-center px-3 pt-2 gap-2.5"
+        style={{
+          borderTopWidth: 0.5,
+          borderTopColor: colors.border,
+          backgroundColor: colors.background,
+          paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 8),
+        }}
+      >
         <UserAvatar uri={user?.avatarUrl} size={32} />
         <TextInput
-          style={[styles.commentInput, { color: colors.foreground }]}
+          className="flex-1 text-[15px]"
+          style={{ color: colors.foreground }}
           placeholder="Add a comment..."
           placeholderTextColor={colors.mutedForeground}
           value={comment}
           onChangeText={setComment}
         />
         <TouchableOpacity onPress={handleComment} disabled={!comment.trim() || isPending}>
-          <Text style={[styles.postBtn, { color: comment.trim() ? colors.primary : colors.mutedForeground }]}>Post</Text>
+          <Text
+            className="text-[15px] font-bold"
+            style={{ color: comment.trim() ? colors.primary : colors.mutedForeground }}
+          >
+            Post
+          </Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  navbar: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  backBtn: { padding: 4 },
-  navTitle: { fontSize: 17, fontWeight: "700" },
-  authorRow: { flexDirection: "row", alignItems: "center", gap: 10, padding: 12 },
-  authorName: { fontSize: 14, fontWeight: "600" },
-  image: { height: width, resizeMode: "cover", backgroundColor: "#F0F0F0" },
-  actionsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 8,
-  },
-  actionBtn: { padding: 4, marginRight: 8 },
-  likesText: { fontWeight: "700", paddingHorizontal: 14, paddingVertical: 6, fontSize: 14 },
-  captionRow: { paddingHorizontal: 14, paddingBottom: 8 },
-  caption: { fontSize: 14, lineHeight: 20 },
-  captionUsername: { fontWeight: "700" },
-  sectionHeader: { fontSize: 13, fontWeight: "600", padding: 14, textTransform: "uppercase", letterSpacing: 0.5 },
-  commentRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  commentContent: { flex: 1 },
-  commentText: { fontSize: 14, lineHeight: 19 },
-  commentUsername: { fontWeight: "600" },
-  commentTime: { fontSize: 11, marginTop: 3 },
-  commentInputContainer: {
-    flexDirection: "row", alignItems: "center",
-    paddingHorizontal: 12, paddingTop: 8, gap: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  commentInput: { flex: 1, fontSize: 15 },
-  postBtn: { fontSize: 15, fontWeight: "700" },
-});
