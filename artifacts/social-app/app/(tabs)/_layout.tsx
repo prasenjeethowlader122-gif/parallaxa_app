@@ -3,12 +3,12 @@ import { View, Text, TouchableOpacity, Image, Platform, StyleSheet } from "react
 import { Stack, useRouter, usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { SentIcon, Search01Icon } from '@hugeicons/core-free-icons';
+import { Menu01Icon } from '@hugeicons/core-free-icons';
 import { useColors } from "@/hooks/useColors";
 
 const TABS = [
   { id: "index", label: "For You" },
-  { id: "explore", label: "Following" }, // Map these to your actual file names
+  { id: "explore", label: "Following" },
   { id: "trending", label: "Trending" }
 ];
 
@@ -18,11 +18,9 @@ export default function RootLayout() {
   const router = useRouter();
   const pathname = usePathname();
   
-  // Determine active tab based on current route
   const currentRoute = pathname === "/" ? "index" : pathname.replace("/", "");
-
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
-
+  
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* --- GLOBAL HEADER & SLIDER --- */}
@@ -42,14 +40,9 @@ export default function RootLayout() {
             style={{ width: 40, height: 40 }} 
           />
          
-          <View className="flex-row gap-3">
-            <TouchableOpacity className="p-2">
-                <HugeiconsIcon icon={Search01Icon} size={22} color={colors.foreground} />
-            </TouchableOpacity>
-            <TouchableOpacity className="p-2">
-                <HugeiconsIcon icon={SentIcon} size={22} color={colors.foreground} />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity className="p-2">
+            <HugeiconsIcon icon={Menu01Icon} size={22} color={colors.foreground} />
+          </TouchableOpacity>
         </View>
 
         {/* Navigation Slider */}
