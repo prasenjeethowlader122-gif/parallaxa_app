@@ -1,5 +1,4 @@
-FROM node:24-alpine AS deps
-RUN apk add --no-cache git python3 make g++
+FROM node:24 AS deps
 RUN npm install -g pnpm
 WORKDIR /app
 
@@ -13,7 +12,7 @@ COPY artifacts/social-app/package.json ./artifacts/social-app/
 
 RUN pnpm install
 
-# ── Build Expo web ─────────────────────────────────────────────────────────────
+# ── Build Expo web ──────────────────────────────────────────────────────────
 FROM deps AS expo-builder
 
 COPY lib/ ./lib/
@@ -21,7 +20,7 @@ COPY artifacts/social-app/ ./artifacts/social-app/
 
 RUN pnpm --filter @workspace/social-app exec expo export --platform web --output-dir web-export
 
-# ── Build API ──────────────────────────────────────────────────────────────────
+# ── Build API ────────────────────────────────────────────────────────────
 FROM deps AS api-builder
 
 COPY lib/ ./lib/
@@ -29,8 +28,8 @@ COPY artifacts/api-server/ ./artifacts/api-server/
 
 RUN pnpm --filter @workspace/api-server run build
 
-# ── Production image ───────────────────────────────────────────────────────────
-FROM node:24-alpine AS runner
+# ── Production image ────────────────────────────────────────────────────────
+FROM node:24 AS runner
 RUN npm install -g pnpm
 WORKDIR /app
 
