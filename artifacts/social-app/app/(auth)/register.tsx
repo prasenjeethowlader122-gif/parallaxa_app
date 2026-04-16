@@ -1,6 +1,20 @@
-import { Feather } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import { 
+  UserIcon, 
+  AtSignIcon, 
+  Mail01Icon, 
+  LockPasswordIcon, 
+  ViewIcon, 
+  ViewOffIcon, 
+  ArrowLeft02Icon, 
+  ArrowRight02Icon, 
+  Alert01Icon, 
+  CheckmarkCircle01Icon, 
+  InformationCircleIcon 
+} from '@hugeicons-pro/core-stroke-rounded';
+
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -29,7 +43,7 @@ const TOTAL_STEPS = 3;
 const STEPS = [
   { title: "Who are you?", subtitle: "Let's start with your name and username" },
   { title: "Your email",   subtitle: "We'll use this to sign you in"            },
-  { title: "Secure it",   subtitle: "Create a strong password"                  },
+  { title: "Secure it",    subtitle: "Create a strong password"                  },
 ];
 
 export default function RegisterScreen() {
@@ -64,11 +78,11 @@ export default function RegisterScreen() {
     const newErrors: FormErrors = {};
 
     if (step === 0) {
-      if (!displayName.trim())               newErrors.displayName = "Full name is required";
+      if (!displayName.trim())                newErrors.displayName = "Full name is required";
       else if (displayName.trim().length < 2) newErrors.displayName = "Name must be at least 2 characters";
       else if (displayName.trim().length > 50) newErrors.displayName = "Name must be less than 50 characters";
 
-      if (!username.trim())                  newErrors.username = "Username is required";
+      if (!username.trim())                   newErrors.username = "Username is required";
       else if (username.trim().length < 3)   newErrors.username = "Username must be at least 3 characters";
       else if (username.trim().length > 30)  newErrors.username = "Username must be less than 30 characters";
       else if (!/^[a-zA-Z0-9_-]+$/.test(username.trim()))
@@ -149,7 +163,7 @@ export default function RegisterScreen() {
     keyboardType,
     autoCapitalize = "none",
   }: {
-    icon: React.ComponentProps<typeof Feather>["name"];
+    icon: any;
     placeholder: string;
     value: string;
     onChange: (t: string) => void;
@@ -164,18 +178,19 @@ export default function RegisterScreen() {
   }) => (
     <View className="mb-5">
       <View
-        className={`border rounded-full px-4 py-3 flex-row items-center ${
+        className={`border rounded-full px-4 py-3 flex-row items-center transition-colors ${
           focused
             ? "border-black"
             : error
             ? "border-red-300"
-            : "border-gray-100"
+            : "border-slate-100"
         }`}
       >
-        <Feather
-          name={icon}
+        <HugeiconsIcon
+          icon={icon}
           size={18}
           color={focused ? "#000" : error ? "#dc2626" : "#9ca3af"}
+          strokeWidth={1}
         />
         <TextInput
           className="flex-1 ml-3 text-gray-900 text-base font-medium outline-none"
@@ -195,13 +210,13 @@ export default function RegisterScreen() {
           editable={!isLoading}
         />
         {value && !error && !secure && (
-          <Feather name="check-circle" size={18} color="#10b981" />
+          <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} color="#10b981" />
         )}
         {right}
       </View>
       {error && (
         <View className="mt-2 flex-row items-center gap-1.5">
-          <Feather name="info" size={14} color="#dc2626" />
+          <HugeiconsIcon icon={InformationCircleIcon} size={14} color="#dc2626" />
           <Text className="text-red-600 text-xs font-medium">{error}</Text>
         </View>
       )}
@@ -212,11 +227,10 @@ export default function RegisterScreen() {
   const renderStep = () => {
     if (step === 0) return (
       <>
-        {/* Full Name */}
         <View className="mb-2">
           <Text className="text-slate-700 font-semibold mb-2 text-sm">Full Name</Text>
           <InputRow
-            icon="user"
+            icon={UserIcon}
             placeholder="John Doe"
             value={displayName}
             onChange={(t) => { setDisplayName(t); setErrors(p => ({ ...p, displayName: undefined })); }}
@@ -228,11 +242,10 @@ export default function RegisterScreen() {
           />
         </View>
 
-        {/* Username */}
         <View className="mb-2">
           <Text className="text-slate-700 font-semibold mb-2 text-sm">Username</Text>
           <InputRow
-            icon="at-sign"
+            icon={AtSignIcon}
             placeholder="john_doe"
             value={username}
             onChange={(t) => { setUsername(t); setErrors(p => ({ ...p, username: undefined })); }}
@@ -249,7 +262,7 @@ export default function RegisterScreen() {
       <View className="mb-2">
         <Text className="text-slate-700 font-semibold mb-2 text-sm">Email Address</Text>
         <InputRow
-          icon="mail"
+          icon={Mail01Icon}
           placeholder="your.email@example.com"
           value={email}
           onChange={(t) => { setEmail(t); setErrors(p => ({ ...p, email: undefined })); }}
@@ -267,7 +280,7 @@ export default function RegisterScreen() {
         <View className="mb-2">
           <Text className="text-slate-700 font-semibold mb-2 text-sm">Password</Text>
           <InputRow
-            icon="lock"
+            icon={LockPasswordIcon}
             placeholder="At least 6 characters"
             value={password}
             onChange={(t) => { setPassword(t); setErrors(p => ({ ...p, password: undefined })); }}
@@ -278,8 +291,8 @@ export default function RegisterScreen() {
             secure={!showPassword}
             right={
               <TouchableOpacity onPress={() => setShowPassword(v => !v)} disabled={isLoading} className="p-1">
-                <Feather
-                  name={showPassword ? "eye-off" : "eye"}
+                <HugeiconsIcon
+                  icon={showPassword ? ViewOffIcon : ViewIcon}
                   size={18}
                   color={errors.password ? "#dc2626" : "#6b7280"}
                 />
@@ -291,7 +304,7 @@ export default function RegisterScreen() {
         <View className="mb-2">
           <Text className="text-slate-700 font-semibold mb-2 text-sm">Confirm Password</Text>
           <InputRow
-            icon="lock"
+            icon={LockPasswordIcon}
             placeholder="Repeat your password"
             value={confirmPassword}
             onChange={(t) => { setConfirmPass(t); setErrors(p => ({ ...p, confirmPassword: undefined })); }}
@@ -302,8 +315,8 @@ export default function RegisterScreen() {
             secure={!showConfirm}
             right={
               <TouchableOpacity onPress={() => setShowConfirm(v => !v)} disabled={isLoading} className="p-1">
-                <Feather
-                  name={showConfirm ? "eye-off" : "eye"}
+                <HugeiconsIcon
+                  icon={showConfirm ? ViewOffIcon : ViewIcon}
                   size={18}
                   color={errors.confirmPassword ? "#dc2626" : "#6b7280"}
                 />
@@ -340,7 +353,7 @@ export default function RegisterScreen() {
             activeOpacity={0.7}
             className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
           >
-            <Feather name="arrow-left" size={20} color="#1f2937" />
+            <HugeiconsIcon icon={ArrowLeft02Icon} size={20} color="#1f2937" />
           </TouchableOpacity>
 
           {/* Step dots */}
@@ -353,13 +366,11 @@ export default function RegisterScreen() {
                   height: 8,
                   borderRadius: 4,
                   backgroundColor: i === step ? "#000" : i < step ? "#000" : "#e5e7eb",
-                  transition: "width 0.3s",
                 }}
               />
             ))}
           </View>
 
-          {/* Spacer to balance back button */}
           <View className="w-10" />
         </View>
 
@@ -379,7 +390,7 @@ export default function RegisterScreen() {
         {/* ── General Error ── */}
         {errors.general && (
           <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex-row items-center gap-3">
-            <Feather name="alert-circle" size={20} color="#dc2626" />
+            <HugeiconsIcon icon={Alert01Icon} size={20} color="#dc2626" />
             <Text className="flex-1 text-red-700 font-semibold text-sm">{errors.general}</Text>
           </View>
         )}
@@ -401,18 +412,18 @@ export default function RegisterScreen() {
               <Text className="text-white font-bold text-base">
                 {isLastStep ? "Create account" : "Continue"}
               </Text>
-              {!isLastStep && <Feather name="arrow-right" size={18} color="white" />}
+              {!isLastStep && <HugeiconsIcon icon={ArrowRight02Icon} size={18} color="white" />}
             </View>
           )}
         </TouchableOpacity>
 
-        {/* ── Divider & sign in ── */}
+        {/* Divider & sign in */}
         {step === 0 && (
           <>
             <View className="flex-row items-center gap-3 my-4">
-              <View className="flex-1 h-px bg-slate-200" />
+              <div className="flex-1 h-px bg-slate-200" />
               <Text className="text-slate-500 text-xs font-medium">OR</Text>
-              <View className="flex-1 h-px bg-slate-200" />
+              <div className="flex-1 h-px bg-slate-200" />
             </View>
 
             <View className="flex-row justify-center items-center">
@@ -424,7 +435,7 @@ export default function RegisterScreen() {
           </>
         )}
 
-        {/* ── Terms (last step) ── */}
+        {/* Terms (last step) */}
         {isLastStep && (
           <View className="mt-4 items-center">
             <Text className="text-slate-500 text-xs text-center leading-5">

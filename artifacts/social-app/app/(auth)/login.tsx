@@ -1,8 +1,15 @@
-import { Feather } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { Mail01Icon,LockPasswordIcon } from '@hugeicons-pro/core-stroke-rounded';
+import {
+  Mail01Icon,
+  LockPasswordIcon,
+  Alert01Icon,
+  CheckmarkCircle01Icon,
+  InformationCircleIcon,
+  ViewIcon,
+  ViewOffIcon
+} from '@hugeicons-pro/core-stroke-rounded';
 
 import {
   ActivityIndicator,
@@ -13,51 +20,51 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { getApiBaseUrl } from "@/lib/apiUrl";
-import { Image } from "react-native";
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { login } = useAuth();
-
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
-
+  const [errors, setErrors] = useState < { email ? : string;password ? : string;general ? : string } > ({});
+  
   const validateForm = () => {
     const newErrors: typeof errors = {};
-
+    
     if (!email.trim()) {
       newErrors.email = "Email address is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       newErrors.email = "Please enter a valid email address";
     }
-
+    
     if (!password.trim()) {
       newErrors.password = "Password is required";
     } else if (password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  
   const handleLogin = async () => {
     setErrors({});
-
+    
     if (!validateForm()) {
       return;
     }
-
+    
     setIsLoading(true);
     try {
       const baseUrl = getApiBaseUrl();
@@ -66,16 +73,16 @@ export default function LoginScreen() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password }),
       });
-
+      
       const data = await response.json();
-
+      
       if (!response.ok) {
         setErrors({
           general: data.message || "Invalid email or password. Please try again.",
         });
         return;
       }
-
+      
       await login(data.token, data.user);
     } catch (error) {
       setErrors({
@@ -85,10 +92,10 @@ export default function LoginScreen() {
       setIsLoading(false);
     }
   };
-
+  
   const topPt = insets.top + (Platform.OS === "web" ? 24 : 0);
   const bottomPb = insets.bottom + 24;
-
+  
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-white"
@@ -121,7 +128,7 @@ export default function LoginScreen() {
         {/* General Error Alert */}
         {errors.general && (
           <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex-row items-center gap-3">
-            <Feather name="alert-circle" size={20} color="#dc2626" />
+            <HugeiconsIcon icon={Alert01Icon} size={20} color="#dc2626" />
             <Text className="flex-1 text-red-700 font-semibold text-sm">
               {errors.general}
             </Text>
@@ -142,12 +149,12 @@ export default function LoginScreen() {
                   : "border-slate-300"
             }`}
           >
-    <HugeiconsIcon
-      icon={Mail01Icon}
-      size={18}
-      color="currentColor"
-      strokeWidth={1}
-    />
+            <HugeiconsIcon
+              icon={Mail01Icon}
+              size={18}
+              color={emailFocused ? "#000" : "#64748b"}
+              strokeWidth={1}
+            />
             <TextInput
               className="flex-1 ml-3 outline-none text-black-900 text-base font-medium"
               placeholder="your.email@example.com"
@@ -165,12 +172,12 @@ export default function LoginScreen() {
               editable={!isLoading}
             />
             {email && !errors.email && (
-              <Feather name="check-circle" size={18} color="#10b981" />
+              <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} color="#10b981" />
             )}
           </View>
           {errors.email && (
             <View className="mt-2 flex-row items-center gap-1.5">
-              <Feather name="info" size={14} color="#dc2626" />
+              <HugeiconsIcon icon={InformationCircleIcon} size={14} color="#dc2626" />
               <Text className="text-red-600 text-xs font-medium">
                 {errors.email}
               </Text>
@@ -192,12 +199,12 @@ export default function LoginScreen() {
                   : "border-slate-300"
             }`}
           >
-    <HugeiconsIcon
-      icon={LockPasswordIcon}
-      size={18}
-      color="currentColor"
-      strokeWidth={1}
-    />
+            <HugeiconsIcon
+              icon={LockPasswordIcon}
+              size={18}
+              color={passwordFocused ? "#000" : "#64748b"}
+              strokeWidth={1}
+            />
             <TextInput
               className="flex-1 ml-3 outline-none text-gray-900 text-base font-medium"
               placeholder="Enter your password"
@@ -217,8 +224,8 @@ export default function LoginScreen() {
               disabled={isLoading}
               className="p-1"
             >
-              <Feather
-                name={showPassword ? "eye-off" : "eye"}
+              <HugeiconsIcon
+                icon={showPassword ? ViewOffIcon : ViewIcon}
                 size={18}
                 color={errors.password ? "#dc2626" : "#6b7280"}
               />
@@ -226,7 +233,7 @@ export default function LoginScreen() {
           </View>
           {errors.password && (
             <View className="mt-2 flex-row items-center gap-1.5">
-              <Feather name="info" size={14} color="#dc2626" />
+              <HugeiconsIcon icon={InformationCircleIcon} size={14} color="#dc2626" />
               <Text className="text-red-600 text-xs font-medium">
                 {errors.password}
               </Text>
@@ -243,11 +250,7 @@ export default function LoginScreen() {
 
         {/* Sign In Button */}
         <TouchableOpacity
-          className={`h-14 rounded-full items-center justify-center mb-4 transition-opacity text-white ${
-            isLoading || !email || !password
-              ? "bg-black"
-              : "bg-black"
-          }`}
+          className="h-14 rounded-full items-center justify-center mb-4 bg-black"
           onPress={handleLogin}
           disabled={isLoading || !email || !password}
           activeOpacity={0.8}
