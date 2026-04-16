@@ -14,7 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { getApiBaseUrl } from "@/lib/apiUrl";
-
+import { Image } from "react-native";
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -101,7 +101,7 @@ export default function LoginScreen() {
       >
         {/* Logo */}
         <View className="items-center mb-12">
-        <Image source={require('./assets/images/placeholder-logo.svg')} style={{width: 50, height: 50}} />
+        <Image source={require('@/assets/images/placeholder-logo.svg')} style={{width: 50, height: 50}} />
 
         </View>
 
