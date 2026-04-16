@@ -10,12 +10,10 @@ import {
 } from '@hugeicons/core-free-icons';
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { Dimensions, Image, Platform, Text, TouchableOpacity, View } from "react-native";
+import React, { useState, useCallback } from "react";
+import { Image, Platform, Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "./UserAvatar";
-
-const { width } = Dimensions.get("window");
 
 interface Author {
   id: string;
@@ -30,7 +28,6 @@ interface PostCardProps {
   author: Author;
   content?: string | null;
   imageUrl?: string | null;
-  location?: string | null;
   hashtags?: string[];
   likesCount: number;
   commentsCount: number;
@@ -50,24 +47,26 @@ export function PostCard({
 }: PostCardProps) {
   const colors = useColors();
   const router = useRouter();
+  
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
   const [isSaved, setIsSaved] = useState(initialIsSaved);
 
-  const handleLike = async () => {
+  // Optimized Handlers
+  const handleLike = useCallback(async () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const newLiked = !isLiked;
     setIsLiked(newLiked);
-    setLikesCount((c) => c + (newLiked ? 1 : -1));
+    setLikesCount((prev) => prev + (newLiked ? 1 : -1));
     onLike?.(id, newLiked);
-  };
+  }, [isLiked, id, onLike]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const newSaved = !isSaved;
     setIsSaved(newSaved);
     onSave?.(id, newSaved);
-  };
+  }, [isSaved, id, onSave]);
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -79,17 +78,20 @@ export function PostCard({
     return `${Math.floor(h / 24)}d`;
   };
 
+  const navigateToPost = () => router.push({ pathname: "/post/[id]", params: { id } });
+  const navigateToProfile = () => router.push({ pathname: "/profile/[id]", params: { id: author.id } });
+
   return (
     <TouchableOpacity 
       activeOpacity={1}
-      onPress={() => router.push(`/post/${id}` as any)}
+      onPress={navigateToPost}
       className="flex-row px-4 py-3" 
-      style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
+      style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border || '#ccc' }}
     >
       {/* Sidebar Avatar */}
       <View className="mr-3">
-        <TouchableOpacity onPress={() => router.push(`/profile/${author.id}` as any)}>
-          <UserAvatar uri={author.avatarUrl} size={45} />
+        <TouchableOpacity onPress={navigateToProfile}>
+          <UserAvatar uri={author.avatarUrl} size={48} />
         </TouchableOpacity>
       </View>
 
@@ -97,7 +99,7 @@ export function PostCard({
       <View className="flex-1">
         {/* Header: Name, Username, Time */}
         <View className="flex-row items-center justify-between mb-0.5">
-          <View className="flex-row items-center flex-shrink">
+          <View className="flex-row items-center flex-1 flex-shrink">
             <Text 
               numberOfLines={1}
               className="font-bold text-[15px] mr-1" 
@@ -106,85 +108,104 @@ export function PostCard({
               {author.displayName}
             </Text>
             {author.isVerified && (
-              <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} color="#1d9bf0" variant="solid" />
+              <View className="mr-1">
+                <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} color="#1d9bf0" variant="solid" />
+              </View>
             )}
             <Text 
               numberOfLines={1}
-              className="ml-1 text-[15px]" 
+              className="text-[14px] flex-shrink" 
               style={{ color: colors.mutedForeground }}
             >
               @{author.username} · {timeAgo(createdAt)}
             </Text>
           </View>
+          
           <TouchableOpacity hitSlop={12}>
             <HugeiconsIcon icon={MoreHorizontalIcon} size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
         </View>
 
-        {/* Caption/Content */}
+        {/* Caption */}
         {content && (
           <Text className="text-[15px] leading-5 mb-2" style={{ color: colors.foreground }}>
             {content}
-            {hashtags.length > 0 && (
-              <Text className="text-primary"> {hashtags.map(t => `#${t}`).join(" ")}</Text>
-            )}
           </Text>
         )}
 
-        {/* Media (X style: Rounded corners and border) */}
+        {/* Hashtags */}
+        {hashtags.length > 0 && (
+          <View className="flex-row flex-wrap mb-2">
+            {hashtags.map((tag, idx) => (
+              <Text key={`${id}-${idx}`} className="text-[#1d9bf0] mr-1.5 text-[15px]">
+                #{tag}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {/* Media */}
         {imageUrl && (
-          <View className="rounded-2xl overflow-hidden border mb-3" style={{ borderColor: colors.border }}>
+          <View className="rounded-2xl overflow-hidden border mb-3" style={{ borderColor: colors.border || '#eee' }}>
             <Image
               source={{ uri: imageUrl }}
-              style={{ width: '100%', aspectRatio: 16 / 9 }}
+              style={{ width: '100%', aspectRatio: 1.77 }} // 16:9 ratio
               resizeMode="cover"
             />
           </View>
         )}
 
-        {/* Action Bar: Reply, Repost, Like, Save/Share */}
-        <View className="flex-row justify-between items-center pr-4">
+        {/* Action Bar */}
+        <View className="flex-row justify-between items-center pr-6 mt-1">
+          {/* Reply */}
           <TouchableOpacity 
             onPress={() => onComment?.(id)}
-            className="flex-row items-center gap-2 group"
+            className="flex-row items-center gap-2"
+            hitSlop={10}
           >
             <HugeiconsIcon icon={AiChatIcon} size={18} color={colors.mutedForeground} />
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>{commentsCount}</Text>
+            <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>{commentsCount}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-row items-center gap-2">
+          {/* Repost (ArrowUp) */}
+          <TouchableOpacity className="flex-row items-center gap-2" hitSlop={10}>
             <HugeiconsIcon icon={ArrowUp01Icon} size={18} color={colors.mutedForeground} />
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>{Math.floor(likesCount / 3)}</Text>
+            <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>
+              {Math.floor(likesCount / 2.5)} 
+            </Text>
           </TouchableOpacity>
 
+          {/* Like */}
           <TouchableOpacity 
             onPress={handleLike}
             className="flex-row items-center gap-2"
+            hitSlop={10}
           >
             <HugeiconsIcon 
               icon={FavouriteIcon} 
               size={18} 
-              color={isLiked ? colors.destructive : colors.mutedForeground} 
+              color={isLiked ? "#f91880" : colors.mutedForeground} 
               variant={isLiked ? "solid" : "stroke"}
             />
             <Text 
-              className="text-xs" 
-              style={{ color: isLiked ? colors.destructive : colors.mutedForeground }}
+              className="text-[13px]" 
+              style={{ color: isLiked ? "#f91880" : colors.mutedForeground }}
             >
               {likesCount}
             </Text>
           </TouchableOpacity>
 
+          {/* Save/Share Group */}
           <View className="flex-row items-center gap-4">
-            <TouchableOpacity onPress={handleSave}>
+            <TouchableOpacity onPress={handleSave} hitSlop={10}>
               <HugeiconsIcon 
                 icon={Bookmark02Icon} 
                 size={18} 
-                color={isSaved ? colors.primary : colors.mutedForeground} 
+                color={isSaved ? "#1d9bf0" : colors.mutedForeground} 
                 variant={isSaved ? "solid" : "stroke"}
               />
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity hitSlop={10}>
               <HugeiconsIcon icon={Share01Icon} size={18} color={colors.mutedForeground} />
             </TouchableOpacity>
           </View>
