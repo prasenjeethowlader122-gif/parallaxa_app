@@ -1,141 +1,112 @@
-import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useRef } from "react";
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import { SentIcon, Image01Icon, Search01Icon } from '@hugeicons-pro/core-stroke-rounded';
+
 import {
-  ActivityIndicator, FlatList, Platform, RefreshControl, ScrollView, Text, TouchableOpacity, View,
+  ActivityIndicator,
+  FlatList,
+  Platform,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  View,
+  Animated,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useGetFeed, useGetStories, useLikePost, useUnlikePost, useSavePost, useUnsavePost } from "@workspace/api-client-react";
+import { useGetFeed, useGetStories } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
-import { useAuth } from "@/context/AuthContext";
 import { PostCard } from "@/components/PostCard";
-import { StoryCircle } from "@/components/StoryCircle";
 import { EmptyState } from "@/components/EmptyState";
+
+const TABS = ["For You", "Following", "Trending"];
 
 export default function FeedScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user } = useAuth();
-  const [refreshing, setRefreshing] = useState(false);
-
+  const [activeTab, setActiveTab] = useState(0);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  
   const { data: feedData, isLoading: feedLoading, refetch: refetchFeed } = useGetFeed();
-  const { data: storiesData, refetch: refetchStories } = useGetStories();
-  const { mutate: likePost } = useLikePost();
-  const { mutate: unlikePost } = useUnlikePost();
-  const { mutate: savePost } = useSavePost();
-  const { mutate: unsavePost } = useUnsavePost();
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await Promise.all([refetchFeed(), refetchStories()]);
-    setRefreshing(false);
-  }, [refetchFeed, refetchStories]);
-
-  const handleLike = (postId: string, liked: boolean) => {
-    if (liked) likePost({ postId });
-    else unlikePost({ postId });
-  };
-
-  const handleSave = (postId: string, saved: boolean) => {
-    if (saved) savePost({ postId });
-    else unsavePost({ postId });
-  };
-
-  const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
   const posts = feedData?.posts ?? [];
-
-  const StoriesHeader = () => (
-    <View>
-      <View
-        className="flex-row justify-between items-center px-4 pb-3"
-        style={{
-          paddingTop: topPadding,
-          backgroundColor: colors.background,
-          borderBottomWidth: 0.5,
-          borderBottomColor: colors.border,
-        }}
-      >
-        <Text className="text-[26px] font-bold -tracking-tight" style={{ color: colors.foreground }}>
+  
+  const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
+  
+  // Layout Fix: Sticky Top Slider
+  const SliderNav = () => (
+    <View 
+      className="z-50 w-full border-b" 
+      style={{ 
+        paddingTop: topPadding, 
+        backgroundColor: colors.background,
+        borderColor: colors.border + '30'
+      }}
+    >
+      <View className="flex-row justify-between items-center px-5 mb-2">
+        <Text className="text-2xl font-black tracking-tighter" style={{ color: colors.foreground }}>
           Pulse
         </Text>
-        <View className="flex-row gap-1">
-          <TouchableOpacity onPress={() => router.push("/messages" as any)} className="p-1.5">
-            <Feather name="send" size={24} color={colors.foreground} />
-          </TouchableOpacity>
+        <View className="flex-row gap-3">
+            <TouchableOpacity className="p-2"><HugeiconsIcon icon={Search01Icon} size={22} color={colors.foreground} /></TouchableOpacity>
+            <TouchableOpacity className="p-2"><HugeiconsIcon icon={SentIcon} size={22} color={colors.foreground} /></TouchableOpacity>
         </View>
       </View>
 
-      {storiesData && storiesData.length > 0 && (
-        <View className="py-2.5" style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 8 }}>
-            <StoryCircle
-              userId={user?.id ?? ""}
-              username="Your story"
-              avatarUrl={user?.avatarUrl}
-              hasUnviewed={false}
-              isOwn
-              onPress={() => router.push("/(tabs)/create" as any)}
-            />
-            {storiesData.map((group: any) => (
-              <StoryCircle
-                key={group.user.id}
-                userId={group.user.id}
-                username={group.user.username}
-                avatarUrl={group.user.avatarUrl}
-                hasUnviewed={group.hasUnviewed}
-                onPress={() => router.push(`/story/${group.user.id}` as any)}
-              />
-            ))}
-          </ScrollView>
-        </View>
-      )}
+      <View className="flex-row px-2">
+        {TABS.map((tab, index) => {
+          const isActive = activeTab === index;
+          return (
+            <TouchableOpacity
+              key={tab}
+              onPress={() => setActiveTab(index)}
+              className="py-3 px-4 items-center justify-center"
+              activeOpacity={0.7}
+            >
+              <Text 
+                className={`text-sm font-bold transition-all ${isActive ? "opacity-100" : "opacity-40"}`}
+                style={{ color: colors.foreground }}
+              >
+                {tab}
+              </Text>
+              {isActive && (
+                <Animated.View 
+                  className="absolute bottom-0 h-1 w-8 rounded-full bg-black" 
+                  layout={Animated.Layout}
+                />
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
-
+  
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
+      {/* Fixed Slider Navigation */}
+      <SliderNav />
+
       <FlatList
         data={posts}
         keyExtractor={(item: any) => item.id}
-        renderItem={({ item }: { item: any }) => (
-          <PostCard
-            id={item.id}
-            author={item.author}
-            content={item.content}
-            imageUrl={item.imageUrl}
-            location={item.location}
-            hashtags={item.hashtags}
-            likesCount={item.likesCount}
-            commentsCount={item.commentsCount}
-            isLiked={item.isLiked}
-            isSaved={item.isSaved}
-            createdAt={item.createdAt}
-            onLike={handleLike}
-            onSave={handleSave}
-          />
-        )}
-        ListHeaderComponent={<StoriesHeader />}
+        renderItem={({ item }) => <PostCard {...item} />}
         ListEmptyComponent={
           feedLoading ? (
-            <View className="p-10 items-center">
-              <ActivityIndicator size="large" color={colors.primary} />
-            </View>
+            <View className="py-20 items-center"><ActivityIndicator color={colors.primary} /></View>
           ) : (
-            <EmptyState
-              icon="image"
-              title="No posts yet"
-              subtitle="Follow people to see their posts here"
-              actionLabel="Explore"
-              onAction={() => router.push("/(tabs)/explore" as any)}
-            />
+            <EmptyState icon={Image01Icon} title="Nothing to see here" />
           )
         }
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+          <RefreshControl 
+            refreshing={false} 
+            onRefresh={refetchFeed} 
+            tintColor={colors.primary} 
+          />
         }
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={posts.length === 0 ? { flexGrow: 1 } : undefined}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
       />
     </View>
   );
