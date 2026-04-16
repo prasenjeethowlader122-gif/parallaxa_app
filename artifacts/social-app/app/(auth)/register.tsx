@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -16,14 +15,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { getApiBaseUrl } from "@/lib/apiUrl";
 
-const X = {
-  bg: "#000000",
-  surface: "#16181C",
-  border: "#2F3336",
-  accent: "#1D9BF0",
-  white: "#E7E9EA",
-  muted: "#71767B",
-  inputBg: "#000000",
+type FormErrors = {
+  displayName?: string;
+  username?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  general?: string;
 };
 
 type FloatingInputProps = {
@@ -33,7 +31,13 @@ type FloatingInputProps = {
   keyboardType?: any;
   autoCapitalize?: any;
   secureTextEntry?: boolean;
+  placeholder?: string;
+  error?: string;
+  focused: boolean;
+  onFocus: () => void;
+  onBlur: () => void;
   rightElement?: React.ReactNode;
+  disabled?: boolean;
 };
 
 function FloatingInput({
@@ -43,57 +47,54 @@ function FloatingInput({
   keyboardType,
   autoCapitalize = "none",
   secureTextEntry = false,
+  placeholder,
+  error,
+  focused,
+  onFocus,
+  onBlur,
   rightElement,
+  disabled = false,
 }: FloatingInputProps) {
-  const [focused, setFocused] = useState(false);
-  const lifted = focused || value.length > 0;
+  const isValid = value && !error;
 
   return (
-    <View
-      style={{
-        borderWidth: 1,
-        borderColor: focused ? X.accent : X.border,
-        borderRadius: 4,
-        backgroundColor: X.inputBg,
-        height: 56,
-        flexDirection: "row",
-        alignItems: "flex-end",
-        paddingHorizontal: 14,
-        paddingBottom: 10,
-        position: "relative",
-        marginBottom: 16,
-      }}
-    >
-      <Text
-        style={{
-          position: "absolute",
-          left: 14,
-          top: lifted ? 6 : 17,
-          fontSize: lifted ? 11 : 15,
-          color: focused ? X.accent : X.muted,
-          fontWeight: "400",
-        }}
-      >
+    <View className="mb-4">
+      <Text className={`text-sm font-semibold mb-2 ${focused ? "text-blue-600" : "text-slate-700"}`}>
         {label}
       </Text>
-      <TextInput
-        style={{
-          flex: 1,
-          color: X.white,
-          fontSize: 17,
-          marginTop: 14,
-          outlineStyle: "none",
-        } as any}
-        value={value}
-        onChangeText={onChangeText}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        keyboardType={keyboardType}
-        autoCapitalize={autoCapitalize}
-        autoCorrect={false}
-        secureTextEntry={secureTextEntry}
-      />
-      {rightElement}
+      <View
+        className={`border rounded-lg px-4 py-3 flex-row items-center ${
+          focused
+            ? "border-blue-500 bg-blue-50"
+            : error
+              ? "border-red-300 bg-red-50"
+              : "border-slate-200 bg-white"
+        }`}
+      >
+        <TextInput
+          className="flex-1 text-slate-900 text-base"
+          placeholder={placeholder || label}
+          placeholderTextColor="#d1d5db"
+          value={value}
+          onChangeText={onChangeText}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          autoCorrect={false}
+          secureTextEntry={secureTextEntry}
+          editable={!disabled}
+        />
+        {isValid && (
+          <Feather name="check-circle" size={20} color="#10b981" />
+        )}
+        {rightElement}
+      </View>
+      {error && (
+        <Text className="mt-1.5 text-red-600 text-sm font-medium">
+          {error}
+        </Text>
+      )}
     </View>
   );
 }
@@ -107,18 +108,69 @@ export default function RegisterScreen() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const [displayNameFocused, setDisplayNameFocused] = useState(false);
+  const [usernameFocused, setUsernameFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    // Display Name validation
+    if (!displayName.trim()) {
+      newErrors.displayName = "Name is required";
+    } else if (displayName.trim().length < 2) {
+      newErrors.displayName = "Name must be at least 2 characters";
+    }
+
+    // Username validation
+    if (!username.trim()) {
+      newErrors.username = "Username is required";
+    } else if (username.trim().length < 3) {
+      newErrors.username = "Username must be at least 3 characters";
+    } else if (!/^[a-zA-Z0-9_-]+$/.test(username.trim())) {
+      newErrors.username = "Username can only contain letters, numbers, underscores, and hyphens";
+    }
+
+    // Email validation
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!email.includes("@")) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    // Password validation
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    // Confirm Password validation
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleRegister = async () => {
-    if (!displayName.trim() || !username.trim() || !email.trim() || !password.trim()) {
-      Alert.alert("Error", "Please fill in all fields");
+    setErrors({});
+
+    if (!validateForm()) {
       return;
     }
-    if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters");
-      return;
-    }
+
     setIsLoading(true);
     try {
       const baseUrl = getApiBaseUrl();
@@ -132,168 +184,216 @@ export default function RegisterScreen() {
           password,
         }),
       });
+
       const data = await response.json();
+
       if (!response.ok) {
-        Alert.alert("Registration Failed", data.message ?? "Could not create account");
+        setErrors({
+          general:
+            data.message ||
+            "Registration failed. Please check your information and try again.",
+        });
         return;
       }
+
       await login(data.token, data.user);
-    } catch {
-      Alert.alert("Error", "Could not connect to server. Please try again.");
+    } catch (error) {
+      setErrors({
+        general:
+          "Could not connect to server. Please check your internet connection and try again.",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const topPt = insets.top + (Platform.OS === "web" ? 67 : 0);
+  const topPt = insets.top + (Platform.OS === "web" ? 16 : 0);
   const bottomPb = insets.bottom + 24;
+
+  const isFormValid =
+    displayName.trim() &&
+    username.trim() &&
+    email.trim() &&
+    password &&
+    confirmPassword &&
+    !errors.displayName &&
+    !errors.username &&
+    !errors.email &&
+    !errors.password &&
+    !errors.confirmPassword;
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: X.bg }}
+      className="flex-1 bg-white"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
         contentContainerStyle={{
-          paddingHorizontal: 40,
+          paddingHorizontal: 24,
           paddingTop: topPt + 16,
           paddingBottom: bottomPb,
         }}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {/* Header row: back + X logo */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 36,
-          }}
-        >
+        {/* Header row: back + logo */}
+        <View className="flex-row items-center justify-between mb-8">
           <TouchableOpacity
             onPress={() => router.back()}
-            style={{
-              width: 36,
-              height: 36,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 18,
-            }}
+            disabled={isLoading}
             activeOpacity={0.7}
+            className="w-9 h-9 items-center justify-center rounded-full bg-slate-100"
           >
-            <Feather name="x" size={20} color={X.white} />
+            <Feather name="arrow-left" size={20} color="#1f2937" />
           </TouchableOpacity>
 
-          {/* X Logo centered */}
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "900",
-              color: X.white,
-              fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-            }}
-          >
-            ✕
-          </Text>
+          <Text className="text-2xl font-black text-slate-900">Parallaxa</Text>
 
-          {/* Spacer to balance the back button */}
-          <View style={{ width: 36 }} />
+          <View className="w-9" />
         </View>
 
         {/* Heading */}
-        <Text
-          style={{
-            fontSize: 31,
-            fontWeight: "800",
-            color: X.white,
-            marginBottom: 8,
-            letterSpacing: -0.5,
-            fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-          }}
-        >
-          Create your account
+        <Text className="text-3xl font-bold text-slate-900 mb-1">
+          Create account
         </Text>
-        <Text style={{ color: X.muted, fontSize: 15, marginBottom: 32 }}>
-          Step 1 of 1
+        <Text className="text-base text-slate-500 mb-6">
+          Join our community today
         </Text>
 
-        {/* Fields */}
+        {/* General Error */}
+        {errors.general && (
+          <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <View className="flex-row items-start gap-3">
+              <Feather name="alert-circle" size={20} color="#dc2626" className="mt-0.5" />
+              <Text className="flex-1 text-red-700 font-medium">{errors.general}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Form Fields */}
         <FloatingInput
-          label="Name"
+          label="Full Name"
+          placeholder="John Doe"
           value={displayName}
           onChangeText={setDisplayName}
           autoCapitalize="words"
+          error={errors.displayName}
+          focused={displayNameFocused}
+          onFocus={() => setDisplayNameFocused(true)}
+          onBlur={() => setDisplayNameFocused(false)}
+          disabled={isLoading}
         />
 
         <FloatingInput
           label="Username"
+          placeholder="john_doe"
           value={username}
           onChangeText={setUsername}
+          error={errors.username}
+          focused={usernameFocused}
+          onFocus={() => setUsernameFocused(true)}
+          onBlur={() => setUsernameFocused(false)}
+          disabled={isLoading}
         />
 
         <FloatingInput
           label="Email"
+          placeholder="john@example.com"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
+          error={errors.email}
+          focused={emailFocused}
+          onFocus={() => setEmailFocused(true)}
+          onBlur={() => setEmailFocused(false)}
+          disabled={isLoading}
         />
 
         <FloatingInput
           label="Password"
+          placeholder="At least 6 characters"
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
+          error={errors.password}
+          focused={passwordFocused}
+          onFocus={() => setPasswordFocused(true)}
+          onBlur={() => setPasswordFocused(false)}
           rightElement={
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
-              style={{ paddingLeft: 8, paddingBottom: 2 }}
+              disabled={isLoading}
+              className="ml-2"
             >
-              <Feather name={showPassword ? "eye-off" : "eye"} size={18} color={X.muted} />
+              <Feather
+                name={showPassword ? "eye-off" : "eye"}
+                size={20}
+                color="#6b7280"
+              />
             </TouchableOpacity>
           }
+          disabled={isLoading}
+        />
+
+        <FloatingInput
+          label="Confirm Password"
+          placeholder="Repeat your password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry={!showConfirmPassword}
+          error={errors.confirmPassword}
+          focused={confirmPasswordFocused}
+          onFocus={() => setConfirmPasswordFocused(true)}
+          onBlur={() => setConfirmPasswordFocused(false)}
+          rightElement={
+            <TouchableOpacity
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              disabled={isLoading}
+              className="ml-2"
+            >
+              <Feather
+                name={showConfirmPassword ? "eye-off" : "eye"}
+                size={20}
+                color="#6b7280"
+              />
+            </TouchableOpacity>
+          }
+          disabled={isLoading}
         />
 
         {/* Terms note */}
-        <Text style={{ color: X.muted, fontSize: 13, lineHeight: 18, marginBottom: 32 }}>
-          By signing up, you agree to the{" "}
-          <Text style={{ color: X.accent }}>Terms of Service</Text>
+        <Text className="text-slate-600 text-xs leading-5 mb-6">
+          By signing up, you agree to our{" "}
+          <Text className="text-blue-600 font-semibold">Terms of Service</Text>
           {" "}and{" "}
-          <Text style={{ color: X.accent }}>Privacy Policy</Text>
+          <Text className="text-blue-600 font-semibold">Privacy Policy</Text>
           , including{" "}
-          <Text style={{ color: X.accent }}>Cookie Use</Text>.
-          X may use your contact information, including your email address and phone number for
-          purposes outlined in our Privacy Policy.{" "}
-          <Text style={{ color: X.accent }}>Learn more</Text>
+          <Text className="text-blue-600 font-semibold">Cookie Use</Text>.
         </Text>
 
-        {/* Create account button */}
+        {/* Create Account Button */}
         <TouchableOpacity
-          style={{
-            height: 52,
-            borderRadius: 26,
-            backgroundColor: X.white,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: isLoading ? 0.8 : 1,
-          }}
+          className={`h-14 rounded-lg items-center justify-center mb-4 ${
+            isLoading || !isFormValid ? "bg-slate-200" : "bg-blue-600"
+          }`}
           onPress={handleRegister}
-          disabled={isLoading}
-          activeOpacity={0.88}
+          disabled={isLoading || !isFormValid}
+          activeOpacity={0.8}
         >
           {isLoading ? (
-            <ActivityIndicator color={X.bg} />
+            <ActivityIndicator color="white" />
           ) : (
-            <Text style={{ fontSize: 15, fontWeight: "700", color: X.bg, letterSpacing: 0.1 }}>
-              Create account
-            </Text>
+            <Text className="text-white font-bold text-base">Create account</Text>
           )}
         </TouchableOpacity>
 
         {/* Sign in link */}
-        <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 20 }}>
-          <Text style={{ color: X.muted, fontSize: 15 }}>Have an account? </Text>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={{ color: X.accent, fontSize: 15, fontWeight: "700" }}>Log in</Text>
+        <View className="flex-row justify-center items-center">
+          <Text className="text-slate-600 text-base">
+            Already have an account?{" "}
+          </Text>
+          <TouchableOpacity onPress={() => router.back()} disabled={isLoading}>
+            <Text className="text-blue-600 font-bold text-base">Log in</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
