@@ -26,9 +26,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-// Ensure these paths are correct in your project
-// import { useAuth } from "@/context/AuthContext";
-// import { getApiBaseUrl } from "@/lib/apiUrl";
 
 type FormErrors = {
   displayName?: string;
@@ -50,9 +47,7 @@ const STEPS = [
 export default function RegisterScreen() {
   const insets  = useSafeAreaInsets();
   const router  = useRouter();
-  // const { login } = useAuth(); // Uncomment when ready
 
-  /* ─── form state ─── */
   const [step, setStep]                   = useState(0);
   const [displayName, setDisplayName]     = useState("");
   const [username, setUsername]           = useState("");
@@ -64,7 +59,6 @@ export default function RegisterScreen() {
   const [isLoading, setIsLoading]         = useState(false);
   const [errors, setErrors]               = useState<FormErrors>({});
 
-  /* ─── focus state ─── */
   const [displayNameFocused, setDNF]   = useState(false);
   const [usernameFocused,    setUNF]   = useState(false);
   const [emailFocused,       setEF]    = useState(false);
@@ -78,25 +72,25 @@ export default function RegisterScreen() {
     const newErrors: FormErrors = {};
 
     if (step === 0) {
-      if (!displayName.trim())                 newErrors.displayName = "Full name is required";
-      else if (displayName.trim().length < 2)  newErrors.displayName = "Name must be at least 2 characters";
+      if (!displayName.trim())                newErrors.displayName = "Full name is required";
+      else if (displayName.trim().length < 2) newErrors.displayName = "Name must be at least 2 characters";
       
-      if (!username.trim())                    newErrors.username = "Username is required";
+      if (!username.trim())                   newErrors.username = "Username is required";
       else if (!/^[a-zA-Z0-9_-]+$/.test(username.trim()))
         newErrors.username = "Letters, numbers, _ and - only";
     }
 
     if (step === 1) {
-      if (!email.trim())                       newErrors.email = "Email address is required";
+      if (!email.trim())                      newErrors.email = "Email address is required";
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
         newErrors.email = "Please enter a valid email address";
     }
 
     if (step === 2) {
-      if (!password)                   newErrors.password = "Password is required";
-      else if (password.length < 6)    newErrors.password = "Password must be at least 6 characters";
+      if (!password)                          newErrors.password = "Password is required";
+      else if (password.length < 6)           newErrors.password = "Password must be at least 6 characters";
 
-      if (!confirmPassword)            newErrors.confirmPassword = "Please confirm your password";
+      if (!confirmPassword)                   newErrors.confirmPassword = "Please confirm your password";
       else if (password !== confirmPassword)  newErrors.confirmPassword = "Passwords do not match";
     }
 
@@ -104,7 +98,9 @@ export default function RegisterScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Fix 1: clear errors before validating on goNext
   const goNext = () => {
+    setErrors({});
     if (!validateStep()) return;
     if (step < TOTAL_STEPS - 1) setStep(s => s + 1);
   };
@@ -115,16 +111,11 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
+    setErrors({});
     if (!validateStep()) return;
     setIsLoading(true);
     try {
-      // Mocking the API call logic
-      // const baseUrl = getApiBaseUrl();
-      // const response = await fetch(`${baseUrl}/api/auth/register`, { ... });
-      // const data = await response.json();
       console.log("Registering...", { displayName, username, email, password });
-      
-      // await login(data.token, data.user);
     } catch {
       setErrors({ general: "Connection failed. Check your internet and try again." });
     } finally {
@@ -132,7 +123,8 @@ export default function RegisterScreen() {
     }
   };
 
-  /* ─── reusable input ─── */
+  // Fix 2: isPassword prop suppresses checkmark independently of secure
+  // Fix 3: value?.length guards against undefined crash
   const InputRow = ({
     icon,
     placeholder,
@@ -143,6 +135,7 @@ export default function RegisterScreen() {
     onBlur,
     error,
     secure = false,
+    isPassword = false,
     right,
     keyboardType,
     autoCapitalize = "none",
@@ -161,13 +154,11 @@ export default function RegisterScreen() {
         />
         <TextInput
           className="flex-1 ml-3 text-gray-900 text-base font-medium"
-          style={{ outlineStyle: 'none' } as any} // Fixed web outline
+          style={{ outlineStyle: 'none' } as any}
           placeholder={placeholder}
           placeholderTextColor="#9ca3af"
           value={value}
-          onChangeText={(t) => {
-            onChange(t);
-          }}
+          onChangeText={(t) => onChange(t)}
           onFocus={onFocus}
           onBlur={onBlur}
           secureTextEntry={secure}
@@ -176,7 +167,7 @@ export default function RegisterScreen() {
           autoCorrect={false}
           editable={!isLoading}
         />
-        {value.length > 0 && !error && !secure && (
+        {value?.length > 0 && !error && !isPassword && (
           <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} color="#10b981" />
         )}
         {right}
@@ -207,7 +198,7 @@ export default function RegisterScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Top bar ── */}
+        {/* Top bar */}
         <View className="flex-row items-center mb-10">
           <TouchableOpacity
             onPress={goBack}
@@ -233,7 +224,7 @@ export default function RegisterScreen() {
           <View className="w-10" />
         </View>
 
-        {/* ── Heading ── */}
+        {/* Heading */}
         <View className="mb-8">
           <Text className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
             Step {step + 1} of {TOTAL_STEPS}
@@ -246,7 +237,7 @@ export default function RegisterScreen() {
           </Text>
         </View>
 
-        {/* ── General Error ── */}
+        {/* General Error */}
         {errors.general && (
           <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex-row items-center gap-3">
             <HugeiconsIcon icon={Alert01Icon} size={20} color="#dc2626" />
@@ -254,7 +245,7 @@ export default function RegisterScreen() {
           </View>
         )}
 
-        {/* ── Step Content ── */}
+        {/* Step 0: Name & Username */}
         {step === 0 && (
           <>
             <Text className="text-slate-700 font-semibold mb-2 text-sm ml-1">Full Name</Text>
@@ -283,6 +274,7 @@ export default function RegisterScreen() {
           </>
         )}
 
+        {/* Step 1: Email */}
         {step === 1 && (
           <>
             <Text className="text-slate-700 font-semibold mb-2 text-sm ml-1">Email Address</Text>
@@ -300,6 +292,7 @@ export default function RegisterScreen() {
           </>
         )}
 
+        {/* Step 2: Password */}
         {step === 2 && (
           <>
             <Text className="text-slate-700 font-semibold mb-2 text-sm ml-1">Password</Text>
@@ -313,6 +306,7 @@ export default function RegisterScreen() {
               onBlur={() => setPF(false)}
               error={errors.password}
               secure={!showPassword}
+              isPassword
               right={
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="p-1">
                   <HugeiconsIcon icon={showPassword ? ViewOffIcon : ViewIcon} size={18} color="#6b7280" />
@@ -330,6 +324,7 @@ export default function RegisterScreen() {
               onBlur={() => setCF(false)}
               error={errors.confirmPassword}
               secure={!showConfirm}
+              isPassword
               right={
                 <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)} className="p-1">
                   <HugeiconsIcon icon={showConfirm ? ViewOffIcon : ViewIcon} size={18} color="#6b7280" />
@@ -339,7 +334,7 @@ export default function RegisterScreen() {
           </>
         )}
 
-        {/* ── Buttons ── */}
+        {/* Buttons */}
         <TouchableOpacity
           className="h-14 rounded-full bg-black items-center justify-center mt-2 mb-4"
           onPress={isLastStep ? handleRegister : goNext}
