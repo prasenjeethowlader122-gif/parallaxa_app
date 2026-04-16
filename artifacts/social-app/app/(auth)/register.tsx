@@ -1,9 +1,8 @@
-import AntDesign from '@expo/vector-icons/AntDesign';
+import { Feather } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -65,13 +64,13 @@ export default function RegisterScreen() {
     const newErrors: FormErrors = {};
 
     if (step === 0) {
-      if (!displayName.trim())              newErrors.displayName = "Full name is required";
+      if (!displayName.trim())               newErrors.displayName = "Full name is required";
       else if (displayName.trim().length < 2) newErrors.displayName = "Name must be at least 2 characters";
       else if (displayName.trim().length > 50) newErrors.displayName = "Name must be less than 50 characters";
 
-      if (!username.trim())                newErrors.username = "Username is required";
-      else if (username.trim().length < 3) newErrors.username = "Username must be at least 3 characters";
-      else if (username.trim().length > 30) newErrors.username = "Username must be less than 30 characters";
+      if (!username.trim())                  newErrors.username = "Username is required";
+      else if (username.trim().length < 3)   newErrors.username = "Username must be at least 3 characters";
+      else if (username.trim().length > 30)  newErrors.username = "Username must be less than 30 characters";
       else if (!/^[a-zA-Z0-9_-]+$/.test(username.trim()))
         newErrors.username = "Letters, numbers, _ and - only";
     }
@@ -87,8 +86,8 @@ export default function RegisterScreen() {
       else if (password.length < 6)   newErrors.password = "Password must be at least 6 characters";
       else if (password.length > 128) newErrors.password = "Password must be less than 128 characters";
 
-      if (!confirmPassword)              newErrors.confirmPassword = "Please confirm your password";
-      else if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+      if (!confirmPassword)                  newErrors.confirmPassword = "Please confirm your password";
+      else if (password !== confirmPassword)  newErrors.confirmPassword = "Passwords do not match";
     }
 
     setErrors(newErrors);
@@ -150,11 +149,18 @@ export default function RegisterScreen() {
     keyboardType,
     autoCapitalize = "none",
   }: {
-    icon: string; placeholder: string; value: string;
-    onChange: (t: string) => void; focused: boolean;
-    onFocus: () => void; onBlur: () => void; error?: string;
-    secure?: boolean; right?: React.ReactNode;
-    keyboardType?: any; autoCapitalize?: any;
+    icon: React.ComponentProps<typeof Feather>["name"];
+    placeholder: string;
+    value: string;
+    onChange: (t: string) => void;
+    focused: boolean;
+    onFocus: () => void;
+    onBlur: () => void;
+    error?: string;
+    secure?: boolean;
+    right?: React.ReactNode;
+    keyboardType?: any;
+    autoCapitalize?: any;
   }) => (
     <View className="mb-5">
       <View
@@ -166,8 +172,8 @@ export default function RegisterScreen() {
             : "border-gray-100"
         }`}
       >
-        <AntDesign
-          name={icon as any}
+        <Feather
+          name={icon}
           size={18}
           color={focused ? "#000" : error ? "#dc2626" : "#9ca3af"}
         />
@@ -178,7 +184,7 @@ export default function RegisterScreen() {
           value={value}
           onChangeText={(t) => {
             onChange(t);
-            if (error) setErrors(prev => ({ ...prev })); // clear on type handled per field
+            if (error) setErrors(prev => ({ ...prev }));
           }}
           onFocus={onFocus}
           onBlur={onBlur}
@@ -189,13 +195,13 @@ export default function RegisterScreen() {
           editable={!isLoading}
         />
         {value && !error && !secure && (
-          <AntDesign name="check-circle" size={18} color="#10b981" />
+          <Feather name="check-circle" size={18} color="#10b981" />
         )}
         {right}
       </View>
       {error && (
         <View className="mt-2 flex-row items-center gap-1.5">
-          <AntDesign name="info" size={14} color="#dc2626" />
+          <Feather name="info" size={14} color="#dc2626" />
           <Text className="text-red-600 text-xs font-medium">{error}</Text>
         </View>
       )}
@@ -210,10 +216,15 @@ export default function RegisterScreen() {
         <View className="mb-2">
           <Text className="text-slate-700 font-semibold mb-2 text-sm">Full Name</Text>
           <InputRow
-            icon="user" placeholder="John Doe"
-            value={displayName} onChange={(t) => { setDisplayName(t); setErrors(p => ({...p, displayName: undefined})); }}
-            focused={displayNameFocused} onFocus={() => setDNF(true)} onBlur={() => setDNF(false)}
-            error={errors.displayName} autoCapitalize="words"
+            icon="user"
+            placeholder="John Doe"
+            value={displayName}
+            onChange={(t) => { setDisplayName(t); setErrors(p => ({ ...p, displayName: undefined })); }}
+            focused={displayNameFocused}
+            onFocus={() => setDNF(true)}
+            onBlur={() => setDNF(false)}
+            error={errors.displayName}
+            autoCapitalize="words"
           />
         </View>
 
@@ -221,9 +232,13 @@ export default function RegisterScreen() {
         <View className="mb-2">
           <Text className="text-slate-700 font-semibold mb-2 text-sm">Username</Text>
           <InputRow
-            icon="at-sign" placeholder="john_doe"
-            value={username} onChange={(t) => { setUsername(t); setErrors(p => ({...p, username: undefined})); }}
-            focused={usernameFocused} onFocus={() => setUNF(true)} onBlur={() => setUNF(false)}
+            icon="at-sign"
+            placeholder="john_doe"
+            value={username}
+            onChange={(t) => { setUsername(t); setErrors(p => ({ ...p, username: undefined })); }}
+            focused={usernameFocused}
+            onFocus={() => setUNF(true)}
+            onBlur={() => setUNF(false)}
             error={errors.username}
           />
         </View>
@@ -234,10 +249,15 @@ export default function RegisterScreen() {
       <View className="mb-2">
         <Text className="text-slate-700 font-semibold mb-2 text-sm">Email Address</Text>
         <InputRow
-          icon="mail" placeholder="your.email@example.com"
-          value={email} onChange={(t) => { setEmail(t); setErrors(p => ({...p, email: undefined})); }}
-          focused={emailFocused} onFocus={() => setEF(true)} onBlur={() => setEF(false)}
-          error={errors.email} keyboardType="email-address"
+          icon="mail"
+          placeholder="your.email@example.com"
+          value={email}
+          onChange={(t) => { setEmail(t); setErrors(p => ({ ...p, email: undefined })); }}
+          focused={emailFocused}
+          onFocus={() => setEF(true)}
+          onBlur={() => setEF(false)}
+          error={errors.email}
+          keyboardType="email-address"
         />
       </View>
     );
@@ -247,13 +267,22 @@ export default function RegisterScreen() {
         <View className="mb-2">
           <Text className="text-slate-700 font-semibold mb-2 text-sm">Password</Text>
           <InputRow
-            icon="lock" placeholder="At least 6 characters"
-            value={password} onChange={(t) => { setPassword(t); setErrors(p => ({...p, password: undefined})); }}
-            focused={passwordFocused} onFocus={() => setPF(true)} onBlur={() => setPF(false)}
-            error={errors.password} secure={!showPassword}
+            icon="lock"
+            placeholder="At least 6 characters"
+            value={password}
+            onChange={(t) => { setPassword(t); setErrors(p => ({ ...p, password: undefined })); }}
+            focused={passwordFocused}
+            onFocus={() => setPF(true)}
+            onBlur={() => setPF(false)}
+            error={errors.password}
+            secure={!showPassword}
             right={
               <TouchableOpacity onPress={() => setShowPassword(v => !v)} disabled={isLoading} className="p-1">
-                <AntDesign name={showPassword ? "eye-off" : "eye"} size={18} color={errors.password ? "#dc2626" : "#6b7280"} />
+                <Feather
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={18}
+                  color={errors.password ? "#dc2626" : "#6b7280"}
+                />
               </TouchableOpacity>
             }
           />
@@ -262,13 +291,22 @@ export default function RegisterScreen() {
         <View className="mb-2">
           <Text className="text-slate-700 font-semibold mb-2 text-sm">Confirm Password</Text>
           <InputRow
-            icon="lock" placeholder="Repeat your password"
-            value={confirmPassword} onChange={(t) => { setConfirmPass(t); setErrors(p => ({...p, confirmPassword: undefined})); }}
-            focused={confirmFocused} onFocus={() => setCF(true)} onBlur={() => setCF(false)}
-            error={errors.confirmPassword} secure={!showConfirm}
+            icon="lock"
+            placeholder="Repeat your password"
+            value={confirmPassword}
+            onChange={(t) => { setConfirmPass(t); setErrors(p => ({ ...p, confirmPassword: undefined })); }}
+            focused={confirmFocused}
+            onFocus={() => setCF(true)}
+            onBlur={() => setCF(false)}
+            error={errors.confirmPassword}
+            secure={!showConfirm}
             right={
               <TouchableOpacity onPress={() => setShowConfirm(v => !v)} disabled={isLoading} className="p-1">
-                <AntDesign name={showConfirm ? "eye-off" : "eye"} size={18} color={errors.confirmPassword ? "#dc2626" : "#6b7280"} />
+                <Feather
+                  name={showConfirm ? "eye-off" : "eye"}
+                  size={18}
+                  color={errors.confirmPassword ? "#dc2626" : "#6b7280"}
+                />
               </TouchableOpacity>
             }
           />
@@ -302,7 +340,7 @@ export default function RegisterScreen() {
             activeOpacity={0.7}
             className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
           >
-            <AntDesign name="arrow-left" size={20} color="#1f2937" />
+            <Feather name="arrow-left" size={20} color="#1f2937" />
           </TouchableOpacity>
 
           {/* Step dots */}
@@ -310,9 +348,13 @@ export default function RegisterScreen() {
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <View
                 key={i}
-                style={{ width: i === step ? 24 : 8, height: 8, borderRadius: 4,
+                style={{
+                  width: i === step ? 24 : 8,
+                  height: 8,
+                  borderRadius: 4,
                   backgroundColor: i === step ? "#000" : i < step ? "#000" : "#e5e7eb",
-                  transition: "width 0.3s" }}
+                  transition: "width 0.3s",
+                }}
               />
             ))}
           </View>
@@ -337,7 +379,7 @@ export default function RegisterScreen() {
         {/* ── General Error ── */}
         {errors.general && (
           <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex-row items-center gap-3">
-            <AntDesign name="alert-circle" size={20} color="#dc2626" />
+            <Feather name="alert-circle" size={20} color="#dc2626" />
             <Text className="flex-1 text-red-700 font-semibold text-sm">{errors.general}</Text>
           </View>
         )}
@@ -359,7 +401,7 @@ export default function RegisterScreen() {
               <Text className="text-white font-bold text-base">
                 {isLastStep ? "Create account" : "Continue"}
               </Text>
-              {!isLastStep && <AntDesign name="arrow-right" size={18} color="white" />}
+              {!isLastStep && <Feather name="arrow-right" size={18} color="white" />}
             </View>
           )}
         </TouchableOpacity>

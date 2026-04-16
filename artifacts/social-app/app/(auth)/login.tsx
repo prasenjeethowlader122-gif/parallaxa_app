@@ -1,4 +1,4 @@
-import AntDesign from '@expo/vector-icons/AntDesign';
+import { Feather } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { getApiBaseUrl } from "@/lib/apiUrl";
 import { Image } from "react-native";
+
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -101,8 +102,7 @@ export default function LoginScreen() {
       >
         {/* Logo */}
         <View className="items-center mb-12">
-        <Image source={require('@/assets/images/placeholder-logo.svg')} style={{width: 50, height: 50}} />
-
+          <Image source={require('@/assets/images/placeholder-logo.svg')} style={{ width: 50, height: 50 }} />
         </View>
 
         {/* Heading */}
@@ -118,7 +118,7 @@ export default function LoginScreen() {
         {/* General Error Alert */}
         {errors.general && (
           <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex-row items-center gap-3">
-            <AntDesign name="alert-circle" size={20} color="#dc2626" />
+            <Feather name="alert-circle" size={20} color="#dc2626" />
             <Text className="flex-1 text-red-700 font-semibold text-sm">
               {errors.general}
             </Text>
@@ -139,7 +139,7 @@ export default function LoginScreen() {
                   : "border-slate-300"
             }`}
           >
-            <AntDesign
+            <Feather
               name="mail"
               size={18}
               color={emailFocused ? "#3b82f6" : errors.email ? "#dc2626" : "#9ca3af"}
@@ -159,15 +159,14 @@ export default function LoginScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               editable={!isLoading}
-              placeholderTextColor="#9ca3af"
             />
             {email && !errors.email && (
-              <AntDesign name="check-circle" size={18} color="#10b981" />
+              <Feather name="check-circle" size={18} color="#10b981" />
             )}
           </View>
           {errors.email && (
             <View className="mt-2 flex-row items-center gap-1.5">
-              <AntDesign name="info" size={14} color="#dc2626" />
+              <Feather name="info" size={14} color="#dc2626" />
               <Text className="text-red-600 text-xs font-medium">
                 {errors.email}
               </Text>
@@ -189,7 +188,7 @@ export default function LoginScreen() {
                   : "border-slate-300"
             }`}
           >
-            <AntDesign
+            <Feather
               name="lock"
               size={18}
               color={passwordFocused ? "#3b82f6" : errors.password ? "#dc2626" : "#9ca3af"}
@@ -213,7 +212,7 @@ export default function LoginScreen() {
               disabled={isLoading}
               className="p-1"
             >
-              <AntDesign
+              <Feather
                 name={showPassword ? "eye-off" : "eye"}
                 size={18}
                 color={errors.password ? "#dc2626" : "#6b7280"}
@@ -222,7 +221,7 @@ export default function LoginScreen() {
           </View>
           {errors.password && (
             <View className="mt-2 flex-row items-center gap-1.5">
-              <AntDesign name="info" size={14} color="#dc2626" />
+              <Feather name="info" size={14} color="#dc2626" />
               <Text className="text-red-600 text-xs font-medium">
                 {errors.password}
               </Text>
