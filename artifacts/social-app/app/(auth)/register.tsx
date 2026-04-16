@@ -2,16 +2,103 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
-  ScrollView, Text, TextInput, TouchableOpacity, View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
-import { useColors } from "@/hooks/useColors";
 import { getApiBaseUrl } from "@/lib/apiUrl";
 
+const X = {
+  bg: "#000000",
+  surface: "#16181C",
+  border: "#2F3336",
+  accent: "#1D9BF0",
+  white: "#E7E9EA",
+  muted: "#71767B",
+  inputBg: "#000000",
+};
+
+type FloatingInputProps = {
+  label: string;
+  value: string;
+  onChangeText: (t: string) => void;
+  keyboardType?: any;
+  autoCapitalize?: any;
+  secureTextEntry?: boolean;
+  rightElement?: React.ReactNode;
+};
+
+function FloatingInput({
+  label,
+  value,
+  onChangeText,
+  keyboardType,
+  autoCapitalize = "none",
+  secureTextEntry = false,
+  rightElement,
+}: FloatingInputProps) {
+  const [focused, setFocused] = useState(false);
+  const lifted = focused || value.length > 0;
+
+  return (
+    <View
+      style={{
+        borderWidth: 1,
+        borderColor: focused ? X.accent : X.border,
+        borderRadius: 4,
+        backgroundColor: X.inputBg,
+        height: 56,
+        flexDirection: "row",
+        alignItems: "flex-end",
+        paddingHorizontal: 14,
+        paddingBottom: 10,
+        position: "relative",
+        marginBottom: 16,
+      }}
+    >
+      <Text
+        style={{
+          position: "absolute",
+          left: 14,
+          top: lifted ? 6 : 17,
+          fontSize: lifted ? 11 : 15,
+          color: focused ? X.accent : X.muted,
+          fontWeight: "400",
+        }}
+      >
+        {label}
+      </Text>
+      <TextInput
+        style={{
+          flex: 1,
+          color: X.white,
+          fontSize: 17,
+          marginTop: 14,
+          outlineStyle: "none",
+        } as any}
+        value={value}
+        onChangeText={onChangeText}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={false}
+        secureTextEntry={secureTextEntry}
+      />
+      {rightElement}
+    </View>
+  );
+}
+
 export default function RegisterScreen() {
-  const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { login } = useAuth();
@@ -20,6 +107,7 @@ export default function RegisterScreen() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -57,95 +145,155 @@ export default function RegisterScreen() {
     }
   };
 
-  const topPt = insets.top + (Platform.OS === "web" ? 67 : 0) + 20;
-  const bottomPb = insets.bottom + 40;
-
-  const fields = [
-    { icon: "user" as const, placeholder: "Full name", value: displayName, setter: setDisplayName, autoCapitalize: "words" as const },
-    { icon: "at-sign" as const, placeholder: "Username", value: username, setter: setUsername, autoCapitalize: "none" as const },
-    { icon: "mail" as const, placeholder: "Email", value: email, setter: setEmail, autoCapitalize: "none" as const, keyboard: "email-address" as const },
-  ];
+  const topPt = insets.top + (Platform.OS === "web" ? 67 : 0);
+  const bottomPb = insets.bottom + 24;
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white dark:bg-black"
+      style={{ flex: 1, backgroundColor: X.bg }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 28, paddingTop: topPt, paddingBottom: bottomPb }}
+        contentContainerStyle={{
+          paddingHorizontal: 40,
+          paddingTop: topPt + 16,
+          paddingBottom: bottomPb,
+        }}
         keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity onPress={() => router.back()} className="mb-6">
-          <Feather name="arrow-left" size={24} color={colors.foreground} />
+        {/* Header row: back + X logo */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 36,
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{
+              width: 36,
+              height: 36,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 18,
+            }}
+            activeOpacity={0.7}
+          >
+            <Feather name="x" size={20} color={X.white} />
+          </TouchableOpacity>
+
+          {/* X Logo centered */}
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: "900",
+              color: X.white,
+              fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+            }}
+          >
+            ✕
+          </Text>
+
+          {/* Spacer to balance the back button */}
+          <View style={{ width: 36 }} />
+        </View>
+
+        {/* Heading */}
+        <Text
+          style={{
+            fontSize: 31,
+            fontWeight: "800",
+            color: X.white,
+            marginBottom: 8,
+            letterSpacing: -0.5,
+            fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+          }}
+        >
+          Create your account
+        </Text>
+        <Text style={{ color: X.muted, fontSize: 15, marginBottom: 32 }}>
+          Step 1 of 1
+        </Text>
+
+        {/* Fields */}
+        <FloatingInput
+          label="Name"
+          value={displayName}
+          onChangeText={setDisplayName}
+          autoCapitalize="words"
+        />
+
+        <FloatingInput
+          label="Username"
+          value={username}
+          onChangeText={setUsername}
+        />
+
+        <FloatingInput
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
+
+        <FloatingInput
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+          rightElement={
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              style={{ paddingLeft: 8, paddingBottom: 2 }}
+            >
+              <Feather name={showPassword ? "eye-off" : "eye"} size={18} color={X.muted} />
+            </TouchableOpacity>
+          }
+        />
+
+        {/* Terms note */}
+        <Text style={{ color: X.muted, fontSize: 13, lineHeight: 18, marginBottom: 32 }}>
+          By signing up, you agree to the{" "}
+          <Text style={{ color: X.accent }}>Terms of Service</Text>
+          {" "}and{" "}
+          <Text style={{ color: X.accent }}>Privacy Policy</Text>
+          , including{" "}
+          <Text style={{ color: X.accent }}>Cookie Use</Text>.
+          X may use your contact information, including your email address and phone number for
+          purposes outlined in our Privacy Policy.{" "}
+          <Text style={{ color: X.accent }}>Learn more</Text>
+        </Text>
+
+        {/* Create account button */}
+        <TouchableOpacity
+          style={{
+            height: 52,
+            borderRadius: 26,
+            backgroundColor: X.white,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: isLoading ? 0.8 : 1,
+          }}
+          onPress={handleRegister}
+          disabled={isLoading}
+          activeOpacity={0.88}
+        >
+          {isLoading ? (
+            <ActivityIndicator color={X.bg} />
+          ) : (
+            <Text style={{ fontSize: 15, fontWeight: "700", color: X.bg, letterSpacing: 0.1 }}>
+              Create account
+            </Text>
+          )}
         </TouchableOpacity>
 
-        <View className="mb-8">
-          <Text className="text-[28px] font-bold mb-1.5" style={{ color: colors.foreground }}>
-            Create account
-          </Text>
-          <Text className="text-[15px]" style={{ color: colors.mutedForeground }}>
-            Join Pulse today
-          </Text>
-        </View>
-
-        <View className="gap-3">
-          {fields.map(({ icon, placeholder, value, setter, autoCapitalize, keyboard }) => (
-            <View
-              key={placeholder}
-              className="flex-row items-center border rounded-xl px-3.5 h-[50px] gap-2.5"
-              style={{ borderColor: colors.border, backgroundColor: colors.input }}
-            >
-              <Feather name={icon} size={18} color={colors.mutedForeground} />
-              <TextInput
-                className="flex-1 text-[15px]"
-                style={{ color: colors.foreground }}
-                placeholder={placeholder}
-                placeholderTextColor={colors.mutedForeground}
-                value={value}
-                onChangeText={setter}
-                autoCapitalize={autoCapitalize}
-                keyboardType={keyboard}
-                autoCorrect={false}
-              />
-            </View>
-          ))}
-
-          <View
-            className="flex-row items-center border rounded-xl px-3.5 h-[50px] gap-2.5"
-            style={{ borderColor: colors.border, backgroundColor: colors.input }}
-          >
-            <Feather name="lock" size={18} color={colors.mutedForeground} />
-            <TextInput
-              className="flex-1 text-[15px]"
-              style={{ color: colors.foreground }}
-              placeholder="Password (min 6 chars)"
-              placeholderTextColor={colors.mutedForeground}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-          </View>
-
-          <TouchableOpacity
-            className="h-[50px] rounded-xl bg-primary items-center justify-center mt-2"
-            onPress={handleRegister}
-            disabled={isLoading}
-            activeOpacity={0.85}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text className="text-base font-bold text-white">Create account</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <View className="flex-row justify-center items-center mt-8">
-          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-            Already have an account?
-          </Text>
+        {/* Sign in link */}
+        <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 20 }}>
+          <Text style={{ color: X.muted, fontSize: 15 }}>Have an account? </Text>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text className="text-sm font-bold text-primary"> Log in</Text>
+            <Text style={{ color: X.accent, fontSize: 15, fontWeight: "700" }}>Log in</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

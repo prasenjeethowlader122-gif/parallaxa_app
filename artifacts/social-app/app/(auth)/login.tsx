@@ -2,16 +2,32 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
-  ScrollView, Text, TextInput, TouchableOpacity, View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
-import { useColors } from "@/hooks/useColors";
 import { getApiBaseUrl } from "@/lib/apiUrl";
 
+// X/Twitter color tokens
+const X = {
+  bg: "#000000",
+  surface: "#16181C",
+  border: "#2F3336",
+  accent: "#1D9BF0",
+  white: "#E7E9EA",
+  muted: "#71767B",
+  inputBg: "#000000",
+};
+
 export default function LoginScreen() {
-  const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { login } = useAuth();
@@ -20,6 +36,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -47,103 +65,201 @@ export default function LoginScreen() {
     }
   };
 
-  const topPt = insets.top + (Platform.OS === "web" ? 67 : 0) + 40;
-  const bottomPb = insets.bottom + 40;
+  const topPt = insets.top + (Platform.OS === "web" ? 67 : 0);
+  const bottomPb = insets.bottom + 24;
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white dark:bg-black"
+      style={{ flex: 1, backgroundColor: X.bg }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 32, paddingTop: topPt, paddingBottom: bottomPb }}
+        contentContainerStyle={{
+          paddingHorizontal: 40,
+          paddingTop: topPt + 24,
+          paddingBottom: bottomPb,
+          flexGrow: 1,
+        }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Logo */}
-        <View className="items-center mb-10">
-          <View className="w-20 h-20 rounded-full bg-primary items-center justify-center mb-4">
-            <Feather name="camera" size={36} color="#FFFFFF" />
-          </View>
-          <Text className="text-4xl font-bold -tracking-wide" style={{ color: colors.foreground }}>
-            Pulse
-          </Text>
-          <Text className="text-[15px] mt-1" style={{ color: colors.mutedForeground }}>
-            Share your moments
+        {/* X Logo */}
+        <View style={{ alignItems: "center", marginBottom: 36 }}>
+          {/* X SVG-style logo using text */}
+          <Text
+            style={{
+              fontSize: 30,
+              fontWeight: "900",
+              color: X.white,
+              letterSpacing: -1,
+              fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+            }}
+          >
+            ✕
           </Text>
         </View>
 
-        {/* Form */}
-        <View className="gap-3">
+        {/* Heading */}
+        <Text
+          style={{
+            fontSize: 31,
+            fontWeight: "800",
+            color: X.white,
+            marginBottom: 32,
+            letterSpacing: -0.5,
+            fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+          }}
+        >
+          Sign in to X
+        </Text>
+
+        {/* Floating label email input */}
+        <View style={{ marginBottom: 16 }}>
           <View
-            className="flex-row items-center border rounded-xl px-3.5 h-[50px] gap-2.5"
-            style={{ borderColor: colors.border, backgroundColor: colors.input }}
+            style={{
+              borderWidth: 1,
+              borderColor: emailFocused ? X.accent : X.border,
+              borderRadius: 4,
+              backgroundColor: X.inputBg,
+              height: 56,
+              justifyContent: "center",
+              paddingHorizontal: 14,
+              position: "relative",
+            }}
           >
-            <Feather name="mail" size={18} color={colors.mutedForeground} />
+            <Text
+              style={{
+                position: "absolute",
+                left: 14,
+                top: emailFocused || email.length > 0 ? 6 : 17,
+                fontSize: emailFocused || email.length > 0 ? 11 : 15,
+                color: emailFocused ? X.accent : X.muted,
+                fontWeight: "400",
+              }}
+            >
+              Phone, email, or username
+            </Text>
             <TextInput
-              className="flex-1 text-[15px]"
-              style={{ color: colors.foreground }}
-              placeholder="Email"
-              placeholderTextColor={colors.mutedForeground}
+              style={{
+                color: X.white,
+                fontSize: 17,
+                marginTop: 14,
+                outlineStyle: "none",
+              }}
               value={email}
               onChangeText={setEmail}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
             />
           </View>
+        </View>
 
+        {/* Floating label password input */}
+        <View style={{ marginBottom: 24 }}>
           <View
-            className="flex-row items-center border rounded-xl px-3.5 h-[50px] gap-2.5"
-            style={{ borderColor: colors.border, backgroundColor: colors.input }}
+            style={{
+              borderWidth: 1,
+              borderColor: passwordFocused ? X.accent : X.border,
+              borderRadius: 4,
+              backgroundColor: X.inputBg,
+              height: 56,
+              flexDirection: "row",
+              alignItems: "flex-end",
+              paddingHorizontal: 14,
+              paddingBottom: 10,
+              position: "relative",
+            }}
           >
-            <Feather name="lock" size={18} color={colors.mutedForeground} />
+            <Text
+              style={{
+                position: "absolute",
+                left: 14,
+                top: passwordFocused || password.length > 0 ? 6 : 17,
+                fontSize: passwordFocused || password.length > 0 ? 11 : 15,
+                color: passwordFocused ? X.accent : X.muted,
+                fontWeight: "400",
+              }}
+            >
+              Password
+            </Text>
             <TextInput
-              className="flex-1 text-[15px]"
-              style={{ color: colors.foreground }}
-              placeholder="Password"
-              placeholderTextColor={colors.mutedForeground}
+              style={{
+                flex: 1,
+                color: X.white,
+                fontSize: 17,
+                marginTop: 14,
+                outlineStyle: "none",
+              }}
               value={password}
               onChangeText={setPassword}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
               secureTextEntry={!showPassword}
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Feather name={showPassword ? "eye-off" : "eye"} size={18} color={colors.mutedForeground} />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ paddingLeft: 8 }}>
+              <Feather name={showPassword ? "eye-off" : "eye"} size={18} color={X.muted} />
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            className="h-[50px] rounded-xl bg-primary items-center justify-center mt-1"
-            onPress={handleLogin}
-            disabled={isLoading}
-            activeOpacity={0.85}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text className="text-base font-bold text-white">Log in</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity className="items-center py-2">
-            <Text className="text-sm font-medium text-primary">Forgot password?</Text>
-          </TouchableOpacity>
         </View>
+
+        {/* Forgot password */}
+        <TouchableOpacity style={{ alignSelf: "flex-end", marginBottom: 28 }}>
+          <Text style={{ color: X.accent, fontSize: 14, fontWeight: "600" }}>
+            Forgot password?
+          </Text>
+        </TouchableOpacity>
+
+        {/* Sign in button */}
+        <TouchableOpacity
+          style={{
+            height: 52,
+            borderRadius: 26,
+            backgroundColor: X.white,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 14,
+            opacity: isLoading ? 0.8 : 1,
+          }}
+          onPress={handleLogin}
+          disabled={isLoading}
+          activeOpacity={0.88}
+        >
+          {isLoading ? (
+            <ActivityIndicator color={X.bg} />
+          ) : (
+            <Text style={{ fontSize: 15, fontWeight: "700", color: X.bg, letterSpacing: 0.1 }}>
+              Sign in
+            </Text>
+          )}
+        </TouchableOpacity>
 
         {/* Divider */}
-        <View className="flex-row items-center my-6 gap-3">
-          <View className="flex-1 h-px" style={{ backgroundColor: colors.border }} />
-          <Text className="text-[13px] font-semibold" style={{ color: colors.mutedForeground }}>OR</Text>
-          <View className="flex-1 h-px" style={{ backgroundColor: colors.border }} />
+        <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 20, gap: 12 }}>
+          <View style={{ flex: 1, height: 1, backgroundColor: X.border }} />
+          <Text style={{ color: X.muted, fontSize: 13, fontWeight: "500" }}>or</Text>
+          <View style={{ flex: 1, height: 1, backgroundColor: X.border }} />
         </View>
 
-        {/* Sign up */}
-        <View className="flex-row justify-center items-center">
-          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-            Don't have an account?
-          </Text>
+        {/* Sign up CTA */}
+        <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 12 }}>
+          <Text style={{ color: X.muted, fontSize: 15 }}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
-            <Text className="text-sm font-bold text-primary"> Sign up</Text>
+            <Text style={{ color: X.accent, fontSize: 15, fontWeight: "700" }}>Sign up</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Footer */}
+        <View style={{ marginTop: "auto", paddingTop: 48, alignItems: "center" }}>
+          <Text style={{ color: X.muted, fontSize: 12, textAlign: "center", lineHeight: 18 }}>
+            By signing in, you agree to our{" "}
+            <Text style={{ color: X.accent }}>Terms of Service</Text>
+            {" "}and{" "}
+            <Text style={{ color: X.accent }}>Privacy Policy</Text>
+            , including{" "}
+            <Text style={{ color: X.accent }}>Cookie Use</Text>.
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
