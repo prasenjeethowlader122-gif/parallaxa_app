@@ -9,7 +9,7 @@ import {
   InformationCircleIcon,
   ViewIcon,
   ViewOffIcon
-} from '@hugeicons-pro/core-stroke-rounded';
+} from '@hugeicons/core-stroke-rounded';
 
 import {
   ActivityIndicator,

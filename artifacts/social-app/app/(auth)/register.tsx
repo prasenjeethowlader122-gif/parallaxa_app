@@ -13,7 +13,7 @@ import {
   Alert01Icon, 
   CheckmarkCircle01Icon, 
   InformationCircleIcon 
-} from '@hugeicons-pro/core-stroke-rounded';
+} from '@hugeicons/core-stroke-rounded';
 
 import {
   ActivityIndicator,
