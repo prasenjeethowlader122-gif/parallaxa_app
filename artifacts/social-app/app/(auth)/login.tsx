@@ -131,7 +131,7 @@ export default function LoginScreen() {
             Email Address
           </Text>
           <View
-            className={`border border-gray-100 px-4 py-3 flex-row items-center transition-colors ${
+            className={`border rounded-full border-gray-100 px-4 py-3 flex-row items-center transition-colors ${
               emailFocused
                 ? "border-black"
                 : errors.email
@@ -181,7 +181,7 @@ export default function LoginScreen() {
             Password
           </Text>
           <View
-            className={`border border-gray-100 px-4 py-3 flex-row items-center transition-colors ${
+            className={`border rounded-full border-gray-100 px-4 py-3 flex-row items-center transition-colors ${
               passwordFocused
                 ? "border-black"
                 : errors.password
@@ -239,10 +239,10 @@ export default function LoginScreen() {
 
         {/* Sign In Button */}
         <TouchableOpacity
-          className={`h-14 rounded-xl items-center justify-center mb-4 transition-opacity ${
+          className={`h-14 rounded-full items-center justify-center mb-4 transition-opacity text-white ${
             isLoading || !email || !password
-              ? "bg-slate-200"
-              : "bg-blue-600 active:bg-blue-700"
+              ? "bg-black"
+              : "bg-black"
           }`}
           onPress={handleLogin}
           disabled={isLoading || !email || !password}
