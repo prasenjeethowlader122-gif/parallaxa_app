@@ -51,7 +51,17 @@ COPY --from=api-builder /app/artifacts/api-server/dist ./artifacts/api-server/di
 COPY --from=expo-builder /app/artifacts/social-app/web-export ./artifacts/api-server/public
 
 # Create migration entrypoint script
-RUN echo '#!/bin/sh\nset -e\necho "Running database migrations..."\npnpm --filter @workspace/db run push\necho "Starting API server..."\nnode --enable-source-maps ./artifacts/api-server/dist/index.mjs' > /app/start.sh && chmod +x /app/start.sh
+RUN echo '#!/bin/sh\n\
+set -e\n\
+echo "Running database migrations..."\n\
+pnpm --filter @workspace/db run push\n\
+\n\
+# Clear expo cache and start in background if needed, or just start API\n\
+echo "Starting API server..."\n\
+# If you need to clear expo cache specifically before the node process starts:\n\
+# npx expo start -c --non-interactive &\n\
+\n\
+node --enable-source-maps ./artifacts/api-server/dist/index.mjs' > /app/start.sh && chmod +x /app/start.sh
 
 ENV NODE_ENV=production
 ENV PORT=8080
