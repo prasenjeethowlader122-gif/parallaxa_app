@@ -101,9 +101,8 @@ export default function LoginScreen() {
       >
         {/* Logo */}
         <View className="items-center mb-12">
-          <Text className="text-5xl font-black text-slate-900 tracking-tight">
-            Parallaxa
-          </Text>
+        <Image source={require('./assets/images/placeholder-logo.svg')} style={{width: 50, height: 50}} />
+
         </View>
 
         {/* Heading */}
@@ -132,12 +131,12 @@ export default function LoginScreen() {
             Email Address
           </Text>
           <View
-            className={`border rounded-xl px-4 py-3 flex-row items-center transition-colors ${
+            className={`border border-gray-100 px-4 py-3 flex-row items-center transition-colors ${
               emailFocused
-                ? "border-blue-500 bg-blue-50"
+                ? "border-black"
                 : errors.email
-                  ? "border-red-300 bg-red-50"
-                  : "border-slate-300 bg-slate-50"
+                  ? "border-red-300"
+                  : "border-slate-300"
             }`}
           >
             <Feather
@@ -146,7 +145,7 @@ export default function LoginScreen() {
               color={emailFocused ? "#3b82f6" : errors.email ? "#dc2626" : "#9ca3af"}
             />
             <TextInput
-              className="flex-1 ml-3 text-slate-900 text-base font-medium"
+              className="flex-1 ml-3 outline-none text-black-900 text-base font-medium"
               placeholder="your.email@example.com"
               placeholderTextColor="#d1d5db"
               value={email}
@@ -182,12 +181,12 @@ export default function LoginScreen() {
             Password
           </Text>
           <View
-            className={`border rounded-xl px-4 py-3 flex-row items-center transition-colors ${
+            className={`border border-gray-100 px-4 py-3 flex-row items-center transition-colors ${
               passwordFocused
-                ? "border-blue-500 bg-blue-50"
+                ? "border-black"
                 : errors.password
-                  ? "border-red-300 bg-red-50"
-                  : "border-slate-300 bg-slate-50"
+                  ? "border-red-300"
+                  : "border-slate-300"
             }`}
           >
             <Feather
@@ -196,7 +195,7 @@ export default function LoginScreen() {
               color={passwordFocused ? "#3b82f6" : errors.password ? "#dc2626" : "#9ca3af"}
             />
             <TextInput
-              className="flex-1 ml-3 text-slate-900 text-base font-medium"
+              className="flex-1 ml-3 outline-none text-gray-900 text-base font-medium"
               placeholder="Enter your password"
               placeholderTextColor="#9ca3af"
               value={password}
