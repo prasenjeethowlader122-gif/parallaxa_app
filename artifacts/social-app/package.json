@@ -53,6 +53,8 @@
     "react-native-worklets": "0.5.1",
     "typescript": "~5.9.2",
     "zod": "catalog:",
+    "@hugeicons/react-native": "latest",
+    "@hugeicons-pro/core-stroke-rounded": "latest",
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {

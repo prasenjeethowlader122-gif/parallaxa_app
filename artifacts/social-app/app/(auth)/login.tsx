@@ -1,6 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import { Mail01Icon,LockPasswordIcon } from '@hugeicons-pro/core-stroke-rounded';
+
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -139,11 +142,12 @@ export default function LoginScreen() {
                   : "border-slate-300"
             }`}
           >
-            <Feather
-              name="mail"
-              size={18}
-              color={emailFocused ? "#3b82f6" : errors.email ? "#dc2626" : "#9ca3af"}
-            />
+    <HugeiconsIcon
+      icon={Mail01Icon}
+      size={18}
+      color="currentColor"
+      strokeWidth={1}
+    />
             <TextInput
               className="flex-1 ml-3 outline-none text-black-900 text-base font-medium"
               placeholder="your.email@example.com"
@@ -188,11 +192,12 @@ export default function LoginScreen() {
                   : "border-slate-300"
             }`}
           >
-            <Feather
-              name="lock"
-              size={18}
-              color={passwordFocused ? "#3b82f6" : errors.password ? "#dc2626" : "#9ca3af"}
-            />
+    <HugeiconsIcon
+      icon={LockPasswordIcon}
+      size={18}
+      color="currentColor"
+      strokeWidth={1}
+    />
             <TextInput
               className="flex-1 ml-3 outline-none text-gray-900 text-base font-medium"
               placeholder="Enter your password"
