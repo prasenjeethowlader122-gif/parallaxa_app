@@ -42,7 +42,8 @@ COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/api-client-react/package.json ./lib/api-client-react/
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 
-RUN pnpm install --prod
+# Install all dependencies including dev dependencies needed for drizzle-kit
+RUN pnpm install
 
 COPY --from=api-builder /app/artifacts/api-server/dist ./artifacts/api-server/dist
 
