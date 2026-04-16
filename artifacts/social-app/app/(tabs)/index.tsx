@@ -6,6 +6,7 @@ import { SentIcon, Image01Icon, Search01Icon } from '@hugeicons/core-free-icons'
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   Platform,
   RefreshControl,
   Text,
@@ -44,9 +45,8 @@ export default function FeedScreen() {
       }}
     >
       <View className="flex-row justify-between items-center px-5 mb-2">
-        <Text className="text-2xl font-black tracking-tighter" style={{ color: colors.foreground }}>
-          Pulse
-        </Text>
+        <Image source={require('@/assets/images/parallaxa-logo.svg')} style={{ width: 40, height: 40 }} />
+       
         <View className="flex-row gap-3">
             <TouchableOpacity className="p-2"><HugeiconsIcon icon={Search01Icon} size={22} color={colors.foreground} /></TouchableOpacity>
             <TouchableOpacity className="p-2"><HugeiconsIcon icon={SentIcon} size={22} color={colors.foreground} /></TouchableOpacity>
