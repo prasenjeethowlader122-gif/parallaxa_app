@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useCallback, useState, useRef } from "react";
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { SentIcon, Image01Icon, Search01Icon } from '@hugeicons-pro/core-stroke-rounded';
+import { SentIcon, Image01Icon, Search01Icon } from '@hugeicons/core-free-icons';
 
 import {
   ActivityIndicator,
