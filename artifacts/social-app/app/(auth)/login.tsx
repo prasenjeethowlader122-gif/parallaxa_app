@@ -32,13 +32,15 @@ export default function LoginScreen() {
     const newErrors: typeof errors = {};
 
     if (!email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!email.includes("@")) {
+      newErrors.email = "Email address is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       newErrors.email = "Please enter a valid email address";
     }
 
     if (!password.trim()) {
       newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
@@ -65,7 +67,7 @@ export default function LoginScreen() {
 
       if (!response.ok) {
         setErrors({
-          general: data.message || "Login failed. Please check your credentials and try again.",
+          general: data.message || "Invalid email or password. Please try again.",
         });
         return;
       }
@@ -73,7 +75,7 @@ export default function LoginScreen() {
       await login(data.token, data.user);
     } catch (error) {
       setErrors({
-        general: "Could not connect to server. Please check your internet connection and try again.",
+        general: "Connection failed. Please check your internet and try again.",
       });
     } finally {
       setIsLoading(false);
@@ -91,89 +93,117 @@ export default function LoginScreen() {
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 24,
-          paddingTop: topPt + 24,
+          paddingTop: topPt + 32,
           paddingBottom: bottomPb,
           flexGrow: 1,
         }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Logo */}
-        <View className="items-center mb-8">
-          <Text className="text-4xl font-black text-slate-900 tracking-tighter">
+        <View className="items-center mb-12">
+          <Text className="text-5xl font-black text-slate-900 tracking-tight">
             Parallaxa
           </Text>
         </View>
 
         {/* Heading */}
-        <Text className="text-3xl font-bold text-slate-900 mb-2">
-          Sign in
-        </Text>
-        <Text className="text-base text-slate-500 mb-8">
-          Welcome back to your social network
-        </Text>
+        <View className="mb-8">
+          <Text className="text-3xl font-bold text-slate-900 mb-3">
+            Welcome back
+          </Text>
+          <Text className="text-base text-slate-500">
+            Sign in to continue to your account
+          </Text>
+        </View>
 
-        {/* General Error */}
+        {/* General Error Alert */}
         {errors.general && (
-          <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <View className="flex-row items-center gap-3">
-              <Feather name="alert-circle" size={20} color="#dc2626" />
-              <Text className="flex-1 text-red-700 font-medium">{errors.general}</Text>
-            </View>
+          <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex-row items-center gap-3">
+            <Feather name="alert-circle" size={20} color="#dc2626" />
+            <Text className="flex-1 text-red-700 font-semibold text-sm">
+              {errors.general}
+            </Text>
           </View>
         )}
 
         {/* Email Input */}
-        <View className="mb-4">
+        <View className="mb-5">
+          <Text className="text-slate-700 font-semibold mb-2 text-sm">
+            Email Address
+          </Text>
           <View
-            className={`border rounded-lg px-4 py-3 flex-row items-center ${
+            className={`border rounded-xl px-4 py-3 flex-row items-center transition-colors ${
               emailFocused
                 ? "border-blue-500 bg-blue-50"
                 : errors.email
                   ? "border-red-300 bg-red-50"
-                  : "border-slate-200 bg-white"
+                  : "border-slate-300 bg-slate-50"
             }`}
           >
+            <Feather
+              name="mail"
+              size={18}
+              color={emailFocused ? "#3b82f6" : errors.email ? "#dc2626" : "#9ca3af"}
+            />
             <TextInput
-              className="flex-1 text-slate-900 text-base"
-              placeholder="Email address"
-              placeholderTextColor="#9ca3af"
+              className="flex-1 ml-3 text-slate-900 text-base font-medium"
+              placeholder="your.email@example.com"
+              placeholderTextColor="#d1d5db"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errors.email) setErrors({ ...errors, email: undefined });
+              }}
               onFocus={() => setEmailFocused(true)}
               onBlur={() => setEmailFocused(false)}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               editable={!isLoading}
+              placeholderTextColor="#9ca3af"
             />
             {email && !errors.email && (
-              <Feather name="check-circle" size={20} color="#10b981" />
+              <Feather name="check-circle" size={18} color="#10b981" />
             )}
           </View>
           {errors.email && (
-            <Text className="mt-1.5 text-red-600 text-sm font-medium">
-              {errors.email}
-            </Text>
+            <View className="mt-2 flex-row items-center gap-1.5">
+              <Feather name="info" size={14} color="#dc2626" />
+              <Text className="text-red-600 text-xs font-medium">
+                {errors.email}
+              </Text>
+            </View>
           )}
         </View>
 
         {/* Password Input */}
-        <View className="mb-6">
+        <View className="mb-4">
+          <Text className="text-slate-700 font-semibold mb-2 text-sm">
+            Password
+          </Text>
           <View
-            className={`border rounded-lg px-4 py-3 flex-row items-center ${
+            className={`border rounded-xl px-4 py-3 flex-row items-center transition-colors ${
               passwordFocused
                 ? "border-blue-500 bg-blue-50"
                 : errors.password
                   ? "border-red-300 bg-red-50"
-                  : "border-slate-200 bg-white"
+                  : "border-slate-300 bg-slate-50"
             }`}
           >
+            <Feather
+              name="lock"
+              size={18}
+              color={passwordFocused ? "#3b82f6" : errors.password ? "#dc2626" : "#9ca3af"}
+            />
             <TextInput
-              className="flex-1 text-slate-900 text-base"
-              placeholder="Password"
+              className="flex-1 ml-3 text-slate-900 text-base font-medium"
+              placeholder="Enter your password"
               placeholderTextColor="#9ca3af"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errors.password) setErrors({ ...errors, password: undefined });
+              }}
               onFocus={() => setPasswordFocused(true)}
               onBlur={() => setPasswordFocused(false)}
               secureTextEntry={!showPassword}
@@ -182,24 +212,27 @@ export default function LoginScreen() {
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
               disabled={isLoading}
-              className="ml-2"
+              className="p-1"
             >
               <Feather
                 name={showPassword ? "eye-off" : "eye"}
-                size={20}
-                color="#6b7280"
+                size={18}
+                color={errors.password ? "#dc2626" : "#6b7280"}
               />
             </TouchableOpacity>
           </View>
           {errors.password && (
-            <Text className="mt-1.5 text-red-600 text-sm font-medium">
-              {errors.password}
-            </Text>
+            <View className="mt-2 flex-row items-center gap-1.5">
+              <Feather name="info" size={14} color="#dc2626" />
+              <Text className="text-red-600 text-xs font-medium">
+                {errors.password}
+              </Text>
+            </View>
           )}
         </View>
 
-        {/* Forgot Password */}
-        <TouchableOpacity className="mb-8">
+        {/* Forgot Password Link */}
+        <TouchableOpacity className="self-end mb-8">
           <Text className="text-blue-600 font-semibold text-sm">
             Forgot password?
           </Text>
@@ -207,10 +240,10 @@ export default function LoginScreen() {
 
         {/* Sign In Button */}
         <TouchableOpacity
-          className={`h-14 rounded-lg items-center justify-center mb-4 ${
+          className={`h-14 rounded-xl items-center justify-center mb-4 transition-opacity ${
             isLoading || !email || !password
               ? "bg-slate-200"
-              : "bg-blue-600"
+              : "bg-blue-600 active:bg-blue-700"
           }`}
           onPress={handleLogin}
           disabled={isLoading || !email || !password}
@@ -226,22 +259,22 @@ export default function LoginScreen() {
         {/* Divider */}
         <View className="flex-row items-center gap-3 my-6">
           <View className="flex-1 h-px bg-slate-200" />
-          <Text className="text-slate-500 text-sm font-medium">or</Text>
+          <Text className="text-slate-500 text-xs font-medium">OR</Text>
           <View className="flex-1 h-px bg-slate-200" />
         </View>
 
         {/* Sign Up CTA */}
         <View className="flex-row justify-center items-center">
-          <Text className="text-slate-600 text-base">
+          <Text className="text-slate-600 text-sm">
             Don't have an account?{" "}
           </Text>
           <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
-            <Text className="text-blue-600 font-bold text-base">Sign up</Text>
+            <Text className="text-blue-600 font-bold text-sm">Sign up</Text>
           </TouchableOpacity>
         </View>
 
         {/* Footer */}
-        <View className="mt-auto pt-8 items-center">
+        <View className="mt-auto pt-12 items-center">
           <Text className="text-slate-500 text-xs text-center leading-5">
             By signing in, you agree to our{" "}
             <Text className="text-blue-600 font-semibold">Terms of Service</Text>

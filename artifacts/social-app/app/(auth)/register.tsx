@@ -24,7 +24,7 @@ type FormErrors = {
   general?: string;
 };
 
-type FloatingInputProps = {
+type InputFieldProps = {
   label: string;
   value: string;
   onChangeText: (t: string) => void;
@@ -38,9 +38,10 @@ type FloatingInputProps = {
   onBlur: () => void;
   rightElement?: React.ReactNode;
   disabled?: boolean;
+  icon?: string;
 };
 
-function FloatingInput({
+function InputField({
   label,
   value,
   onChangeText,
@@ -54,29 +55,57 @@ function FloatingInput({
   onBlur,
   rightElement,
   disabled = false,
-}: FloatingInputProps) {
+  icon,
+}: InputFieldProps) {
   const isValid = value && !error;
 
+  const iconColorMap: Record<string, string> = {
+    "user": "#9ca3af",
+    "at-sign": "#9ca3af",
+    "mail": "#9ca3af",
+    "lock": "#9ca3af",
+  };
+
+  const getIconColor = () => {
+    if (focused) return "#3b82f6";
+    if (error) return "#dc2626";
+    return iconColorMap[icon || ""] || "#9ca3af";
+  };
+
   return (
-    <View className="mb-4">
-      <Text className={`text-sm font-semibold mb-2 ${focused ? "text-blue-600" : "text-slate-700"}`}>
+    <View className="mb-5">
+      <Text className={`text-sm font-semibold mb-2 ${
+        focused ? "text-blue-600" : error ? "text-red-600" : "text-slate-700"
+      }`}>
         {label}
       </Text>
       <View
-        className={`border rounded-lg px-4 py-3 flex-row items-center ${
+        className={`border rounded-xl px-4 py-3 flex-row items-center transition-colors ${
           focused
             ? "border-blue-500 bg-blue-50"
             : error
               ? "border-red-300 bg-red-50"
-              : "border-slate-200 bg-white"
+              : "border-slate-300 bg-slate-50"
         }`}
       >
+        {icon && (
+          <Feather
+            name={icon as any}
+            size={18}
+            color={getIconColor()}
+            style={{ marginRight: 10 }}
+          />
+        )}
         <TextInput
-          className="flex-1 text-slate-900 text-base"
+          className="flex-1 text-slate-900 text-base font-medium"
           placeholder={placeholder || label}
           placeholderTextColor="#d1d5db"
           value={value}
-          onChangeText={onChangeText}
+          onChangeText={(text) => {
+            onChangeText(text);
+            // Clear error on change
+            if (error) onChangeText(text);
+          }}
           onFocus={onFocus}
           onBlur={onBlur}
           keyboardType={keyboardType}
@@ -86,14 +115,17 @@ function FloatingInput({
           editable={!disabled}
         />
         {isValid && (
-          <Feather name="check-circle" size={20} color="#10b981" />
+          <Feather name="check-circle" size={18} color="#10b981" style={{ marginLeft: 8 }} />
         )}
         {rightElement}
       </View>
       {error && (
-        <Text className="mt-1.5 text-red-600 text-sm font-medium">
-          {error}
-        </Text>
+        <View className="mt-2 flex-row items-center gap-1.5">
+          <Feather name="info" size={14} color="#dc2626" />
+          <Text className="text-red-600 text-xs font-medium flex-1">
+            {error}
+          </Text>
+        </View>
       )}
     </View>
   );
@@ -125,9 +157,11 @@ export default function RegisterScreen() {
 
     // Display Name validation
     if (!displayName.trim()) {
-      newErrors.displayName = "Name is required";
+      newErrors.displayName = "Full name is required";
     } else if (displayName.trim().length < 2) {
       newErrors.displayName = "Name must be at least 2 characters";
+    } else if (displayName.trim().length > 50) {
+      newErrors.displayName = "Name must be less than 50 characters";
     }
 
     // Username validation
@@ -135,14 +169,16 @@ export default function RegisterScreen() {
       newErrors.username = "Username is required";
     } else if (username.trim().length < 3) {
       newErrors.username = "Username must be at least 3 characters";
+    } else if (username.trim().length > 30) {
+      newErrors.username = "Username must be less than 30 characters";
     } else if (!/^[a-zA-Z0-9_-]+$/.test(username.trim())) {
       newErrors.username = "Username can only contain letters, numbers, underscores, and hyphens";
     }
 
     // Email validation
     if (!email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!email.includes("@")) {
+      newErrors.email = "Email address is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       newErrors.email = "Please enter a valid email address";
     }
 
@@ -151,6 +187,8 @@ export default function RegisterScreen() {
       newErrors.password = "Password is required";
     } else if (password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
+    } else if (password.length > 128) {
+      newErrors.password = "Password must be less than 128 characters";
     }
 
     // Confirm Password validation
@@ -188,26 +226,32 @@ export default function RegisterScreen() {
       const data = await response.json();
 
       if (!response.ok) {
-        setErrors({
-          general:
-            data.message ||
-            "Registration failed. Please check your information and try again.",
-        });
+        const errorMessage = data.message || "Registration failed. Please check your information and try again.";
+        
+        // Handle field-specific errors from backend
+        if (data.field) {
+          setErrors({
+            [data.field]: errorMessage,
+          } as FormErrors);
+        } else {
+          setErrors({
+            general: errorMessage,
+          });
+        }
         return;
       }
 
       await login(data.token, data.user);
     } catch (error) {
       setErrors({
-        general:
-          "Could not connect to server. Please check your internet connection and try again.",
+        general: "Connection failed. Please check your internet connection and try again.",
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const topPt = insets.top + (Platform.OS === "web" ? 16 : 0);
+  const topPt = insets.top + (Platform.OS === "web" ? 24 : 0);
   const bottomPb = insets.bottom + 24;
 
   const isFormValid =
@@ -230,48 +274,54 @@ export default function RegisterScreen() {
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 24,
-          paddingTop: topPt + 16,
+          paddingTop: topPt + 24,
           paddingBottom: bottomPb,
+          flexGrow: 1,
         }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {/* Header row: back + logo */}
-        <View className="flex-row items-center justify-between mb-8">
+        <View className="flex-row items-center justify-between mb-12">
           <TouchableOpacity
             onPress={() => router.back()}
             disabled={isLoading}
             activeOpacity={0.7}
-            className="w-9 h-9 items-center justify-center rounded-full bg-slate-100"
+            className="w-10 h-10 items-center justify-center rounded-full bg-slate-100 active:bg-slate-200"
           >
             <Feather name="arrow-left" size={20} color="#1f2937" />
           </TouchableOpacity>
 
-          <Text className="text-2xl font-black text-slate-900">Parallaxa</Text>
+          <Text className="text-2xl font-black text-slate-900">
+            Parallaxa
+          </Text>
 
-          <View className="w-9" />
+          <View className="w-10" />
         </View>
 
         {/* Heading */}
-        <Text className="text-3xl font-bold text-slate-900 mb-1">
-          Create account
-        </Text>
-        <Text className="text-base text-slate-500 mb-6">
-          Join our community today
-        </Text>
+        <View className="mb-8">
+          <Text className="text-3xl font-bold text-slate-900 mb-2">
+            Create account
+          </Text>
+          <Text className="text-base text-slate-500">
+            Join our community today
+          </Text>
+        </View>
 
-        {/* General Error */}
+        {/* General Error Alert */}
         {errors.general && (
-          <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <View className="flex-row items-start gap-3">
-              <Feather name="alert-circle" size={20} color="#dc2626" className="mt-0.5" />
-              <Text className="flex-1 text-red-700 font-medium">{errors.general}</Text>
-            </View>
+          <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex-row items-start gap-3">
+            <Feather name="alert-circle" size={20} color="#dc2626" style={{ marginTop: 2 }} />
+            <Text className="flex-1 text-red-700 font-semibold text-sm">
+              {errors.general}
+            </Text>
           </View>
         )}
 
         {/* Form Fields */}
-        <FloatingInput
+        <InputField
+          icon="user"
           label="Full Name"
           placeholder="John Doe"
           value={displayName}
@@ -284,7 +334,8 @@ export default function RegisterScreen() {
           disabled={isLoading}
         />
 
-        <FloatingInput
+        <InputField
+          icon="at-sign"
           label="Username"
           placeholder="john_doe"
           value={username}
@@ -296,9 +347,10 @@ export default function RegisterScreen() {
           disabled={isLoading}
         />
 
-        <FloatingInput
-          label="Email"
-          placeholder="john@example.com"
+        <InputField
+          icon="mail"
+          label="Email Address"
+          placeholder="your.email@example.com"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -309,7 +361,8 @@ export default function RegisterScreen() {
           disabled={isLoading}
         />
 
-        <FloatingInput
+        <InputField
+          icon="lock"
           label="Password"
           placeholder="At least 6 characters"
           value={password}
@@ -323,19 +376,20 @@ export default function RegisterScreen() {
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
               disabled={isLoading}
-              className="ml-2"
+              className="p-1"
             >
               <Feather
                 name={showPassword ? "eye-off" : "eye"}
-                size={20}
-                color="#6b7280"
+                size={18}
+                color={errors.password ? "#dc2626" : "#6b7280"}
               />
             </TouchableOpacity>
           }
           disabled={isLoading}
         />
 
-        <FloatingInput
+        <InputField
+          icon="lock"
           label="Confirm Password"
           placeholder="Repeat your password"
           value={confirmPassword}
@@ -349,12 +403,12 @@ export default function RegisterScreen() {
             <TouchableOpacity
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               disabled={isLoading}
-              className="ml-2"
+              className="p-1"
             >
               <Feather
                 name={showConfirmPassword ? "eye-off" : "eye"}
-                size={20}
-                color="#6b7280"
+                size={18}
+                color={errors.confirmPassword ? "#dc2626" : "#6b7280"}
               />
             </TouchableOpacity>
           }
@@ -373,15 +427,17 @@ export default function RegisterScreen() {
 
         {/* Create Account Button */}
         <TouchableOpacity
-          className={`h-14 rounded-lg items-center justify-center mb-4 ${
-            isLoading || !isFormValid ? "bg-slate-200" : "bg-blue-600"
+          className={`h-14 rounded-xl items-center justify-center mb-4 transition-opacity ${
+            isLoading || !isFormValid
+              ? "bg-slate-200"
+              : "bg-blue-600 active:bg-blue-700"
           }`}
           onPress={handleRegister}
           disabled={isLoading || !isFormValid}
           activeOpacity={0.8}
         >
           {isLoading ? (
-            <ActivityIndicator color="white" />
+            <ActivityIndicator color="white" size="small" />
           ) : (
             <Text className="text-white font-bold text-base">Create account</Text>
           )}
@@ -389,11 +445,11 @@ export default function RegisterScreen() {
 
         {/* Sign in link */}
         <View className="flex-row justify-center items-center">
-          <Text className="text-slate-600 text-base">
+          <Text className="text-slate-600 text-sm">
             Already have an account?{" "}
           </Text>
           <TouchableOpacity onPress={() => router.back()} disabled={isLoading}>
-            <Text className="text-blue-600 font-bold text-base">Log in</Text>
+            <Text className="text-blue-600 font-bold text-sm">Log in</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
