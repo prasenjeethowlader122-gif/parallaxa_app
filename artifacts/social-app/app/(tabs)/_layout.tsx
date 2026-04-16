@@ -1,142 +1,90 @@
-import { BlurView } from "expo-blur";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
-import { Tabs } from "expo-router";
-import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
-import { SymbolView } from "expo-symbols";
-import { Feather } from "@expo/vector-icons";
-import React from "react";
-import { Platform, StyleSheet, View, useColorScheme } from "react-native";
-
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, Image, Platform, StyleSheet } from "react-native";
+import { Stack, useRouter, usePathname } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import { SentIcon, Search01Icon } from '@hugeicons/core-free-icons';
 import { useColors } from "@/hooks/useColors";
 
-function NativeTabLayout() {
-  return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Home</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="explore">
-        <Icon sf={{ default: "magnifyingglass", selected: "magnifyingglass" }} />
-        <Label>Explore</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="create">
-        <Icon sf={{ default: "plus.app", selected: "plus.app.fill" }} />
-        <Label>Create</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="notifications">
-        <Icon sf={{ default: "heart", selected: "heart.fill" }} />
-        <Label>Activity</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
-        <Icon sf={{ default: "person.crop.circle", selected: "person.crop.circle.fill" }} />
-        <Label>Profile</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
+const TABS = [
+  { id: "index", label: "For You" },
+  { id: "explore", label: "Following" }, // Map these to your actual file names
+  { id: "trending", label: "Trending" }
+];
 
-function ClassicTabLayout() {
+export default function RootLayout() {
   const colors = useColors();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const isIOS = Platform.OS === "ios";
-  const isWeb = Platform.OS === "web";
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  // Determine active tab based on current route
+  const currentRoute = pathname === "/" ? "index" : pathname.replace("/", "");
+
+  const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.mutedForeground,
-        headerShown: false,
-        tabBarShowLabel: false,
-        tabBarStyle: {
-          position: "absolute",
-          backgroundColor: isIOS ? "transparent" : colors.background,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: colors.border,
-          elevation: 0,
-          ...(isWeb ? { height: 84 } : {}),
-        },
-        tabBarBackground: () =>
-          isIOS ? (
-            <BlurView
-              intensity={100}
-              tint={isDark ? "dark" : "light"}
-              style={StyleSheet.absoluteFill}
-            />
-          ) : isWeb ? (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
-          ) : null,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color, focused }) =>
-            isIOS ? (
-              <SymbolView name={focused ? "house.fill" : "house"} tintColor={color} size={24} />
-            ) : (
-              <Feather name="home" size={24} color={color} />
-            ),
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* --- GLOBAL HEADER & SLIDER --- */}
+      <View 
+        style={{ 
+          paddingTop: topPadding, 
+          backgroundColor: colors.background,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: colors.border + '30',
+          zIndex: 50
         }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: "Explore",
-          tabBarIcon: ({ color, focused }) =>
-            isIOS ? (
-              <SymbolView name={focused ? "magnifyingglass" : "magnifyingglass"} tintColor={color} size={24} />
-            ) : (
-              <Feather name="search" size={24} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="create"
-        options={{
-          title: "Create",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="plus.app" tintColor={color} size={24} />
-            ) : (
-              <Feather name="plus-square" size={24} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: "Activity",
-          tabBarIcon: ({ color, focused }) =>
-            isIOS ? (
-              <SymbolView name={focused ? "heart.fill" : "heart"} tintColor={color} size={24} />
-            ) : (
-              <Feather name="heart" size={24} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color, focused }) =>
-            isIOS ? (
-              <SymbolView name={focused ? "person.crop.circle.fill" : "person.crop.circle"} tintColor={color} size={24} />
-            ) : (
-              <Feather name="user" size={24} color={color} />
-            ),
-        }}
-      />
-    </Tabs>
-  );
-}
+      >
+        {/* Top Bar: Logo & Actions */}
+        <View className="flex-row justify-between items-center px-5 mb-2">
+          <Image 
+            source={require('@/assets/images/parallaxa-logo.svg')} 
+            style={{ width: 40, height: 40 }} 
+          />
+         
+          <View className="flex-row gap-3">
+            <TouchableOpacity className="p-2">
+                <HugeiconsIcon icon={Search01Icon} size={22} color={colors.foreground} />
+            </TouchableOpacity>
+            <TouchableOpacity className="p-2">
+                <HugeiconsIcon icon={SentIcon} size={22} color={colors.foreground} />
+            </TouchableOpacity>
+          </View>
+        </View>
 
-export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
-  return <ClassicTabLayout />;
+        {/* Navigation Slider */}
+        <View className="flex-row px-2">
+          {TABS.map((tab) => {
+            const isActive = currentRoute === tab.id;
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                onPress={() => router.push(`/${tab.id === 'index' ? '' : tab.id}`)}
+                className="py-3 px-4 items-center justify-center"
+              >
+                <Text 
+                  className={`text-sm font-bold`}
+                  style={{ 
+                    color: colors.foreground, 
+                    opacity: isActive ? 1 : 0.4 
+                  }}
+                >
+                  {tab.label}
+                </Text>
+                {isActive && (
+                  <View 
+                    className="absolute bottom-0 h-1 w-8 rounded-full" 
+                    style={{ backgroundColor: colors.primary || 'black' }}
+                  />
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* --- CONTENT AREA --- */}
+      <Stack screenOptions={{ headerShown: false }} />
+    </View>
+  );
 }
