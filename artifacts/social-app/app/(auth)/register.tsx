@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState, useRef } from "react";
 import {
@@ -166,7 +166,7 @@ export default function RegisterScreen() {
             : "border-gray-100"
         }`}
       >
-        <Feather
+        <AntDesign
           name={icon as any}
           size={18}
           color={focused ? "#000" : error ? "#dc2626" : "#9ca3af"}
@@ -189,13 +189,13 @@ export default function RegisterScreen() {
           editable={!isLoading}
         />
         {value && !error && !secure && (
-          <Feather name="check-circle" size={18} color="#10b981" />
+          <AntDesign name="check-circle" size={18} color="#10b981" />
         )}
         {right}
       </View>
       {error && (
         <View className="mt-2 flex-row items-center gap-1.5">
-          <Feather name="info" size={14} color="#dc2626" />
+          <AntDesign name="info" size={14} color="#dc2626" />
           <Text className="text-red-600 text-xs font-medium">{error}</Text>
         </View>
       )}
@@ -253,7 +253,7 @@ export default function RegisterScreen() {
             error={errors.password} secure={!showPassword}
             right={
               <TouchableOpacity onPress={() => setShowPassword(v => !v)} disabled={isLoading} className="p-1">
-                <Feather name={showPassword ? "eye-off" : "eye"} size={18} color={errors.password ? "#dc2626" : "#6b7280"} />
+                <AntDesign name={showPassword ? "eye-off" : "eye"} size={18} color={errors.password ? "#dc2626" : "#6b7280"} />
               </TouchableOpacity>
             }
           />
@@ -268,7 +268,7 @@ export default function RegisterScreen() {
             error={errors.confirmPassword} secure={!showConfirm}
             right={
               <TouchableOpacity onPress={() => setShowConfirm(v => !v)} disabled={isLoading} className="p-1">
-                <Feather name={showConfirm ? "eye-off" : "eye"} size={18} color={errors.confirmPassword ? "#dc2626" : "#6b7280"} />
+                <AntDesign name={showConfirm ? "eye-off" : "eye"} size={18} color={errors.confirmPassword ? "#dc2626" : "#6b7280"} />
               </TouchableOpacity>
             }
           />
@@ -302,7 +302,7 @@ export default function RegisterScreen() {
             activeOpacity={0.7}
             className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
           >
-            <Feather name="arrow-left" size={20} color="#1f2937" />
+            <AntDesign name="arrow-left" size={20} color="#1f2937" />
           </TouchableOpacity>
 
           {/* Step dots */}
@@ -337,7 +337,7 @@ export default function RegisterScreen() {
         {/* ── General Error ── */}
         {errors.general && (
           <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex-row items-center gap-3">
-            <Feather name="alert-circle" size={20} color="#dc2626" />
+            <AntDesign name="alert-circle" size={20} color="#dc2626" />
             <Text className="flex-1 text-red-700 font-semibold text-sm">{errors.general}</Text>
           </View>
         )}
@@ -359,7 +359,7 @@ export default function RegisterScreen() {
               <Text className="text-white font-bold text-base">
                 {isLastStep ? "Create account" : "Continue"}
               </Text>
-              {!isLastStep && <Feather name="arrow-right" size={18} color="white" />}
+              {!isLastStep && <AntDesign name="arrow-right" size={18} color="white" />}
             </View>
           )}
         </TouchableOpacity>

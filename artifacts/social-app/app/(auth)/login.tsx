@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -118,7 +118,7 @@ export default function LoginScreen() {
         {/* General Error Alert */}
         {errors.general && (
           <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex-row items-center gap-3">
-            <Feather name="alert-circle" size={20} color="#dc2626" />
+            <AntDesign name="alert-circle" size={20} color="#dc2626" />
             <Text className="flex-1 text-red-700 font-semibold text-sm">
               {errors.general}
             </Text>
@@ -139,7 +139,7 @@ export default function LoginScreen() {
                   : "border-slate-300"
             }`}
           >
-            <Feather
+            <AntDesign
               name="mail"
               size={18}
               color={emailFocused ? "#3b82f6" : errors.email ? "#dc2626" : "#9ca3af"}
@@ -162,12 +162,12 @@ export default function LoginScreen() {
               placeholderTextColor="#9ca3af"
             />
             {email && !errors.email && (
-              <Feather name="check-circle" size={18} color="#10b981" />
+              <AntDesign name="check-circle" size={18} color="#10b981" />
             )}
           </View>
           {errors.email && (
             <View className="mt-2 flex-row items-center gap-1.5">
-              <Feather name="info" size={14} color="#dc2626" />
+              <AntDesign name="info" size={14} color="#dc2626" />
               <Text className="text-red-600 text-xs font-medium">
                 {errors.email}
               </Text>
@@ -189,7 +189,7 @@ export default function LoginScreen() {
                   : "border-slate-300"
             }`}
           >
-            <Feather
+            <AntDesign
               name="lock"
               size={18}
               color={passwordFocused ? "#3b82f6" : errors.password ? "#dc2626" : "#9ca3af"}
@@ -213,7 +213,7 @@ export default function LoginScreen() {
               disabled={isLoading}
               className="p-1"
             >
-              <Feather
+              <AntDesign
                 name={showPassword ? "eye-off" : "eye"}
                 size={18}
                 color={errors.password ? "#dc2626" : "#6b7280"}
@@ -222,7 +222,7 @@ export default function LoginScreen() {
           </View>
           {errors.password && (
             <View className="mt-2 flex-row items-center gap-1.5">
-              <Feather name="info" size={14} color="#dc2626" />
+              <AntDesign name="info" size={14} color="#dc2626" />
               <Text className="text-red-600 text-xs font-medium">
                 {errors.password}
               </Text>
