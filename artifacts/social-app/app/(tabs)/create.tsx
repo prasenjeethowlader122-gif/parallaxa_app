@@ -1,208 +1,357 @@
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
-  Image,
 } from "react-native";
 import { useCreatePost } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
-
-// Hugeicons
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
   Image01Icon,
   Location01Icon,
-  SquareLock02Icon, // For "Public/Everyone"
-  CircleIcon,
+  SquareLock02Icon,
+  XMarkIcon,
 } from "@hugeicons/core-free-icons";
+
+const MAX_LENGTH = 2200;
 
 export default function CreateScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user } = useAuth();
+
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [location, setLocation] = useState("");
-  
+  const [audience, setAudience] = useState<"public" | "followers">("public");
+
   const { mutate: createPost, isPending } = useCreatePost({
     mutation: {
-      onSuccess: () => {
-        router.push("/(tabs)");
-      },
+      onSuccess: () => router.replace("/(tabs)" as any),
       onError: (err: any) =>
         Alert.alert("Error", err?.message ?? "Could not create post"),
     },
   });
-  
+
+  const remaining = MAX_LENGTH - content.length;
+  const canPost = useMemo(() => {
+    return !!content.trim() || !!imageUrl.trim();
+  }, [content, imageUrl]);
+
+  const hashtags = useMemo(() => {
+    return Array.from(
+      new Set((content.match(/#\w+/g) ?? []).map((t) => t.slice(1).toLowerCase()))
+    );
+  }, [content]);
+
   const handlePost = () => {
-    if (!content.trim() && !imageUrl.trim()) return;
-    
-    // Extract hashtags automatically from content
-    const tags = content.match(/#(\w+)/g)?.map((t) => t.replace("#", "").toLowerCase()) || [];
-    
+    if (!canPost || isPending) return;
+
     createPost({
       data: {
         content: content.trim() || undefined,
         imageUrl: imageUrl.trim() || undefined,
         location: location.trim() || undefined,
-        hashtags: tags,
+        hashtags,
+        visibility: audience,
       },
     });
   };
-  
-  // Function to render highlighted text
-  const renderHighlightedText = (text: string) => {
-    return text.split(/(\s+)/).map((word, index) => {
-      if (word.startsWith("#") || word.startsWith("@")) {
-        return (
-          <Text key={index} style={{ color: colors.primary }}>
-            {word}
-          </Text>
-        );
-      }
-      return word;
-    });
+
+  const insertAtCursor = (value: string) => {
+    setContent((prev) => (prev.endsWith(" ") || prev.length === 0 ? prev + value : prev + " " + value));
   };
-  
+
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
     >
-      {/* ── HEADER ── */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-        }}
-      >
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={{ fontSize: 16, color: colors.foreground }}>Cancel</Text>
-        </TouchableOpacity>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Pressable onPress={() => router.back()} hitSlop={10}>
+          <Text style={[styles.headerAction, { color: colors.foreground }]}>Cancel</Text>
+        </Pressable>
 
-        <TouchableOpacity
+        <Text style={[styles.headerTitle, { color: colors.foreground }]}>
+          New post
+        </Text>
+
+        <Pressable
           onPress={handlePost}
-          disabled={isPending || (!content.trim() && !imageUrl.trim())}
-          style={{
-            paddingHorizontal: 20,
-            paddingVertical: 8,
-            borderRadius: 20,
-            backgroundColor: colors.primary,
-            opacity: !content.trim() && !imageUrl.trim() ? 0.5 : 1,
-          }}
+          disabled={!canPost || isPending}
+          style={[
+            styles.postButton,
+            {
+              backgroundColor: colors.primary,
+              opacity: !canPost || isPending ? 0.5 : 1,
+            },
+          ]}
         >
           {isPending ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>
-              Post
-            </Text>
+            <Text style={styles.postButtonText}>Post</Text>
           )}
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        <View style={{ flexDirection: "row", padding: 16, gap: 12 }}>
-          <UserAvatar uri={user?.avatarUrl} size={40} />
-          
-          <View style={{ flex: 1 }}>
-            {/* Audience Selector (Twitter Style) */}
-            <TouchableOpacity 
-              style={{ 
-                flexDirection: 'row', 
-                alignItems: 'center', 
-                borderWidth: 1, 
-                borderColor: colors.border, 
-                borderRadius: 15, 
-                paddingHorizontal: 8, 
-                paddingVertical: 2,
-                alignSelf: 'flex-start',
-                marginBottom: 12
-              }}
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.composeRow}>
+          <UserAvatar uri={user?.avatarUrl} size={44} />
+
+          <View style={styles.composeMain}>
+            <Pressable
+              onPress={() =>
+                setAudience(audience === "public" ? "followers" : "public")
+              }
+              style={[
+                styles.audienceChip,
+                { borderColor: colors.border, backgroundColor: colors.card },
+              ]}
             >
-              <Text style={{ color: colors.primary, fontSize: 13, fontWeight: '700' }}>Public</Text>
-            </TouchableOpacity>
+              <HugeiconsIcon
+                icon={audience === "public" ? SquareLock02Icon : SquareLock02Icon}
+                size={14}
+                color={colors.primary}
+              />
+              <Text style={[styles.audienceText, { color: colors.primary }]}>
+                {audience === "public" ? "Public" : "Followers"}
+              </Text>
+            </Pressable>
 
-            <View>
-                {/* Highlighted text overlay for visual feedback */}
-                <TextInput
-                style={{
-                    fontSize: 18,
-                    color: colors.foreground,
-                    textAlignVertical: "top",
-                    minHeight: 120,
-                }}
-                placeholder="What's happening?"
-                placeholderTextColor={colors.mutedForeground}
-                value={content}
-                onChangeText={setContent}
-                multiline
-                autoFocus
-                />
-            </View>
+            <TextInput
+              style={[styles.input, { color: colors.foreground }]}
+              placeholder="What's happening?"
+              placeholderTextColor={colors.mutedForeground}
+              value={content}
+              onChangeText={setContent}
+              multiline
+              autoFocus
+              maxLength={MAX_LENGTH}
+              textAlignVertical="top"
+              scrollEnabled={false}
+            />
 
-            {/* Image Preview if URL exists */}
-            {imageUrl.trim().length > 0 && (
-              <View style={{ marginTop: 12, position: 'relative' }}>
-                <Image 
-                  source={{ uri: imageUrl }} 
-                  style={{ width: '100%', height: 200, borderRadius: 16, backgroundColor: colors.muted }} 
+            {imageUrl.trim().length > 0 ? (
+              <View style={styles.previewWrap}>
+                <Image
+                  source={{ uri: imageUrl.trim() }}
+                  style={[styles.previewImage, { backgroundColor: colors.muted }]}
                   resizeMode="cover"
                 />
-                <TouchableOpacity 
+                <Pressable
                   onPress={() => setImageUrl("")}
-                  style={{ position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 12, padding: 4 }}
+                  style={styles.removePreview}
                 >
-                   <Text style={{ color: '#fff', fontSize: 10 }}>✕</Text>
-                </TouchableOpacity>
+                  <HugeiconsIcon icon={XMarkIcon} size={16} color="#fff" />
+                </Pressable>
               </View>
-            )}
+            ) : null}
           </View>
+        </View>
+
+        <View style={[styles.metaCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <Pressable
+            style={styles.metaRow}
+            onPress={() => {
+              Alert.prompt?.("Image URL", "Paste image URL", [
+                { text: "Cancel", style: "cancel" },
+                { text: "Save", onPress: (t) => setImageUrl(t ?? "") },
+              ]);
+            }}
+          >
+            <HugeiconsIcon icon={Image01Icon} size={20} color={colors.primary} />
+            <Text style={[styles.metaText, { color: colors.foreground }]}>Add image URL</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.metaRow}
+            onPress={() => {
+              Alert.prompt?.("Location", "Enter location", [
+                { text: "Cancel", style: "cancel" },
+                { text: "Save", onPress: (t) => setLocation(t ?? "") },
+              ]);
+            }}
+          >
+            <HugeiconsIcon icon={Location01Icon} size={20} color={colors.primary} />
+            <Text style={[styles.metaText, { color: colors.foreground }]}>Add location</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.helperRow}>
+          <Text
+            style={[
+              styles.counter,
+              { color: remaining < 100 ? colors.destructive : colors.mutedForeground },
+            ]}
+          >
+            {remaining}
+          </Text>
         </View>
       </ScrollView>
 
-      {/* ── TOOLBAR ── */}
-      <View
-        style={{
-          borderTopWidth: 0.5,
-          borderTopColor: colors.border,
-          paddingHorizontal: 16,
-          paddingVertical: 10,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 20,
-        }}
-      >
-        <TouchableOpacity onPress={() => {/* Trigger Image Picker or URL Alert */}}>
-          <HugeiconsIcon icon={Image01Icon} size={22} color={colors.primary} />
-        </TouchableOpacity>
-        
-        <TouchableOpacity onPress={() => {/* Location Logic */}}>
-          <HugeiconsIcon icon={Location01Icon} size={22} color={colors.primary} />
-        </TouchableOpacity>
+      <View style={[styles.toolbar, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
+        <Pressable onPress={() => insertAtCursor("#")} style={styles.toolbarButton}>
+          <Text style={{ color: colors.primary, fontWeight: "700" }}>#</Text>
+        </Pressable>
+
+        <Pressable onPress={() => insertAtCursor("@")} style={styles.toolbarButton}>
+          <Text style={{ color: colors.primary, fontWeight: "700" }}>@</Text>
+        </Pressable>
 
         <View style={{ flex: 1 }} />
 
-        {/* Character Count Circle */}
-        <View style={{ width: 24, height: 24, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ fontSize: 10, color: content.length > 2000 ? 'red' : colors.mutedForeground }}>
-                {2200 - content.length}
-            </Text>
-        </View>
+        <Text style={[styles.toolbarHint, { color: colors.mutedForeground }]}>
+          {hashtags.length > 0 ? `${hashtags.length} hashtag${hashtags.length > 1 ? "s" : ""}` : "No hashtags yet"}
+        </Text>
       </View>
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    height: 56,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerAction: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  postButton: {
+    minWidth: 72,
+    height: 34,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  postButtonText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 24,
+  },
+  composeRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  composeMain: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  audienceChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 12,
+  },
+  audienceText: {
+    marginLeft: 6,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  input: {
+    fontSize: 18,
+    lineHeight: 24,
+    minHeight: 140,
+    padding: 0,
+  },
+  previewWrap: {
+    marginTop: 12,
+    position: "relative",
+  },
+  previewImage: {
+    width: "100%",
+    height: 220,
+    borderRadius: 16,
+  },
+  removePreview: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  metaCard: {
+    marginTop: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  metaRow: {
+    minHeight: 52,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  metaText: {
+    marginLeft: 10,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  helperRow: {
+    marginTop: 12,
+    alignItems: "flex-end",
+  },
+  counter: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  toolbar: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  toolbarButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  toolbarHint: {
+    fontSize: 12,
+  },
+});
