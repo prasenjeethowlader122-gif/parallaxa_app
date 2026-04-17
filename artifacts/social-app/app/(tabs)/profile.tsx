@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -16,9 +16,7 @@ import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
 import { EmptyState } from "@/components/EmptyState";
-
-// Hugeicons Imports
-import { HugeiconsIcon } from '@hugeicons/react-native';
+import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
   Menu01Icon,
   UserPlus01Icon,
@@ -26,8 +24,8 @@ import {
   Grid01Icon,
   Bookmark02Icon,
   AiTypeIcon,
-  Camera01Icon
-} from '@hugeicons/core-free-icons';
+  Camera01Icon,
+} from "@hugeicons/core-free-icons";
 
 const { width } = Dimensions.get("window");
 const ITEM = (width - 2) / 3;
@@ -44,33 +42,57 @@ export default function ProfileScreen() {
     { enabled: !!user?.id }
   );
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
-  };
-
   const posts = postsData?.posts ?? [];
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch]);
+
+  const handleLogout = useCallback(() => {
+    logout();
+  }, [logout]);
+
+  const keyExtractor = useCallback((item: any) => String(item.id), []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: any }) => (
+      <TouchableOpacity
+        onPress={() => router.push(`/post/${item.id}` as any)}
+        activeOpacity={0.85}
+        style={[styles.gridItem, { backgroundColor: colors.muted }]}
+      >
+        {item.imageUrl ? (
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={styles.gridImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.gridPlaceholder}>
+            <HugeiconsIcon icon={AiTypeIcon} size={20} color={colors.mutedForeground} />
+          </View>
+        )}
+      </TouchableOpacity>
+    ),
+    [colors.muted, colors.mutedForeground, router]
+  );
 
   const ListHeader = useMemo(
     () => (
       <View>
-        {/* Navbar */}
         <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            borderBottomWidth: StyleSheet.hairlineWidth,
-            borderBottomColor: colors.border,
-          }}
+          style={[
+            styles.navbar,
+            { borderBottomColor: colors.border },
+          ]}
         >
-          <Text
-            style={{ fontSize: 18, fontWeight: "700", color: colors.foreground }}
-          >
-            {user?.username}
+          <Text style={[styles.username, { color: colors.foreground }]}>
+            {user?.username ?? "Profile"}
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/settings" as any)}
@@ -80,42 +102,20 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Profile info */}
-        <View style={{ padding: 16 }}>
-          <View
-            style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}
-          >
+        <View style={styles.profileSection}>
+          <View style={styles.profileRow}>
             <UserAvatar uri={user?.avatarUrl} size={84} />
-            <View
-              style={{
-                flex: 1,
-                flexDirection: "row",
-                justifyContent: "space-around",
-                marginLeft: 12,
-              }}
-            >
+            <View style={styles.statsRow}>
               {[
-                { label: "Posts",     value: user?.postsCount     ?? 0 },
+                { label: "Posts", value: user?.postsCount ?? 0 },
                 { label: "Followers", value: user?.followersCount ?? 0 },
                 { label: "Following", value: user?.followingCount ?? 0 },
               ].map(({ label, value }) => (
-                <View key={label} style={{ alignItems: "center" }}>
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: "700",
-                      color: colors.foreground,
-                    }}
-                  >
+                <View key={label} style={styles.statItem}>
+                  <Text style={[styles.statValue, { color: colors.foreground }]}>
                     {value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}
                   </Text>
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      marginTop: 2,
-                      color: colors.mutedForeground,
-                    }}
-                  >
+                  <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>
                     {label}
                   </Text>
                 </View>
@@ -123,93 +123,52 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <Text
-            style={{
-              fontSize: 15,
-              fontWeight: "600",
-              marginBottom: 4,
-              color: colors.foreground,
-            }}
-          >
-            {user?.displayName}
+          <Text style={[styles.displayName, { color: colors.foreground }]}>
+            {user?.displayName ?? user?.username}
           </Text>
+
           {user?.bio ? (
-            <Text
-              style={{
-                fontSize: 14,
-                lineHeight: 19,
-                marginBottom: 4,
-                color: colors.foreground,
-              }}
-            >
+            <Text style={[styles.bio, { color: colors.foreground }]}>
               {user.bio}
             </Text>
           ) : null}
+
           {user?.website ? (
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "500",
-                marginBottom: 12,
-                color: colors.primary,
-              }}
-            >
+            <Text style={[styles.website, { color: colors.primary }]}>
               {user.website}
             </Text>
           ) : null}
 
-          {/* Action row */}
-          <View style={{ flexDirection: "row", gap: 8 }}>
+          <View style={styles.actionRow}>
             <TouchableOpacity
-              style={{
-                flex: 1,
-                height: 34,
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: colors.border,
-                borderRadius: 8,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              style={[
+                styles.editButton,
+                { borderColor: colors.border },
+              ]}
               onPress={() => router.push("/edit-profile" as any)}
               activeOpacity={0.7}
             >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "600",
-                  color: colors.foreground,
-                }}
-              >
+              <Text style={[styles.editButtonText, { color: colors.foreground }]}>
                 Edit profile
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={{
-                width: 34,
-                height: 34,
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: colors.border,
-                borderRadius: 8,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              style={[
+                styles.iconButton,
+                { borderColor: colors.border },
+              ]}
               activeOpacity={0.7}
             >
               <HugeiconsIcon icon={UserPlus01Icon} size={18} color={colors.foreground} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={{
-                width: 34,
-                height: 34,
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: colors.border,
-                borderRadius: 8,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              onPress={() => logout()}
+              style={[
+                styles.iconButton,
+                { borderColor: colors.border },
+              ]}
+              onPress={handleLogout}
               activeOpacity={0.7}
             >
               <HugeiconsIcon icon={Logout01Icon} size={18} color={colors.destructive} />
@@ -217,102 +176,65 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Tabs */}
-        <View
-          style={{
-            flexDirection: "row",
-            borderTopWidth: StyleSheet.hairlineWidth,
-            borderBottomWidth: StyleSheet.hairlineWidth,
-            borderColor: colors.border,
-          }}
-        >
+        <View style={[styles.tabsRow, { borderColor: colors.border }]}>
           {(["posts", "saved"] as const).map((tab) => (
             <TouchableOpacity
               key={tab}
-              style={{
-                flex: 1,
-                height: 44,
-                alignItems: "center",
-                justifyContent: "center",
-                position: "relative",
-              }}
+              style={styles.tabButton}
               onPress={() => setActiveTab(tab)}
+              activeOpacity={0.75}
             >
               <HugeiconsIcon
                 icon={tab === "posts" ? Grid01Icon : Bookmark02Icon}
                 size={22}
-                color={
-                  activeTab === tab ? colors.foreground : colors.mutedForeground
-                }
+                color={activeTab === tab ? colors.foreground : colors.mutedForeground}
               />
-              {activeTab === tab && (
-                <View
-                  style={{
-                    position: "absolute",
-                    bottom: 0, // Switched to bottom for standard tab indicator feel
-                    left: 0,
-                    right: 0,
-                    height: 2,
-                    backgroundColor: colors.foreground,
-                  }}
-                />
-              )}
+              {activeTab === tab ? (
+                <View style={[styles.tabIndicator, { backgroundColor: colors.foreground }]} />
+              ) : null}
             </TouchableOpacity>
           ))}
         </View>
       </View>
     ),
-    [user, activeTab, colors, router, logout]
+    [activeTab, colors, handleLogout, router, user]
   );
 
+  const Empty = useMemo(() => {
+    if (isLoading) {
+      return (
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      );
+    }
+
+    return activeTab === "posts" ? (
+      <EmptyState
+        icon={Camera01Icon}
+        title="No posts yet"
+        subtitle="Share your first photo"
+        actionLabel="Create post"
+        onAction={() => router.push("/(tabs)/create" as any)}
+      />
+    ) : (
+      <EmptyState
+        icon={Bookmark02Icon}
+        title="No saved posts"
+        subtitle="Saved items will appear here"
+      />
+    );
+  }, [activeTab, colors.primary, isLoading, router]);
+
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
-        data={posts}
-        keyExtractor={(item: any) => item.id}
+        data={activeTab === "posts" ? posts : []}
+        keyExtractor={keyExtractor}
         numColumns={3}
-        renderItem={({ item }: { item: any }) => (
-          <TouchableOpacity
-            onPress={() => router.push(`/post/${item.id}` as any)}
-            activeOpacity={0.85}
-            style={{
-              width: ITEM,
-              height: ITEM,
-              margin: 0.5,
-              backgroundColor: colors.muted,
-            }}
-          >
-            {item.imageUrl ? (
-              <Image
-                source={{ uri: item.imageUrl }}
-                style={{ width: "100%", height: "100%" }}
-                resizeMode="cover"
-              />
-            ) : (
-              <View
-                style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-              >
-                <HugeiconsIcon icon={AiTypeIcon} size={20} color={colors.mutedForeground} />
-              </View>
-            )}
-          </TouchableOpacity>
-        )}
+        renderItem={renderItem}
         ListHeaderComponent={ListHeader}
-        ListEmptyComponent={
-          isLoading ? (
-            <View style={{ padding: 40, alignItems: "center" }}>
-              <ActivityIndicator size="large" color={colors.primary} />
-            </View>
-          ) : (
-            <EmptyState
-              icon={Camera01Icon} 
-              title="No posts yet"
-              subtitle="Share your first photo"
-              actionLabel="Create post"
-              onAction={() => router.push("/(tabs)/create" as any)}
-            />
-          )
-        }
+        ListEmptyComponent={Empty}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -321,7 +243,131 @@ export default function ProfileScreen() {
           />
         }
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews
+        initialNumToRender={9}
+        windowSize={7}
       />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  navbar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  username: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  profileSection: {
+    padding: 16,
+  },
+  profileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  statsRow: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginLeft: 12,
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  statLabel: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  displayName: {
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  bio: {
+    fontSize: 14,
+    lineHeight: 19,
+    marginBottom: 4,
+  },
+  website: {
+    fontSize: 14,
+    fontWeight: "500",
+    marginBottom: 12,
+  },
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  editButton: {
+    flex: 1,
+    height: 34,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  editButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  iconButton: {
+    width: 34,
+    height: 34,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  tabsRow: {
+    flexDirection: "row",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  tabButton: {
+    flex: 1,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  tabIndicator: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+  },
+  gridItem: {
+    width: ITEM,
+    height: ITEM,
+    margin: 0.5,
+  },
+  gridImage: {
+    width: "100%",
+    height: "100%",
+  },
+  gridPlaceholder: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingWrap: {
+    padding: 40,
+    alignItems: "center",
+  },
+});
