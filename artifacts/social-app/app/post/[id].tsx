@@ -11,6 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { ArrowLeft02Icon, HeartIcon, Message01Icon, Send02Icon, CheckmarkBadge01Icon } from "@hugeicons/core-free-icons";
+import { PostCard } from "@/components/PostCard";
 
 const { width } = Dimensions.get("window");
 
@@ -72,6 +73,8 @@ export default function PostDetailScreen() {
         <Text className="ml-4 text-[17px] font-bold" style={{ color: colors.foreground }}>Post</Text>
       </View>
       
+      
+      <PostCard {...post}/>
       {/* Author and Image sections... (use same structure as your provided code) */}
       
       <Text className="text-[13px] font-semibold p-4 uppercase text-mutedForeground">
@@ -94,7 +97,7 @@ export default function PostDetailScreen() {
       <View className="flex-row items-center px-3 pt-2 gap-2.5" style={{ borderTopWidth: 0.5, borderTopColor: colors.border, paddingBottom: insets.bottom + 8 }}>
         <UserAvatar uri={user?.avatarUrl} size={32} />
         <TextInput
-          className="flex-1 text-[15px] p-2"
+          className="flex-1 text-[15px] p-2 outline-none"
           style={{ color: colors.foreground }}
           placeholder="Add a comment..."
           value={comment}

@@ -94,8 +94,8 @@ export function PostCard({
     <TouchableOpacity 
       activeOpacity={1}
       onPress={navigateToPost}
-      className="flex-row px-4 py-3" 
-      style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border || '#ccc' }}
+      className="flex-row border-b-2 border-gray-100 p-4" 
+      
     >
       {/* Sidebar Avatar */}
       <View className="mr-3">
