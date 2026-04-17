@@ -11,13 +11,15 @@ const TABS = [
   { id: "explore", label: "Following" },
   { id: "trending", label: "Trending" }
 ];
-
+const CONTEXT_MENUS = [
+  {id : 'home' , label : 'Home' , icon : HomeIcon}
+]
 export default function RootLayout() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const pathname = usePathname();
-  
+  const [isMenuEnable , setIsMenuEnable] = useState(false)
   const currentRoute = pathname === "/" ? "index" : pathname.replace("/", "");
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
   
@@ -34,7 +36,11 @@ export default function RootLayout() {
         }}
       >
         {/* Top Bar: Logo & Actions */}
-        <View className="flex-row justify-between items-center px-5 mb-2">
+        <View className="flex-row justify-between items-center px-5 gap-4 mb-2">
+          <TouchableOpacity onPress = {()=>setIsMenuEnable((prev)=>!prev)}>
+            <HugeiconsIcon icon={Menu01Icon} size={22} color={colors.foreground} />
+          </TouchableOpacity>
+          <HugeiconsIcon icon={Menu01Icon} size={22} color={colors.foreground} />
           <Image 
             source={require('@/assets/images/parallaxa-logo.svg')} 
             style={{ width: 40, height: 40 }} 
@@ -44,7 +50,6 @@ export default function RootLayout() {
             <HugeiconsIcon icon={Menu01Icon} size={22} color={colors.foreground} />
           </TouchableOpacity>
         </View>
-
         {/* Navigation Slider */}
         <View className="flex-row px-2">
           {TABS.map((tab) => {
@@ -52,7 +57,7 @@ export default function RootLayout() {
             return (
               <TouchableOpacity
                 key={tab.id}
-                onPress={() => router.push(`/${tab.id === 'index' ? '' : tab.id}`)}
+               // onPress={() => router.push(`/${tab.id === 'index' ? '' : tab.id}`)}
                 className="py-3 px-4 items-center justify-center"
               >
                 <Text 
@@ -78,6 +83,17 @@ export default function RootLayout() {
 
       {/* --- CONTENT AREA --- */}
       <Stack screenOptions={{ headerShown: false }} />
+      {
+        isMenuEnable &&  (
+        <View className= 'w-full h-screen bg-white'>
+          <View className= 'flex-row p-4 border-b-2 items-center justify-between gap-4'>
+            {
+              
+            }
+          </View>
+        </View>
+        )
+      }
     </View>
   );
 }

@@ -12,7 +12,7 @@ import {
   ArrowRight02Icon,
   TickCircleIcon,
   InformationCircleIcon,
-  AlertCircleIcon
+  Alert01Icon,
 } from '@hugeicons/core-free-icons';
 
 import {
@@ -111,10 +111,11 @@ export default function RegisterScreen() {
   
   const goBack = () => {
     if (step > 0) { 
-        setStep(s => s - 1);
-        setErrors({}); 
+      setStep(s => s - 1);
+      setErrors({}); 
+    } else {
+      router.back();
     }
-    else router.back();
   };
   
   const handleRegister = async () => {
@@ -145,6 +146,15 @@ export default function RegisterScreen() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  /* ─── helper to clear a single field error ─── */
+  const clearError = (field: keyof FormErrors) => {
+    setErrors(prev => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
   
   /* ─── reusable input ─── */
@@ -192,10 +202,7 @@ export default function RegisterScreen() {
           placeholder={placeholder}
           placeholderTextColor="#9ca3af"
           value={value}
-          onChangeText={(t) => {
-            onChange(t);
-            if (error) setErrors(prev => ({ ...prev }));
-          }}
+          onChangeText={onChange}
           onFocus={onFocus}
           onBlur={onBlur}
           secureTextEntry={secure}
@@ -204,7 +211,7 @@ export default function RegisterScreen() {
           autoCorrect={false}
           editable={!isLoading}
         />
-        {value && !error && !secure && (
+        {value && !error && !secure && !right && (
           <HugeiconsIcon icon={TickCircleIcon} size={18} color="#10b981" />
         )}
         {right}
@@ -226,7 +233,7 @@ export default function RegisterScreen() {
           icon={UserIcon}
           placeholder="John Doe"
           value={displayName}
-          onChange={(t) => { setDisplayName(t); setErrors(p => ({ ...p, displayName: undefined })); }}
+          onChange={(t) => { setDisplayName(t); clearError("displayName"); }}
           focused={displayNameFocused}
           onFocus={() => setDNF(true)}
           onBlur={() => setDNF(false)}
@@ -238,7 +245,7 @@ export default function RegisterScreen() {
           icon={AtSignIcon}
           placeholder="john_doe"
           value={username}
-          onChange={(t) => { setUsername(t); setErrors(p => ({ ...p, username: undefined })); }}
+          onChange={(t) => { setUsername(t); clearError("username"); }}
           focused={usernameFocused}
           onFocus={() => setUNF(true)}
           onBlur={() => setUNF(false)}
@@ -254,7 +261,7 @@ export default function RegisterScreen() {
           icon={Mail01Icon}
           placeholder="your.email@example.com"
           value={email}
-          onChange={(t) => { setEmail(t); setErrors(p => ({ ...p, email: undefined })); }}
+          onChange={(t) => { setEmail(t); clearError("email"); }}
           focused={emailFocused}
           onFocus={() => setEF(true)}
           onBlur={() => setEF(false)}
@@ -271,7 +278,7 @@ export default function RegisterScreen() {
           icon={LockPasswordIcon}
           placeholder="At least 6 characters"
           value={password}
-          onChange={(t) => { setPassword(t); setErrors(p => ({ ...p, password: undefined })); }}
+          onChange={(t) => { setPassword(t); clearError("password"); }}
           focused={passwordFocused}
           onFocus={() => setPF(true)}
           onBlur={() => setPF(false)}
@@ -292,7 +299,7 @@ export default function RegisterScreen() {
           icon={LockPasswordIcon}
           placeholder="Repeat your password"
           value={confirmPassword}
-          onChange={(t) => { setConfirmPass(t); setErrors(p => ({ ...p, confirmPassword: undefined })); }}
+          onChange={(t) => { setConfirmPass(t); clearError("confirmPassword"); }}
           focused={confirmFocused}
           onFocus={() => setCF(true)}
           onBlur={() => setCF(false)}
@@ -310,6 +317,8 @@ export default function RegisterScreen() {
         />
       </>
     );
+
+    return null;
   };
   
   const isLastStep = step === TOTAL_STEPS - 1;
@@ -369,7 +378,7 @@ export default function RegisterScreen() {
 
         {errors.general && (
           <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex-row items-center gap-3">
-            <HugeiconsIcon icon={AlertCircleIcon} size={20} color="#dc2626" />
+            <HugeiconsIcon icon={Alert01Icon} size={20} color="#dc2626" />
             <Text className="flex-1 text-red-700 font-semibold text-sm">{errors.general}</Text>
           </View>
         )}
