@@ -193,6 +193,97 @@ export default function RootLayout() {
               borderRightColor: colors.border,
             }}
           >
+            <View
+       style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: colors.border,
+        marginBottom: 8,
+       }}
+      >
+       <View>
+        <Text
+         style={{
+          fontSize: 16,
+          fontWeight: "700",
+          color: colors.foreground,
+         }}
+        >
+         {user?.displayName ?? "Menu"}
+        </Text>
+        {user?.username ? (
+         <Text
+          style={{
+           fontSize: 13,
+           color: colors.mutedForeground,
+           marginTop: 2,
+          }}
+         >
+          @{user.username}
+         </Text>
+        ) : null}
+       </View>
+       <TouchableOpacity onPress={() => setMenuOpen(false)}>
+        <HugeiconsIcon
+         icon={Cancel01Icon}
+         size={20}
+         color={colors.mutedForeground}
+        />
+       </TouchableOpacity>
+      </View>
+
+{ /* Menu items */ }
+<ScrollView showsVerticalScrollIndicator={false}>
+       {MENU_ITEMS.map((item) => {
+        const isActive = currentRoute === item.id;
+        return (
+         <TouchableOpacity
+          key={item.id}
+          onPress={() => navigateTo(item.id)}
+          activeOpacity={0.7}
+          style={{
+           flexDirection: "row",
+           alignItems: "center",
+           gap: 14,
+           paddingHorizontal: 20,
+           paddingVertical: 14,
+           backgroundColor: isActive
+            ? (colors.primary ?? "#000") + "12"
+            : "transparent",
+           borderRadius: 12,
+           marginHorizontal: 8,
+           marginVertical: 2,
+          }}
+         >
+          <HugeiconsIcon
+           icon={item.icon}
+           size={22}
+           color={
+            isActive
+             ? (colors.primary ?? colors.foreground)
+             : colors.foreground
+           }
+           strokeWidth={isActive ? 2 : 1.5}
+          />
+          <Text
+           style={{
+            fontSize: 15,
+            fontWeight: isActive ? "700" : "500",
+            color: isActive
+             ? (colors.primary ?? colors.foreground)
+             : colors.foreground,
+           }}
+          >
+           {item.label}
+          </Text>
+         </TouchableOpacity>
+);
+ })}
+</ScrollView>
             {/* Drawer Header & Items... (previous code logic remains here) */}
           </View>
         </>
