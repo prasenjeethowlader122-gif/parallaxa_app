@@ -32,12 +32,12 @@ const TABS = [
 ];
 
 const MENU_ITEMS = [
-  { id: "index",        label: "Home",          icon: Home01Icon },
-  { id: "explore",      label: "Explore",       icon: Search01Icon },
-  { id: "notifications",label: "Notifications", icon: Notification01Icon },
-  { id: "profile",      label: "Profile",       icon: UserIcon },
-  { id: "create",       label: "New Post",      icon: Add01Icon },
-  { id: "settings",     label: "Settings",      icon: Settings01Icon },
+  { id: "index", label: "Home", icon: Home01Icon },
+  { id: "explore", label: "Explore", icon: Search01Icon },
+  { id: "notifications", label: "Notifications", icon: Notification01Icon },
+  { id: "profile", label: "Profile", icon: UserIcon },
+  { id: "create", label: "New Post", icon: Add01Icon },
+  { id: "settings", label: "Settings", icon: Settings01Icon },
 ];
 
 export default function RootLayout() {
@@ -47,16 +47,16 @@ export default function RootLayout() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-
+  
   const currentRoute = pathname === "/" ? "index" : pathname.replace("/", "");
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
-
+  
   const navigateTo = (id: string) => {
     setMenuOpen(false);
     const path = id === "index" ? "/(tabs)" : `/(tabs)/${id}`;
     router.push(path as any);
   };
-
+  
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* ── GLOBAL HEADER ── */}
@@ -79,6 +79,14 @@ export default function RootLayout() {
             paddingBottom: 8,
           }}
         >
+          <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "start",
+            
+          }}
+        >
           {/* Hamburger */}
           <TouchableOpacity
             onPress={() => setMenuOpen((prev) => !prev)}
@@ -94,10 +102,10 @@ export default function RootLayout() {
           {/* Logo */}
           <Image
             source={require("@/assets/images/parallaxa-logo.svg")}
-            style={{ width: 36, height: 36 }}
+            style={{ width: 46, height: 46 }}
             resizeMode="contain"
           />
-
+          </View>
           {/* Notifications shortcut */}
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/notifications" as any)}
@@ -141,8 +149,8 @@ export default function RootLayout() {
                     style={{
                       position: "absolute",
                       bottom: 0,
-                      height: 3,
-                      width: 28,
+                      height: 2,
+                      width: 38,
                       borderRadius: 2,
                       backgroundColor: colors.primary ?? "#000",
                     }}
@@ -284,9 +292,9 @@ export default function RootLayout() {
                 );
               })}
             </ScrollView>
-          </View>
-        </>
-      )}
-    </View>
-  );
+          </View> </>
+  )
+}
+</View>
+);
 }
