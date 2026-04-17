@@ -30,6 +30,12 @@ import {
 const { width } = Dimensions.get("window");
 const ITEM = (width - 2) / 3;
 
+const STATS = [
+  { label: "Posts", key: "postsCount" },
+  { label: "Followers", key: "followersCount" },
+  { label: "Following", key: "followingCount" },
+] as const;
+
 export default function ProfileScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -42,7 +48,12 @@ export default function ProfileScreen() {
     { enabled: !!user?.id }
   );
 
-  const posts = postsData?.posts ?? [];
+  // Defensive: guard against unexpected API response shapes
+  const posts = Array.isArray(postsData?.posts)
+    ? postsData.posts
+    : Array.isArray(postsData?.data)
+    ? postsData.data
+    : [];
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -85,12 +96,7 @@ export default function ProfileScreen() {
   const ListHeader = useMemo(
     () => (
       <View>
-        <View
-          style={[
-            styles.navbar,
-            { borderBottomColor: colors.border },
-          ]}
-        >
+        <View style={[styles.navbar, { borderBottomColor: colors.border }]}>
           <Text style={[styles.username, { color: colors.foreground }]}>
             {user?.username ?? "Profile"}
           </Text>
@@ -106,25 +112,24 @@ export default function ProfileScreen() {
           <View style={styles.profileRow}>
             <UserAvatar uri={user?.avatarUrl} size={84} />
             <View style={styles.statsRow}>
-              {[
-                { label: "Posts", value: user?.postsCount ?? 0 },
-                { label: "Followers", value: user?.followersCount ?? 0 },
-                { label: "Following", value: user?.followingCount ?? 0 },
-              ].map(({ label, value }) => (
-                <View key={label} style={styles.statItem}>
-                  <Text style={[styles.statValue, { color: colors.foreground }]}>
-                    {value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}
-                  </Text>
-                  <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>
-                    {label}
-                  </Text>
-                </View>
-              ))}
+              {STATS.map(({ label, key }) => {
+                const value = user?.[key] ?? 0;
+                return (
+                  <View key={label} style={styles.statItem}>
+                    <Text style={[styles.statValue, { color: colors.foreground }]}>
+                      {value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}
+                    </Text>
+                    <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>
+                      {label}
+                    </Text>
+                  </View>
+                );
+              })}
             </View>
           </View>
 
           <Text style={[styles.displayName, { color: colors.foreground }]}>
-            {user?.displayName ?? user?.username}
+            {user?.displayName ?? user?.username ?? ""}
           </Text>
 
           {user?.bio ? (
@@ -141,10 +146,7 @@ export default function ProfileScreen() {
 
           <View style={styles.actionRow}>
             <TouchableOpacity
-              style={[
-                styles.editButton,
-                { borderColor: colors.border },
-              ]}
+              style={[styles.editButton, { borderColor: colors.border }]}
               onPress={() => router.push("/edit-profile" as any)}
               activeOpacity={0.7}
             >
@@ -154,20 +156,14 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.iconButton,
-                { borderColor: colors.border },
-              ]}
+              style={[styles.iconButton, { borderColor: colors.border }]}
               activeOpacity={0.7}
             >
               <HugeiconsIcon icon={UserPlus01Icon} size={18} color={colors.foreground} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.iconButton,
-                { borderColor: colors.border },
-              ]}
+              style={[styles.iconButton, { borderColor: colors.border }]}
               onPress={handleLogout}
               activeOpacity={0.7}
             >
