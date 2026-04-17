@@ -1,4 +1,3 @@
-import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
@@ -17,6 +16,18 @@ import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
 import { EmptyState } from "@/components/EmptyState";
+
+// Hugeicons Imports
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import {
+  Menu01Icon,
+  UserPlus01Icon,
+  Logout01Icon,
+  Grid01Icon,
+  Bookmark02Icon,
+  AiTypeIcon,
+  Camera01Icon
+} from '@hugeicons/core-free-icons';
 
 const { width } = Dimensions.get("window");
 const ITEM = (width - 2) / 3;
@@ -41,7 +52,6 @@ export default function ProfileScreen() {
 
   const posts = postsData?.posts ?? [];
 
-  // Memoised so it doesn't re-create on every scroll event
   const ListHeader = useMemo(
     () => (
       <View>
@@ -66,7 +76,7 @@ export default function ProfileScreen() {
             onPress={() => router.push("/settings" as any)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Feather name="menu" size={24} color={colors.foreground} />
+            <HugeiconsIcon icon={Menu01Icon} size={24} color={colors.foreground} />
           </TouchableOpacity>
         </View>
 
@@ -186,7 +196,7 @@ export default function ProfileScreen() {
               }}
               activeOpacity={0.7}
             >
-              <Feather name="user-plus" size={16} color={colors.foreground} />
+              <HugeiconsIcon icon={UserPlus01Icon} size={18} color={colors.foreground} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -202,12 +212,12 @@ export default function ProfileScreen() {
               onPress={() => logout()}
               activeOpacity={0.7}
             >
-              <Feather name="log-out" size={16} color={colors.destructive} />
+              <HugeiconsIcon icon={Logout01Icon} size={18} color={colors.destructive} />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Grid / Saved tabs */}
+        {/* Tabs */}
         <View
           style={{
             flexDirection: "row",
@@ -228,8 +238,8 @@ export default function ProfileScreen() {
               }}
               onPress={() => setActiveTab(tab)}
             >
-              <Feather
-                name={tab === "posts" ? "grid" : "bookmark"}
+              <HugeiconsIcon
+                icon={tab === "posts" ? Grid01Icon : Bookmark02Icon}
                 size={22}
                 color={
                   activeTab === tab ? colors.foreground : colors.mutedForeground
@@ -239,7 +249,7 @@ export default function ProfileScreen() {
                 <View
                   style={{
                     position: "absolute",
-                    top: 0,
+                    bottom: 0, // Switched to bottom for standard tab indicator feel
                     left: 0,
                     right: 0,
                     height: 2,
@@ -252,8 +262,7 @@ export default function ProfileScreen() {
         </View>
       </View>
     ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user, activeTab, colors]
+    [user, activeTab, colors, router, logout]
   );
 
   return (
@@ -283,7 +292,7 @@ export default function ProfileScreen() {
               <View
                 style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
               >
-                <Feather name="type" size={16} color={colors.mutedForeground} />
+                <HugeiconsIcon icon={AiTypeIcon} size={20} color={colors.mutedForeground} />
               </View>
             )}
           </TouchableOpacity>
@@ -296,7 +305,7 @@ export default function ProfileScreen() {
             </View>
           ) : (
             <EmptyState
-              icon="camera"
+              icon={Camera01Icon} // Note: Check if EmptyState component expects an object or string
               title="No posts yet"
               subtitle="Share your first photo"
               actionLabel="Create post"
@@ -312,7 +321,6 @@ export default function ProfileScreen() {
           />
         }
         showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => <View style={{ height: 1 }} />}
       />
     </View>
   );
