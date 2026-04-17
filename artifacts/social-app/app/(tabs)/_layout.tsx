@@ -21,6 +21,7 @@ import {
   Settings01Icon,
   Add01Icon,
   Cancel01Icon,
+  Message01Icon,
 } from "@hugeicons/core-free-icons";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
@@ -38,6 +39,9 @@ const MENU_ITEMS = [
   { id: "notifications", label: "Notifications", icon: Notification01Icon },
   { id: "profile", label: "Profile", icon: UserIcon },
   { id: "create", label: "New Post", icon: Add01Icon },
+];
+
+const BOTTOM_MENU_ITEMS = [
   { id: "settings", label: "Settings", icon: Settings01Icon },
 ];
 
@@ -48,16 +52,16 @@ export default function RootLayout() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  
+
   const currentRoute = pathname === "/" || pathname === "/(tabs)" ? "index" : pathname.split("/").pop();
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
-  
+
   const navigateTo = (id: string) => {
     setMenuOpen(false);
     const path = id === "index" ? "/(tabs)" : `/(tabs)/${id}`;
     router.push(path as any);
   };
-  
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* ── GLOBAL HEADER ── */}
@@ -101,7 +105,7 @@ export default function RootLayout() {
             />
           </View>
 
-          <View style={{ flexDirection: "row",gap : 16, alignItems: "center" , justifyContent: "end" }}>
+          <View style={{ flexDirection: "row", gap: 16, alignItems: "center", justifyContent: "flex-end" }}>
             {/* Notifications shortcut */}
             <TouchableOpacity
               onPress={() => router.push("/(tabs)/notifications" as any)}
@@ -109,6 +113,18 @@ export default function RootLayout() {
             >
               <HugeiconsIcon
                 icon={Notification01Icon}
+                size={22}
+                color={colors.foreground}
+              />
+            </TouchableOpacity>
+
+            {/* Message icon - before avatar */}
+            <TouchableOpacity
+              onPress={() => router.push("/(tabs)/messages" as any)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <HugeiconsIcon
+                icon={Message01Icon}
                 size={22}
                 color={colors.foreground}
               />
@@ -153,7 +169,7 @@ export default function RootLayout() {
                         height: 2,
                         width: 38,
                         borderRadius: 0,
-                        backgroundColor:  "#000",
+                        backgroundColor: "#000",
                       }}
                     />
                   )}
@@ -194,97 +210,157 @@ export default function RootLayout() {
             }}
           >
             <View
-       style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 20,
-        paddingBottom: 20,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: colors.border,
-        marginBottom: 8,
-       }}
-      >
-       <View>
-        <Text
-         style={{
-          fontSize: 16,
-          fontWeight: "700",
-          color: colors.foreground,
-         }}
-        >
-         {user?.displayName ?? "Menu"}
-        </Text>
-        {user?.username ? (
-         <Text
-          style={{
-           fontSize: 13,
-           color: colors.mutedForeground,
-           marginTop: 2,
-          }}
-         >
-          @{user.username}
-         </Text>
-        ) : null}
-       </View>
-       <TouchableOpacity onPress={() => setMenuOpen(false)}>
-        <HugeiconsIcon
-         icon={Cancel01Icon}
-         size={20}
-         color={colors.mutedForeground}
-        />
-       </TouchableOpacity>
-      </View>
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                paddingBottom: 20,
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderBottomColor: colors.border,
+                marginBottom: 8,
+              }}
+            >
+              <View>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "700",
+                    color: colors.foreground,
+                  }}
+                >
+                  {user?.displayName ?? "Menu"}
+                </Text>
+                {user?.username ? (
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: colors.mutedForeground,
+                      marginTop: 2,
+                    }}
+                  >
+                    @{user.username}
+                  </Text>
+                ) : null}
+              </View>
+              <TouchableOpacity onPress={() => setMenuOpen(false)}>
+                <HugeiconsIcon
+                  icon={Cancel01Icon}
+                  size={20}
+                  color={colors.mutedForeground}
+                />
+              </TouchableOpacity>
+            </View>
 
-{ /* Menu items */ }
-<ScrollView showsVerticalScrollIndicator={false}>
-       {MENU_ITEMS.map((item) => {
-        const isActive = currentRoute === item.id;
-        return (
-         <TouchableOpacity
-          key={item.id}
-          onPress={() => navigateTo(item.id)}
-          activeOpacity={0.7}
-          style={{
-           flexDirection: "row",
-           alignItems: "center",
-           gap: 14,
-           paddingHorizontal: 20,
-           paddingVertical: 14,
-           backgroundColor: isActive
-            ? (colors.primary ?? "#000") + "12"
-            : "transparent",
-           borderRadius: 12,
-           marginHorizontal: 8,
-           marginVertical: 2,
-          }}
-         >
-          <HugeiconsIcon
-           icon={item.icon}
-           size={22}
-           color={
-            isActive
-             ? (colors.primary ?? colors.foreground)
-             : colors.foreground
-           }
-           strokeWidth={isActive ? 2 : 1.5}
-          />
-          <Text
-           style={{
-            fontSize: 15,
-            fontWeight: isActive ? "700" : "500",
-            color: isActive
-             ? (colors.primary ?? colors.foreground)
-             : colors.foreground,
-           }}
-          >
-           {item.label}
-          </Text>
-         </TouchableOpacity>
-);
- })}
-</ScrollView>
-            {/* Drawer Header & Items... (previous code logic remains here) */}
+            <ScrollView
+              style={{ flex: 1 }}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20 }}
+            >
+              {/* Top menu items */}
+              {MENU_ITEMS.map((item) => {
+                const isActive = currentRoute === item.id;
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    onPress={() => navigateTo(item.id)}
+                    activeOpacity={0.7}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 14,
+                      paddingHorizontal: 20,
+                      paddingVertical: 14,
+                      backgroundColor: isActive
+                        ? (colors.primary ?? "#000") + "12"
+                        : "transparent",
+                      borderRadius: 12,
+                      marginHorizontal: 8,
+                      marginVertical: 2,
+                    }}
+                  >
+                    <HugeiconsIcon
+                      icon={item.icon}
+                      size={22}
+                      color={
+                        isActive
+                          ? (colors.primary ?? colors.foreground)
+                          : colors.foreground
+                      }
+                      strokeWidth={isActive ? 2 : 1.5}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        fontWeight: isActive ? "700" : "500",
+                        color: isActive
+                          ? (colors.primary ?? colors.foreground)
+                          : colors.foreground,
+                      }}
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+
+              {/* Bottom divider */}
+              <View
+                style={{
+                  height: 0.8,
+                  backgroundColor: colors.border,
+                  marginVertical: 16,
+                  marginHorizontal: 20,
+                }}
+              />
+
+              {/* Bottom setting item */}
+              {BOTTOM_MENU_ITEMS.map((item) => {
+                const isActive = currentRoute === item.id;
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    onPress={() => navigateTo(item.id)}
+                    activeOpacity={0.7}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 14,
+                      paddingHorizontal: 20,
+                      paddingVertical: 14,
+                      backgroundColor: isActive
+                        ? (colors.primary ?? "#000") + "12"
+                        : "transparent",
+                      borderRadius: 12,
+                      marginHorizontal: 8,
+                      marginVertical: 2,
+                    }}
+                  >
+                    <HugeiconsIcon
+                      icon={item.icon}
+                      size={22}
+                      color={
+                        isActive
+                          ? (colors.primary ?? colors.foreground)
+                          : colors.foreground
+                      }
+                      strokeWidth={isActive ? 2 : 1.5}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        fontWeight: isActive ? "700" : "500",
+                        color: isActive
+                          ? (colors.primary ?? colors.foreground)
+                          : colors.foreground,
+                      }}
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
         </>
       )}
