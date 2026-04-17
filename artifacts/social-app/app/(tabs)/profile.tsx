@@ -1,11 +1,17 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
-  ActivityIndicator, Dimensions, FlatList, Image, Platform,
-  RefreshControl, Text, TouchableOpacity, View,
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Image,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetUserPosts } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
@@ -17,7 +23,6 @@ const ITEM = (width - 2) / 3;
 
 export default function ProfileScreen() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, logout } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
@@ -34,107 +39,225 @@ export default function ProfileScreen() {
     setRefreshing(false);
   };
 
-  const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
   const posts = postsData?.posts ?? [];
 
-  const Header = () => (
-    <View>
-      {/* Navbar */}
-      <View
-        className="flex-row justify-between items-center px-4 pb-3"
-        style={{
-          paddingTop: topPadding + 12,
-          backgroundColor: colors.background,
-          borderBottomWidth: 0.5,
-          borderBottomColor: colors.border,
-        }}
-      >
-        <Text className="text-xl font-bold" style={{ color: colors.foreground }}>{user?.username}</Text>
-        <View className="flex-row gap-1">
-          <TouchableOpacity onPress={() => router.push("/settings" as any)} className="p-1">
+  // Memoised so it doesn't re-create on every scroll event
+  const ListHeader = useMemo(
+    () => (
+      <View>
+        {/* Navbar */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: colors.border,
+          }}
+        >
+          <Text
+            style={{ fontSize: 18, fontWeight: "700", color: colors.foreground }}
+          >
+            {user?.username}
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/settings" as any)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
             <Feather name="menu" size={24} color={colors.foreground} />
           </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Profile info */}
-      <View className="p-4">
-        <View className="flex-row items-center mb-3">
-          <UserAvatar uri={user?.avatarUrl} size={84} />
-          <View className="flex-1 flex-row justify-around ml-3">
-            {[
-              { label: "Posts", value: user?.postsCount ?? 0 },
-              { label: "Followers", value: user?.followersCount ?? 0 },
-              { label: "Following", value: user?.followingCount ?? 0 },
-            ].map(({ label, value }) => (
-              <View key={label} className="items-center">
-                <Text className="text-lg font-bold" style={{ color: colors.foreground }}>
-                  {value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}
-                </Text>
-                <Text className="text-[13px] mt-0.5" style={{ color: colors.mutedForeground }}>{label}</Text>
-              </View>
-            ))}
+        {/* Profile info */}
+        <View style={{ padding: 16 }}>
+          <View
+            style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}
+          >
+            <UserAvatar uri={user?.avatarUrl} size={84} />
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                justifyContent: "space-around",
+                marginLeft: 12,
+              }}
+            >
+              {[
+                { label: "Posts",     value: user?.postsCount     ?? 0 },
+                { label: "Followers", value: user?.followersCount ?? 0 },
+                { label: "Following", value: user?.followingCount ?? 0 },
+              ].map(({ label, value }) => (
+                <View key={label} style={{ alignItems: "center" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "700",
+                      color: colors.foreground,
+                    }}
+                  >
+                    {value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      marginTop: 2,
+                      color: colors.mutedForeground,
+                    }}
+                  >
+                    {label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <Text
+            style={{
+              fontSize: 15,
+              fontWeight: "600",
+              marginBottom: 4,
+              color: colors.foreground,
+            }}
+          >
+            {user?.displayName}
+          </Text>
+          {user?.bio ? (
+            <Text
+              style={{
+                fontSize: 14,
+                lineHeight: 19,
+                marginBottom: 4,
+                color: colors.foreground,
+              }}
+            >
+              {user.bio}
+            </Text>
+          ) : null}
+          {user?.website ? (
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: "500",
+                marginBottom: 12,
+                color: colors.primary,
+              }}
+            >
+              {user.website}
+            </Text>
+          ) : null}
+
+          {/* Action row */}
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                height: 34,
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: colors.border,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onPress={() => router.push("/edit-profile" as any)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: colors.foreground,
+                }}
+              >
+                Edit profile
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{
+                width: 34,
+                height: 34,
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: colors.border,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              activeOpacity={0.7}
+            >
+              <Feather name="user-plus" size={16} color={colors.foreground} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{
+                width: 34,
+                height: 34,
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: colors.border,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onPress={() => logout()}
+              activeOpacity={0.7}
+            >
+              <Feather name="log-out" size={16} color={colors.destructive} />
+            </TouchableOpacity>
           </View>
         </View>
 
-        <Text className="text-[15px] font-semibold mb-1" style={{ color: colors.foreground }}>{user?.displayName}</Text>
-        {user?.bio && <Text className="text-sm leading-[19px] mb-1" style={{ color: colors.foreground }}>{user.bio}</Text>}
-        {user?.website && <Text className="text-sm font-medium mb-3 text-primary">{user.website}</Text>}
-
-        <View className="flex-row gap-2">
-          <TouchableOpacity
-            className="flex-1 h-[34px] border rounded-lg items-center justify-center"
-            style={{ borderColor: colors.border }}
-            onPress={() => router.push("/edit-profile" as any)}
-            activeOpacity={0.7}
-          >
-            <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>Edit profile</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="w-[34px] h-[34px] border rounded-lg items-center justify-center"
-            style={{ borderColor: colors.border }}
-            activeOpacity={0.7}
-          >
-            <Feather name="user-plus" size={16} color={colors.foreground} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="w-[34px] h-[34px] border rounded-lg items-center justify-center"
-            style={{ borderColor: colors.border }}
-            onPress={() => logout()}
-            activeOpacity={0.7}
-          >
-            <Feather name="log-out" size={16} color={colors.destructive} />
-          </TouchableOpacity>
+        {/* Grid / Saved tabs */}
+        <View
+          style={{
+            flexDirection: "row",
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderColor: colors.border,
+          }}
+        >
+          {(["posts", "saved"] as const).map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              style={{
+                flex: 1,
+                height: 44,
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+              }}
+              onPress={() => setActiveTab(tab)}
+            >
+              <Feather
+                name={tab === "posts" ? "grid" : "bookmark"}
+                size={22}
+                color={
+                  activeTab === tab ? colors.foreground : colors.mutedForeground
+                }
+              />
+              {activeTab === tab && (
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 2,
+                    backgroundColor: colors.foreground,
+                  }}
+                />
+              )}
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
-
-      {/* Tabs */}
-      <View
-        className="flex-row"
-        style={{ borderTopWidth: 0.5, borderBottomWidth: 0.5, borderColor: colors.border }}
-      >
-        {["posts", "saved"].map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            className="flex-1 h-11 items-center justify-center relative"
-            onPress={() => setActiveTab(tab as "posts" | "saved")}
-          >
-            <Feather
-              name={tab === "posts" ? "grid" : "bookmark"}
-              size={22}
-              color={activeTab === tab ? colors.foreground : colors.mutedForeground}
-            />
-            {activeTab === tab && (
-              <View className="absolute top-0 left-0 right-0 h-px" style={{ backgroundColor: colors.foreground }} />
-            )}
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user, activeTab, colors]
   );
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <FlatList
         data={posts}
         keyExtractor={(item: any) => item.id}
@@ -143,21 +266,32 @@ export default function ProfileScreen() {
           <TouchableOpacity
             onPress={() => router.push(`/post/${item.id}` as any)}
             activeOpacity={0.85}
-            style={{ width: ITEM, height: ITEM, margin: 0.5, backgroundColor: colors.muted }}
+            style={{
+              width: ITEM,
+              height: ITEM,
+              margin: 0.5,
+              backgroundColor: colors.muted,
+            }}
           >
             {item.imageUrl ? (
-              <Image source={{ uri: item.imageUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+              <Image
+                source={{ uri: item.imageUrl }}
+                style={{ width: "100%", height: "100%" }}
+                resizeMode="cover"
+              />
             ) : (
-              <View className="w-full h-full items-center justify-center">
+              <View
+                style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+              >
                 <Feather name="type" size={16} color={colors.mutedForeground} />
               </View>
             )}
           </TouchableOpacity>
         )}
-        ListHeaderComponent={<Header />}
+        ListHeaderComponent={ListHeader}
         ListEmptyComponent={
           isLoading ? (
-            <View className="p-10 items-center">
+            <View style={{ padding: 40, alignItems: "center" }}>
               <ActivityIndicator size="large" color={colors.primary} />
             </View>
           ) : (
@@ -171,7 +305,11 @@ export default function ProfileScreen() {
           )
         }
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+          />
         }
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={{ height: 1 }} />}

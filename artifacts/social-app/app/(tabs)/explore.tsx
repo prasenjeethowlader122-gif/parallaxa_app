@@ -2,21 +2,26 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator, Dimensions, FlatList, Image, Platform,
-  Text, TextInput, TouchableOpacity, View,
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Image,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetExplorePosts, useSearch } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "@/components/UserAvatar";
 
 const { width } = Dimensions.get("window");
 const COLUMN = 3;
-const ITEM_SIZE = (width - 2) / COLUMN;
+const GAP = 1;
+const ITEM_SIZE = (width - GAP * (COLUMN - 1)) / COLUMN;
 
 export default function ExploreScreen() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -35,30 +40,35 @@ export default function ExploreScreen() {
     setDebounceTimer(t);
   };
 
-  const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
   const isSearching = debouncedQuery.length > 1;
   const posts = exploreData?.posts ?? [];
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Search bar */}
       <View
-        className="px-4 pb-3"
         style={{
-          paddingTop: topPadding + 12,
+          paddingHorizontal: 16,
+          paddingVertical: 10,
           backgroundColor: colors.background,
           borderBottomWidth: 0.5,
           borderBottomColor: colors.border,
         }}
       >
         <View
-          className="flex-row items-center rounded-xl px-3 h-10 gap-2"
-          style={{ backgroundColor: colors.muted }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            borderRadius: 12,
+            paddingHorizontal: 12,
+            height: 40,
+            gap: 8,
+            backgroundColor: colors.muted,
+          }}
         >
           <Feather name="search" size={16} color={colors.mutedForeground} />
           <TextInput
-            className="flex-1 text-[15px]"
-            style={{ color: colors.foreground }}
+            style={{ flex: 1, fontSize: 15, color: colors.foreground }}
             placeholder="Search users, tags, posts..."
             placeholderTextColor={colors.mutedForeground}
             value={query}
@@ -66,7 +76,12 @@ export default function ExploreScreen() {
             autoCorrect={false}
           />
           {query.length > 0 && (
-            <TouchableOpacity onPress={() => { setQuery(""); setDebouncedQuery(""); }}>
+            <TouchableOpacity
+              onPress={() => {
+                setQuery("");
+                setDebouncedQuery("");
+              }}
+            >
               <Feather name="x" size={16} color={colors.mutedForeground} />
             </TouchableOpacity>
           )}
@@ -74,6 +89,7 @@ export default function ExploreScreen() {
       </View>
 
       {isSearching && searchData ? (
+        /* ── SEARCH RESULTS ── */
         <FlatList
           data={[
             ...searchData.users.map((u: any) => ({ ...u, _type: "user" })),
@@ -85,93 +101,161 @@ export default function ExploreScreen() {
             if (item._type === "user") {
               return (
                 <TouchableOpacity
-                  className="flex-row items-center px-4 py-3 gap-3"
-                  style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    gap: 12,
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: colors.border,
+                  }}
                   onPress={() => router.push(`/profile/${item.id}` as any)}
                   activeOpacity={0.7}
                 >
                   <UserAvatar uri={item.avatarUrl} size={44} />
-                  <View className="flex-1">
-                    <Text className="text-[15px] font-semibold" style={{ color: colors.foreground }}>{item.username}</Text>
-                    <Text className="text-[13px] mt-0.5" style={{ color: colors.mutedForeground }}>{item.displayName}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}
+                    >
+                      {item.username}
+                    </Text>
+                    <Text
+                      style={{ fontSize: 13, marginTop: 2, color: colors.mutedForeground }}
+                    >
+                      {item.displayName}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               );
             }
+
             if (item._type === "hashtag") {
               return (
                 <TouchableOpacity
-                  className="flex-row items-center px-4 py-3 gap-3"
-                  style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    gap: 12,
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: colors.border,
+                  }}
                   activeOpacity={0.7}
                 >
                   <View
-                    className="w-11 h-11 rounded-full items-center justify-center"
-                    style={{ backgroundColor: colors.muted }}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: colors.muted,
+                    }}
                   >
                     <Feather name="hash" size={22} color={colors.foreground} />
                   </View>
-                  <View className="flex-1">
-                    <Text className="text-[15px] font-semibold" style={{ color: colors.foreground }}>#{item.name}</Text>
-                    <Text className="text-[13px] mt-0.5" style={{ color: colors.mutedForeground }}>{item.postCount} posts</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}
+                    >
+                      #{item.name}
+                    </Text>
+                    <Text
+                      style={{ fontSize: 13, marginTop: 2, color: colors.mutedForeground }}
+                    >
+                      {item.postCount} posts
+                    </Text>
                   </View>
                 </TouchableOpacity>
               );
             }
+
             if (item._type === "post" && item.imageUrl) {
               return (
                 <TouchableOpacity
-                  className="flex-row items-center px-4 py-3 gap-3"
-                  style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    gap: 12,
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: colors.border,
+                  }}
                   onPress={() => router.push(`/post/${item.id}` as any)}
                   activeOpacity={0.7}
                 >
-                  <Image source={{ uri: item.imageUrl }} className="w-11 h-11 rounded-md" resizeMode="cover" />
-                  <View className="flex-1">
-                    <Text className="text-[15px] font-semibold" style={{ color: colors.foreground }} numberOfLines={2}>
+                  <Image
+                    source={{ uri: item.imageUrl }}
+                    style={{ width: 44, height: 44, borderRadius: 6 }}
+                    resizeMode="cover"
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}
+                      numberOfLines={2}
+                    >
                       {item.content ?? "Post"}
                     </Text>
                   </View>
                 </TouchableOpacity>
               );
             }
+
             return null;
           }}
           showsVerticalScrollIndicator={false}
         />
       ) : (
+        /* ── EXPLORE GRID ── */
         <FlatList
           data={posts}
           keyExtractor={(item: any) => item.id}
           numColumns={COLUMN}
-          renderItem={({ item, index }: { item: any; index: number }) => {
-            const isLarge = index % 5 === 0;
-            const size = isLarge ? ITEM_SIZE * 2 + 1 : ITEM_SIZE;
-            return (
-              <TouchableOpacity
-                onPress={() => router.push(`/post/${item.id}` as any)}
-                activeOpacity={0.85}
-                style={{ width: size, height: size, margin: 0.5 }}
-              >
-                {item.imageUrl ? (
-                  <Image source={{ uri: item.imageUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-                ) : (
-                  <View className="w-full h-full items-center justify-center" style={{ backgroundColor: colors.muted }}>
-                    <Feather name="image" size={20} color={colors.mutedForeground} />
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          }}
+          renderItem={({ item }: { item: any }) => (
+            <TouchableOpacity
+              onPress={() => router.push(`/post/${item.id}` as any)}
+              activeOpacity={0.85}
+              style={{
+                width: ITEM_SIZE,
+                height: ITEM_SIZE,
+                margin: GAP / 2,
+                backgroundColor: colors.muted,
+              }}
+            >
+              {item.imageUrl ? (
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  style={{ width: "100%", height: "100%" }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View
+                  style={{
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Feather name="image" size={20} color={colors.mutedForeground} />
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
           ListEmptyComponent={
             isLoading ? (
-              <View className="p-16 items-center">
+              <View style={{ padding: 64, alignItems: "center" }}>
                 <ActivityIndicator size="large" color={colors.primary} />
               </View>
             ) : null
           }
           showsVerticalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: colors.background }} />}
+          columnWrapperStyle={{ gap: GAP }}
+          ItemSeparatorComponent={() => (
+            <View style={{ height: GAP, backgroundColor: colors.background }} />
+          )}
         />
       )}
     </View>

@@ -1,22 +1,32 @@
 import React, { useEffect } from "react";
 import {
-  ActivityIndicator, FlatList, Platform, RefreshControl, Text, View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  Text,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useGetNotifications, useMarkNotificationsRead } from "@workspace/api-client-react";
+import {
+  useGetNotifications,
+  useMarkNotificationsRead,
+} from "@workspace/api-client-react";
+import { Notification01Icon } from "@hugeicons/core-free-icons";
 import { useColors } from "@/hooks/useColors";
 import { NotificationItem } from "@/components/NotificationItem";
 import { EmptyState } from "@/components/EmptyState";
 
 export default function NotificationsScreen() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = React.useState(false);
 
   const { data, isLoading, refetch } = useGetNotifications();
   const { mutate: markRead } = useMarkNotificationsRead();
 
-  useEffect(() => { markRead(); }, []);
+  // Mark all as read when screen mounts
+  useEffect(() => {
+    markRead();
+  }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -24,25 +34,29 @@ export default function NotificationsScreen() {
     setRefreshing(false);
   };
 
-  const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
   const notifications = data?.notifications ?? [];
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Screen header */}
       <View
-        className="px-4 pb-3"
         style={{
-          paddingTop: topPadding + 12,
+          paddingHorizontal: 16,
+          paddingVertical: 14,
           backgroundColor: colors.background,
           borderBottomWidth: 0.5,
           borderBottomColor: colors.border,
         }}
       >
-        <Text className="text-2xl font-bold" style={{ color: colors.foreground }}>Notifications</Text>
+        <Text
+          style={{ fontSize: 22, fontWeight: "700", color: colors.foreground }}
+        >
+          Notifications
+        </Text>
       </View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
@@ -62,16 +76,22 @@ export default function NotificationsScreen() {
           )}
           ListEmptyComponent={
             <EmptyState
-              icon="bell"
+              icon={Notification01Icon}
               title="No notifications yet"
               subtitle="When people like or comment on your posts, you'll see them here"
             />
           }
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.primary}
+            />
           }
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={notifications.length === 0 ? { flexGrow: 1 } : undefined}
+          contentContainerStyle={
+            notifications.length === 0 ? { flexGrow: 1 } : undefined
+          }
         />
       )}
     </View>
