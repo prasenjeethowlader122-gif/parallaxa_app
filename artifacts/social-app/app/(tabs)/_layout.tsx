@@ -58,7 +58,7 @@ export default function RootLayout() {
 
   const navigateTo = (id: string) => {
     setMenuOpen(false);
-    const path = id === "index" ? "/(tabs)" : `/(tabs)/${id}`;
+    const path = id === "index" ? "/" : `/${id}`;
     router.push(path as any);
   };
 
@@ -120,7 +120,7 @@ export default function RootLayout() {
 
             {/* Message icon - before avatar */}
             <TouchableOpacity
-              onPress={() => router.push("/(tabs)/messages" as any)}
+              onPress={() => router.push("/messages" as any)}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <HugeiconsIcon
@@ -253,6 +253,7 @@ export default function RootLayout() {
             </View>
 
             <ScrollView
+              className = 'h-full'
               style={{ flex: 1 }}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 20 }}
