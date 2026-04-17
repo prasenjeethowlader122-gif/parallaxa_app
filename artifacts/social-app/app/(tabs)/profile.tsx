@@ -305,7 +305,7 @@ export default function ProfileScreen() {
             </View>
           ) : (
             <EmptyState
-              icon={Camera01Icon} // Note: Check if EmptyState component expects an object or string
+              icon={Camera01Icon} 
               title="No posts yet"
               subtitle="Share your first photo"
               actionLabel="Create post"
