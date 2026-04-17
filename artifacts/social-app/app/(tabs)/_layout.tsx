@@ -64,8 +64,6 @@ export default function RootLayout() {
         style={{
           paddingTop: topPadding,
           backgroundColor: colors.background,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: colors.border,
           zIndex: 50,
         }}
       >
@@ -79,7 +77,7 @@ export default function RootLayout() {
             paddingBottom: 8,
           }}
         >
-          <View
+          <View className='gap-4'
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -116,6 +114,14 @@ export default function RootLayout() {
               size={22}
               color={colors.foreground}
             />
+          </TouchableOpacity>
+         <TouchableOpacity
+            onPress={() => router.push("/(tabs)/notifications" as any)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <View className ='w-8 h-8 rounded-full bg-gray-100'>
+              
+            </View>
           </TouchableOpacity>
         </View>
 
