@@ -101,7 +101,7 @@ export default function RootLayout() {
             />
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+          <View style={{ flexDirection: "row",gap : 16, alignItems: "center" , justifyContent: "end" }}>
             {/* Notifications shortcut */}
             <TouchableOpacity
               onPress={() => router.push("/(tabs)/notifications" as any)}
@@ -152,8 +152,8 @@ export default function RootLayout() {
                         left: 16,
                         height: 2,
                         width: 38,
-                        borderRadius: 2,
-                        backgroundColor: colors.primary ?? "#000",
+                        borderRadius: 0,
+                        backgroundColor:  "#000",
                       }}
                     />
                   )}
