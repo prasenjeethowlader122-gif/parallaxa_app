@@ -258,6 +258,11 @@ export default function RootLayout() {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 20 }}
             >
+              <ScrollView
+              style = {{
+                height:'100%'
+              }}
+              >
               {/* Top menu items */}
               {MENU_ITEMS.map((item) => {
                 const isActive = currentRoute === item.id;
@@ -304,7 +309,7 @@ export default function RootLayout() {
                   </TouchableOpacity>
                 );
               })}
-
+              </ScrollView>
               {/* Bottom divider */}
               <View
                 style={{
