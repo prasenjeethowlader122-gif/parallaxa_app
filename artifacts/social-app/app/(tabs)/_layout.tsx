@@ -95,7 +95,7 @@ export default function RootLayout() {
 
             {/* Logo */}
             <Image
-              source={require("@/assets/images/placeholder-logo.svg")}
+              source={require("@/assets/images/st.svg")}
               style={{ width: 35, height: 35 }}
               resizeMode="contain"
             />
