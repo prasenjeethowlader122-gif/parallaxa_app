@@ -202,8 +202,7 @@ router.get("/feed", authenticate, async (req: AuthRequest, res) => {
       .from(postsTable)
       .where(and(
         inArray(postsTable.userId, followingIds),
-        eq(postsTable.isArchived, false),
-        isNull(postsTable.parentPostId), // top-level posts only
+        eq(postsTable.isArchived, false) // top-level posts only
       ))
       .orderBy(desc(postsTable.createdAt))
       .limit(limit);
