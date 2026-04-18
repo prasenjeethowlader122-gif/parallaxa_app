@@ -329,10 +329,8 @@ export default function RootLayout() {
                       gap: 14,
                       paddingHorizontal: 20,
                       paddingVertical: 14,
-                      backgroundColor: isActive
-                        ? (colors.primary ?? "#000") + "12"
-                        : "transparent",
-                      borderRadius: 12,
+                      backgroundColor: '#000',
+                      borderRadius: 20,
                       marginHorizontal: 8,
                       marginVertical: 2,
                     }}
@@ -341,20 +339,14 @@ export default function RootLayout() {
                     <HugeiconsIcon
                       icon={item.icon}
                       size={22}
-                      color={
-                        isActive
-                          ? (colors.primary ?? colors.foreground)
-                          : colors.foreground
-                      }
+                      color='#fff'
                       strokeWidth={isActive ? 2 : 1.5}
                     />
                     <Text
                       style={{
                         fontSize: 15,
                         fontWeight: isActive ? "700" : "500",
-                        color: isActive
-                          ? (colors.primary ?? colors.foreground)
-                          : colors.foreground,
+                        color: '#fff',
                       }}
                     >
                       {item.label}
