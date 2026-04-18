@@ -15,6 +15,8 @@ export const postsTable = pgTable("posts", {
   isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  parentPostId: text('id'),
+  
 });
 
 export const insertPostSchema = createInsertSchema(postsTable).omit({

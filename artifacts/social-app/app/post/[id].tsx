@@ -77,7 +77,7 @@ export default function PostDetailScreen() {
       },
     },
   });
-
+  
   const { mutate: likePost } = useLikePost();
   const { mutate: unlikePost } = useUnlikePost();
 

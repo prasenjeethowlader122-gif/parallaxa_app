@@ -1,12 +1,27 @@
-import { Feather } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator, Dimensions, FlatList, Image,
-  Platform, RefreshControl, Text, TouchableOpacity, View,
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Image,
+  Platform,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-// Fixed: positional-arg hooks from generated API
+import { HugeiconsIcon } from "@hugeicons/react-native";
+import {
+  ArrowLeft01Icon,
+  MoreHorizontalIcon,
+  GridIcon,
+  AiIcon,
+  Message01Icon,
+  CheckmarkCircle01Icon,
+  UserPlus01Icon,
+} from "@hugeicons/core-free-icons";
 import { useGetUser, useGetUserPosts, useFollowUser, useUnfollowUser } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
@@ -16,7 +31,7 @@ import { getApiBaseUrl } from "@/lib/apiUrl";
 
 const { width } = Dimensions.get("window");
 const ITEM = (width - 2) / 3;
-// run...
+
 export default function UserProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -25,11 +40,10 @@ export default function UserProfileScreen() {
   const { user: me } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fixed: positional string arg, not object param
-  const { data: profile, isLoading, refetch } = useGetUser(id);
-  const { data: postsData, refetch: refetchPosts } = useGetUserPosts(id);
+  // Fixed: positional string arg (id as string)
+  const { data: profile, isLoading, refetch } = useGetUser(id!);
+  const { data: postsData, refetch: refetchPosts } = useGetUserPosts(id!);
 
-  // Fixed: positional arg hooks — onSuccess callbacks use correct arg shape
   const { mutate: followUser } = useFollowUser({
     mutation: { onSuccess: () => refetch() },
   });
@@ -48,7 +62,6 @@ export default function UserProfileScreen() {
 
   const handleFollow = () => {
     if (!id) return;
-    // Fixed: followUser/unfollowUser take { userId } per generated API
     if (profile?.isFollowing) unfollowUser({ userId: id });
     else followUser({ userId: id });
   };
@@ -68,13 +81,26 @@ export default function UserProfileScreen() {
         }}
       >
         <TouchableOpacity onPress={() => router.back()} className="p-1">
-          <Feather name="arrow-left" size={24} color={colors.foreground} />
+          <HugeiconsIcon
+            icon={ArrowLeft01Icon}
+            size={24}
+            color={colors.foreground}
+            strokeWidth={1.5}
+          />
         </TouchableOpacity>
-        <Text className="text-lg font-bold" style={{ color: colors.foreground }}>
+        <Text
+          className="text-lg font-bold"
+          style={{ color: colors.foreground }}
+        >
           {profile?.username ?? ""}
         </Text>
         <TouchableOpacity className="p-1">
-          <Feather name="more-horizontal" size={24} color={colors.foreground} />
+          <HugeiconsIcon
+            icon={MoreHorizontalIcon}
+            size={24}
+            color={colors.foreground}
+            strokeWidth={1.5}
+          />
         </TouchableOpacity>
       </View>
 
@@ -85,7 +111,6 @@ export default function UserProfileScreen() {
       ) : profile ? (
         <View className="p-4">
           <View className="flex-row items-center mb-3.5">
-            {/* Fixed: avatarUrl can be null per schema */}
             <UserAvatar uri={profile.avatarUrl ?? undefined} size={84} />
             <View className="flex-1 flex-row justify-around ml-3">
               {[
@@ -94,10 +119,16 @@ export default function UserProfileScreen() {
                 { label: "Following", value: profile.followingCount },
               ].map(({ label, value }) => (
                 <View key={label} className="items-center">
-                  <Text className="text-lg font-bold" style={{ color: colors.foreground }}>
+                  <Text
+                    className="text-lg font-bold"
+                    style={{ color: colors.foreground }}
+                  >
                     {value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}
                   </Text>
-                  <Text className="text-[13px] mt-0.5" style={{ color: colors.mutedForeground }}>
+                  <Text
+                    className="text-[13px] mt-0.5"
+                    style={{ color: colors.mutedForeground }}
+                  >
                     {label}
                   </Text>
                 </View>
@@ -106,20 +137,37 @@ export default function UserProfileScreen() {
           </View>
 
           <View className="flex-row items-center gap-1.5 mb-1">
-            <Text className="text-[15px] font-semibold" style={{ color: colors.foreground }}>
+            <Text
+              className="text-[15px] font-semibold"
+              style={{ color: colors.foreground }}
+            >
               {profile.displayName}
             </Text>
             {profile.isVerified && (
-              <Feather name="check-circle" size={15} color={colors.primary} />
+              <HugeiconsIcon
+                icon={CheckmarkCircle01Icon}
+                size={15}
+                color={colors.primary}
+                strokeWidth={1.5}
+              />
             )}
           </View>
+
           {profile.bio && (
-            <Text className="text-sm leading-[19px] mb-1" style={{ color: colors.foreground }}>
+            <Text
+              className="text-sm leading-[19px] mb-1"
+              style={{ color: colors.foreground }}
+            >
               {profile.bio}
             </Text>
           )}
           {profile.website && (
-            <Text className="text-sm font-medium mb-3 text-primary">{profile.website}</Text>
+            <Text
+              className="text-sm font-medium mb-3"
+              style={{ color: colors.primary }}
+            >
+              {profile.website}
+            </Text>
           )}
 
           {!isOwnProfile && (
@@ -127,19 +175,28 @@ export default function UserProfileScreen() {
               <TouchableOpacity
                 className="flex-1 h-[34px] rounded-lg items-center justify-center border"
                 style={{
-                  backgroundColor: profile.isFollowing ? colors.background : colors.primary,
-                  borderColor: profile.isFollowing ? colors.border : colors.primary,
+                  backgroundColor: profile.isFollowing
+                    ? colors.background
+                    : colors.primary,
+                  borderColor: profile.isFollowing
+                    ? colors.border
+                    : colors.primary,
                 }}
                 onPress={handleFollow}
                 activeOpacity={0.8}
               >
                 <Text
                   className="text-sm font-bold"
-                  style={{ color: profile.isFollowing ? colors.foreground : "#FFFFFF" }}
+                  style={{
+                    color: profile.isFollowing
+                      ? colors.foreground
+                      : "#FFFFFF",
+                  }}
                 >
                   {profile.isFollowing ? "Following" : "Follow"}
                 </Text>
               </TouchableOpacity>
+
               <TouchableOpacity
                 className="flex-1 h-[34px] border rounded-lg items-center justify-center"
                 style={{ borderColor: colors.border }}
@@ -151,7 +208,7 @@ export default function UserProfileScreen() {
                       method: "POST",
                       headers: {
                         "Content-Type": "application/json",
-                        // Fixed: use actual auth token, not user id
+                        // Note: in production you should pass a real auth token
                         Authorization: `Bearer ${me.id}`,
                       },
                       body: JSON.stringify({ userId: id }),
@@ -166,9 +223,12 @@ export default function UserProfileScreen() {
                 }}
                 activeOpacity={0.8}
               >
-                <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
-                  Message
-                </Text>
+                <HugeiconsIcon
+                  icon={Message01Icon}
+                  size={16}
+                  color={colors.foreground}
+                  strokeWidth={1.5}
+                />
               </TouchableOpacity>
             </View>
           )}
@@ -178,9 +238,18 @@ export default function UserProfileScreen() {
       {/* Grid header */}
       <View
         className="h-11 items-center justify-center"
-        style={{ borderTopWidth: 0.5, borderBottomWidth: 0.5, borderColor: colors.border }}
+        style={{
+          borderTopWidth: 0.5,
+          borderBottomWidth: 0.5,
+          borderColor: colors.border,
+        }}
       >
-        <Feather name="grid" size={22} color={colors.foreground} />
+        <HugeiconsIcon
+          icon={GridIcon}
+          size={22}
+          color={colors.foreground}
+          strokeWidth={1.5}
+        />
       </View>
     </View>
   );
@@ -210,7 +279,12 @@ export default function UserProfileScreen() {
               />
             ) : (
               <View className="w-full h-full items-center justify-center">
-                <Feather name="type" size={16} color={colors.mutedForeground} />
+                <HugeiconsIcon
+                  icon={AiIcon}
+                  size={16}
+                  color={colors.mutedForeground}
+                  strokeWidth={1.5}
+                />
               </View>
             )}
           </TouchableOpacity>
@@ -218,7 +292,11 @@ export default function UserProfileScreen() {
         ListHeaderComponent={<Header />}
         ListEmptyComponent={
           !isLoading ? (
-            <EmptyState icon="camera" title="No posts yet" subtitle="This user hasn't posted yet" />
+            <EmptyState
+              icon={GridIcon}
+              title="No posts yet"
+              subtitle="This user hasn't posted yet"
+            />
           ) : null
         }
         refreshControl={
