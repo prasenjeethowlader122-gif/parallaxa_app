@@ -30,7 +30,6 @@ import {
 const { width } = Dimensions.get("window");
 const ITEM = (width - 2) / 3;
 
-// ─── Fixed: typed tab union ──────────────────────────────────────────────────
 type ActiveTab = "posts" | "saved";
 const TABS = ["posts", "saved"] as const;
 
@@ -39,8 +38,6 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
-
-  // ─── Fixed: properly typed state ────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<ActiveTab>("posts");
 
   const { data: postsData, isLoading, refetch } = useGetUserPosts(
@@ -55,12 +52,14 @@ export default function ProfileScreen() {
     setRefreshing(false);
   };
 
-  // ─── Fixed: guard against non-array / undefined with Array.isArray ───────
+  // Defensive: handle PostPage shape, plain array, or nested data envelope
   const posts = useMemo(() => {
     if (!postsData) return [];
-    if (Array.isArray(postsData)) return postsData;
-    if (Array.isArray(postsData.posts)) return postsData.posts;
-    return [];
+    const raw =
+      (postsData as any)?.posts ??
+      (postsData as any)?.data?.posts ??
+      postsData;
+    return Array.isArray(raw) ? raw : [];
   }, [postsData]);
 
   const ListHeader = useMemo(
@@ -118,7 +117,6 @@ export default function ProfileScreen() {
                 marginLeft: 12,
               }}
             >
-              {/* ─── Fixed: as const on the stats array ─────────────────── */}
               {(
                 [
                   { label: "Posts", value: user?.postsCount ?? 0 },
@@ -263,7 +261,6 @@ export default function ProfileScreen() {
             borderColor: colors.border,
           }}
         >
-          {/* ─── Fixed: TABS constant is typed as const, setter is correct ── */}
           {TABS.map((tab) => (
             <TouchableOpacity
               key={tab}
@@ -307,42 +304,51 @@ export default function ProfileScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <FlatList
-        data={posts}
+        // Always pass a guaranteed array to FlatList
+        data={Array.isArray(posts) ? posts : []}
         keyExtractor={(item: any) => String(item?.id ?? Math.random())}
         numColumns={3}
-        renderItem={({ item }: { item: any }) => (
-          <TouchableOpacity
-            onPress={() =>
-              item?.id && router.push(`/post/${item.id}` as any)
-            }
-            activeOpacity={0.85}
-            style={{
-              width: ITEM,
-              height: ITEM,
-              margin: 0.5,
-              backgroundColor: colors.muted,
-            }}
-          >
-            {item?.imageUrl ? (
-              <Image
-                source={{ uri: item.imageUrl }}
-                style={{ width: "100%", height: "100%" }}
-                resizeMode="cover"
-              />
-            ) : (
-              <View
-                style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-              >
-                <HugeiconsIcon
-                  icon={AiTypeIcon}
-                  size={16}
-                  color={colors.mutedForeground}
-                  strokeWidth={1.5}
+        renderItem={({ item }: { item: any }) => {
+          // Guard against null/undefined items
+          if (!item) return null;
+          return (
+            <TouchableOpacity
+              onPress={() =>
+                item?.id && router.push(`/post/${item.id}` as any)
+              }
+              activeOpacity={0.85}
+              style={{
+                width: ITEM,
+                height: ITEM,
+                margin: 0.5,
+                backgroundColor: colors.muted,
+              }}
+            >
+              {item?.imageUrl ? (
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  style={{ width: "100%", height: "100%" }}
+                  resizeMode="cover"
                 />
-              </View>
-            )}
-          </TouchableOpacity>
-        )}
+              ) : (
+                <View
+                  style={{
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <HugeiconsIcon
+                    icon={AiTypeIcon}
+                    size={16}
+                    color={colors.mutedForeground}
+                    strokeWidth={1.5}
+                  />
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        }}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={
           isLoading ? (

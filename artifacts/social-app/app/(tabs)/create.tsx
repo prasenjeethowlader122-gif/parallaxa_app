@@ -147,7 +147,6 @@ const AudiencePill: FC<{ label: string; colors: any }> = ({
   </TouchableOpacity>
 );
 
-// ─── Fixed: custom props interface instead of MentionSuggestionsProps ───────
 interface MentionSuggestionsCompProps {
   keyword?: string;
   onSuggestionPress?: (suggestion: MentionSuggestion) => void;
@@ -159,10 +158,12 @@ const MentionSuggestionsComp: FC<MentionSuggestionsCompProps> = ({
   onSuggestionPress,
   colors,
 }) => {
-  if (!keyword) return null;
+  // Guard: keyword must be a non-empty string
+  if (!keyword || typeof keyword !== "string") return null;
 
   const filtered = (mentionSuggestions as readonly MentionSuggestion[]).filter(
-    (u) => u.name.toLowerCase().includes(keyword.toLowerCase())
+    (u) =>
+      u?.name && u.name.toLowerCase().includes(keyword.toLowerCase())
   );
 
   if (!filtered.length) return null;
@@ -243,9 +244,12 @@ export default function CreateScreen() {
     },
   });
 
+  // Guard: content may not have .match if it's somehow not a string
   const hashtags = useMemo(
     () =>
-      content.match(/#\w+/g)?.map((t) => t.slice(1).toLowerCase()) ?? [],
+      typeof content === "string"
+        ? (content.match(/#\w+/g) ?? []).map((t) => t.slice(1).toLowerCase())
+        : [],
     [content]
   );
 
@@ -281,6 +285,10 @@ export default function CreateScreen() {
     onChange: setContent,
     triggersConfig,
   });
+
+  // Guard: triggers.mention may be undefined on first render
+  const mentionKeyword = triggers?.mention?.keyword;
+  const mentionOnPress = triggers?.mention?.onSuggestionPress;
 
   const postBtnDisabled = isPending || isEmpty || isOverLimit;
 
@@ -411,11 +419,11 @@ export default function CreateScreen() {
 
             <AudiencePill label="Everyone" colors={colors} />
 
-            {/* ─── Fixed: pass keyword and onSuggestionPress explicitly ─── */}
+            {/* Guard: only render suggestions when triggers.mention is ready */}
             <View style={{ marginTop: 10 }}>
               <MentionSuggestionsComp
-                keyword={triggers.mention.keyword}
-                onSuggestionPress={triggers.mention.onSuggestionPress}
+                keyword={mentionKeyword}
+                onSuggestionPress={mentionOnPress}
                 colors={colors}
               />
             </View>
