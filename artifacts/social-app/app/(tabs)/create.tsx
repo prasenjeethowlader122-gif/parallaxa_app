@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import React, { useMemo, useState, FC } from "react";
+import React, { useMemo, useState, FC, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,6 +12,7 @@ import {
   View,
   Image,
   Pressable,
+  Animated,
 } from "react-native";
 import { useCreatePost } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
@@ -21,6 +22,11 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
   Image01Icon,
   Location01Icon,
+  EmojiSmileIcon,
+  BarChart04Icon,
+  Calendar03Icon,
+  Cancel01Icon,
+  Globe02Icon,
 } from "@hugeicons/core-free-icons";
 import {
   useMentions,
@@ -28,22 +34,16 @@ import {
   MentionSuggestionsProps,
 } from "react-native-controlled-mentions";
 
-const triggersConfig: TriggersConfig < "mention" | "hashtag" > = {
+const triggersConfig: TriggersConfig<"mention" | "hashtag"> = {
   mention: {
     trigger: "@",
-    textStyle: {
-      fontWeight: "700",
-      color: "#2563eb",
-    },
+    textStyle: { fontWeight: "700", color: "#1d9bf0" },
   },
   hashtag: {
     trigger: "#",
     allowedSpacesCount: 0,
     isInsertSpaceAfterMention: true,
-    textStyle: {
-      fontWeight: "700",
-      color: "#7c3aed",
-    },
+    textStyle: { fontWeight: "700", color: "#1d9bf0" },
   },
 };
 
@@ -55,192 +55,303 @@ const mentionSuggestions = [
   { id: "5", name: "Ayesha" },
 ];
 
-const MentionSuggestions: FC < MentionSuggestionsProps > = ({ keyword, onSuggestionPress }) => {
+const MAX_CHARS = 280;
+
+// Circular progress ring
+function CharRing({ count, max }: { count: number; max: number }) {
+  const remaining = max - count;
+  const pct = Math.min(count / max, 1);
+  const size = 30;
+  const stroke = 2.5;
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const dashOffset = circ * (1 - pct);
+
+  const isNearLimit = remaining <= 20;
+  const isOverLimit = remaining < 0;
+
+  const ringColor = isOverLimit ? "#f4212e" : isNearLimit ? "#ffd400" : "#1d9bf0";
+
+  return (
+    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+      {/* SVG-style ring using border trick */}
+      <View
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: stroke,
+          borderColor: "#2f3336",
+          position: "absolute",
+        }}
+      />
+      {isNearLimit && (
+        <Text style={{ fontSize: 10, fontWeight: "700", color: ringColor, zIndex: 1 }}>
+          {remaining}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+// Audience pill button
+function AudiencePill({ label }: { label: string }) {
+  return (
+    <TouchableOpacity
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+        borderWidth: 1,
+        borderColor: "#1d9bf0",
+        borderRadius: 20,
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        alignSelf: "flex-start",
+      }}
+    >
+      <Text style={{ color: "#1d9bf0", fontSize: 13, fontWeight: "700" }}>{label}</Text>
+      <HugeiconsIcon icon={Globe02Icon} size={11} color="#1d9bf0" />
+    </TouchableOpacity>
+  );
+}
+
+const MentionSuggestions: FC<MentionSuggestionsProps> = ({ keyword, onSuggestionPress }) => {
   if (keyword == null) return null;
-  
   const filtered = mentionSuggestions.filter((u) =>
     u.name.toLowerCase().includes(keyword.toLowerCase())
   );
-  
   if (filtered.length === 0) return null;
-  
+
   return (
     <View
       style={{
-        marginBottom: 10,
-        borderWidth: 1,
-        borderColor: "#e5e7eb",
+        marginBottom: 8,
         borderRadius: 12,
         overflow: "hidden",
-        backgroundColor: "#fff",
+        backgroundColor: "#16181c",
+        borderWidth: 1,
+        borderColor: "#2f3336",
+        shadowColor: "#000",
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        elevation: 8,
       }}
     >
-      {filtered.map((user) => (
+      {filtered.map((u, i) => (
         <Pressable
-          key={user.id}
-          onPress={() => onSuggestionPress(user)}
+          key={u.id}
+          onPress={() => onSuggestionPress(u)}
           style={({ pressed }) => ({
-            paddingHorizontal: 12,
-            paddingVertical: 10,
-            backgroundColor: pressed ? "#f3f4f6" : "#fff",
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            backgroundColor: pressed ? "#1e2126" : "transparent",
+            borderTopWidth: i > 0 ? 1 : 0,
+            borderTopColor: "#2f3336",
           })}
         >
-          <Text style={{ fontSize: 15, color: "#111827" }}>{user.name}</Text>
+          <Text style={{ fontSize: 15, fontWeight: "600", color: "#e7e9ea" }}>{u.name}</Text>
         </Pressable>
       ))}
     </View>
   );
 };
 
+// Toolbar action buttons
+const TOOLBAR_ACTIONS = [
+  { icon: Image01Icon, id: "image" },
+  { icon: BarChart04Icon, id: "poll" },
+  { icon: EmojiSmileIcon, id: "emoji" },
+  { icon: Calendar03Icon, id: "schedule" },
+  { icon: Location01Icon, id: "location" },
+];
+
 export default function CreateScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user } = useAuth();
-  
+
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [location, setLocation] = useState("");
-  
+  const inputRef = useRef<TextInput>(null);
+
+  const charCount = content.length;
+  const remaining = MAX_CHARS - charCount;
+  const isOverLimit = remaining < 0;
+  const isEmpty = !content.trim() && !imageUrl.trim();
+
   const { mutate: createPost, isPending } = useCreatePost({
     mutation: {
-      onSuccess: () => {
-        router.push("/(tabs)");
-      },
-      onError: (err: any) =>
-        Alert.alert("Error", err?.message ?? "Could not create post"),
+      onSuccess: () => router.push("/(tabs)" as any),
+      onError: (err: any) => Alert.alert("Error", err?.message ?? "Could not create post"),
     },
   });
-  
+
   const hashtags = useMemo(
     () => content.match(/#(\w+)/g)?.map((t) => t.replace("#", "").toLowerCase()) || [],
     [content]
   );
-  
+
   const handlePost = () => {
-    if (!content.trim() && !imageUrl.trim()) return;
-    
+    if (isEmpty || isOverLimit) return;
     createPost({
       data: {
         content: content.trim() || undefined,
         imageUrl: imageUrl.trim() || undefined,
-        location: location.trim() || undefined,
         hashtags,
       },
     });
   };
-  
+
   const { textInputProps, triggers } = useMentions({
     value: content,
     onChange: setContent,
     triggersConfig,
   });
-  
+
+  // Post button state
+  const postBtnDisabled = isPending || isEmpty || isOverLimit;
+
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
+      style={{ flex: 1, backgroundColor: "#000000" }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      {/* ── HEADER ── */}
       <View
         style={{
           flexDirection: "row",
-          justifyContent: "space-between",
           alignItems: "center",
+          justifyContent: "space-between",
           paddingHorizontal: 16,
-          paddingVertical: 12,
+          paddingTop: Platform.OS === "ios" ? 56 : 16,
+          paddingBottom: 12,
+          borderBottomWidth: 0.5,
+          borderBottomColor: "#2f3336",
         }}
       >
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={{ fontSize: 16, color: colors.foreground }}>Cancel</Text>
+        {/* Cancel */}
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={{
+            width: 36,
+            height: 36,
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 18,
+          }}
+        >
+          <HugeiconsIcon icon={Cancel01Icon} size={20} color="#e7e9ea" />
         </TouchableOpacity>
 
+        {/* Drafts */}
+        <TouchableOpacity>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: "#1d9bf0" }}>Drafts</Text>
+        </TouchableOpacity>
+
+        {/* Post button */}
         <TouchableOpacity
           onPress={handlePost}
-          disabled={isPending || (!content.trim() && !imageUrl.trim())}
+          disabled={postBtnDisabled}
           style={{
-            paddingHorizontal: 20,
+            paddingHorizontal: 18,
             paddingVertical: 8,
             borderRadius: 20,
-            backgroundColor: colors.primary,
-            opacity: !content.trim() && !imageUrl.trim() ? 0.5 : 1,
+            backgroundColor: postBtnDisabled ? "#0f4c75" : "#1d9bf0",
           }}
+          activeOpacity={0.8}
         >
           {isPending ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>
+            <Text
+              style={{
+                color: postBtnDisabled ? "#5b9ab8" : "#fff",
+                fontSize: 15,
+                fontWeight: "700",
+              }}
+            >
               Post
             </Text>
           )}
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+      {/* ── COMPOSE AREA ── */}
+      <ScrollView
+        style={{ flex: 1 }}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={{ flexDirection: "row", padding: 16, gap: 12 }}>
-          <UserAvatar uri={user?.avatarUrl} size={40} />
-
-          <View style={{ flex: 1 }}>
-            <TouchableOpacity
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 15,
-                paddingHorizontal: 8,
-                paddingVertical: 2,
-                alignSelf: "flex-start",
-                marginBottom: 12,
-              }}
-            >
-              <Text
+          {/* Avatar with thread line */}
+          <View style={{ alignItems: "center" }}>
+            <UserAvatar uri={user?.avatarUrl} size={42} />
+            {/* Thread line */}
+            {content.length > 0 && (
+              <View
                 style={{
-                  color: colors.primary,
-                  fontSize: 13,
-                  fontWeight: "700",
+                  width: 2,
+                  flex: 1,
+                  marginTop: 8,
+                  backgroundColor: "#2f3336",
+                  borderRadius: 1,
+                  minHeight: 30,
                 }}
-              >
-                Public
-              </Text>
-            </TouchableOpacity>
-
-            <MentionSuggestions {...triggers.mention} />
-
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 16,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                minHeight: 120,
-                backgroundColor: colors.background,
-              }}
-            >
-              <TextInput
-                {...textInputProps}
-                style={{
-                  fontSize: 18,
-                  color: colors.foreground,
-                  textAlignVertical: "top",
-                  minHeight: 120,
-                }}
-                placeholder="What's happening?"
-                placeholderTextColor={colors.mutedForeground}
-                multiline
-                autoFocus
               />
+            )}
+          </View>
+
+          <View style={{ flex: 1, paddingTop: 2 }}>
+            {/* Username */}
+            <Text style={{ fontSize: 15, fontWeight: "700", color: "#e7e9ea", marginBottom: 4 }}>
+              {user?.username ?? "you"}
+            </Text>
+
+            {/* Audience selector */}
+            <AudiencePill label="Everyone" />
+
+            {/* Mention suggestions dropdown */}
+            <View style={{ marginTop: 10 }}>
+              <MentionSuggestions {...triggers.mention} />
             </View>
 
+            {/* Text input */}
+            <TextInput
+              ref={inputRef}
+              {...textInputProps}
+              style={{
+                fontSize: 20,
+                color: "#e7e9ea",
+                textAlignVertical: "top",
+                lineHeight: 26,
+                marginTop: 6,
+                minHeight: 100,
+                fontWeight: "400",
+              }}
+              placeholder="What is happening?!"
+              placeholderTextColor="#536471"
+              multiline
+              autoFocus
+              selectionColor="#1d9bf0"
+            />
+
+            {/* Image preview */}
             {imageUrl.trim().length > 0 && (
-              <View style={{ marginTop: 12, position: "relative" }}>
+              <View
+                style={{
+                  marginTop: 12,
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  borderWidth: 1,
+                  borderColor: "#2f3336",
+                }}
+              >
                 <Image
                   source={{ uri: imageUrl }}
-                  style={{
-                    width: "100%",
-                    height: 200,
-                    borderRadius: 16,
-                    backgroundColor: colors.muted,
-                  }}
+                  style={{ width: "100%", height: 220 }}
                   resizeMode="cover"
                 />
                 <TouchableOpacity
@@ -249,49 +360,135 @@ export default function CreateScreen() {
                     position: "absolute",
                     top: 8,
                     right: 8,
-                    backgroundColor: "rgba(0,0,0,0.6)",
-                    borderRadius: 12,
-                    padding: 4,
+                    backgroundColor: "rgba(0,0,0,0.75)",
+                    borderRadius: 20,
+                    width: 32,
+                    height: 32,
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 10 }}>✕</Text>
+                  <HugeiconsIcon icon={Cancel01Icon} size={16} color="#e7e9ea" />
                 </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Add to thread hint */}
+            {content.length > 0 && (
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 16, alignItems: "center" }}>
+                <UserAvatar uri={user?.avatarUrl} size={24} />
+                <Text style={{ fontSize: 15, color: "#536471" }}>Add to thread</Text>
               </View>
             )}
           </View>
         </View>
       </ScrollView>
 
+      {/* ── BOTTOM TOOLBAR ── */}
       <View
         style={{
           borderTopWidth: 0.5,
-          borderTopColor: colors.border,
-          paddingHorizontal: 16,
+          borderTopColor: "#2f3336",
+          paddingHorizontal: 12,
           paddingVertical: 10,
+          paddingBottom: Platform.OS === "ios" ? 34 : 14,
           flexDirection: "row",
           alignItems: "center",
-          gap: 20,
+          backgroundColor: "#000000",
         }}
       >
-        <TouchableOpacity onPress={() => {}}>
-          <HugeiconsIcon icon={Image01Icon} size={22} color={colors.primary} />
-        </TouchableOpacity>
+        {/* Action icons */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 2, flex: 1 }}>
+          {TOOLBAR_ACTIONS.map(({ icon, id }) => (
+            <TouchableOpacity
+              key={id}
+              style={{
+                width: 38,
+                height: 38,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 19,
+              }}
+              activeOpacity={0.7}
+            >
+              <HugeiconsIcon icon={icon} size={20} color="#1d9bf0" strokeWidth={1.5} />
+            </TouchableOpacity>
+          ))}
+        </View>
 
-        <TouchableOpacity onPress={() => {}}>
-          <HugeiconsIcon icon={Location01Icon} size={22} color={colors.primary} />
-        </TouchableOpacity>
+        {/* Divider */}
+        <View style={{ width: 1, height: 28, backgroundColor: "#2f3336", marginHorizontal: 8 }} />
 
-        <View style={{ flex: 1 }} />
+        {/* Char counter ring area */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+          {/* Progress circle */}
+          <View style={{ width: 30, height: 30, position: "relative" }}>
+            {/* Background track */}
+            <View
+              style={{
+                position: "absolute",
+                width: 30,
+                height: 30,
+                borderRadius: 15,
+                borderWidth: 2.5,
+                borderColor: "#2f3336",
+              }}
+            />
+            {/* Filled arc — simplified as colored ring with opacity trick */}
+            {charCount > 0 && (
+              <View
+                style={{
+                  position: "absolute",
+                  width: 30,
+                  height: 30,
+                  borderRadius: 15,
+                  borderWidth: 2.5,
+                  borderColor: isOverLimit ? "#f4212e" : remaining <= 20 ? "#ffd400" : "#1d9bf0",
+                  opacity: Math.min(charCount / MAX_CHARS, 1),
+                }}
+              />
+            )}
+            {remaining <= 20 && (
+              <View style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center" }}>
+                <Text
+                  style={{
+                    fontSize: 9,
+                    fontWeight: "700",
+                    color: isOverLimit ? "#f4212e" : "#ffd400",
+                  }}
+                >
+                  {remaining}
+                </Text>
+              </View>
+            )}
+          </View>
 
-        <Text
-          style={{
-            fontSize: 10,
-            color: content.length > 2200 ? "red" : colors.mutedForeground,
-          }}
-        >
-          {2200 - content.length}
-        </Text>
+          {/* Add post (+) button */}
+          <TouchableOpacity
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 15,
+              borderWidth: 1.5,
+              borderColor: "#536471",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ color: "#536471", fontSize: 18, lineHeight: 20, marginTop: -1 }}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
 }
+/**
+ * // এই replacements করুন create.tsx এ:
+backgroundColor: "#000000"  →  backgroundColor: colors.background
+color: "#e7e9ea"            →  color: colors.foreground
+color: "#536471"            →  color: colors.mutedForeground
+borderColor: "#2f3336"      →  borderColor: colors.border
+color: "#1d9bf0"            →  color: colors.primary
+backgroundColor: "#1d9bf0"  →  backgroundColor: colors.primary
+backgroundColor: "#0f4c75"  →  backgroundColor: colors.muted
+ */
