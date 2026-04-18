@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { generateId, generateToken, hashPassword, comparePassword } from "../lib/auth";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 import { logger } from "../lib/logger";
-
+import generateTextLogoSVGBase64 from './svg-logo'
 const router = Router();
 
 router.post("/auth/register", async (req, res) => {
@@ -35,12 +35,22 @@ router.post("/auth/register", async (req, res) => {
     }
     const passwordHash = await hashPassword(password);
     const id = generateId();
+    /**
+     * genarete a profile picture 
+     */
+    const logoSVGBase64 = generateTextLogoSVGBase64(displayName, {
+      width: 1200,
+      height: 400,
+      fontSize: 140,
+      background: '#764abc'
+    });
     const [user] = await db.insert(usersTable).values({
       id,
       username,
       email,
       passwordHash,
       displayName,
+      avatarUrl: logoSVGBase64
     }).returning();
     const token = generateToken(id);
     res.status(201).json({
