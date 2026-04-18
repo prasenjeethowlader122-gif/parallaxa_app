@@ -30,11 +30,123 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          run_install: false
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
+          node-version: 24
+          cache: "pnpm"
+
+      # ── Install dependencies ─────────────────────────────────────────────
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ── EAS CLI ──────────────────────────────────────────────────────────
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      # ── Determine build profile ──────────────────────────────────────────
+      # On tag push → use "preview" (APK). On manual trigger → use chosen profile.
+      - name: Set build profile
+        id: profile
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ github.event.inputs.profile }}" >> $GITHUB_OUTPUT
+          else
+            echo "value=preview" >> $GITHUB_OUTPUT
+          fi
+
+      # ── Build APK via EAS (no-wait then download) ────────────────────────
+      - name: Build APK with EAS
+        id: eas_build
+        working-directory: artifacts/social-app
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          BUILD_ID=$(eas build \
+            --platform android \
+            --profile ${{ steps.profile.outputs.value }} \
+            --non-interactive \
+            --json \
+            --no-wait \
+            | jq -r '.[0].id')
+
+          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
+          echo "EAS Build ID: $BUILD_ID"
+
+      - name: Wait for EAS build & get APK URL
+        id: eas_url
+        working-directory: artifacts/social-app
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          BUILD_ID="${{ steps.eas_build.outputs.build_id }}"
+          echo "Waiting for build $BUILD_ID to complete..."
+
+          for i in $(seq 1 60); do
+            RESULT=$(eas build:view "$BUILD_ID" --json)
+            STATUS=$(echo "$RESULT" | jq -r '.status')
+            echo "  Status: $STATUS (attempt $i/60)"
+
+            if [ "$STATUS" = "FINISHED" ]; then
+              APK_URL=$(echo "$RESULT" | jq -r '.artifacts.buildUrl')
+              echo "apk_url=$APK_URL" >> $GITHUB_OUTPUT
+              echo "APK URL: $APK_URL"
+              break
+            fi
+
+            if [ "$STATUS" = "ERRORED" ] || [ "$STATUS" = "CANCELLED" ]; then
+              echo "Build failed with status: $STATUS"
+              exit 1
+            fi
+
+            sleep 60
+          done
+
+          if [ -z "$(grep 'apk_url' $GITHUB_OUTPUT)" ]; then
+            echo "Build timed out after 60 minutes"
+            exit 1
+          fi
+
+      # ── Download APK ─────────────────────────────────────────────────────
+      - name: Download APK
+        run: |
+          mkdir -p dist
+          curl -L "${{ steps.eas_url.outputs.apk_url }}" -o dist/social-app.apk
+          echo "APK size: $(du -sh dist/social-app.apk | cut -f1)"
+
+      # ── Derive release tag ────────────────────────────────────────────────
+      - name: Set release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "value=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "value=manual-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+          fi
+
+      # ── Create GitHub Release & upload APK ───────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.value }}
+          name: "Release ${{ steps.tag.outputs.value }}"
+          body: |
+            ## Android APK — ${{ steps.tag.outputs.value }}
+
+            Built with EAS profile: `${{ steps.profile.outputs.value }}`
+            Commit: ${{ github.sha }}
+
+            ### Install
+            1. Download `social-app.apk` below.
+            2. Enable **Install from unknown sources** on your Android device.
+            3. Open the downloaded APK to install.
+          files: dist/social-app.apk
+          draft: false
+          prerelease: ${{ steps.profile.outputs.value != 'production' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        with:
           node-version: 24
           cache: "pnpm"
 
