@@ -38,11 +38,11 @@ const MENU_ITEMS = [
   { id: "explore", label: "Explore", icon: Search01Icon },
   { id: "notifications", label: "Notifications", icon: Notification01Icon },
   { id: "profile", label: "Profile", icon: UserIcon },
-  { id: "create", label: "New Post", icon: Add01Icon },
+  { id: "settings", label: "Settings", icon: Settings01Icon },
 ];
 
 const BOTTOM_MENU_ITEMS = [
-  { id: "settings", label: "Settings", icon: Settings01Icon },
+  { id: "create", label: "New Post", icon: Add01Icon },
 ];
 
 export default function RootLayout() {
@@ -336,6 +336,7 @@ export default function RootLayout() {
                       marginHorizontal: 8,
                       marginVertical: 2,
                     }}
+                    className = 'bg-gray-900 text-white rounded-2xl'
                   >
                     <HugeiconsIcon
                       icon={item.icon}
