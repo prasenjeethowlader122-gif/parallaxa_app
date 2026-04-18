@@ -158,7 +158,6 @@ const MentionSuggestionsComp: FC<MentionSuggestionsCompProps> = ({
   onSuggestionPress,
   colors,
 }) => {
-  // Guard: keyword must be a non-empty string
   if (!keyword || typeof keyword !== "string") return null;
 
   const filtered = (mentionSuggestions as readonly MentionSuggestion[]).filter(
@@ -244,7 +243,6 @@ export default function CreateScreen() {
     },
   });
 
-  // Guard: content may not have .match if it's somehow not a string
   const hashtags = useMemo(
     () =>
       typeof content === "string"
@@ -255,13 +253,18 @@ export default function CreateScreen() {
 
   const handlePost = useCallback(() => {
     if (isEmpty || isOverLimit) return;
-    createPost({
-      data: {
-        content: content.trim() || undefined,
-        imageUrl: imageUrl.trim() || undefined,
-        hashtags,
-      },
-    });
+
+    const postData: {
+      content?: string;
+      imageUrl?: string;
+      hashtags?: string[];
+    } = {};
+
+    if (content.trim()) postData.content = content.trim();
+    if (imageUrl.trim()) postData.imageUrl = imageUrl.trim();
+    if (hashtags.length) postData.hashtags = hashtags;
+
+    createPost({ data: postData });
   }, [content, imageUrl, hashtags, isEmpty, isOverLimit, createPost]);
 
   const triggersConfig = useMemo(
@@ -286,7 +289,6 @@ export default function CreateScreen() {
     triggersConfig,
   });
 
-  // Guard: triggers.mention may be undefined on first render
   const mentionKeyword = triggers?.mention?.keyword;
   const mentionOnPress = triggers?.mention?.onSuggestionPress;
 
@@ -419,7 +421,6 @@ export default function CreateScreen() {
 
             <AudiencePill label="Everyone" colors={colors} />
 
-            {/* Guard: only render suggestions when triggers.mention is ready */}
             <View style={{ marginTop: 10 }}>
               <MentionSuggestionsComp
                 keyword={mentionKeyword}

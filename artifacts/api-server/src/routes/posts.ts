@@ -4,7 +4,7 @@ import {
   postsTable, usersTable, likesTable, savedPostsTable,
   followsTable, hashtagsTable, postHashtagsTable
 } from "@workspace/db";
-import { eq, and, desc, inArray, sql, isNull, isNotNull } from "drizzle-orm";
+import { eq, and, desc, inArray, sql, isNull } from "drizzle-orm";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
 
@@ -38,6 +38,7 @@ async function formatPost(post: typeof postsTable.$inferSelect, myId: string) {
     hashtags: hashtagRows.map((h) => h.name),
     likesCount: post.likesCount,
     repliesCount: post.repliesCount,
+    commentsCount: post.repliesCount, // alias for compatibility
     isLiked: !!liked,
     isSaved: !!saved,
     createdAt: post.createdAt,
@@ -48,7 +49,12 @@ async function formatPost(post: typeof postsTable.$inferSelect, myId: string) {
 router.post("/posts", authenticate, async (req: AuthRequest, res) => {
   try {
     const { content, imageUrl, videoUrl, location, hashtags, parentPostId } = req.body;
-    
+
+    if (!content && !imageUrl && !videoUrl) {
+      res.status(400).json({ error: "Bad Request", message: "Post must have content, image, or video" });
+      return;
+    }
+
     // If parentPostId provided, verify parent exists
     if (parentPostId) {
       const [parent] = await db.select().from(postsTable).where(eq(postsTable.id, parentPostId)).limit(1);
@@ -63,10 +69,10 @@ router.post("/posts", authenticate, async (req: AuthRequest, res) => {
       id,
       userId: req.userId!,
       parentPostId: parentPostId ?? null,
-      content,
-      imageUrl: parentPostId ? null : imageUrl,
-      videoUrl: parentPostId ? null : videoUrl,
-      location: parentPostId ? null : location,
+      content: content ?? null,
+      imageUrl: parentPostId ? null : (imageUrl ?? null),
+      videoUrl: parentPostId ? null : (videoUrl ?? null),
+      location: parentPostId ? null : (location ?? null),
     }).returning();
 
     // If it's a reply/comment, increment parent's repliesCount
@@ -92,7 +98,7 @@ router.post("/posts", authenticate, async (req: AuthRequest, res) => {
     } else {
       // Only increment postsCount for top-level posts
       await db.update(usersTable).set({ postsCount: sql`${usersTable.postsCount} + 1` }).where(eq(usersTable.id, req.userId!));
-      
+
       // Handle hashtags for top-level posts only
       if (hashtags?.length) {
         for (const tag of hashtags) {
@@ -174,11 +180,13 @@ router.delete("/posts/:postId", authenticate, async (req: AuthRequest, res) => {
     if (post.parentPostId) {
       // Decrement parent's repliesCount
       await db.update(postsTable)
-        .set({ repliesCount: sql`${postsTable.repliesCount} - 1` })
+        .set({ repliesCount: sql`GREATEST(${postsTable.repliesCount} - 1, 0)` })
         .where(eq(postsTable.id, post.parentPostId));
     } else {
       // Only decrement postsCount for top-level posts
-      await db.update(usersTable).set({ postsCount: sql`${usersTable.postsCount} - 1` }).where(eq(usersTable.id, req.userId!));
+      await db.update(usersTable)
+        .set({ postsCount: sql`GREATEST(${usersTable.postsCount} - 1, 0)` })
+        .where(eq(usersTable.id, req.userId!));
     }
 
     res.json({ message: "Post deleted" });
@@ -187,7 +195,7 @@ router.delete("/posts/:postId", authenticate, async (req: AuthRequest, res) => {
   }
 });
 
-// Home feed - top-level posts only
+// Home feed - top-level posts only (no replies)
 router.get("/feed", authenticate, async (req: AuthRequest, res) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 20, 100);
@@ -197,13 +205,17 @@ router.get("/feed", authenticate, async (req: AuthRequest, res) => {
       .where(eq(followsTable.followerId, req.userId!));
 
     const followingIds = [req.userId!, ...following.map((f) => f.followingId)];
+
     const posts = await db
       .select()
       .from(postsTable)
-      .where(and(
-        inArray(postsTable.userId, followingIds),
-        eq(postsTable.isArchived, false) // top-level posts only
-      ))
+      .where(
+        and(
+          inArray(postsTable.userId, followingIds),
+          eq(postsTable.isArchived, false),
+          isNull(postsTable.parentPostId), // top-level posts only — fixes 500 from replies leaking in
+        )
+      )
       .orderBy(desc(postsTable.createdAt))
       .limit(limit);
 
@@ -221,10 +233,12 @@ router.get("/explore", authenticate, async (req: AuthRequest, res) => {
     const posts = await db
       .select()
       .from(postsTable)
-      .where(and(
-        eq(postsTable.isArchived, false),
-        isNull(postsTable.parentPostId), // top-level posts only
-      ))
+      .where(
+        and(
+          eq(postsTable.isArchived, false),
+          isNull(postsTable.parentPostId), // top-level posts only
+        )
+      )
       .orderBy(desc(postsTable.likesCount), desc(postsTable.createdAt))
       .limit(limit);
 

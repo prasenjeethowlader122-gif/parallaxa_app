@@ -88,6 +88,7 @@ export interface UserPage {
 export interface Post {
   id: string;
   author: UserSummary;
+  parentPostId?: string | null;
   content?: string | null;
   imageUrl?: string | null;
   videoUrl?: string | null;
@@ -95,6 +96,7 @@ export interface Post {
   hashtags: string[];
   likesCount: number;
   commentsCount: number;
+  repliesCount: number;
   isLiked: boolean;
   isSaved: boolean;
   createdAt: string;
@@ -106,6 +108,8 @@ export interface CreatePostInput {
   videoUrl?: string;
   location?: string;
   hashtags?: string[];
+  /** If set, this post is a reply to the given post ID */
+  parentPostId?: string;
 }
 
 export interface PostPage {

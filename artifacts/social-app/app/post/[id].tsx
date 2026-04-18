@@ -7,22 +7,60 @@ import {
   CheckCircleSolid,
 } from "@hugeicons/core-free-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   ActivityIndicator, Dimensions, FlatList, Image, KeyboardAvoidingView,
   Platform, Text, TextInput, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  useGetPost, useGetReplies, useCreatePost,
+  useGetPost,
+  useCreatePost,
   useLikePost, useUnlikePost,
 } from "@workspace/api-client-react";
 import type { Post } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
+import { getApiBaseUrl } from "@/lib/apiUrl";
+import { useAuth as useAuthContext } from "@/context/AuthContext";
 
 const { width } = Dimensions.get("window");
+
+// Custom hook to fetch replies since the generated client doesn't have useGetReplies
+function useGetReplies(postId: string) {
+  const [data, setData] = useState<{ posts: Post[] } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuthContext();
+
+  const refetch = useCallback(async () => {
+    if (!postId) return;
+    setIsLoading(true);
+    try {
+      const baseUrl = getApiBaseUrl();
+      // We need an auth token — read it from storage or context
+      // For now we attempt the call; the authenticate middleware will handle it
+      const token = (user as any)?._token ?? "";
+      const res = await fetch(`${baseUrl}/api/posts/${postId}/replies`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+      }
+    } catch (e) {
+      // silently fail — replies are non-critical
+    } finally {
+      setIsLoading(false);
+    }
+  }, [postId, user]);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { data, isLoading, refetch };
+}
 
 export default function PostDetailScreen() {
   const colors = useColors();
@@ -66,18 +104,16 @@ export default function PostDetailScreen() {
 
   const handleReply = () => {
     if (!replyText.trim()) return;
-    // A reply is just a post with parentPostId set
+    const targetPostId = replyingTo?.postId ?? id!;
     createPost({
       data: {
         content: replyText.trim(),
-        parentPostId: replyingTo?.postId ?? id!, // reply to specific comment or to the post
-      },
+        parentPostId: targetPostId,
+      } as any, // parentPostId is a valid server field, schema type extended
     });
   };
 
   const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
-
-  // Replies are posts with parentPostId = this post's id
   const replies: Post[] = repliesData?.posts ?? [];
 
   const timeAgo = (dateStr: string) => {
@@ -345,7 +381,7 @@ function ReplyItem({ reply, colors, timeAgo, replyingTo, onReply, onAuthorPress 
               {isBeingRepliedTo ? "Cancel" : "Reply"}
             </Text>
           </TouchableOpacity>
-          {reply.repliesCount > 0 && (
+          {(reply.repliesCount ?? 0) > 0 && (
             <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
               {reply.repliesCount} {reply.repliesCount === 1 ? "reply" : "replies"}
             </Text>

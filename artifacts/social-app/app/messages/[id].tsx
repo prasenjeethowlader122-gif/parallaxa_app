@@ -20,14 +20,15 @@ export default function ConversationScreen() {
   const [message, setMessage] = useState("");
   const flatListRef = useRef<FlatList>(null);
 
-  const { data: convoData } = useGetConversation({ conversationId: id });
-  const { data: messagesData, refetch } = useGetMessages({ conversationId: id });
+  // Fix: hooks take plain string, not an object
+  const { data: convoData } = useGetConversation(id ?? "");
+  const { data: messagesData, refetch } = useGetMessages(id ?? "");
   const { mutate: sendMessage, isPending } = useSendMessage({
     mutation: { onSuccess: () => { setMessage(""); refetch(); } },
   });
 
   const handleSend = () => {
-    if (!message.trim()) return;
+    if (!message.trim() || !id) return;
     sendMessage({ conversationId: id, data: { content: message.trim() } });
   };
 

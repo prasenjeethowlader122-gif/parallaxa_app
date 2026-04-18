@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, postsTable, followsTable, storiesTable } from "@workspace/db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, isNull, sql } from "drizzle-orm";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
 
@@ -107,27 +107,49 @@ router.get("/users/:userId/posts", authenticate, async (req: AuthRequest, res) =
   try {
     const { userId } = req.params;
     const limit = Math.min(Number(req.query.limit) || 20, 100);
+
+    // Only fetch top-level posts (no replies)
     const posts = await db
       .select()
       .from(postsTable)
-      .where(and(eq(postsTable.userId, userId), eq(postsTable.isArchived, false)))
+      .where(
+        and(
+          eq(postsTable.userId, userId),
+          eq(postsTable.isArchived, false),
+          isNull(postsTable.parentPostId), // exclude replies
+        )
+      )
       .orderBy(desc(postsTable.createdAt))
       .limit(limit);
 
-    res.json({ posts: posts.map((p) => ({
-      id: p.id,
-      author: { id: userId, username: "", displayName: "", isVerified: false, isFollowing: false },
-      content: p.content,
-      imageUrl: p.imageUrl,
-      videoUrl: p.videoUrl,
-      location: p.location,
-      hashtags: [],
-      likesCount: p.likesCount,
-      commentsCount: p.commentsCount,
-      isLiked: false,
-      isSaved: false,
-      createdAt: p.createdAt,
-    })), nextCursor: null });
+    // Fetch author info once
+    const [author] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+
+    res.json({
+      posts: posts.map((p) => ({
+        id: p.id,
+        author: {
+          id: userId,
+          username: author?.username ?? "",
+          displayName: author?.displayName ?? "",
+          avatarUrl: author?.avatarUrl ?? null,
+          isVerified: author?.isVerified ?? false,
+          isFollowing: false,
+        },
+        content: p.content,
+        imageUrl: p.imageUrl,
+        videoUrl: p.videoUrl,
+        location: p.location,
+        hashtags: [],
+        likesCount: p.likesCount,
+        commentsCount: p.repliesCount, // repliesCount is the DB field
+        repliesCount: p.repliesCount,
+        isLiked: false,
+        isSaved: false,
+        createdAt: p.createdAt,
+      })),
+      nextCursor: null,
+    });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
@@ -225,8 +247,8 @@ router.delete("/users/:userId/follow", authenticate, async (req: AuthRequest, re
       .limit(1);
     if (existing) {
       await db.delete(followsTable).where(and(eq(followsTable.followerId, myId), eq(followsTable.followingId, userId)));
-      await db.update(usersTable).set({ followingCount: sql`${usersTable.followingCount} - 1` }).where(eq(usersTable.id, myId));
-      await db.update(usersTable).set({ followersCount: sql`${usersTable.followersCount} - 1` }).where(eq(usersTable.id, userId));
+      await db.update(usersTable).set({ followingCount: sql`GREATEST(${usersTable.followingCount} - 1, 0)` }).where(eq(usersTable.id, myId));
+      await db.update(usersTable).set({ followersCount: sql`GREATEST(${usersTable.followersCount} - 1, 0)` }).where(eq(usersTable.id, userId));
     }
     res.json({ message: "Unfollowed" });
   } catch (err) {

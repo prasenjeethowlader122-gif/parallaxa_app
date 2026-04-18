@@ -28,16 +28,17 @@ function escapeXml(str: string): string {
     .replace(/'/g, "&apos;");
 }
 
-export function generateAvatarSVGBase64(
+export function generateTextLogoSVGBase64(
   displayName: string,
-  size = 200
+  size: number | { width ? : number;height ? : number;fontSize ? : number;background ? : string } = 200
 ): string {
+  const sz = typeof size === "number" ? size : 200;
   const initials = escapeXml(getInitials(displayName));
-  const bg = getColor(displayName);
-  const fontSize = Math.round(size * 0.4);
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="${bg}"/>
+  const bg = typeof size === "object" && size.background ? size.background : getColor(displayName);
+  const fontSize = typeof size === "object" && size.fontSize ? size.fontSize : Math.round(sz * 0.4);
+  
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}">
+  <circle cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2}" fill="${bg}"/>
   <text
     x="50%" y="50%"
     dominant-baseline="central"
@@ -49,8 +50,8 @@ export function generateAvatarSVGBase64(
     letter-spacing="1"
   >${initials}</text>
 </svg>`;
-
+  
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 
-export default generateAvatarSVGBase64;
+export default generateTextLogoSVGBase64;
