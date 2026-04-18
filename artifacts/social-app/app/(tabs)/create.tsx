@@ -13,8 +13,8 @@ import {
   Image,
   Pressable,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker"; // For image upload
-import { Svg, Circle } from "react-native-svg"; // For proper ring
+import * as ImagePicker from "expo-image-picker";
+import { Svg, Circle } from "react-native-svg";
 import { useCreatePost } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
@@ -32,7 +32,6 @@ import {
 import {
   useMentions,
   TriggersConfig,
-  MentionSuggestionsProps,
 } from "react-native-controlled-mentions";
 
 type MentionType = "mention" | "hashtag";
@@ -45,12 +44,14 @@ const mentionSuggestions = [
   { id: "5", name: "Ayesha" },
 ] as const;
 
+type MentionSuggestion = { id: string; name: string };
+
 const MAX_CHARS = 280;
 
 interface CharRingProps {
   count: number;
   max: number;
-  colors: any; // From useColors
+  colors: any;
 }
 
 const CharRing: FC<CharRingProps> = ({ count, max, colors }) => {
@@ -64,10 +65,21 @@ const CharRing: FC<CharRingProps> = ({ count, max, colors }) => {
 
   const isNearLimit = remaining <= 20;
   const isOverLimit = remaining < 0;
-  const ringColor = isOverLimit ? colors.destructive ?? "#f4212e" : isNearLimit ? colors.accent ?? "#ffd400" : colors.primary;
+  const ringColor = isOverLimit
+    ? colors.destructive ?? "#f4212e"
+    : isNearLimit
+    ? colors.accent ?? "#ffd400"
+    : colors.primary;
 
   return (
-    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+    <View
+      style={{
+        width: size,
+        height: size,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <Circle
           cx={size / 2}
@@ -92,7 +104,14 @@ const CharRing: FC<CharRingProps> = ({ count, max, colors }) => {
         />
       </Svg>
       {isNearLimit && (
-        <Text style={{ fontSize: 10, fontWeight: "700", color: ringColor, position: "absolute" }}>
+        <Text
+          style={{
+            fontSize: 10,
+            fontWeight: "700",
+            color: ringColor,
+            position: "absolute",
+          }}
+        >
           {remaining}
         </Text>
       )}
@@ -100,7 +119,10 @@ const CharRing: FC<CharRingProps> = ({ count, max, colors }) => {
   );
 };
 
-const AudiencePill: FC<{ label: string; colors: any }> = ({ label, colors }) => (
+const AudiencePill: FC<{ label: string; colors: any }> = ({
+  label,
+  colors,
+}) => (
   <TouchableOpacity
     style={{
       flexDirection: "row",
@@ -116,17 +138,34 @@ const AudiencePill: FC<{ label: string; colors: any }> = ({ label, colors }) => 
     accessibilityRole="button"
     accessibilityLabel={`Audience: ${label}`}
   >
-    <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "700" }}>{label}</Text>
+    <Text
+      style={{ color: colors.primary, fontSize: 13, fontWeight: "700" }}
+    >
+      {label}
+    </Text>
     <HugeiconsIcon icon={Globe02Icon} size={11} color={colors.primary} />
   </TouchableOpacity>
 );
 
-const MentionSuggestionsComp: FC<MentionSuggestionsProps> = ({ keyword, onSuggestionPress, colors }) => {
+// ─── Fixed: custom props interface instead of MentionSuggestionsProps ───────
+interface MentionSuggestionsCompProps {
+  keyword?: string;
+  onSuggestionPress?: (suggestion: MentionSuggestion) => void;
+  colors: any;
+}
+
+const MentionSuggestionsComp: FC<MentionSuggestionsCompProps> = ({
+  keyword,
+  onSuggestionPress,
+  colors,
+}) => {
   if (!keyword) return null;
-  const filtered = mentionSuggestions.filter((u) =>
-    u.name.toLowerCase().includes(keyword.toLowerCase())
+
+  const filtered = (mentionSuggestions as readonly MentionSuggestion[]).filter(
+    (u) => u.name.toLowerCase().includes(keyword.toLowerCase())
   );
-  if (!filtered?.length) return null;
+
+  if (!filtered.length) return null;
 
   return (
     <View
@@ -150,14 +189,24 @@ const MentionSuggestionsComp: FC<MentionSuggestionsProps> = ({ keyword, onSugges
           style={({ pressed }) => ({
             paddingHorizontal: 16,
             paddingVertical: 12,
-            backgroundColor: pressed ? (colors.cardHover ?? "#1e2126") : "transparent",
+            backgroundColor: pressed
+              ? colors.cardHover ?? "#1e2126"
+              : "transparent",
             borderTopWidth: i > 0 ? 1 : 0,
             borderTopColor: colors.border,
           })}
           accessibilityRole="button"
           accessibilityLabel={`Mention @${u.name}`}
         >
-          <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{u.name}</Text>
+          <Text
+            style={{
+              fontSize: 15,
+              fontWeight: "600",
+              color: colors.foreground,
+            }}
+          >
+            {u.name}
+          </Text>
         </Pressable>
       ))}
     </View>
@@ -170,7 +219,7 @@ const TOOLBAR_ACTIONS = [
   { icon: EmojiSmileIcon, id: "emoji", accessibilityLabel: "Emoji" },
   { icon: Calendar03Icon, id: "schedule", accessibilityLabel: "Schedule" },
   { icon: Location01Icon, id: "location", accessibilityLabel: "Location" },
-];
+] as const;
 
 export default function CreateScreen() {
   const colors = useColors();
@@ -189,12 +238,14 @@ export default function CreateScreen() {
   const { mutate: createPost, isPending } = useCreatePost({
     mutation: {
       onSuccess: () => router.push("/(tabs)" as any),
-      onError: (err: any) => Alert.alert("Error", err?.message ?? "Could not create post"),
+      onError: (err: any) =>
+        Alert.alert("Error", err?.message ?? "Could not create post"),
     },
   });
 
   const hashtags = useMemo(
-    () => content.match(/#\w+/g)?.map((t) => t.slice(1).toLowerCase()) || [],
+    () =>
+      content.match(/#\w+/g)?.map((t) => t.slice(1).toLowerCase()) ?? [],
     [content]
   );
 
@@ -209,18 +260,21 @@ export default function CreateScreen() {
     });
   }, [content, imageUrl, hashtags, isEmpty, isOverLimit, createPost]);
 
-  const triggersConfig = useMemo((): TriggersConfig<MentionType> => ({
-    mention: {
-      trigger: "@",
-      textStyle: { fontWeight: "700", color: colors.primary },
-    },
-    hashtag: {
-      trigger: "#",
-      allowedSpacesCount: 0,
-      isInsertSpaceAfterMention: true,
-      textStyle: { fontWeight: "700", color: colors.primary },
-    },
-  }), [colors.primary]);
+  const triggersConfig = useMemo(
+    (): TriggersConfig<MentionType> => ({
+      mention: {
+        trigger: "@",
+        textStyle: { fontWeight: "700", color: colors.primary },
+      },
+      hashtag: {
+        trigger: "#",
+        allowedSpacesCount: 0,
+        isInsertSpaceAfterMention: true,
+        textStyle: { fontWeight: "700", color: colors.primary },
+      },
+    }),
+    [colors.primary]
+  );
 
   const { textInputProps, triggers } = useMentions({
     value: content,
@@ -231,7 +285,9 @@ export default function CreateScreen() {
   const postBtnDisabled = isPending || isEmpty || isOverLimit;
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images });
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    });
     if (!result.canceled && result.assets?.[0]?.uri) {
       setImageUrl(result.assets[0].uri);
     }
@@ -258,15 +314,29 @@ export default function CreateScreen() {
         <TouchableOpacity
           onPress={() => router.back()}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={{ width: 36, height: 36, alignItems: "center", justifyContent: "center", borderRadius: 18 }}
+          style={{
+            width: 36,
+            height: 36,
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 18,
+          }}
           accessibilityRole="button"
           accessibilityLabel="Cancel"
         >
-          <HugeiconsIcon icon={Cancel01Icon} size={20} color={colors.foreground ?? "#e7e9ea"} />
+          <HugeiconsIcon
+            icon={Cancel01Icon}
+            size={20}
+            color={colors.foreground ?? "#e7e9ea"}
+          />
         </TouchableOpacity>
 
         <TouchableOpacity accessibilityLabel="Save draft">
-          <Text style={{ fontSize: 15, fontWeight: "700", color: colors.primary }}>Drafts</Text>
+          <Text
+            style={{ fontSize: 15, fontWeight: "700", color: colors.primary }}
+          >
+            Drafts
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -276,7 +346,9 @@ export default function CreateScreen() {
             paddingHorizontal: 18,
             paddingVertical: 8,
             borderRadius: 20,
-            backgroundColor: postBtnDisabled ? (colors.muted ?? "#0f4c75") : colors.primary,
+            backgroundColor: postBtnDisabled
+              ? colors.muted ?? "#0f4c75"
+              : colors.primary,
           }}
           activeOpacity={0.8}
           accessibilityRole="button"
@@ -286,7 +358,15 @@ export default function CreateScreen() {
           {isPending ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={{ color: postBtnDisabled ? (colors.mutedForeground ?? "#5b9ab8") : "#fff", fontSize: 15, fontWeight: "700" }}>
+            <Text
+              style={{
+                color: postBtnDisabled
+                  ? colors.mutedForeground ?? "#5b9ab8"
+                  : "#fff",
+                fontSize: 15,
+                fontWeight: "700",
+              }}
+            >
               Post
             </Text>
           )}
@@ -304,19 +384,40 @@ export default function CreateScreen() {
           <View style={{ alignItems: "center" }}>
             <UserAvatar uri={user?.avatarUrl} size={42} />
             {content.length > 0 && (
-              <View style={{ width: 2, flex: 1, marginTop: 8, backgroundColor: colors.border ?? "#2f3336", borderRadius: 1, minHeight: 30 }} />
+              <View
+                style={{
+                  width: 2,
+                  flex: 1,
+                  marginTop: 8,
+                  backgroundColor: colors.border ?? "#2f3336",
+                  borderRadius: 1,
+                  minHeight: 30,
+                }}
+              />
             )}
           </View>
 
           <View style={{ flex: 1, paddingTop: 2 }}>
-            <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground ?? "#e7e9ea", marginBottom: 4 }}>
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "700",
+                color: colors.foreground ?? "#e7e9ea",
+                marginBottom: 4,
+              }}
+            >
               {user?.username ?? "you"}
             </Text>
 
             <AudiencePill label="Everyone" colors={colors} />
 
+            {/* ─── Fixed: pass keyword and onSuggestionPress explicitly ─── */}
             <View style={{ marginTop: 10 }}>
-              <MentionSuggestionsComp {...triggers.mention} colors={colors} />
+              <MentionSuggestionsComp
+                keyword={triggers.mention.keyword}
+                onSuggestionPress={triggers.mention.onSuggestionPress}
+                colors={colors}
+              />
             </View>
 
             <TextInput
@@ -340,8 +441,20 @@ export default function CreateScreen() {
             />
 
             {imageUrl.trim().length > 0 && (
-              <View style={{ marginTop: 12, borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: colors.border ?? "#2f3336" }}>
-                <Image source={{ uri: imageUrl }} style={{ width: "100%", height: 220 }} resizeMode="cover" />
+              <View
+                style={{
+                  marginTop: 12,
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  borderWidth: 1,
+                  borderColor: colors.border ?? "#2f3336",
+                }}
+              >
+                <Image
+                  source={{ uri: imageUrl }}
+                  style={{ width: "100%", height: 220 }}
+                  resizeMode="cover"
+                />
                 <TouchableOpacity
                   onPress={() => setImageUrl("")}
                   style={{
@@ -358,15 +471,33 @@ export default function CreateScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Remove image"
                 >
-                  <HugeiconsIcon icon={Cancel01Icon} size={16} color={colors.foreground ?? "#e7e9ea"} />
+                  <HugeiconsIcon
+                    icon={Cancel01Icon}
+                    size={16}
+                    color={colors.foreground ?? "#e7e9ea"}
+                  />
                 </TouchableOpacity>
               </View>
             )}
 
             {content.length > 0 && (
-              <View style={{ flexDirection: "row", gap: 10, marginTop: 16, alignItems: "center" }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: 10,
+                  marginTop: 16,
+                  alignItems: "center",
+                }}
+              >
                 <UserAvatar uri={user?.avatarUrl} size={24} />
-                <Text style={{ fontSize: 15, color: colors.mutedForeground ?? "#536471" }}>Add to thread</Text>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: colors.mutedForeground ?? "#536471",
+                  }}
+                >
+                  Add to thread
+                </Text>
               </View>
             )}
           </View>
@@ -386,11 +517,13 @@ export default function CreateScreen() {
           backgroundColor: colors.background ?? "#000",
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 2, flex: 1 }}>
-          {(TOOLBAR_ACTIONS || []).map(({ icon, id, accessibilityLabel }) => (
+        <View
+          style={{ flexDirection: "row", alignItems: "center", gap: 2, flex: 1 }}
+        >
+          {TOOLBAR_ACTIONS.map(({ icon, id, accessibilityLabel }) => (
             <TouchableOpacity
               key={id}
-              onPress={id === "image" ? pickImage : undefined} // Image picker example
+              onPress={id === "image" ? pickImage : undefined}
               style={{
                 width: 38,
                 height: 38,
@@ -402,12 +535,24 @@ export default function CreateScreen() {
               accessibilityRole="button"
               accessibilityLabel={accessibilityLabel}
             >
-              <HugeiconsIcon icon={icon} size={20} color={colors.primary} strokeWidth={1.5} />
+              <HugeiconsIcon
+                icon={icon}
+                size={20}
+                color={colors.primary}
+                strokeWidth={1.5}
+              />
             </TouchableOpacity>
           ))}
         </View>
 
-        <View style={{ width: 1, height: 28, backgroundColor: colors.border ?? "#2f3336", marginHorizontal: 8 }} />
+        <View
+          style={{
+            width: 1,
+            height: 28,
+            backgroundColor: colors.border ?? "#2f3336",
+            marginHorizontal: 8,
+          }}
+        />
 
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
           <CharRing count={charCount} max={MAX_CHARS} colors={colors} />
@@ -425,7 +570,16 @@ export default function CreateScreen() {
             accessibilityRole="button"
             accessibilityLabel="Add media"
           >
-            <Text style={{ color: colors.mutedForeground ?? "#536471", fontSize: 18, lineHeight: 20, marginTop: -1 }}>+</Text>
+            <Text
+              style={{
+                color: colors.mutedForeground ?? "#536471",
+                fontSize: 18,
+                lineHeight: 20,
+                marginTop: -1,
+              }}
+            >
+              +
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
