@@ -1,6 +1,5 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
   description: SocialApp API specification
@@ -9,31 +8,17 @@ servers:
     description: Base API path
 tags:
   - name: health
-    description: Health operations
   - name: auth
-    description: Authentication operations
   - name: users
-    description: User operations
   - name: posts
-    description: Post operations
   - name: stories
-    description: Story operations
-  - name: comments
-    description: Comment operations
   - name: likes
-    description: Like operations
   - name: follows
-    description: Follow operations
   - name: notifications
-    description: Notification operations
   - name: messages
-    description: Message operations
   - name: search
-    description: Search operations
   - name: explore
-    description: Explore operations
   - name: saved
-    description: Saved post operations
 
 paths:
   /healthz:
@@ -49,7 +34,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  # ── Auth ────────────────────────────────────────────────────────────────────
   /auth/register:
     post:
       operationId: register
@@ -126,7 +110,6 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
-  # ── Users ───────────────────────────────────────────────────────────────────
   /users/{userId}:
     get:
       operationId: getUser
@@ -171,7 +154,7 @@ paths:
     get:
       operationId: getUserPosts
       tags: [users]
-      summary: Get posts by user
+      summary: Get top-level posts by user
       security:
         - bearerAuth: []
       parameters:
@@ -259,7 +242,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
-
     delete:
       operationId: unfollowUser
       tags: [follows]
@@ -293,12 +275,11 @@ paths:
                 items:
                   $ref: "#/components/schemas/UserSummary"
 
-  # ── Posts ───────────────────────────────────────────────────────────────────
   /posts:
     post:
       operationId: createPost
       tags: [posts]
-      summary: Create a new post
+      summary: Create a post or comment/reply (set parentPostId for reply)
       security:
         - bearerAuth: []
       requestBody:
@@ -336,7 +317,7 @@ paths:
     delete:
       operationId: deletePost
       tags: [posts]
-      summary: Delete a post
+      summary: Delete a post or comment/reply
       security:
         - bearerAuth: []
       parameters:
@@ -348,6 +329,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
+
+  /posts/{postId}/replies:
+    get:
+      operationId: getReplies
+      tags: [posts]
+      summary: Get replies/comments of a post
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/postId"
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: Replies list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostPage"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /posts/{postId}/like:
     post:
@@ -413,69 +415,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
-  /posts/{postId}/comments:
-    get:
-      operationId: getComments
-      tags: [comments]
-      summary: Get comments on a post
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/postId"
-        - $ref: "#/components/parameters/cursor"
-        - $ref: "#/components/parameters/limit"
-      responses:
-        "200":
-          description: Comments list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CommentPage"
-    post:
-      operationId: createComment
-      tags: [comments]
-      summary: Comment on a post
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/postId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateCommentInput"
-      responses:
-        "201":
-          description: Comment created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Comment"
-
-  /comments/{commentId}:
-    delete:
-      operationId: deleteComment
-      tags: [comments]
-      summary: Delete a comment
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/commentId"
-      responses:
-        "200":
-          description: Comment deleted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MessageResponse"
-
-  # ── Feed ────────────────────────────────────────────────────────────────────
   /feed:
     get:
       operationId: getFeed
       tags: [posts]
-      summary: Get home feed
+      summary: Get home feed (top-level posts only)
       security:
         - bearerAuth: []
       parameters:
@@ -489,12 +433,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/PostPage"
 
-  # ── Explore ─────────────────────────────────────────────────────────────────
   /explore:
     get:
       operationId: getExplorePosts
       tags: [explore]
-      summary: Get explore grid
+      summary: Get explore grid (top-level posts only)
       security:
         - bearerAuth: []
       parameters:
@@ -508,7 +451,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/PostPage"
 
-  # ── Stories ─────────────────────────────────────────────────────────────────
   /stories:
     get:
       operationId: getStories
@@ -579,7 +521,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
-  # ── Notifications ───────────────────────────────────────────────────────────
   /notifications:
     get:
       operationId: getNotifications
@@ -628,7 +569,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/UnreadCount"
 
-  # ── Messages ─────────────────────────────────────────────────────────────────
   /conversations:
     get:
       operationId: getConversations
@@ -724,7 +664,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/Conversation"
 
-  # ── Search ──────────────────────────────────────────────────────────────────
   /search:
     get:
       operationId: search
@@ -752,7 +691,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/SearchResults"
 
-  # ── Saved ────────────────────────────────────────────────────────────────────
   /saved:
     get:
       operationId: getSavedPosts
@@ -793,12 +731,6 @@ components:
         type: string
     storyId:
       name: storyId
-      in: path
-      required: true
-      schema:
-        type: string
-    commentId:
-      name: commentId
       in: path
       required: true
       schema:
@@ -880,7 +812,6 @@ components:
           type: integer
       required: [count]
 
-    # ── Auth ──────────────────────────────────────────────────────────────────
     RegisterInput:
       type: object
       properties:
@@ -917,7 +848,6 @@ components:
           $ref: "#/components/schemas/User"
       required: [token, user]
 
-    # ── Users ─────────────────────────────────────────────────────────────────
     User:
       type: object
       properties:
@@ -1004,7 +934,7 @@ components:
           nullable: true
       required: [users]
 
-    # ── Posts ─────────────────────────────────────────────────────────────────
+    # Unified Post model — parentPostId null = top-level, set = comment/reply
     Post:
       type: object
       properties:
@@ -1012,6 +942,10 @@ components:
           type: string
         author:
           $ref: "#/components/schemas/UserSummary"
+        parentPostId:
+          type: string
+          nullable: true
+          description: "null for top-level posts; set to parent post ID for comments/replies"
         content:
           type: string
           nullable: true
@@ -1030,8 +964,9 @@ components:
             type: string
         likesCount:
           type: integer
-        commentsCount:
+        repliesCount:
           type: integer
+          description: "Number of direct replies/comments on this post"
         isLiked:
           type: boolean
         isSaved:
@@ -1039,11 +974,14 @@ components:
         createdAt:
           type: string
           format: date-time
-      required: [id, author, hashtags, likesCount, commentsCount, isLiked, isSaved, createdAt]
+      required: [id, author, hashtags, likesCount, repliesCount, isLiked, isSaved, createdAt]
 
     CreatePostInput:
       type: object
       properties:
+        parentPostId:
+          type: string
+          description: "Set to create a comment/reply on an existing post"
         content:
           type: string
         imageUrl:
@@ -1069,50 +1007,6 @@ components:
           nullable: true
       required: [posts]
 
-    # ── Comments ──────────────────────────────────────────────────────────────
-    Comment:
-      type: object
-      properties:
-        id:
-          type: string
-        postId:
-          type: string
-        author:
-          $ref: "#/components/schemas/UserSummary"
-        content:
-          type: string
-        parentId:
-          type: string
-          nullable: true
-        repliesCount:
-          type: integer
-        createdAt:
-          type: string
-          format: date-time
-      required: [id, postId, author, content, repliesCount, createdAt]
-
-    CreateCommentInput:
-      type: object
-      properties:
-        content:
-          type: string
-        parentId:
-          type: string
-      required: [content]
-
-    CommentPage:
-      type: object
-      properties:
-        comments:
-          type: array
-          items:
-            $ref: "#/components/schemas/Comment"
-        nextCursor:
-          type: string
-          nullable: true
-      required: [comments]
-
-    # ── Stories ───────────────────────────────────────────────────────────────
     Story:
       type: object
       properties:
@@ -1166,7 +1060,6 @@ components:
           default: 5
       required: [mediaUrl, mediaType]
 
-    # ── Notifications ─────────────────────────────────────────────────────────
     Notification:
       type: object
       properties:
@@ -1203,7 +1096,6 @@ components:
           nullable: true
       required: [notifications]
 
-    # ── Messages ──────────────────────────────────────────────────────────────
     Message:
       type: object
       properties:
@@ -1271,7 +1163,6 @@ components:
           type: string
       required: [userId]
 
-    # ── Search ────────────────────────────────────────────────────────────────
     SearchResults:
       type: object
       properties:

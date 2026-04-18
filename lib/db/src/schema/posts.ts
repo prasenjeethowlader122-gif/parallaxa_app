@@ -6,26 +6,25 @@ import { usersTable } from "./users";
 export const postsTable = pgTable("posts", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  parentPostId: text("parent_post_id"), // null = top-level post, set = comment/reply
   content: text("content"),
   imageUrl: text("image_url"),
   videoUrl: text("video_url"),
   location: text("location"),
   likesCount: integer("likes_count").notNull().default(0),
-  commentsCount: integer("comments_count").notNull().default(0),
+  repliesCount: integer("replies_count").notNull().default(0),
   isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  parentPostId: text('id'),
-  
 });
 
 export const insertPostSchema = createInsertSchema(postsTable).omit({
   likesCount: true,
-  commentsCount: true,
+  repliesCount: true,
   isArchived: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export type InsertPost = z.infer<typeof insertPostSchema>;
+export type InsertPost = z.infer < typeof insertPostSchema > ;
 export type Post = typeof postsTable.$inferSelect;
