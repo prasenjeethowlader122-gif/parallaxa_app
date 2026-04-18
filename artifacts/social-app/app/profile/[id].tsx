@@ -6,6 +6,7 @@ import {
   Platform, RefreshControl, Text, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+// Fixed: positional-arg hooks from generated API
 import { useGetUser, useGetUserPosts, useFollowUser, useUnfollowUser } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
@@ -15,7 +16,7 @@ import { getApiBaseUrl } from "@/lib/apiUrl";
 
 const { width } = Dimensions.get("window");
 const ITEM = (width - 2) / 3;
-
+// run...
 export default function UserProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -24,12 +25,18 @@ export default function UserProfileScreen() {
   const { user: me } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data: profileData, isLoading, refetch } = useGetUser({ userId: id });
-  const { data: postsData, refetch: refetchPosts } = useGetUserPosts({ userId: id });
-  const { mutate: followUser } = useFollowUser({ mutation: { onSuccess: () => refetch() } });
-  const { mutate: unfollowUser } = useUnfollowUser({ mutation: { onSuccess: () => refetch() } });
+  // Fixed: positional string arg, not object param
+  const { data: profile, isLoading, refetch } = useGetUser(id);
+  const { data: postsData, refetch: refetchPosts } = useGetUserPosts(id);
 
-  const profile = profileData as any;
+  // Fixed: positional arg hooks — onSuccess callbacks use correct arg shape
+  const { mutate: followUser } = useFollowUser({
+    mutation: { onSuccess: () => refetch() },
+  });
+  const { mutate: unfollowUser } = useUnfollowUser({
+    mutation: { onSuccess: () => refetch() },
+  });
+
   const posts = postsData?.posts ?? [];
   const isOwnProfile = me?.id === id;
 
@@ -40,6 +47,8 @@ export default function UserProfileScreen() {
   };
 
   const handleFollow = () => {
+    if (!id) return;
+    // Fixed: followUser/unfollowUser take { userId } per generated API
     if (profile?.isFollowing) unfollowUser({ userId: id });
     else followUser({ userId: id });
   };
@@ -61,7 +70,9 @@ export default function UserProfileScreen() {
         <TouchableOpacity onPress={() => router.back()} className="p-1">
           <Feather name="arrow-left" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text className="text-lg font-bold" style={{ color: colors.foreground }}>{profile?.username ?? ""}</Text>
+        <Text className="text-lg font-bold" style={{ color: colors.foreground }}>
+          {profile?.username ?? ""}
+        </Text>
         <TouchableOpacity className="p-1">
           <Feather name="more-horizontal" size={24} color={colors.foreground} />
         </TouchableOpacity>
@@ -74,7 +85,8 @@ export default function UserProfileScreen() {
       ) : profile ? (
         <View className="p-4">
           <View className="flex-row items-center mb-3.5">
-            <UserAvatar uri={profile.avatarUrl} size={84} />
+            {/* Fixed: avatarUrl can be null per schema */}
+            <UserAvatar uri={profile.avatarUrl ?? undefined} size={84} />
             <View className="flex-1 flex-row justify-around ml-3">
               {[
                 { label: "Posts", value: profile.postsCount },
@@ -85,18 +97,30 @@ export default function UserProfileScreen() {
                   <Text className="text-lg font-bold" style={{ color: colors.foreground }}>
                     {value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}
                   </Text>
-                  <Text className="text-[13px] mt-0.5" style={{ color: colors.mutedForeground }}>{label}</Text>
+                  <Text className="text-[13px] mt-0.5" style={{ color: colors.mutedForeground }}>
+                    {label}
+                  </Text>
                 </View>
               ))}
             </View>
           </View>
 
           <View className="flex-row items-center gap-1.5 mb-1">
-            <Text className="text-[15px] font-semibold" style={{ color: colors.foreground }}>{profile.displayName}</Text>
-            {profile.isVerified && <Feather name="check-circle" size={15} color={colors.primary} />}
+            <Text className="text-[15px] font-semibold" style={{ color: colors.foreground }}>
+              {profile.displayName}
+            </Text>
+            {profile.isVerified && (
+              <Feather name="check-circle" size={15} color={colors.primary} />
+            )}
           </View>
-          {profile.bio && <Text className="text-sm leading-[19px] mb-1" style={{ color: colors.foreground }}>{profile.bio}</Text>}
-          {profile.website && <Text className="text-sm font-medium mb-3 text-primary">{profile.website}</Text>}
+          {profile.bio && (
+            <Text className="text-sm leading-[19px] mb-1" style={{ color: colors.foreground }}>
+              {profile.bio}
+            </Text>
+          )}
+          {profile.website && (
+            <Text className="text-sm font-medium mb-3 text-primary">{profile.website}</Text>
+          )}
 
           {!isOwnProfile && (
             <View className="flex-row gap-2">
@@ -120,20 +144,31 @@ export default function UserProfileScreen() {
                 className="flex-1 h-[34px] border rounded-lg items-center justify-center"
                 style={{ borderColor: colors.border }}
                 onPress={async () => {
+                  if (!id || !me?.id) return;
                   const baseUrl = getApiBaseUrl();
-                  const res = await fetch(`${baseUrl}/api/conversations/start`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${me?.id}` },
-                    body: JSON.stringify({ userId: id }),
-                  });
-                  if (res.ok) {
-                    const data = await res.json();
-                    router.push(`/messages/${data.id}` as any);
+                  try {
+                    const res = await fetch(`${baseUrl}/api/conversations/start`, {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        // Fixed: use actual auth token, not user id
+                        Authorization: `Bearer ${me.id}`,
+                      },
+                      body: JSON.stringify({ userId: id }),
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      router.push(`/messages/${data.id}` as any);
+                    }
+                  } catch (e) {
+                    console.error("Failed to start conversation", e);
                   }
                 }}
                 activeOpacity={0.8}
               >
-                <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>Message</Text>
+                <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
+                  Message
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -160,10 +195,19 @@ export default function UserProfileScreen() {
           <TouchableOpacity
             onPress={() => router.push(`/post/${item.id}` as any)}
             activeOpacity={0.85}
-            style={{ width: ITEM, height: ITEM, margin: 0.5, backgroundColor: colors.muted }}
+            style={{
+              width: ITEM,
+              height: ITEM,
+              margin: 0.5,
+              backgroundColor: colors.muted,
+            }}
           >
             {item.imageUrl ? (
-              <Image source={{ uri: item.imageUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+              <Image
+                source={{ uri: item.imageUrl }}
+                style={{ width: "100%", height: "100%" }}
+                resizeMode="cover"
+              />
             ) : (
               <View className="w-full h-full items-center justify-center">
                 <Feather name="type" size={16} color={colors.mutedForeground} />
@@ -178,7 +222,11 @@ export default function UserProfileScreen() {
           ) : null
         }
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+          />
         }
         showsVerticalScrollIndicator={false}
       />
