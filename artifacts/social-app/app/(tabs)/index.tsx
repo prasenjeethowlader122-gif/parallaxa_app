@@ -1,7 +1,7 @@
 import React from "react";
 import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useGetFeed } from "@workspace/api-client-react";
+import { useGetFeed , getExplorePosts} from "@workspace/api-client-react";
 import { Image01Icon } from "@hugeicons/core-free-icons";
 import { useColors } from "@/hooks/useColors";
 import { PostCard } from "@/components/PostCard";
@@ -14,7 +14,7 @@ export default function FeedScreen() {
     data: feedData,
     isLoading: feedLoading,
     refetch: refetchFeed,
-  } = useGetFeed();
+  } = getExplorePosts();
   
   const posts = feedData?.posts ?? [];
   

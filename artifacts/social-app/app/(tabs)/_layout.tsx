@@ -52,7 +52,7 @@ export default function RootLayout() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-
+  const [ActiveViewMode,setActiveViewMode] = useState("index")
   const currentRoute = pathname === "/" || pathname === "/(tabs)" ? "index" : pathname.split("/").pop();
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
@@ -143,11 +143,11 @@ export default function RootLayout() {
         {pathname === "/" && (
           <View style={{ flexDirection: "row", paddingHorizontal: 8 }}>
             {TABS.map((tab) => {
-              const isActive = currentRoute === tab.id;
+              const isActive = ActiveViewMode === tab.id;
               return (
                 <TouchableOpacity
                   key={tab.id}
-                  onPress={() => navigateTo(tab.id)}
+                  onPress={() => setActiveViewMode(tab.id)}
                   style={{ paddingVertical: 10, paddingHorizontal: 16 }}
                 >
                   <Text
