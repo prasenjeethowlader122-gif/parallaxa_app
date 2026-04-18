@@ -174,7 +174,7 @@ export default function ProfileScreen() {
             borderColor: colors.border,
           }}
         >
-          {(["posts", "saved"] as const).map((tab) => (
+          {(["posts", "saved"]).map((tab) => (
             <TouchableOpacity
               key={tab}
               style={{
