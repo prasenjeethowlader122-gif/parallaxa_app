@@ -99,6 +99,7 @@ export default function UserProfileScreen() {
             color={colors.foreground}
             strokeWidth={1.5}
           />
+          <Text>{!isOwnProfile ? profile?.displayName.slice(0,5)+'...' : me?.displayName.slice(0,5)+'...'}</Text>
         </TouchableOpacity>
 
         <Text

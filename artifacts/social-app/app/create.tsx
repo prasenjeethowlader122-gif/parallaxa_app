@@ -21,6 +21,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
   Image01Icon,
   Location01Icon,
+  ArrowLeft01Icon
 } from "@hugeicons/core-free-icons";
 
 const mentionSuggestions = [
@@ -164,8 +165,12 @@ export default function CreateScreen() {
         }}
       >
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={{ fontSize: 17, color: "#1d9bf0", fontWeight: "600" }}>Cancel</Text>
-        </TouchableOpacity>
+          <HugeiconsIcon
+            icon={ArrowLeft01Icon}
+            size={24}
+            color={colors.foreground}
+            strokeWidth={1.5}
+          />        </TouchableOpacity>
         <TouchableOpacity
           className = 'rounded-2xl px-4 p-2 bg-gray-900 text-white'
           onPress={handlePost}

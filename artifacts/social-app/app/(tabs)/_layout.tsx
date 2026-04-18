@@ -96,7 +96,7 @@ export default function RootLayout() {
             {/* Logo */}
             <Image
               source={require("@/assets/images/placeholder-logo.svg")}
-              style={{ width: 50, height: 50 }}
+              style={{ width: 35, height: 35 }}
               resizeMode="contain"
             />
           </View>
@@ -162,7 +162,7 @@ export default function RootLayout() {
               top: 0,
               left: 0,
               bottom: 0,
-              width: 280,
+              width: 250,
               backgroundColor: colors.background,
               zIndex: 100,
               paddingTop: insets.top + 16,
