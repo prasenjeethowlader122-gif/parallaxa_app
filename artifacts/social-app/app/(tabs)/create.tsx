@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import React, { useMemo, useState, FC, useRef } from "react";
+import React, { useMemo, useState, FC, useRef, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,8 +12,9 @@ import {
   View,
   Image,
   Pressable,
-  Animated,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker"; // For image upload
+import { Svg, Circle } from "react-native-svg"; // For proper ring
 import { useCreatePost } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
@@ -34,18 +35,7 @@ import {
   MentionSuggestionsProps,
 } from "react-native-controlled-mentions";
 
-const triggersConfig: TriggersConfig<"mention" | "hashtag"> = {
-  mention: {
-    trigger: "@",
-    textStyle: { fontWeight: "700", color: "#1d9bf0" },
-  },
-  hashtag: {
-    trigger: "#",
-    allowedSpacesCount: 0,
-    isInsertSpaceAfterMention: true,
-    textStyle: { fontWeight: "700", color: "#1d9bf0" },
-  },
-};
+type MentionType = "mention" | "hashtag";
 
 const mentionSuggestions = [
   { id: "1", name: "Prasenjeet Howlader" },
@@ -53,12 +43,17 @@ const mentionSuggestions = [
   { id: "3", name: "Sadia" },
   { id: "4", name: "Nayeem" },
   { id: "5", name: "Ayesha" },
-];
+] as const;
 
 const MAX_CHARS = 280;
 
-// Circular progress ring
-function CharRing({ count, max }: { count: number; max: number }) {
+interface CharRingProps {
+  count: number;
+  max: number;
+  colors: any; // From useColors
+}
+
+const CharRing: FC<CharRingProps> = ({ count, max, colors }) => {
   const remaining = max - count;
   const pct = Math.min(count / max, 1);
   const size = 30;
@@ -69,59 +64,69 @@ function CharRing({ count, max }: { count: number; max: number }) {
 
   const isNearLimit = remaining <= 20;
   const isOverLimit = remaining < 0;
-
-  const ringColor = isOverLimit ? "#f4212e" : isNearLimit ? "#ffd400" : "#1d9bf0";
+  const ringColor = isOverLimit ? colors.destructive ?? "#f4212e" : isNearLimit ? colors.accent ?? "#ffd400" : colors.primary;
 
   return (
     <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
-      {/* SVG-style ring using border trick */}
-      <View
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          borderWidth: stroke,
-          borderColor: "#2f3336",
-          position: "absolute",
-        }}
-      />
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={colors.border ?? "#2f3336"}
+          strokeWidth={stroke}
+        />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={ringColor}
+          strokeWidth={stroke}
+          strokeDasharray={circ}
+          strokeDashoffset={dashOffset}
+          strokeLinecap="round"
+          rotation="-90"
+          origin={`${size / 2}, ${size / 2}`}
+        />
+      </Svg>
       {isNearLimit && (
-        <Text style={{ fontSize: 10, fontWeight: "700", color: ringColor, zIndex: 1 }}>
+        <Text style={{ fontSize: 10, fontWeight: "700", color: ringColor, position: "absolute" }}>
           {remaining}
         </Text>
       )}
     </View>
   );
-}
+};
 
-// Audience pill button
-function AudiencePill({ label }: { label: string }) {
-  return (
-    <TouchableOpacity
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-        borderWidth: 1,
-        borderColor: "#1d9bf0",
-        borderRadius: 20,
-        paddingHorizontal: 10,
-        paddingVertical: 3,
-        alignSelf: "flex-start",
-      }}
-    >
-      <Text style={{ color: "#1d9bf0", fontSize: 13, fontWeight: "700" }}>{label}</Text>
-      <HugeiconsIcon icon={Globe02Icon} size={11} color="#1d9bf0" />
-    </TouchableOpacity>
-  );
-}
+const AudiencePill: FC<{ label: string; colors: any }> = ({ label, colors }) => (
+  <TouchableOpacity
+    style={{
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 3,
+      alignSelf: "flex-start",
+    }}
+    accessibilityRole="button"
+    accessibilityLabel={`Audience: ${label}`}
+  >
+    <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "700" }}>{label}</Text>
+    <HugeiconsIcon icon={Globe02Icon} size={11} color={colors.primary} />
+  </TouchableOpacity>
+);
 
-const MentionSuggestions: FC<MentionSuggestionsProps> = ({ keyword, onSuggestionPress }) => {
-  if (keyword == null) return null;
+const MentionSuggestionsComp: FC<MentionSuggestionsProps> = ({ keyword, onSuggestionPress, colors }) => {
+  if (!keyword) return null;
   const filtered = mentionSuggestions.filter((u) =>
     u.name.toLowerCase().includes(keyword.toLowerCase())
   );
-  if (filtered.length === 0) return null;
+  if (!filtered?.length) return null;
 
   return (
     <View
@@ -129,9 +134,9 @@ const MentionSuggestions: FC<MentionSuggestionsProps> = ({ keyword, onSuggestion
         marginBottom: 8,
         borderRadius: 12,
         overflow: "hidden",
-        backgroundColor: "#16181c",
+        backgroundColor: colors.card ?? "#16181c",
         borderWidth: 1,
-        borderColor: "#2f3336",
+        borderColor: colors.border,
         shadowColor: "#000",
         shadowOpacity: 0.4,
         shadowRadius: 12,
@@ -141,29 +146,30 @@ const MentionSuggestions: FC<MentionSuggestionsProps> = ({ keyword, onSuggestion
       {filtered.map((u, i) => (
         <Pressable
           key={u.id}
-          onPress={() => onSuggestionPress(u)}
+          onPress={() => onSuggestionPress?.(u)}
           style={({ pressed }) => ({
             paddingHorizontal: 16,
             paddingVertical: 12,
-            backgroundColor: pressed ? "#1e2126" : "transparent",
+            backgroundColor: pressed ? (colors.cardHover ?? "#1e2126") : "transparent",
             borderTopWidth: i > 0 ? 1 : 0,
-            borderTopColor: "#2f3336",
+            borderTopColor: colors.border,
           })}
+          accessibilityRole="button"
+          accessibilityLabel={`Mention @${u.name}`}
         >
-          <Text style={{ fontSize: 15, fontWeight: "600", color: "#e7e9ea" }}>{u.name}</Text>
+          <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{u.name}</Text>
         </Pressable>
       ))}
     </View>
   );
 };
 
-// Toolbar action buttons
 const TOOLBAR_ACTIONS = [
-  { icon: Image01Icon, id: "image" },
-  { icon: BarChart04Icon, id: "poll" },
-  { icon: EmojiSmileIcon, id: "emoji" },
-  { icon: Calendar03Icon, id: "schedule" },
-  { icon: Location01Icon, id: "location" },
+  { icon: Image01Icon, id: "image", accessibilityLabel: "Add photo" },
+  { icon: BarChart04Icon, id: "poll", accessibilityLabel: "Poll" },
+  { icon: EmojiSmileIcon, id: "emoji", accessibilityLabel: "Emoji" },
+  { icon: Calendar03Icon, id: "schedule", accessibilityLabel: "Schedule" },
+  { icon: Location01Icon, id: "location", accessibilityLabel: "Location" },
 ];
 
 export default function CreateScreen() {
@@ -188,11 +194,11 @@ export default function CreateScreen() {
   });
 
   const hashtags = useMemo(
-    () => content.match(/#(\w+)/g)?.map((t) => t.replace("#", "").toLowerCase()) || [],
+    () => content.match(/#\w+/g)?.map((t) => t.slice(1).toLowerCase()) || [],
     [content]
   );
 
-  const handlePost = () => {
+  const handlePost = useCallback(() => {
     if (isEmpty || isOverLimit) return;
     createPost({
       data: {
@@ -201,7 +207,20 @@ export default function CreateScreen() {
         hashtags,
       },
     });
-  };
+  }, [content, imageUrl, hashtags, isEmpty, isOverLimit, createPost]);
+
+  const triggersConfig = useMemo((): TriggersConfig<MentionType> => ({
+    mention: {
+      trigger: "@",
+      textStyle: { fontWeight: "700", color: colors.primary },
+    },
+    hashtag: {
+      trigger: "#",
+      allowedSpacesCount: 0,
+      isInsertSpaceAfterMention: true,
+      textStyle: { fontWeight: "700", color: colors.primary },
+    },
+  }), [colors.primary]);
 
   const { textInputProps, triggers } = useMentions({
     value: content,
@@ -209,15 +228,21 @@ export default function CreateScreen() {
     triggersConfig,
   });
 
-  // Post button state
   const postBtnDisabled = isPending || isEmpty || isOverLimit;
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images });
+    if (!result.canceled && result.assets?.[0]?.uri) {
+      setImageUrl(result.assets[0].uri);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "#000000" }}
+      style={{ flex: 1, backgroundColor: colors.background ?? "#000" }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      {/* ── HEADER ── */}
+      {/* Header */}
       <View
         style={{
           flexDirection: "row",
@@ -227,30 +252,23 @@ export default function CreateScreen() {
           paddingTop: Platform.OS === "ios" ? 56 : 16,
           paddingBottom: 12,
           borderBottomWidth: 0.5,
-          borderBottomColor: "#2f3336",
+          borderBottomColor: colors.border ?? "#2f3336",
         }}
       >
-        {/* Cancel */}
         <TouchableOpacity
           onPress={() => router.back()}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={{
-            width: 36,
-            height: 36,
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 18,
-          }}
+          style={{ width: 36, height: 36, alignItems: "center", justifyContent: "center", borderRadius: 18 }}
+          accessibilityRole="button"
+          accessibilityLabel="Cancel"
         >
-          <HugeiconsIcon icon={Cancel01Icon} size={20} color="#e7e9ea" />
+          <HugeiconsIcon icon={Cancel01Icon} size={20} color={colors.foreground ?? "#e7e9ea"} />
         </TouchableOpacity>
 
-        {/* Drafts */}
-        <TouchableOpacity>
-          <Text style={{ fontSize: 15, fontWeight: "700", color: "#1d9bf0" }}>Drafts</Text>
+        <TouchableOpacity accessibilityLabel="Save draft">
+          <Text style={{ fontSize: 15, fontWeight: "700", color: colors.primary }}>Drafts</Text>
         </TouchableOpacity>
 
-        {/* Post button */}
         <TouchableOpacity
           onPress={handlePost}
           disabled={postBtnDisabled}
@@ -258,27 +276,24 @@ export default function CreateScreen() {
             paddingHorizontal: 18,
             paddingVertical: 8,
             borderRadius: 20,
-            backgroundColor: postBtnDisabled ? "#0f4c75" : "#1d9bf0",
+            backgroundColor: postBtnDisabled ? (colors.muted ?? "#0f4c75") : colors.primary,
           }}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Post"
+          accessibilityState={{ disabled: postBtnDisabled }}
         >
           {isPending ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text
-              style={{
-                color: postBtnDisabled ? "#5b9ab8" : "#fff",
-                fontSize: 15,
-                fontWeight: "700",
-              }}
-            >
+            <Text style={{ color: postBtnDisabled ? (colors.mutedForeground ?? "#5b9ab8") : "#fff", fontSize: 15, fontWeight: "700" }}>
               Post
             </Text>
           )}
         </TouchableOpacity>
       </View>
 
-      {/* ── COMPOSE AREA ── */}
+      {/* Compose Area */}
       <ScrollView
         style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
@@ -286,45 +301,30 @@ export default function CreateScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={{ flexDirection: "row", padding: 16, gap: 12 }}>
-          {/* Avatar with thread line */}
           <View style={{ alignItems: "center" }}>
             <UserAvatar uri={user?.avatarUrl} size={42} />
-            {/* Thread line */}
             {content.length > 0 && (
-              <View
-                style={{
-                  width: 2,
-                  flex: 1,
-                  marginTop: 8,
-                  backgroundColor: "#2f3336",
-                  borderRadius: 1,
-                  minHeight: 30,
-                }}
-              />
+              <View style={{ width: 2, flex: 1, marginTop: 8, backgroundColor: colors.border ?? "#2f3336", borderRadius: 1, minHeight: 30 }} />
             )}
           </View>
 
           <View style={{ flex: 1, paddingTop: 2 }}>
-            {/* Username */}
-            <Text style={{ fontSize: 15, fontWeight: "700", color: "#e7e9ea", marginBottom: 4 }}>
+            <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground ?? "#e7e9ea", marginBottom: 4 }}>
               {user?.username ?? "you"}
             </Text>
 
-            {/* Audience selector */}
-            <AudiencePill label="Everyone" />
+            <AudiencePill label="Everyone" colors={colors} />
 
-            {/* Mention suggestions dropdown */}
             <View style={{ marginTop: 10 }}>
-              <MentionSuggestions {...triggers.mention} />
+              <MentionSuggestionsComp {...triggers.mention} colors={colors} />
             </View>
 
-            {/* Text input */}
             <TextInput
               ref={inputRef}
               {...textInputProps}
               style={{
                 fontSize: 20,
-                color: "#e7e9ea",
+                color: colors.foreground ?? "#e7e9ea",
                 textAlignVertical: "top",
                 lineHeight: 26,
                 marginTop: 6,
@@ -332,28 +332,16 @@ export default function CreateScreen() {
                 fontWeight: "400",
               }}
               placeholder="What is happening?!"
-              placeholderTextColor="#536471"
+              placeholderTextColor={colors.mutedForeground ?? "#536471"}
               multiline
               autoFocus
-              selectionColor="#1d9bf0"
+              selectionColor={colors.primary}
+              accessibilityLabel="Post content"
             />
 
-            {/* Image preview */}
             {imageUrl.trim().length > 0 && (
-              <View
-                style={{
-                  marginTop: 12,
-                  borderRadius: 16,
-                  overflow: "hidden",
-                  borderWidth: 1,
-                  borderColor: "#2f3336",
-                }}
-              >
-                <Image
-                  source={{ uri: imageUrl }}
-                  style={{ width: "100%", height: 220 }}
-                  resizeMode="cover"
-                />
+              <View style={{ marginTop: 12, borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: colors.border ?? "#2f3336" }}>
+                <Image source={{ uri: imageUrl }} style={{ width: "100%", height: 220 }} resizeMode="cover" />
                 <TouchableOpacity
                   onPress={() => setImageUrl("")}
                   style={{
@@ -367,41 +355,42 @@ export default function CreateScreen() {
                     alignItems: "center",
                     justifyContent: "center",
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Remove image"
                 >
-                  <HugeiconsIcon icon={Cancel01Icon} size={16} color="#e7e9ea" />
+                  <HugeiconsIcon icon={Cancel01Icon} size={16} color={colors.foreground ?? "#e7e9ea"} />
                 </TouchableOpacity>
               </View>
             )}
 
-            {/* Add to thread hint */}
             {content.length > 0 && (
               <View style={{ flexDirection: "row", gap: 10, marginTop: 16, alignItems: "center" }}>
                 <UserAvatar uri={user?.avatarUrl} size={24} />
-                <Text style={{ fontSize: 15, color: "#536471" }}>Add to thread</Text>
+                <Text style={{ fontSize: 15, color: colors.mutedForeground ?? "#536471" }}>Add to thread</Text>
               </View>
             )}
           </View>
         </View>
       </ScrollView>
 
-      {/* ── BOTTOM TOOLBAR ── */}
+      {/* Bottom Toolbar */}
       <View
         style={{
           borderTopWidth: 0.5,
-          borderTopColor: "#2f3336",
+          borderTopColor: colors.border ?? "#2f3336",
           paddingHorizontal: 12,
           paddingVertical: 10,
           paddingBottom: Platform.OS === "ios" ? 34 : 14,
           flexDirection: "row",
           alignItems: "center",
-          backgroundColor: "#000000",
+          backgroundColor: colors.background ?? "#000",
         }}
       >
-        {/* Action icons */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 2, flex: 1 }}>
-          {TOOLBAR_ACTIONS.map(({ icon, id }) => (
+          {(TOOLBAR_ACTIONS || []).map(({ icon, id, accessibilityLabel }) => (
             <TouchableOpacity
               key={id}
+              onPress={id === "image" ? pickImage : undefined} // Image picker example
               style={{
                 width: 38,
                 height: 38,
@@ -410,85 +399,36 @@ export default function CreateScreen() {
                 borderRadius: 19,
               }}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={accessibilityLabel}
             >
-              <HugeiconsIcon icon={icon} size={20} color="#1d9bf0" strokeWidth={1.5} />
+              <HugeiconsIcon icon={icon} size={20} color={colors.primary} strokeWidth={1.5} />
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Divider */}
-        <View style={{ width: 1, height: 28, backgroundColor: "#2f3336", marginHorizontal: 8 }} />
+        <View style={{ width: 1, height: 28, backgroundColor: colors.border ?? "#2f3336", marginHorizontal: 8 }} />
 
-        {/* Char counter ring area */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-          {/* Progress circle */}
-          <View style={{ width: 30, height: 30, position: "relative" }}>
-            {/* Background track */}
-            <View
-              style={{
-                position: "absolute",
-                width: 30,
-                height: 30,
-                borderRadius: 15,
-                borderWidth: 2.5,
-                borderColor: "#2f3336",
-              }}
-            />
-            {/* Filled arc — simplified as colored ring with opacity trick */}
-            {charCount > 0 && (
-              <View
-                style={{
-                  position: "absolute",
-                  width: 30,
-                  height: 30,
-                  borderRadius: 15,
-                  borderWidth: 2.5,
-                  borderColor: isOverLimit ? "#f4212e" : remaining <= 20 ? "#ffd400" : "#1d9bf0",
-                  opacity: Math.min(charCount / MAX_CHARS, 1),
-                }}
-              />
-            )}
-            {remaining <= 20 && (
-              <View style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center" }}>
-                <Text
-                  style={{
-                    fontSize: 9,
-                    fontWeight: "700",
-                    color: isOverLimit ? "#f4212e" : "#ffd400",
-                  }}
-                >
-                  {remaining}
-                </Text>
-              </View>
-            )}
-          </View>
+          <CharRing count={charCount} max={MAX_CHARS} colors={colors} />
 
-          {/* Add post (+) button */}
           <TouchableOpacity
             style={{
               width: 30,
               height: 30,
               borderRadius: 15,
               borderWidth: 1.5,
-              borderColor: "#536471",
+              borderColor: colors.mutedForeground ?? "#536471",
               alignItems: "center",
               justifyContent: "center",
             }}
+            accessibilityRole="button"
+            accessibilityLabel="Add media"
           >
-            <Text style={{ color: "#536471", fontSize: 18, lineHeight: 20, marginTop: -1 }}>+</Text>
+            <Text style={{ color: colors.mutedForeground ?? "#536471", fontSize: 18, lineHeight: 20, marginTop: -1 }}>+</Text>
           </TouchableOpacity>
         </View>
       </View>
     </KeyboardAvoidingView>
   );
 }
-/**
- * // এই replacements করুন create.tsx এ:
-backgroundColor: "#000000"  →  backgroundColor: colors.background
-color: "#e7e9ea"            →  color: colors.foreground
-color: "#536471"            →  color: colors.mutedForeground
-borderColor: "#2f3336"      →  borderColor: colors.border
-color: "#1d9bf0"            →  color: colors.primary
-backgroundColor: "#1d9bf0"  →  backgroundColor: colors.primary
-backgroundColor: "#0f4c75"  →  backgroundColor: colors.muted
- */
