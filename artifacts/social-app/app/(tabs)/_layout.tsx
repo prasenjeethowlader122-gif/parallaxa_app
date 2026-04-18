@@ -88,14 +88,14 @@ export default function RootLayout() {
               <HugeiconsIcon
                 icon={menuOpen ? Cancel01Icon : Menu01Icon}
                 size={22}
-                strokeWidth={1.5}
+                strokeWidth={2}
                 color={colors.foreground}
               />
             </TouchableOpacity>
 
             {/* Logo */}
             <Image
-              source={require("@/assets/images/parallaxa-logo.svg")}
+              source={require("@/assets/images/placeholder-logo.svg")}
               style={{ width: 50, height: 50 }}
               resizeMode="contain"
             />
@@ -116,7 +116,7 @@ export default function RootLayout() {
               <HugeiconsIcon
                 icon={Notification01Icon}
                 size={22}
-                strokeWidth={1.5}
+                strokeWidth={2}
                 color={colors.foreground}
               />
             </TouchableOpacity>
@@ -128,7 +128,7 @@ export default function RootLayout() {
               <HugeiconsIcon
                 icon={Message01Icon}
                 size={22}
-                strokeWidth={1.5}
+                strokeWidth={2}
                 color={colors.foreground}
               />
             </TouchableOpacity>
