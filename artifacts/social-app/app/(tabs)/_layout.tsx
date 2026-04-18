@@ -88,6 +88,7 @@ export default function RootLayout() {
               <HugeiconsIcon
                 icon={menuOpen ? Cancel01Icon : Menu01Icon}
                 size={22}
+                strokeWidth={1.5}
                 color={colors.foreground}
               />
             </TouchableOpacity>
@@ -103,7 +104,7 @@ export default function RootLayout() {
           <View
             style={{
               flexDirection: "row",
-              gap: 16,
+              gap: 18,
               alignItems: "center",
               justifyContent: "flex-end",
             }}
@@ -115,6 +116,7 @@ export default function RootLayout() {
               <HugeiconsIcon
                 icon={Notification01Icon}
                 size={22}
+                strokeWidth={1.5}
                 color={colors.foreground}
               />
             </TouchableOpacity>
@@ -126,6 +128,7 @@ export default function RootLayout() {
               <HugeiconsIcon
                 icon={Message01Icon}
                 size={22}
+                strokeWidth={1.5}
                 color={colors.foreground}
               />
             </TouchableOpacity>
