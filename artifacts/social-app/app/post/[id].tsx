@@ -14,44 +14,15 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  useGetPost, useGetComments, useCreateComment,
+  useGetPost, useGetReplies, useCreatePost,
   useLikePost, useUnlikePost,
 } from "@workspace/api-client-react";
+import type { Post } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
 
 const { width } = Dimensions.get("window");
-
-// Types aligned with api.schemas.ts
-interface UserSummary {
-  id: string;
-  username: string;
-  displayName: string;
-  avatarUrl?: string | null;
-  isVerified: boolean;
-  isFollowing: boolean;
-}
-
-interface Comment {
-  id: string;
-  postId: string;
-  content: string;
-  createdAt: string;
-  author: UserSummary;
-  parentId?: string | null;
-  repliesCount: number; // fixed: was replyCount
-}
-
-interface Post {
-  id: string;
-  content?: string | null;
-  imageUrl?: string | null;
-  likesCount: number;
-  isLiked: boolean;
-  createdAt: string;
-  author: UserSummary;
-}
 
 export default function PostDetailScreen() {
   const colors = useColors();
@@ -60,24 +31,22 @@ export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
 
-  const [comment, setComment] = useState("");
-  const [replyingTo, setReplyingTo] = useState<{ commentId: string; username: string } | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [replyingTo, setReplyingTo] = useState<{ postId: string; username: string } | null>(null);
 
-  // Fixed: positional args instead of object params
   const { data: post, isLoading: postLoading } = useGetPost(id!);
-  const { data: commentsData, refetch: refetchComments } = useGetComments(id!);
+  const { data: repliesData, refetch: refetchReplies } = useGetReplies(id!);
 
-  // Replies use createComment with parentId per the API schema
-  const { mutate: createComment, isPending: commentPending } = useCreateComment({
+  const { mutate: createPost, isPending: replyPending } = useCreatePost({
     mutation: {
       onSuccess: () => {
-        setComment("");
+        setReplyText("");
         setReplyingTo(null);
-        refetchComments();
+        refetchReplies();
       },
     },
   });
-  
+
   const { mutate: likePost } = useLikePost();
   const { mutate: unlikePost } = useUnlikePost();
 
@@ -91,26 +60,25 @@ export default function PostDetailScreen() {
     const newLiked = !isLiked;
     setLocalLiked(newLiked);
     setLocalCount(likesCount + (newLiked ? 1 : -1));
-    // Fixed: positional args
     if (newLiked) likePost({ postId: id! });
     else unlikePost({ postId: id! });
   }, [isLiked, likesCount, id]);
 
-  const handleComment = () => {
-    if (!comment.trim()) return;
-    // Fixed: use createComment with optional parentId for replies
-    createComment({
-      postId: id!,
+  const handleReply = () => {
+    if (!replyText.trim()) return;
+    // A reply is just a post with parentPostId set
+    createPost({
       data: {
-        content: comment.trim(),
-        ...(replyingTo ? { parentId: replyingTo.commentId } : {}),
+        content: replyText.trim(),
+        parentPostId: replyingTo?.postId ?? id!, // reply to specific comment or to the post
       },
     });
   };
 
   const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
-  // Fixed: CommentPage has comments array per schema
-  const comments: Comment[] = (commentsData?.comments ?? []) as Comment[];
+
+  // Replies are posts with parentPostId = this post's id
+  const replies: Post[] = repliesData?.posts ?? [];
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -124,59 +92,59 @@ export default function PostDetailScreen() {
 
   if (postLoading) {
     return (
-      <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.background }}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
-  // Only show top-level comments (no parentId)
-  const topLevelComments = comments.filter((c) => !c.parentId);
-
-  const renderComment = ({ item }: { item: Comment }) => (
-    <CommentItem
-      comment={item}
-      colors={colors}
-      timeAgo={timeAgo}
-      replyingTo={replyingTo}
-      setReplyingTo={setReplyingTo}
-    />
-  );
-
   const PostHeader = () => (
     <View>
       {/* Nav */}
       <View
-        className="flex-row justify-between items-center px-4 pb-3"
         style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingBottom: 12,
           paddingTop: topPadding + 12,
           backgroundColor: colors.background,
           borderBottomWidth: 0.5,
           borderBottomColor: colors.border,
         }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="p-1">
+        <TouchableOpacity onPress={() => router.back()} style={{ padding: 4 }}>
           <HugeiconsIcon icon={ArrowLeft} width={24} height={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text className="text-[17px] font-bold" style={{ color: colors.foreground }}>Post</Text>
+        <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground }}>Post</Text>
         <View style={{ width: 36 }} />
       </View>
 
       {/* Author */}
       {post?.author && (
         <TouchableOpacity
-          className="flex-row items-center gap-2.5 p-3"
-          onPress={() => router.push(`/profile/${post.author.id}`)}
+          style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 12 }}
+          onPress={() => router.push(`/profile/${post.author.id}` as any)}
           activeOpacity={0.8}
         >
           <UserAvatar uri={post.author.avatarUrl} size={36} />
-          <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
+          <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
             {post.author.username}
           </Text>
           {post.author.isVerified && (
             <HugeiconsIcon icon={CheckCircleSolid} width={14} height={14} color={colors.primary} />
           )}
         </TouchableOpacity>
+      )}
+
+      {/* Post content */}
+      {post?.content && (
+        <View style={{ paddingHorizontal: 14, paddingBottom: 10 }}>
+          <Text style={{ fontSize: 15, lineHeight: 22, color: colors.foreground }}>
+            {post.content}
+          </Text>
+        </View>
       )}
 
       {/* Image */}
@@ -189,10 +157,17 @@ export default function PostDetailScreen() {
 
       {/* Actions */}
       <View
-        className="flex-row items-center px-3 py-2.5 gap-2"
-        style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 12,
+          paddingVertical: 10,
+          gap: 8,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
       >
-        <TouchableOpacity onPress={handleLike} className="p-1 mr-2">
+        <TouchableOpacity onPress={handleLike} style={{ padding: 4, marginRight: 8 }}>
           <HugeiconsIcon
             icon={Heart}
             width={24}
@@ -200,72 +175,96 @@ export default function PostDetailScreen() {
             color={isLiked ? colors.destructive : colors.foreground}
           />
         </TouchableOpacity>
-        <TouchableOpacity className="p-1 mr-2">
+        <TouchableOpacity style={{ padding: 4, marginRight: 8 }}>
           <HugeiconsIcon icon={MessageCircle} width={24} height={24} color={colors.foreground} />
         </TouchableOpacity>
-        <TouchableOpacity className="p-1">
+        <TouchableOpacity style={{ padding: 4 }}>
           <HugeiconsIcon icon={Send} width={22} height={22} color={colors.foreground} />
         </TouchableOpacity>
       </View>
 
-      <Text className="font-bold px-3.5 py-1.5 text-sm" style={{ color: colors.foreground }}>
+      <Text style={{ fontWeight: "700", paddingHorizontal: 14, paddingVertical: 6, fontSize: 14, color: colors.foreground }}>
         {likesCount.toLocaleString()} likes
       </Text>
 
-      {post?.content && (
-        <View className="px-3.5 pb-2">
-          <Text className="text-sm leading-5" style={{ color: colors.foreground }}>
-            <Text className="font-bold">{post.author?.username} </Text>
-            {post.content}
-          </Text>
-        </View>
-      )}
-
       <Text
-        className="text-[13px] font-semibold p-3.5 uppercase tracking-wide"
-        style={{ color: colors.mutedForeground }}
+        style={{
+          fontSize: 13,
+          fontWeight: "600",
+          paddingHorizontal: 14,
+          paddingVertical: 10,
+          textTransform: "uppercase",
+          letterSpacing: 0.5,
+          color: colors.mutedForeground,
+        }}
       >
-        {topLevelComments.length} Comments
+        {replies.length} Replies
       </Text>
 
-      {/* Show replying-to banner */}
+      {/* Replying-to banner */}
       {replyingTo && (
         <View
-          className="flex-row items-center justify-between px-3.5 py-2"
-          style={{ backgroundColor: colors.muted }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            backgroundColor: colors.muted,
+          }}
         >
-          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
+          <Text style={{ fontSize: 14, color: colors.mutedForeground }}>
             Replying to{" "}
-            <Text className="font-semibold" style={{ color: colors.foreground }}>
+            <Text style={{ fontWeight: "600", color: colors.foreground }}>
               @{replyingTo.username}
             </Text>
           </Text>
           <TouchableOpacity onPress={() => setReplyingTo(null)}>
-            <Text className="text-sm font-semibold" style={{ color: colors.primary }}>Cancel</Text>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: colors.primary }}>Cancel</Text>
           </TouchableOpacity>
         </View>
       )}
     </View>
   );
 
+  const renderReply = ({ item }: { item: Post }) => (
+    <ReplyItem
+      reply={item}
+      colors={colors}
+      timeAgo={timeAgo}
+      replyingTo={replyingTo}
+      onReply={() =>
+        setReplyingTo(
+          replyingTo?.postId === item.id
+            ? null
+            : { postId: item.id, username: item.author.username }
+        )
+      }
+      onAuthorPress={() => router.push(`/profile/${item.author.id}` as any)}
+    />
+  );
+
   return (
     <KeyboardAvoidingView
-      className="flex-1"
-      style={{ backgroundColor: colors.background }}
+      style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <FlatList
-        data={topLevelComments}
+        data={replies}
         keyExtractor={(item) => item.id}
-        renderItem={renderComment}
+        renderItem={renderReply}
         ListHeaderComponent={<PostHeader />}
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Comment input */}
+      {/* Reply input */}
       <View
-        className="flex-row items-center px-3 pt-2 gap-2.5"
         style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 12,
+          paddingTop: 8,
+          gap: 10,
           borderTopWidth: 0.5,
           borderTopColor: colors.border,
           backgroundColor: colors.background,
@@ -274,22 +273,26 @@ export default function PostDetailScreen() {
       >
         <UserAvatar uri={user?.avatarUrl} size={32} />
         <TextInput
-          className="flex-1 text-[15px]"
-          style={{ color: colors.foreground }}
-          placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Add a comment..."}
+          style={{ flex: 1, fontSize: 15, color: colors.foreground }}
+          placeholder={
+            replyingTo
+              ? `Reply to @${replyingTo.username}...`
+              : "Add a reply..."
+          }
           placeholderTextColor={colors.mutedForeground}
-          value={comment}
-          onChangeText={setComment}
+          value={replyText}
+          onChangeText={setReplyText}
           multiline
         />
         <TouchableOpacity
-          onPress={handleComment}
-          disabled={!comment.trim() || commentPending}
+          onPress={handleReply}
+          disabled={!replyText.trim() || replyPending}
         >
           <Text
-            className="text-[15px] font-bold"
             style={{
-              color: comment.trim() ? colors.primary : colors.mutedForeground,
+              fontSize: 15,
+              fontWeight: "700",
+              color: replyText.trim() ? colors.primary : colors.mutedForeground,
             }}
           >
             {replyingTo ? "Reply" : "Post"}
@@ -300,70 +303,55 @@ export default function PostDetailScreen() {
   );
 }
 
-// CommentItem component
-interface CommentItemProps {
-  comment: Comment;
+interface ReplyItemProps {
+  reply: Post;
   colors: any;
   timeAgo: (date: string) => string;
-  replyingTo: { commentId: string; username: string } | null;
-  setReplyingTo: (val: { commentId: string; username: string } | null) => void;
+  replyingTo: { postId: string; username: string } | null;
+  onReply: () => void;
+  onAuthorPress: () => void;
 }
 
-const CommentItem = ({
-  comment,
-  colors,
-  timeAgo,
-  replyingTo,
-  setReplyingTo,
-}: CommentItemProps) => {
-  const isBeingRepliedTo = replyingTo?.commentId === comment.id;
+function ReplyItem({ reply, colors, timeAgo, replyingTo, onReply, onAuthorPress }: ReplyItemProps) {
+  const isBeingRepliedTo = replyingTo?.postId === reply.id;
 
   return (
-    <View className="mb-2">
-      <View
-        className="flex-row items-start gap-2.5 px-3.5 py-2.5"
-        style={{
-          borderBottomWidth: 0.5,
-          borderBottomColor: colors.border,
-          // Highlight the comment being replied to
-          backgroundColor: isBeingRepliedTo ? colors.muted : colors.background,
-        }}
-      >
-        <UserAvatar uri={comment.author.avatarUrl} size={32} />
-        <View className="flex-1">
-          <Text className="text-sm leading-[19px]" style={{ color: colors.foreground }}>
-            <Text className="font-semibold">{comment.author.username} </Text>
-            {comment.content}
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderBottomWidth: 0.5,
+        borderBottomColor: colors.border,
+        backgroundColor: isBeingRepliedTo ? colors.muted : colors.background,
+      }}
+    >
+      <TouchableOpacity onPress={onAuthorPress}>
+        <UserAvatar uri={reply.author.avatarUrl} size={32} />
+      </TouchableOpacity>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 14, lineHeight: 19, color: colors.foreground }}>
+          <Text style={{ fontWeight: "600" }}>{reply.author.username} </Text>
+          {reply.content}
+        </Text>
+        <View style={{ flexDirection: "row", gap: 12, marginTop: 4, alignItems: "center" }}>
+          <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
+            {timeAgo(reply.createdAt as unknown as string)}
           </Text>
-          <View className="flex-row gap-3 mt-1 items-center">
-            <Text className="text-[11px]" style={{ color: colors.mutedForeground }}>
-              {timeAgo(comment.createdAt)}
+          <TouchableOpacity onPress={onReply}>
+            <Text style={{ fontSize: 11, fontWeight: "500", color: colors.primary }}>
+              {isBeingRepliedTo ? "Cancel" : "Reply"}
             </Text>
-            {/* Fixed: was checking replyCount > 0, now correctly shows reply button always for top-level */}
-            {!comment.parentId && (
-              <TouchableOpacity
-                onPress={() =>
-                  setReplyingTo(
-                    isBeingRepliedTo
-                      ? null
-                      : { commentId: comment.id, username: comment.author.username }
-                  )
-                }
-              >
-                <Text style={{ color: colors.primary }} className="text-[11px] font-medium">
-                  {isBeingRepliedTo ? "Cancel" : "Reply"}
-                </Text>
-              </TouchableOpacity>
-            )}
-            {/* Fixed: was replyCount, now repliesCount per schema */}
-            {comment.repliesCount > 0 && (
-              <Text className="text-[11px]" style={{ color: colors.mutedForeground }}>
-                {comment.repliesCount} {comment.repliesCount === 1 ? "reply" : "replies"}
-              </Text>
-            )}
-          </View>
+          </TouchableOpacity>
+          {reply.repliesCount > 0 && (
+            <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
+              {reply.repliesCount} {reply.repliesCount === 1 ? "reply" : "replies"}
+            </Text>
+          )}
         </View>
       </View>
     </View>
   );
-};
+}
