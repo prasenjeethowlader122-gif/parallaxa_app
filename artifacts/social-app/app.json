@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Pulse",
+    "name": "parallaxa",
     "slug": "social-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.pulse.socialapp"
+      "bundleIdentifier": "com.parallaxa.socialapp"
     },
     "android": {
       "adaptiveIcon": {
