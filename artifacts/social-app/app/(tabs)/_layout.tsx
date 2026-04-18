@@ -37,7 +37,7 @@ const MENU_ITEMS = [
   { id: "index", label: "Home", icon: Home01Icon },
   { id: "explore", label: "Explore", icon: Search01Icon },
   { id: "notifications", label: "Notifications", icon: Notification01Icon },
-  { id: "profile", label: "Profile", icon: UserIcon },
+  
   { id: "settings", label: "Settings", icon: Settings01Icon },
 ];
 
@@ -132,7 +132,7 @@ export default function RootLayout() {
 
             {/* User Avatar */}
             <TouchableOpacity
-              onPress={() => router.push("/(tabs)/profile" as any)}
+              onPress={() => router.push("/profile/" + user?.id as any)}
             >
               <UserAvatar uri={user?.avatarUrl} size={32} />
             </TouchableOpacity>
