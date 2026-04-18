@@ -95,7 +95,7 @@ export default function RootLayout() {
 
             {/* Logo */}
             <Image
-              source={require("@/assets/images/st.svg")}
+              source={require("@/assets/images/placeholder-logo.svg")}
               style={{ width: 35, height: 35 }}
               resizeMode="contain"
             />
@@ -215,7 +215,8 @@ export default function RootLayout() {
             </View>
 
             <ScrollView
-              style={{ flex: 1 }}
+              style={{ flex: 1  }}
+              className= 'h-full'
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 20 }}
             >
@@ -293,7 +294,7 @@ export default function RootLayout() {
                       backgroundColor: "#000",
                       borderRadius: 20,
                       marginHorizontal: 8,
-                      marginVertical: 2,
+                      marginVertical: 6,
                     }}
                   >
                     <HugeiconsIcon
