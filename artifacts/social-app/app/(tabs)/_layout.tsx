@@ -110,11 +110,11 @@ export default function RootLayout() {
             }}
           >
             <TouchableOpacity
-              onPress={() => router.push("/(tabs)/notifications" as any)}
+              onPress={() => router.push("/(tabs)/explore" as any)}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <HugeiconsIcon
-                icon={Notification01Icon}
+                icon={Search01Icon}
                 size={22}
                 strokeWidth={2}
                 color={colors.foreground}
@@ -281,6 +281,7 @@ export default function RootLayout() {
               {BOTTOM_MENU_ITEMS.map((item) => {
                 const isActive = currentRoute === item.id;
                 return (
+                <View className = 'flex-row mx-4 my-4 items-center justify-between gap-4'>
                   <TouchableOpacity
                     key={item.id}
                     onPress={() => navigateTo(item.id)}
@@ -293,8 +294,7 @@ export default function RootLayout() {
                       paddingVertical: 14,
                       backgroundColor: "#000",
                       borderRadius: 20,
-                      marginHorizontal: 8,
-                      marginVertical: 6,
+                      
                     }}
                   >
                     <HugeiconsIcon
@@ -313,6 +313,17 @@ export default function RootLayout() {
                       {item.label}
                     </Text>
                   </TouchableOpacity>
+                  <TouchableOpacity
+                  onPress={() => router.push("/(tabs)/explore" as any)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+              <HugeiconsIcon
+                icon={Settings01Icon}
+                size={22}
+                strokeWidth={2}
+                color={colors.foreground}
+              /></TouchableOpacity>
+                  </View>
                 );
               })}
             </ScrollView>
