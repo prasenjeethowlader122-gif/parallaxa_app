@@ -166,15 +166,11 @@ export default function CreateScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={{ fontSize: 17, color: "#1d9bf0", fontWeight: "600" }}>Cancel</Text>
         </TouchableOpacity>
-
         <TouchableOpacity
+          className = 'rounded-2xl px-4 p-2 bg-gray-900 text-white'
           onPress={handlePost}
           disabled={isPending || (!content.trim() && !imageUrl.trim())}
           style={{
-            paddingHorizontal: 20,
-            paddingVertical: 8,
-            borderRadius: 20,
-            backgroundColor: "#1d9bf0",
             opacity: isPending || (!content.trim() && !imageUrl.trim()) ? 0.5 : 1,
           }}
         >
@@ -186,6 +182,7 @@ export default function CreateScreen() {
             </Text>
           )}
         </TouchableOpacity>
+        
       </View>
 
       <ScrollView 
@@ -221,7 +218,7 @@ export default function CreateScreen() {
               }}>
                 <Text style={{
                   color: "#1d9bf0",
-                  fontSize: 13,
+                  fontSize: 10,
                   fontWeight: "500",
                 }}>
                   Everyone can reply
@@ -252,6 +249,7 @@ export default function CreateScreen() {
                 }}
               >
                 <TextInput
+                  className = 'outline-none border-none'
                   value={content}
                   onChangeText={handleTextChange}
                   style={{
