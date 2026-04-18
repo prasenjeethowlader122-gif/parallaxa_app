@@ -78,7 +78,7 @@ jobs:
         id: eas_url
         working-directory: artifacts/social-app
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_TOKEN: jC9iuFuKiE-3eUCiLqU6eR2Q5eXwF5Kq-FCRh68K
         run: |
           BUILD_ID="${{ steps.eas_build.outputs.build_id }}"
           echo "Waiting for build $BUILD_ID to complete..."
