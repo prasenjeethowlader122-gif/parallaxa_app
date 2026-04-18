@@ -17,7 +17,6 @@ import {
   Home01Icon,
   Search01Icon,
   Notification01Icon,
-  UserIcon,
   Settings01Icon,
   Add01Icon,
   Cancel01Icon,
@@ -27,17 +26,10 @@ import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
 
-const TABS = [
-  { id: "index", label: "For You" },
-  { id: "explore", label: "Following" },
-  { id: "trending", label: "Trending" },
-];
-
 const MENU_ITEMS = [
   { id: "index", label: "Home", icon: Home01Icon },
   { id: "explore", label: "Explore", icon: Search01Icon },
   { id: "notifications", label: "Notifications", icon: Notification01Icon },
-  
   { id: "settings", label: "Settings", icon: Settings01Icon },
 ];
 
@@ -52,9 +44,11 @@ export default function RootLayout() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [ActiveViewMode,setActiveViewMode] = useState("index")
-  const currentRoute = pathname === "/" || pathname === "/(tabs)" ? "index" : pathname.split("/").pop();
+
+  const currentRoute =
+    pathname === "/" || pathname === "/(tabs)" ? "index" : pathname.split("/").pop();
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
+  const isHome = pathname === "/" || pathname === "/(tabs)";
 
   const navigateTo = (id: string) => {
     setMenuOpen(false);
@@ -70,7 +64,8 @@ export default function RootLayout() {
           paddingTop: topPadding,
           backgroundColor: colors.background,
           zIndex: 50,
-          borderBottomWidth: currentRoute !== "index" ? StyleSheet.hairlineWidth : 0,
+          // শুধু non-home পেজে border দেখাবে; home-এ index.tsx নিজে ট্যাব দেখাবে
+          borderBottomWidth: !isHome ? StyleSheet.hairlineWidth : 0,
           borderBottomColor: colors.border,
         }}
       >
@@ -105,8 +100,14 @@ export default function RootLayout() {
             />
           </View>
 
-          <View style={{ flexDirection: "row", gap: 16, alignItems: "center", justifyContent: "flex-end" }}>
-            {/* Notifications shortcut */}
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 16,
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
+          >
             <TouchableOpacity
               onPress={() => router.push("/(tabs)/notifications" as any)}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -118,7 +119,6 @@ export default function RootLayout() {
               />
             </TouchableOpacity>
 
-            {/* Message icon - before avatar */}
             <TouchableOpacity
               onPress={() => router.push("/messages" as any)}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -130,54 +130,12 @@ export default function RootLayout() {
               />
             </TouchableOpacity>
 
-            {/* User Avatar */}
-            <TouchableOpacity
-              onPress={() => router.push(`/profile/${user?.id}`)}
-            >
+            <TouchableOpacity onPress={() => router.push(`/profile/${user?.id}`)}>
               <UserAvatar uri={user?.avatarUrl} size={32} />
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* Tab slider: Only visible on index/home */}
-        {pathname === "/" && (
-          <View style={{ flexDirection: "row", paddingHorizontal: 8 }}>
-            {TABS.map((tab) => {
-              const isActive = ActiveViewMode === tab.id;
-              return (
-                <TouchableOpacity
-                  key={tab.id}
-                  onPress={() => setActiveViewMode(tab.id)}
-                  style={{ paddingVertical: 10, paddingHorizontal: 16 }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "700",
-                      color: colors.foreground,
-                      opacity: isActive ? 1 : 0.4,
-                    }}
-                  >
-                    {tab.label}
-                  </Text>
-                  {isActive && (
-                    <View
-                      style={{
-                        position: "absolute",
-                        bottom: 0,
-                        left: 16,
-                        height: 2,
-                        width: 38,
-                        borderRadius: 0,
-                        backgroundColor: "#000",
-                      }}
-                    />
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
+        {/* ট্যাব bar এখন index.tsx-এ থাকবে — layout থেকে সরানো হয়েছে */}
       </View>
 
       {/* ── CONTENT ── */}
@@ -209,6 +167,7 @@ export default function RootLayout() {
               borderRightColor: colors.border,
             }}
           >
+            {/* Drawer header */}
             <View
               style={{
                 flexDirection: "row",
@@ -253,16 +212,10 @@ export default function RootLayout() {
             </View>
 
             <ScrollView
-              className = 'h-full'
               style={{ flex: 1 }}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 20 }}
             >
-              <ScrollView
-              style = {{
-                height:'100%'
-              }}
-              >
               {/* Top menu items */}
               {MENU_ITEMS.map((item) => {
                 const isActive = currentRoute === item.id;
@@ -309,8 +262,8 @@ export default function RootLayout() {
                   </TouchableOpacity>
                 );
               })}
-              </ScrollView>
-              {/* Bottom divider */}
+
+              {/* Divider */}
               <View
                 style={{
                   height: 0.8,
@@ -320,7 +273,7 @@ export default function RootLayout() {
                 }}
               />
 
-              {/* Bottom setting item */}
+              {/* Bottom action items */}
               {BOTTOM_MENU_ITEMS.map((item) => {
                 const isActive = currentRoute === item.id;
                 return (
@@ -334,24 +287,23 @@ export default function RootLayout() {
                       gap: 14,
                       paddingHorizontal: 20,
                       paddingVertical: 14,
-                      backgroundColor: '#000',
+                      backgroundColor: "#000",
                       borderRadius: 20,
                       marginHorizontal: 8,
                       marginVertical: 2,
                     }}
-                    className = 'bg-gray-900 text-white rounded-2xl'
                   >
                     <HugeiconsIcon
                       icon={item.icon}
                       size={22}
-                      color='#fff'
+                      color="#fff"
                       strokeWidth={isActive ? 2 : 1.5}
                     />
                     <Text
                       style={{
                         fontSize: 15,
                         fontWeight: isActive ? "700" : "500",
-                        color: '#fff',
+                        color: "#fff",
                       }}
                     >
                       {item.label}

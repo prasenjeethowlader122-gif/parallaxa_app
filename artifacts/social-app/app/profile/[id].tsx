@@ -20,9 +20,13 @@ import {
   AiIcon,
   Message01Icon,
   CheckmarkCircle01Icon,
-  UserPlus01Icon,
 } from "@hugeicons/core-free-icons";
-import { useGetUser, useGetUserPosts, useFollowUser, useUnfollowUser } from "@workspace/api-client-react";
+import {
+  useGetUser,
+  useGetUserPosts,
+  useFollowUser,
+  useUnfollowUser,
+} from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -30,7 +34,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { getApiBaseUrl } from "@/lib/apiUrl";
 
 const { width } = Dimensions.get("window");
-const ITEM = (width - 2) / 3;
+const GRID_GAP = 1.5;
+const ITEM = (width - GRID_GAP * 2) / 3;
 
 export default function UserProfileScreen() {
   const colors = useColors();
@@ -40,7 +45,6 @@ export default function UserProfileScreen() {
   const { user: me } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fixed: positional string arg (id as string)
   const { data: profile, isLoading, refetch } = useGetUser(id!);
   const { data: postsData, refetch: refetchPosts } = useGetUserPosts(id!);
 
@@ -66,21 +70,29 @@ export default function UserProfileScreen() {
     else followUser({ userId: id });
   };
 
-  const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
+  // web-এ layout-এর header height account করতে হয়
+  const headerTopPadding = Platform.OS === "web" ? 16 : 12;
 
   const Header = () => (
-    <View>
-      {/* Navbar */}
+    <View style={{ backgroundColor: colors.background }}>
+      {/* ── Navbar ── */}
       <View
-        className="flex-row justify-between items-center px-4 pb-3"
         style={{
-          paddingTop: topPadding + 12,
-          backgroundColor: colors.background,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingTop: headerTopPadding,
+          paddingBottom: 12,
           borderBottomWidth: 0.5,
           borderBottomColor: colors.border,
         }}
       >
-        <TouchableOpacity onPress={() => router.back()} className="p-1">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{ padding: 4 }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           <HugeiconsIcon
             icon={ArrowLeft01Icon}
             size={24}
@@ -88,13 +100,19 @@ export default function UserProfileScreen() {
             strokeWidth={1.5}
           />
         </TouchableOpacity>
+
         <Text
-          className="text-lg font-bold"
-          style={{ color: colors.foreground }}
+          style={{
+            fontSize: 16,
+            fontWeight: "700",
+            color: colors.foreground,
+          }}
+          numberOfLines={1}
         >
           {profile?.username ?? ""}
         </Text>
-        <TouchableOpacity className="p-1">
+
+        <TouchableOpacity style={{ padding: 4 }}>
           <HugeiconsIcon
             icon={MoreHorizontalIcon}
             size={24}
@@ -104,30 +122,51 @@ export default function UserProfileScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* ── Profile info ── */}
       {isLoading ? (
-        <View className="p-16 items-center">
+        <View style={{ paddingVertical: 64, alignItems: "center" }}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : profile ? (
-        <View className="p-4">
-          <View className="flex-row items-center mb-3.5">
+        <View style={{ padding: 16 }}>
+          {/* Avatar + stats */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 14,
+            }}
+          >
             <UserAvatar uri={profile.avatarUrl ?? undefined} size={84} />
-            <View className="flex-1 flex-row justify-around ml-3">
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                justifyContent: "space-around",
+                marginLeft: 12,
+              }}
+            >
               {[
                 { label: "Posts", value: profile.postsCount },
                 { label: "Followers", value: profile.followersCount },
                 { label: "Following", value: profile.followingCount },
               ].map(({ label, value }) => (
-                <View key={label} className="items-center">
+                <View key={label} style={{ alignItems: "center" }}>
                   <Text
-                    className="text-lg font-bold"
-                    style={{ color: colors.foreground }}
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "700",
+                      color: colors.foreground,
+                    }}
                   >
                     {value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}
                   </Text>
                   <Text
-                    className="text-[13px] mt-0.5"
-                    style={{ color: colors.mutedForeground }}
+                    style={{
+                      fontSize: 12,
+                      marginTop: 2,
+                      color: colors.mutedForeground,
+                    }}
                   >
                     {label}
                   </Text>
@@ -136,10 +175,21 @@ export default function UserProfileScreen() {
             </View>
           </View>
 
-          <View className="flex-row items-center gap-1.5 mb-1">
+          {/* Name + verified */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 4,
+            }}
+          >
             <Text
-              className="text-[15px] font-semibold"
-              style={{ color: colors.foreground }}
+              style={{
+                fontSize: 15,
+                fontWeight: "600",
+                color: colors.foreground,
+              }}
             >
               {profile.displayName}
             </Text>
@@ -153,28 +203,50 @@ export default function UserProfileScreen() {
             )}
           </View>
 
-          {profile.bio && (
+          {/* Bio */}
+          {profile.bio ? (
             <Text
-              className="text-sm leading-[19px] mb-1"
-              style={{ color: colors.foreground }}
+              style={{
+                fontSize: 14,
+                lineHeight: 20,
+                color: colors.foreground,
+                marginBottom: 4,
+              }}
             >
               {profile.bio}
             </Text>
-          )}
-          {profile.website && (
+          ) : null}
+
+          {/* Website */}
+          {profile.website ? (
             <Text
-              className="text-sm font-medium mb-3"
-              style={{ color: colors.primary }}
+              style={{
+                fontSize: 14,
+                fontWeight: "500",
+                color: colors.primary,
+                marginBottom: 12,
+              }}
             >
               {profile.website}
             </Text>
-          )}
+          ) : null}
 
+          {/* Action buttons */}
           {!isOwnProfile && (
-            <View className="flex-row gap-2">
+            <View
+              style={{ flexDirection: "row", gap: 8, marginTop: 4 }}
+            >
+              {/* Follow / Following button */}
               <TouchableOpacity
-                className="flex-1 h-[34px] rounded-lg items-center justify-center border"
+                onPress={handleFollow}
+                activeOpacity={0.8}
                 style={{
+                  flex: 1,
+                  height: 36,
+                  borderRadius: 10,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: 1,
                   backgroundColor: profile.isFollowing
                     ? colors.background
                     : colors.primary,
@@ -182,37 +254,45 @@ export default function UserProfileScreen() {
                     ? colors.border
                     : colors.primary,
                 }}
-                onPress={handleFollow}
-                activeOpacity={0.8}
               >
                 <Text
-                  className="text-sm font-bold"
                   style={{
-                    color: profile.isFollowing
-                      ? colors.foreground
-                      : "#FFFFFF",
+                    fontSize: 14,
+                    fontWeight: "700",
+                    color: profile.isFollowing ? colors.foreground : "#FFFFFF",
                   }}
                 >
                   {profile.isFollowing ? "Following" : "Follow"}
                 </Text>
               </TouchableOpacity>
 
+              {/* Message button */}
               <TouchableOpacity
-                className="flex-1 h-[34px] border rounded-lg items-center justify-center"
-                style={{ borderColor: colors.border }}
+                activeOpacity={0.8}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
                 onPress={async () => {
                   if (!id || !me?.id) return;
                   const baseUrl = getApiBaseUrl();
                   try {
-                    const res = await fetch(`${baseUrl}/api/conversations/start`, {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                        // Note: in production you should pass a real auth token
-                        Authorization: `Bearer ${me.id}`,
-                      },
-                      body: JSON.stringify({ userId: id }),
-                    });
+                    const res = await fetch(
+                      `${baseUrl}/api/conversations/start`,
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${me.id}`,
+                        },
+                        body: JSON.stringify({ userId: id }),
+                      }
+                    );
                     if (res.ok) {
                       const data = await res.json();
                       router.push(`/messages/${data.id}` as any);
@@ -221,11 +301,10 @@ export default function UserProfileScreen() {
                     console.error("Failed to start conversation", e);
                   }
                 }}
-                activeOpacity={0.8}
               >
                 <HugeiconsIcon
                   icon={Message01Icon}
-                  size={16}
+                  size={18}
                   color={colors.foreground}
                   strokeWidth={1.5}
                 />
@@ -235,10 +314,12 @@ export default function UserProfileScreen() {
         </View>
       ) : null}
 
-      {/* Grid header */}
+      {/* ── Grid tab indicator ── */}
       <View
-        className="h-11 items-center justify-center"
         style={{
+          height: 44,
+          alignItems: "center",
+          justifyContent: "center",
           borderTopWidth: 0.5,
           borderBottomWidth: 0.5,
           borderColor: colors.border,
@@ -255,7 +336,7 @@ export default function UserProfileScreen() {
   );
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <FlatList
         data={posts}
         keyExtractor={(item: any) => item.id}
@@ -267,7 +348,7 @@ export default function UserProfileScreen() {
             style={{
               width: ITEM,
               height: ITEM,
-              margin: 0.5,
+              margin: GRID_GAP / 2,
               backgroundColor: colors.muted,
             }}
           >
@@ -278,7 +359,14 @@ export default function UserProfileScreen() {
                 resizeMode="cover"
               />
             ) : (
-              <View className="w-full h-full items-center justify-center">
+              <View
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 <HugeiconsIcon
                   icon={AiIcon}
                   size={16}
@@ -307,6 +395,7 @@ export default function UserProfileScreen() {
           />
         }
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
       />
     </View>
   );
