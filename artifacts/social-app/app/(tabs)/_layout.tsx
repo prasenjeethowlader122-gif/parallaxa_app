@@ -100,7 +100,7 @@ export default function RootLayout() {
             {/* Logo */}
             <Image
               source={require("@/assets/images/parallaxa-logo.svg")}
-              style={{ width: 40, height: 40 }}
+              style={{ width: 50, height: 50 }}
               resizeMode="contain"
             />
           </View>
@@ -132,7 +132,7 @@ export default function RootLayout() {
 
             {/* User Avatar */}
             <TouchableOpacity
-              onPress={() => router.push("/profile/" + user?.id as any)}
+              onPress={() => router.push(`/profile/${user?.id}`)}
             >
               <UserAvatar uri={user?.avatarUrl} size={32} />
             </TouchableOpacity>
