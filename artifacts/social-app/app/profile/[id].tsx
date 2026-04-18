@@ -89,6 +89,7 @@ export default function UserProfileScreen() {
         }}
       >
         <TouchableOpacity
+          className = 'flex flex-row items-center gap-4'
           onPress={() => router.back()}
           style={{ padding: 4 }}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -99,19 +100,13 @@ export default function UserProfileScreen() {
             color={colors.foreground}
             strokeWidth={1.5}
           />
-          <Text>{!isOwnProfile ? profile?.displayName.slice(0,5)+'...' : me?.displayName.slice(0,5)+'...'}</Text>
-        </TouchableOpacity>
-
-        <Text
-          style={{
-            fontSize: 16,
-            fontWeight: "700",
-            color: colors.foreground,
+          <Text style={{
+            fontSize:17
+            
           }}
-          numberOfLines={1}
-        >
-          {profile?.username ?? ""}
-        </Text>
+          numberOfLines = {1}
+          >{!isOwnProfile ? profile?.displayName.slice(0,5)+'...' : 'Profile'}</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={{ padding: 4 }}>
           <HugeiconsIcon

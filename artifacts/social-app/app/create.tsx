@@ -254,7 +254,7 @@ export default function CreateScreen() {
                 }}
               >
                 <TextInput
-                  className = 'outline-none border-none'
+                  className = 'outline-none border-none shadow-none'
                   value={content}
                   onChangeText={handleTextChange}
                   style={{
