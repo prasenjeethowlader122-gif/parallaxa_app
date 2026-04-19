@@ -11,8 +11,12 @@ module.exports = {
   darkMode: "media",
   theme: {
     extend: {
+      // tailwind.config.js
       fontFamily: {
+        sans: ["Inter-Regular"], // makes it the default body font
         inter: ["Inter-Regular"],
+        "inter-medium": ["Inter-Medium"],
+        "inter-semibold": ["Inter-SemiBold"],
         "inter-bold": ["Inter-Bold"],
       },
       colors: {

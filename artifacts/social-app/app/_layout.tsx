@@ -72,8 +72,9 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  // app/_layout.tsx
   const [fontsLoaded, fontError] = useFonts({
-    'Inter-Regular': require(''),
+    'Inter-Regular': require('@/assets/fonts/s_g/SpaceGrotesk-Regular.ttf'),
     'Inter-Medium': require('@/assets/fonts/s_g/SpaceGrotesk-Medium.ttf'),
     'Inter-SemiBold': require('@/assets/fonts/s_g/SpaceGrotesk-SemiBold.ttf'),
     'Inter-Bold': require('@/assets/fonts/s_g/SpaceGrotesk-Bold.ttf'),
