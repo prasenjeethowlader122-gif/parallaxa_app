@@ -72,7 +72,7 @@ export default function RootLayout() {
   // ── X logo SVG placeholder (uses the Image asset if available) ──
   const XLogo = () => (
     <View style={{ width: 28, height: 28, justifyContent: "center", alignItems: "center" }}>
-      <Image source={require('@/assets/images/parallaxa-logo.svg')} style={{ width: 30, height: 30 }} />
+      <Image source={require('@/assets/images/parallaxa-logo.svg')} style={{ width: 40, height: 40 }} />
     </View>
   );
 
@@ -97,6 +97,12 @@ export default function RootLayout() {
             paddingBottom: 10,
           }}
         >
+          <View style = {{
+            flexDirection: "row",
+            alignItems:"center",
+            justifyContent: "start",
+            gap: 15
+          }}>
           {/* Left: avatar (opens drawer) */}
           <TouchableOpacity
             onPress={() => setMenuOpen(true)}
@@ -108,7 +114,7 @@ export default function RootLayout() {
 
           {/* Centre: X logo */}
           <XLogo />
-
+          </View>
           {/* Right: icons */}
           <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
             <TouchableOpacity
@@ -190,9 +196,11 @@ export default function RootLayout() {
               paddingBottom: 14,
               flexDirection: "row",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "space-start",
+              gap: 15
             }}
           >
+            
             {/* Close (arrow back) */}
             <TouchableOpacity
               onPress={() => setMenuOpen(false)}
@@ -213,10 +221,7 @@ export default function RootLayout() {
             <View style={{ width: 22 }} />
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
-          >
+          <View>
             {/* ── Profile block ── */}
             <TouchableOpacity
               onPress={() => {
@@ -276,7 +281,10 @@ export default function RootLayout() {
                 marginHorizontal: 20,
               }}
             />
-
+            <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+         >
             {/* ── Main nav ── */}
             {MAIN_NAV.map((item) => {
               const isActive = currentRoute === item.id;
@@ -312,7 +320,7 @@ export default function RootLayout() {
                 </TouchableOpacity>
               );
             })}
-
+</ScrollView>
             {/* Thin divider */}
             <View
               style={{
@@ -412,7 +420,7 @@ export default function RootLayout() {
                 </TouchableOpacity>
               </>
             )}
-          </ScrollView>
+          </View>
         </View>
       )}
     </View>
