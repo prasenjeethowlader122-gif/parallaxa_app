@@ -50,7 +50,7 @@ router.get("/search", authenticate, async (req: AuthRequest, res) => {
           id: p.id,
           author: author ? { id: author.id, username: author.username, displayName: author.displayName, avatarUrl: author.avatarUrl, isVerified: author.isVerified, isFollowing: false } : null,
           content: p.content, imageUrl: p.imageUrl, videoUrl: p.videoUrl, location: p.location,
-          hashtags: [], likesCount: p.likesCount, commentsCount: p.commentsCount,
+          hashtags: [], likesCount: p.likesCount, commentsCount: p.repliesCount,
           isLiked: !!liked, isSaved: !!saved, createdAt: p.createdAt,
         };
       }));

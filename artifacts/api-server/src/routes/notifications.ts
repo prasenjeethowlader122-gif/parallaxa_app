@@ -29,7 +29,7 @@ router.get("/notifications", authenticate, async (req: AuthRequest, res) => {
             id: p.id,
             author: { id: fromUser.id, username: fromUser.username, displayName: fromUser.displayName, avatarUrl: fromUser.avatarUrl, isVerified: fromUser.isVerified, isFollowing: false },
             content: p.content, imageUrl: p.imageUrl, videoUrl: p.videoUrl, location: p.location,
-            hashtags: [], likesCount: p.likesCount, commentsCount: p.commentsCount,
+            hashtags: [], likesCount: p.likesCount, commentsCount: p.repliesCount,
             isLiked: !!liked, isSaved: !!saved, createdAt: p.createdAt,
           };
         }

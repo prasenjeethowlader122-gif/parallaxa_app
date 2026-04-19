@@ -22,7 +22,6 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
   Image01Icon,
   Location01Icon,
-  ArrowLeft01Icon,
   Gif01Icon,
   PollIcon,
   EmojiIcon,
@@ -33,7 +32,8 @@ import {
 type TextSegment = { text: string; type: "plain" | "mention" | "hashtag" };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-function parseSegments(text: string): TextSegment[] {
+function parseSegments(text: string | undefined | null): TextSegment[] {
+  if (!text) return [];
   const regex = /(@\w+|#\w+)/g;
   const segments: TextSegment[] = [];
   let lastIndex = 0;
@@ -71,7 +71,7 @@ const HighlightedText: FC<{ text: string; fontSize: number; lineHeight: number }
       style={{
         fontSize,
         lineHeight,
-        color: "transparent", // invisible — sits over TextInput
+        color: "transparent",
         position: "absolute",
         top: 0,
         left: 0,
@@ -136,7 +136,6 @@ const MentionSuggestions: FC<{
             pressed && styles.suggestionPressed,
           ]}
         >
-          {/* Avatar placeholder */}
           <View style={styles.suggestionAvatar}>
             <Text style={styles.suggestionAvatarText}>
               {user.name[0].toUpperCase()}
@@ -158,17 +157,11 @@ const CharacterArc: FC<{ count: number; max: number }> = ({ count, max }) => {
   const pct = count / max;
   const size = 22;
   const stroke = 2.2;
-  const r = (size - stroke) / 2;
-  const circ = 2 * Math.PI * r;
-  const dash = pct * circ;
-  const gap = circ - dash;
-  const offset = circ * 0.25;
 
   const color = remaining <= 0 ? "#f4212e" : remaining <= 20 ? "#ffd400" : "#1d9bf0";
 
   return (
     <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
-      {/* SVG not available in RN — use a simple View ring approximation */}
       <View
         style={{
           width: size,
@@ -179,7 +172,6 @@ const CharacterArc: FC<{ count: number; max: number }> = ({ count, max }) => {
           position: "absolute",
         }}
       />
-      {/* Filled arc approximation using border trick */}
       <View
         style={{
           width: size,
@@ -236,9 +228,9 @@ export default function CreateScreen() {
   const { user } = useAuth();
   const inputRef = useRef<TextInput>(null);
 
-  const [content, setContent] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [location, setLocation] = useState("");
+  const [content, setContent] = useState<string>("");
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [location, setLocation] = useState<string>("");
   const [mentionKeyword, setMentionKeyword] = useState<string | null>(null);
 
   const MAX = 280;
@@ -272,8 +264,9 @@ export default function CreateScreen() {
   };
 
   const handleTextChange = useCallback((text: string) => {
-    setContent(text);
-    const match = text.match(/@(\w*)$/i);
+    const safeText = text ?? "";
+    setContent(safeText);
+    const match = safeText.match(/@(\w*)$/i);
     setMentionKeyword(match ? match[1] : null);
   }, []);
 
@@ -286,7 +279,8 @@ export default function CreateScreen() {
     [content]
   );
 
-  const displayName = user?.displayName ?? user?.name ?? "You";
+  const displayName = user?.displayName ?? (user as any)?.name ?? "You";
+  const segments = parseSegments(content);
 
   return (
     <KeyboardAvoidingView
@@ -324,7 +318,6 @@ export default function CreateScreen() {
           {/* Avatar */}
           <View style={styles.avatarCol}>
             <UserAvatar uri={user?.avatarUrl} size={42} />
-            {/* Thread line */}
             <View style={styles.threadLine} />
           </View>
 
@@ -348,13 +341,13 @@ export default function CreateScreen() {
 
             {/* Text input with highlight overlay */}
             <View style={styles.inputWrapper}>
-              {/* Highlight layer (behind) */}
+              {/* Highlight layer */}
               <Text
                 style={styles.highlightLayer}
                 selectable={false}
                 pointerEvents="none"
               >
-                {parseSegments(content).map((seg, i) => {
+                {segments.map((seg, i) => {
                   if (seg.type === "mention" || seg.type === "hashtag") {
                     return (
                       <Text key={i} style={styles.highlightToken}>
@@ -362,18 +355,16 @@ export default function CreateScreen() {
                       </Text>
                     );
                   }
-                  // Plain text — same color as input text so overlay is invisible
                   return (
                     <Text key={i} style={styles.highlightPlain}>
                       {seg.text}
                     </Text>
                   );
                 })}
-                {/* Invisible padding so height matches */}
                 {"\u200B"}
               </Text>
 
-              {/* Actual input (text set to transparent where highlights show) */}
+              {/* Actual input */}
               <TextInput
                 ref={inputRef}
                 value={content}
@@ -434,10 +425,8 @@ export default function CreateScreen() {
         </View>
 
         <View style={styles.toolbarRight}>
-          {/* Divider */}
           <View style={styles.toolbarDivider} />
           <CharacterArc count={content.length} max={MAX} />
-          {/* Thread add */}
           <TouchableOpacity style={styles.addPostBtn} activeOpacity={0.7}>
             <Text style={styles.addPostBtnText}>+</Text>
           </TouchableOpacity>
@@ -456,8 +445,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-
-  // Header
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -494,8 +481,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 0.1,
   },
-
-  // Scroll
   scroll: {
     flex: 1,
   },
@@ -503,8 +488,6 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
     paddingTop: 4,
   },
-
-  // Composer
   composer: {
     flexDirection: "row",
     paddingHorizontal: 12,
@@ -529,8 +512,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: 12,
   },
-
-  // Name / audience
   nameRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -562,8 +543,6 @@ const styles = StyleSheet.create({
     color: "#1d9bf0",
     marginLeft: 2,
   },
-
-  // Input + highlight
   inputWrapper: {
     position: "relative",
     minHeight: 80,
@@ -576,7 +555,6 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE,
     lineHeight: LINE_HEIGHT,
     color: "transparent",
-    // must NOT intercept touches
   },
   highlightToken: {
     color: "#1d9bf0",
@@ -593,11 +571,8 @@ const styles = StyleSheet.create({
     minHeight: 80,
     paddingTop: 0,
     paddingBottom: 0,
-    // on Android the background needs to be transparent so highlight shows
     backgroundColor: "transparent",
   },
-
-  // Image preview
   imagePreview: {
     marginTop: 10,
     borderRadius: 14,
@@ -626,8 +601,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
   },
-
-  // Location
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -638,8 +611,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#1d9bf0",
   },
-
-  // Add to thread
   addThreadRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -656,8 +627,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#71767b",
   },
-
-  // Mention suggestions
   suggestionsContainer: {
     marginBottom: 8,
     borderWidth: StyleSheet.hairlineWidth,
@@ -709,8 +678,6 @@ const styles = StyleSheet.create({
     color: "#71767b",
     marginTop: 1,
   },
-
-  // Toolbar
   toolbar: {
     flexDirection: "row",
     alignItems: "center",
