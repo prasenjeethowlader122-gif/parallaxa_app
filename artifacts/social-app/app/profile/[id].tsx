@@ -42,6 +42,7 @@ const { width } = Dimensions.get("window");
 const GRID_COL = 3;
 const GRID_GAP = 1;
 const GRID_ITEM = (width - GRID_GAP * (GRID_COL - 1)) / GRID_COL;
+const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
 type Tab = "posts" | "replies" | "media" | "likes";
 const TABS: { id: Tab; label: string }[] = [
@@ -198,13 +199,13 @@ export default function UserProfileScreen() {
   const Header = () => (
     <View style={styles.headerContainer}>
       {/* ── Top nav ── */}
-      <View style={[styles.topNav, { paddingTop: insets.top + 4 }]}>
+      <View style={[styles.topNav, { paddingTop: topPadding }]}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.navBtn}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={22} color="#0f1419" strokeWidth={1.5} />
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={22} color="#0f1419" strokeWidth={2} />
         </TouchableOpacity>
 
         <View style={styles.navCenter}>
