@@ -26,7 +26,7 @@ router.get("/saved", authenticate, async (req: AuthRequest, res) => {
         id: post.id,
         author: author ? { id: author.id, username: author.username, displayName: author.displayName, avatarUrl: author.avatarUrl, isVerified: author.isVerified, isFollowing: false } : null,
         content: post.content, imageUrl: post.imageUrl, videoUrl: post.videoUrl, location: post.location,
-        hashtags: [], likesCount: post.likesCount, commentsCount: post.commentsCount,
+        hashtags: [], likesCount: post.likesCount, commentsCount: post.repliesCount,
         isLiked: !!liked, isSaved: true, createdAt: post.createdAt,
       };
     }));
