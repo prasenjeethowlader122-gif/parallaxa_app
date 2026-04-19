@@ -107,9 +107,8 @@ export default function FeedScreen() {
           );
         })}
       </View>
-
-      {/* ── ফিড লিস্ট ── */}
-      <FlatList
+      {posts.length &&  (
+              <FlatList
         key={activeTab} // tab বদলালে list পুরো remount হবে
         data={displayPosts}
         keyExtractor={(item: any) => item.id}
@@ -149,6 +148,9 @@ export default function FeedScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
       />
+      )}
+      
+
     </View>
   );
 }
