@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   topNav: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingBottom: 10,
     backgroundColor: "#fff",
   },
