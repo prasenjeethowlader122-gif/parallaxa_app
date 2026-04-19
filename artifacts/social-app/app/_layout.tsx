@@ -38,9 +38,9 @@ const queryClient = new QueryClient({
 
 function RootLayoutNav() {
   const { user, isLoading } = useAuth();
-
+  
   if (isLoading) return null;
-
+  
   if (!user) {
     return (
       <Stack screenOptions={{ headerShown: false }}>
@@ -55,7 +55,7 @@ function RootLayoutNav() {
       </Stack>
     );
   }
-
+  
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" redirect />
@@ -73,20 +73,20 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
+    'Inter-Regular': require(''),
+    'Inter-Medium': require('@/assets/fonts/s_g/SpaceGrotesk-Medium.ttf'),
+    'Inter-SemiBold': require('@/assets/fonts/s_g/SpaceGrotesk-SemiBold.ttf'),
+    'Inter-Bold': require('@/assets/fonts/s_g/SpaceGrotesk-Bold.ttf'),
   });
-
+  
   useEffect(() => {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
-
+  
   if (!fontsLoaded && !fontError) return null;
-
+  
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
