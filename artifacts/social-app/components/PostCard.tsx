@@ -1,135 +1,44 @@
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import {
+  AiChatIcon,
+  ArrowUp01Icon,
+  Bookmark02Icon,
   CheckmarkBadge01Icon,
   FavouriteIcon,
   MoreHorizontalIcon,
-  Share01Icon,
-  Bookmark02Icon,
-  MessageMultiple01Icon,
-  Repeat01Icon,
+  Share01Icon
 } from '@hugeicons/core-free-icons';
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useState, useCallback } from "react";
-import {
-  Image,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, Platform, Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "./UserAvatar";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 interface Author {
   id: string;
   username: string;
   displayName: string;
-  avatarUrl?: string | null;
+  avatarUrl ? : string | null;
   isVerified: boolean;
 }
 
 interface PostCardProps {
   id: string;
   author: Author;
-  content?: string | null;
-  imageUrl?: string | null;
-  hashtags?: string[];
+  content ? : string | null;
+  imageUrl ? : string | null;
+  hashtags ? : string[];
   likesCount: number;
-  // Both fields exist on the Post schema and are distinct:
-  // - commentsCount: top-level comments on the post
-  // - repliesCount:  nested replies to comments
-  // The previous code dropped commentsCount entirely and used repliesCount for
-  // the comment button, which would show the wrong number.
   commentsCount: number;
-  repliesCount: number;
   isLiked: boolean;
   isSaved: boolean;
   createdAt: string;
-  onLike?: (id: string, liked: boolean) => void;
-  onSave?: (id: string, saved: boolean) => void;
-  onComment?: (id: string) => void;
+  onLike ? : (id: string, liked: boolean) => void;
+  onSave ? : (id: string, saved: boolean) => void;
+  onComment ? : (id: string) => void;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const m = Math.floor(diff / 60_000);
-  if (m < 1) return "now";
-  if (m < 60) return `${m}m`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
-  const d = Math.floor(h / 24);
-  if (d < 7) return `${d}d`;
-  return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function formatCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return n > 0 ? String(n) : "";
-}
-
-// ─── Rich content renderer (mention + hashtag highlight) ─────────────────────
-function RichText({ text, highlightColor }: { text: string; highlightColor: string }) {
-  const parts = text.split(/(@\w+|#\w+)/g);
-  return (
-    <Text style={styles.content}>
-      {parts.map((part, i) => {
-        if (/^(@|#)\w+/.test(part)) {
-          return (
-            <Text key={i} style={[styles.contentHighlight, { color: highlightColor }]}>
-              {part}
-            </Text>
-          );
-        }
-        return <Text key={i}>{part}</Text>;
-      })}
-    </Text>
-  );
-}
-
-// ─── Action Button ────────────────────────────────────────────────────────────
-function ActionBtn({
-  icon,
-  count,
-  active,
-  activeColor,
-  onPress,
-}: {
-  icon: any;
-  count?: number;
-  active?: boolean;
-  activeColor?: string;
-  onPress?: () => void;
-}) {
-  const color = active && activeColor ? activeColor : "#71767b";
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-      style={styles.actionBtn}
-      activeOpacity={0.7}
-    >
-      <HugeiconsIcon
-        icon={icon}
-        size={18}
-        color={color}
-        variant={active ? "solid" : "stroke"}
-        strokeWidth={1.5}
-      />
-      {count !== undefined && count > 0 && (
-        <Text style={[styles.actionCount, active && activeColor ? { color } : null]}>
-          {formatCount(count)}
-        </Text>
-      )}
-    </TouchableOpacity>
-  );
-}
-
-// ─── PostCard ─────────────────────────────────────────────────────────────────
 export function PostCard({
   id,
   author,
@@ -138,7 +47,6 @@ export function PostCard({
   hashtags = [],
   likesCount: initialLikesCount,
   commentsCount,
-  repliesCount,
   isLiked: initialIsLiked,
   isSaved: initialIsSaved,
   createdAt,
@@ -146,269 +54,167 @@ export function PostCard({
   onSave,
   onComment,
 }: PostCardProps) {
-  const router = useRouter();
   const colors = useColors();
-
+  const router = useRouter();
+  
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
   const [isSaved, setIsSaved] = useState(initialIsSaved);
-  const [reposted, setReposted] = useState(false);
-
-  const handleLike = useCallback(() => {
+  
+  // Optimized Handlers
+  const handleLike = useCallback(async () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const next = !isLiked;
-    setIsLiked(next);
-    setLikesCount((c) => c + (next ? 1 : -1));
-    onLike?.(id, next);
+    const newLiked = !isLiked;
+    setIsLiked(newLiked);
+    setLikesCount((prev) => prev + (newLiked ? 1 : -1));
+    onLike?.(id, newLiked);
   }, [isLiked, id, onLike]);
-
-  const handleSave = useCallback(() => {
+  
+  const handleSave = useCallback(async () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const next = !isSaved;
-    setIsSaved(next);
-    onSave?.(id, next);
+    const newSaved = !isSaved;
+    setIsSaved(newSaved);
+    onSave?.(id, newSaved);
   }, [isSaved, id, onSave]);
-
-  const handleRepost = useCallback(() => {
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setReposted((r) => !r);
-  }, []);
-
-  const repostCount = Math.round(initialLikesCount * 0.4);
-
+  
+  const timeAgo = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "now";
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h`;
+    return `${Math.floor(h / 24)}d`;
+  };
+  
+  const navigateToPost = () => router.push({ pathname: "/post/[id]", params: { id } });
+  const navigateToProfile = () => router.push({ pathname: "/profile/[id]", params: { id: author.id } });
+  
   return (
-    <TouchableOpacity
+    <TouchableOpacity 
       activeOpacity={1}
-      onPress={() => router.push({ pathname: "/post/[id]", params: { id } })}
-      style={[styles.card, { backgroundColor: colors.background, borderBottomColor: colors.border }]}
+      onPress={navigateToPost}
+      className="flex-row px-4 py-3" 
+      style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border || '#ccc' }}
     >
-      {/* ── Left column: avatar + thread line ── */}
-      <View style={styles.leftCol}>
-        <TouchableOpacity
-          onPress={() => router.push({ pathname: "/profile/[id]", params: { id: author.id } })}
-          activeOpacity={0.8}
-        >
-          <UserAvatar uri={author.avatarUrl} size={40} />
+      {/* Sidebar Avatar */}
+      <View className="mr-3">
+        <TouchableOpacity onPress={navigateToProfile}>
+          <UserAvatar uri={author.avatarUrl} size={35} />
         </TouchableOpacity>
-        <View style={[styles.threadLine, { backgroundColor: colors.border }]} />
       </View>
 
-      {/* ── Right column ── */}
-      <View style={styles.rightCol}>
-        {/* Header row */}
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            style={styles.authorInfo}
-            onPress={() => router.push({ pathname: "/profile/[id]", params: { id: author.id } })}
-            activeOpacity={0.75}
-          >
-            <View style={styles.nameRow}>
-              <Text style={[styles.displayName, { color: colors.foreground }]} numberOfLines={1}>
-                {author.displayName}
-              </Text>
-              {author.isVerified && (
-                <HugeiconsIcon
-                  icon={CheckmarkBadge01Icon}
-                  size={15}
-                  color="#1d9bf0"
-                  variant="solid"
-                />
-              )}
-            </View>
-            <Text style={styles.meta} numberOfLines={1}>
+      {/* Main Content Area */}
+      <View className="flex-1">
+        {/* Header: Name, Username, Time */}
+        <View className="flex-row items-center justify-between mb-0.5">
+          <View className="flex-row items-center flex-1 flex-shrink">
+            <View className='flex-col items-start justify-start'>
+            <Text 
+              numberOfLines={1}
+              className="font-bold text-[15px] mr-1" 
+              style={{ color: colors.foreground }}
+            >
+              {author.displayName}
+            </Text>
+                        <Text 
+              numberOfLines={1}
+              className="text-[14px] flex-shrink" 
+              style={{ color: colors.mutedForeground }}
+            >
               @{author.username} · {timeAgo(createdAt)}
             </Text>
-          </TouchableOpacity>
+            </View>
+            {author.isVerified && (
+              <View className="mr-1">
+                <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} color="#1d9bf0" variant="solid" />
+              </View>
+            )}
 
-          <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
-            <HugeiconsIcon icon={MoreHorizontalIcon} size={18} color="#71767b" strokeWidth={1.5} />
+          </View>
+          
+          <TouchableOpacity hitSlop={12}>
+            <HugeiconsIcon icon={MoreHorizontalIcon} size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
         </View>
 
-        {/* Content */}
-        {content ? <RichText text={content} highlightColor={colors.primary} /> : null}
+        {/* Caption */}
+        {content && (
+          <Text className="text-[15px] leading-5 p-3  mb-2" style={{ color: colors.foreground }}>
+            {content}
+          </Text>
+        )}
 
-        {/* Image */}
-        {imageUrl ? (
-          <View style={[styles.imageWrap, { borderColor: colors.border }]}>
+        {/* Hashtags */}
+        
+
+        {/* Media */}
+        {imageUrl && (
+          <View className="rounded-2xl overflow-hidden border mb-3" style={{ borderColor: colors.border || '#eee' }}>
             <Image
               source={{ uri: imageUrl }}
-              style={styles.image}
+              style={{ width: '100%', aspectRatio: 1.77 }} // 16:9 ratio
               resizeMode="cover"
             />
           </View>
-        ) : null}
-
-        {/* Hashtag pills (if any not already in text) */}
-        {hashtags.length > 0 && !content?.includes("#") && (
-          <View style={styles.hashtagRow}>
-            {hashtags.slice(0, 4).map((tag) => (
-              <View key={tag} style={styles.hashtagPill}>
-                <Text style={[styles.hashtagPillText, { color: colors.primary }]}>#{tag}</Text>
-              </View>
-            ))}
-          </View>
         )}
 
-        {/* Actions */}
-        <View style={styles.actions}>
-          {/* commentsCount = top-level comments; correct field for the comment button */}
-          <ActionBtn
-            icon={MessageMultiple01Icon}
-            count={commentsCount}
+        {/* Action Bar */}
+        <View className="flex-row justify-between items-center w-full mt-1">
+          {/* Reply */}
+          <TouchableOpacity 
             onPress={() => onComment?.(id)}
-          />
-          <ActionBtn
-            icon={Repeat01Icon}
-            count={repostCount}
-            active={reposted}
-            activeColor="#00ba7c"
-            onPress={handleRepost}
-          />
-          <ActionBtn
-            icon={FavouriteIcon}
-            count={likesCount}
-            active={isLiked}
-            activeColor="#f91880"
+            className="flex-row items-center gap-2"
+            hitSlop={10}
+          >
+            <HugeiconsIcon icon={AiChatIcon} size={18} color={colors.mutedForeground} />
+            <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>{commentsCount}</Text>
+          </TouchableOpacity>
+
+          {/* Repost (ArrowUp) */}
+          <TouchableOpacity className="flex-row items-center gap-2" hitSlop={10}>
+            <HugeiconsIcon icon={ArrowUp01Icon} size={18} color={colors.mutedForeground} />
+            <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>
+              {Math.floor(likesCount / 2.5)} 
+            </Text>
+          </TouchableOpacity>
+
+          {/* Like */}
+          <TouchableOpacity 
             onPress={handleLike}
-          />
-          <View style={styles.actionsRight}>
-            <ActionBtn
-              icon={Bookmark02Icon}
-              active={isSaved}
-              activeColor="#1d9bf0"
-              onPress={handleSave}
+            className="flex-row items-center gap-2"
+            hitSlop={10}
+          >
+            <HugeiconsIcon 
+              icon={FavouriteIcon} 
+              size={18} 
+              color={isLiked ? "#f91880" : colors.mutedForeground} 
+              variant={isLiked ? "solid" : "stroke"}
             />
-            <ActionBtn icon={Share01Icon} />
+            <Text 
+              className="text-[13px]" 
+              style={{ color: isLiked ? "#f91880" : colors.mutedForeground }}
+            >
+              {likesCount}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Save/Share Group */}
+          <View className="flex-row items-center gap-4">
+            <TouchableOpacity onPress={handleSave} hitSlop={10}>
+              <HugeiconsIcon 
+                icon={Bookmark02Icon} 
+                size={18} 
+                color={isSaved ? "#1d9bf0" : colors.mutedForeground} 
+                variant={isSaved ? "solid" : "stroke"}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity hitSlop={10}>
+              <HugeiconsIcon icon={Share01Icon} size={18} color={colors.mutedForeground} />
+            </TouchableOpacity>
           </View>
         </View>
       </View>
     </TouchableOpacity>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 4,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-
-  // Left column
-  leftCol: {
-    alignItems: "center",
-    marginRight: 10,
-  },
-  threadLine: {
-    width: 2,
-    flex: 1,
-    minHeight: 12,
-    marginTop: 4,
-    borderRadius: 1,
-    opacity: 0.4,
-  },
-
-  // Right column
-  rightCol: {
-    flex: 1,
-    paddingBottom: 10,
-  },
-
-  // Header
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: 3,
-  },
-  authorInfo: {
-    flex: 1,
-    marginRight: 8,
-  },
-  nameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    flexWrap: "nowrap",
-  },
-  displayName: {
-    fontSize: 15,
-    fontWeight: "700",
-    flexShrink: 1,
-  },
-  meta: {
-    fontSize: 14,
-    color: "#71767b",
-    marginTop: 1,
-  },
-
-  // Content
-  content: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: "#0f1419",
-    marginTop: 2,
-    marginBottom: 10,
-  },
-  contentHighlight: {
-    fontWeight: "500",
-  },
-
-  // Image
-  imageWrap: {
-    borderRadius: 14,
-    overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: 10,
-  },
-  image: {
-    width: "100%",
-    aspectRatio: 16 / 9,
-  },
-
-  // Hashtag pills
-  hashtagRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-    marginBottom: 10,
-  },
-  hashtagPill: {
-    backgroundColor: "#e8f5fd",
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
-  hashtagPillText: {
-    fontSize: 13,
-    fontWeight: "500",
-  },
-
-  // Actions
-  actions: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 2,
-  },
-  actionsRight: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 4,
-  },
-  actionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingVertical: 6,
-    paddingRight: 16,
-  },
-  actionCount: {
-    fontSize: 13,
-    color: "#71767b",
-    fontWeight: "400",
-  },
-});
