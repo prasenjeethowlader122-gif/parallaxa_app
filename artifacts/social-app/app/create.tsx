@@ -13,6 +13,7 @@ import {
   Image,
   Pressable,
   StyleSheet,
+  Dimensions,
 } from "react-native";
 import { useCreatePost } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
@@ -29,26 +30,38 @@ import {
 } from "@hugeicons/core-free-icons";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
-type TextSegment = { text: string; type: "plain" | "mention" | "hashtag" };
+type UserSuggestion = { id: string; name: string; username: string };
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-function parseSegments(text: string | undefined | null): TextSegment[] {
+type TextPart = { text: string; type: "plain" | "mention" | "hashtag" };
+
+// ─── Fixed Helpers ──────────────────────────────────────────────────────────
+const MENTION_REGEX = /@(\w+)/g;
+const HASHTAG_REGEX = /#(\w+)/g;
+
+function parseSegments(text: string): TextPart[] {
   if (!text) return [];
-  const regex = /(@\w+|#\w+)/g;
-  const segments: TextSegment[] = [];
+  const segments: TextPart[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  while ((match = regex.exec(text)) !== null) {
+  // Process mentions first
+  MENTION_REGEX.lastIndex = 0;
+  while ((match = MENTION_REGEX.exec(text)) !== null) {
     if (match.index > lastIndex) {
       segments.push({ text: text.slice(lastIndex, match.index), type: "plain" });
     }
-    const token = match[0];
-    segments.push({
-      text: token,
-      type: token.startsWith("@") ? "mention" : "hashtag",
-    });
-    lastIndex = match.index + token.length;
+    segments.push({ text: match[0], type: "mention" });
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Reset for hashtags (only in remaining text)
+  HASHTAG_REGEX.lastIndex = lastIndex;
+  while ((match = HASHTAG_REGEX.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ text: text.slice(lastIndex, match.index), type: "plain" });
+    }
+    segments.push({ text: match[0], type: "hashtag" });
+    lastIndex = match.index + match[0].length;
   }
 
   if (lastIndex < text.length) {
@@ -58,51 +71,29 @@ function parseSegments(text: string | undefined | null): TextSegment[] {
   return segments;
 }
 
-// ─── Highlighted Text Overlay ───────────────────────────────────────────────
-const HighlightedText: FC<{ text: string; fontSize: number; lineHeight: number }> = ({
-  text,
+function extractHashtags(text: string): string[] {
+  const matches = text.match(HASHTAG_REGEX);
+  return matches ? matches.map((m) => m.slice(1).toLowerCase()) : [];
+}
+
+// ─── Rendered Text Display (No Overlay!) ────────────────────────────────────
+const RenderedText: FC<{ segments: TextPart[]; fontSize: number; lineHeight: number }> = ({
+  segments,
   fontSize,
   lineHeight,
-}) => {
-  const segments = parseSegments(text);
+}) => (
+  <Text style={{ fontSize, lineHeight, opacity: 0.6 }}>
+    {segments.map((seg, i) => {
+      const style = seg.type === "mention" || seg.type === "hashtag"
+        ? { color: "#1d9bf0", fontWeight: "500" }
+        : {};
+      return <Text key={i} style={style}>{seg.text}</Text>;
+    })}
+  </Text>
+);
 
-  return (
-    <Text
-      style={{
-        fontSize,
-        lineHeight,
-        color: "transparent",
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        pointerEvents: "none",
-      }}
-      selectable={false}
-    >
-      {segments.map((seg, i) => {
-        if (seg.type === "mention") {
-          return (
-            <Text key={i} style={{ color: "#1d9bf0", fontWeight: "500" }}>
-              {seg.text}
-            </Text>
-          );
-        }
-        if (seg.type === "hashtag") {
-          return (
-            <Text key={i} style={{ color: "#1d9bf0", fontWeight: "500" }}>
-              {seg.text}
-            </Text>
-          );
-        }
-        return <Text key={i} style={{ color: "transparent" }}>{seg.text}</Text>;
-      })}
-    </Text>
-  );
-};
-
-// ─── Mention Suggestions ────────────────────────────────────────────────────
-const MENTION_SUGGESTIONS = [
+// ─── Fixed Mention Suggestions ─────────────────────────────────────────────
+const MENTION_SUGGESTIONS: UserSuggestion[] = [
   { id: "1", name: "Prasenjeet Howlader", username: "prasenjeet" },
   { id: "2", name: "Rahim Uddin", username: "rahimuddin" },
   { id: "3", name: "Sadia Islam", username: "sadia_islam" },
@@ -112,7 +103,7 @@ const MENTION_SUGGESTIONS = [
 
 const MentionSuggestions: FC<{
   keyword: string | null;
-  onSuggestionPress: (user: { id: string; name: string; username: string }) => void;
+  onSuggestionPress: (user: UserSuggestion) => void;
 }> = ({ keyword, onSuggestionPress }) => {
   if (!keyword || keyword.trim() === "") return null;
 
@@ -137,12 +128,10 @@ const MentionSuggestions: FC<{
           ]}
         >
           <View style={styles.suggestionAvatar}>
-            <Text style={styles.suggestionAvatarText}>
-              {user.name[0].toUpperCase()}
-            </Text>
+            <Text style={styles.suggestionAvatarText}>{user.name[0].toUpperCase()}</Text>
           </View>
-          <View>
-            <Text style={styles.suggestionName}>{user.name}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.suggestionName} numberOfLines={1}>{user.name}</Text>
             <Text style={styles.suggestionUsername}>@{user.username}</Text>
           </View>
         </Pressable>
@@ -151,14 +140,13 @@ const MentionSuggestions: FC<{
   );
 };
 
-// ─── Character Arc ───────────────────────────────────────────────────────────
+// ─── Improved Character Arc ─────────────────────────────────────────────────
 const CharacterArc: FC<{ count: number; max: number }> = ({ count, max }) => {
-  const remaining = max - count;
-  const pct = count / max;
+  const remaining = Math.max(0, max - count);
+  const pct = Math.min(1, count / max);
   const size = 22;
   const stroke = 2.2;
-
-  const color = remaining <= 0 ? "#f4212e" : remaining <= 20 ? "#ffd400" : "#1d9bf0";
+  const color = remaining === 0 ? "#f4212e" : remaining <= 20 ? "#ffd400" : "#1d9bf0";
 
   return (
     <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
@@ -178,7 +166,7 @@ const CharacterArc: FC<{ count: number; max: number }> = ({ count, max }) => {
           height: size,
           borderRadius: size / 2,
           borderWidth: stroke,
-          borderColor: "transparent",
+          borderColor: pct === 0 ? "transparent" : color,
           borderTopColor: pct > 0 ? color : "transparent",
           borderRightColor: pct > 0.25 ? color : "transparent",
           borderBottomColor: pct > 0.5 ? color : "transparent",
@@ -187,41 +175,39 @@ const CharacterArc: FC<{ count: number; max: number }> = ({ count, max }) => {
           transform: [{ rotate: "-90deg" }],
         }}
       />
-      {remaining <= 20 && remaining > 0 && (
-        <Text style={{ fontSize: 9, fontWeight: "700", color }}>{remaining}</Text>
-      )}
-      {remaining <= 0 && (
-        <Text style={{ fontSize: 9, fontWeight: "700", color }}>{remaining}</Text>
-      )}
+      <Text style={{ fontSize: 9, fontWeight: "700", color }}>{remaining}</Text>
     </View>
   );
 };
 
-// ─── Toolbar Button ───────────────────────────────────────────────────────────
-const ToolbarBtn: FC<{ icon: any; onPress: () => void; size?: number }> = ({
+// ─── Toolbar Button ─────────────────────────────────────────────────────────
+const ToolbarBtn: FC<{ icon: any; onPress: () => void; size?: number; accessibilityLabel: string }> = ({
   icon,
   onPress,
   size = 20,
+  accessibilityLabel,
 }) => (
   <TouchableOpacity
     onPress={onPress}
     style={styles.toolbarBtn}
     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     activeOpacity={0.6}
+    accessibilityLabel={accessibilityLabel}
+    accessibilityRole="button"
   >
     <HugeiconsIcon icon={icon} size={size} color="#1d9bf0" strokeWidth={1.5} />
   </TouchableOpacity>
 );
 
-// ─── Audience Badge ───────────────────────────────────────────────────────────
-const AudienceBadge = () => (
-  <View style={styles.audienceBadge}>
+// ─── Audience Badge ─────────────────────────────────────────────────────────
+const AudienceBadge: FC<{ onPress: () => void }> = ({ onPress }) => (
+  <TouchableOpacity onPress={onPress} style={styles.audienceBadge} activeOpacity={0.7}>
     <Text style={styles.audienceBadgeText}>Everyone</Text>
     <Text style={styles.audienceBadgeChevron}>›</Text>
-  </View>
+  </TouchableOpacity>
 );
 
-// ─── Main Screen ─────────────────────────────────────────────────────────────
+// ─── Main Screen ───────────────────────────────────────────────────────────
 export default function CreateScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -235,23 +221,19 @@ export default function CreateScreen() {
 
   const MAX = 280;
   const remaining = MAX - content.length;
+  const segments = useMemo(() => parseSegments(content), [content]);
+  const hashtags = useMemo(() => extractHashtags(content), [content]);
 
   const { mutate: createPost, isPending } = useCreatePost({
     mutation: {
       onSuccess: () => router.push("/(tabs)"),
-      onError: (err: any) =>
-        Alert.alert("Error", err?.message ?? "Could not create post"),
+      onError: (err: any) => Alert.alert("Error", err?.message ?? "Could not create post"),
     },
   });
 
-  const hashtags = useMemo(
-    () => content.match(/#\w+/g)?.map((t) => t.slice(1).toLowerCase()) ?? [],
-    [content]
-  );
-
   const canPost = (content.trim().length > 0 || imageUrl.trim().length > 0) && remaining >= 0;
 
-  const handlePost = () => {
+  const handlePost = useCallback(() => {
     if (!canPost) return;
     createPost({
       data: {
@@ -261,36 +243,45 @@ export default function CreateScreen() {
         hashtags,
       },
     });
-  };
+  }, [canPost, content, imageUrl, location, hashtags, createPost]);
 
   const handleTextChange = useCallback((text: string) => {
-    const safeText = text ?? "";
-    setContent(safeText);
-    const match = safeText.match(/@(\w*)$/i);
+    setContent(text);
+    const match = text.match(/@(\w*)$/i);
     setMentionKeyword(match ? match[1] : null);
   }, []);
 
-  const handleSuggestionPress = useCallback(
-    (u: { id: string; name: string; username: string }) => {
-      const replaced = content.replace(/@(\w*)$/i, `@${u.username} `);
-      setContent(replaced);
-      setMentionKeyword(null);
-    },
-    [content]
-  );
+  const handleSuggestionPress = useCallback((user: UserSuggestion) => {
+    const cursorPos = content.search(/@(\w*)$/i);
+    if (cursorPos !== -1) {
+      const before = content.slice(0, cursorPos);
+      const after = content.slice(content.length); // Preserve anything after
+      setContent(`${before}@${user.username} ${after}`);
+    }
+    setMentionKeyword(null);
+    inputRef.current?.focus();
+  }, [content]);
 
   const displayName = user?.displayName ?? (user as any)?.name ?? "You";
-  const segments = parseSegments(content);
+
+  const pickImage = () => Alert.alert("Image Picker", "Implement image picker");
+  const pickGif = () => Alert.alert("GIF", "Implement GIF picker");
+  // Add other toolbar handlers...
 
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      {/* ── Header ── */}
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.cancelBtn} activeOpacity={0.7}>
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={styles.cancelBtn} 
+          activeOpacity={0.7}
+          accessibilityLabel="Cancel"
+        >
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
 
@@ -299,6 +290,8 @@ export default function CreateScreen() {
           disabled={!canPost || isPending}
           style={[styles.postBtn, (!canPost || isPending) && styles.postBtnDisabled]}
           activeOpacity={0.85}
+          accessibilityLabel="Post"
+          accessibilityState={{ disabled: !canPost || isPending }}
         >
           {isPending ? (
             <ActivityIndicator size="small" color="#fff" />
@@ -313,25 +306,30 @@ export default function CreateScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
       >
         <View style={styles.composer}>
-          {/* Avatar */}
+          {/* Avatar Column */}
           <View style={styles.avatarCol}>
             <UserAvatar uri={user?.avatarUrl} size={42} />
             <View style={styles.threadLine} />
           </View>
 
-          {/* Right column */}
+          {/* Content Column */}
           <View style={styles.composerRight}>
-            {/* Name + Audience */}
             <View style={styles.nameRow}>
-              <Text style={styles.displayName} numberOfLines={1}>
-                {displayName}
-              </Text>
-              <AudienceBadge />
+              <Text style={styles.displayName} numberOfLines={1}>{displayName}</Text>
+              <AudienceBadge onPress={() => Alert.alert("Audience", "Select audience")} />
             </View>
 
-            {/* Mention suggestions */}
+            {/* Preview Rendered Text */}
+            <RenderedText 
+              segments={segments} 
+              fontSize={17} 
+              lineHeight={24} 
+            />
+
+            {/* Mention Suggestions */}
             {mentionKeyword !== null && (
               <MentionSuggestions
                 keyword={mentionKeyword}
@@ -339,58 +337,27 @@ export default function CreateScreen() {
               />
             )}
 
-            {/* Text input with highlight overlay */}
-            <View style={styles.inputWrapper}>
-              {/* Highlight layer */}
-              <Text
-                style={styles.highlightLayer}
-                selectable={false}
-                pointerEvents="none"
-              >
-                {segments.map((seg, i) => {
-                  if (seg.type === "mention" || seg.type === "hashtag") {
-                    return (
-                      <Text key={i} style={styles.highlightToken}>
-                        {seg.text}
-                      </Text>
-                    );
-                  }
-                  return (
-                    <Text key={i} style={styles.highlightPlain}>
-                      {seg.text}
-                    </Text>
-                  );
-                })}
-                {"\u200B"}
-              </Text>
+            {/* Editable Input (plain, below preview) */}
+            <TextInput
+              ref={inputRef}
+              value={content}
+              onChangeText={handleTextChange}
+              style={styles.input}
+              placeholder="What is happening?!"
+              placeholderTextColor="#71767b"
+              multiline
+              maxLength={MAX}
+              autoFocus
+              textAlignVertical="top"
+              selectionColor="#1d9bf0"
+              accessibilityLabel="Write your post"
+            />
 
-              {/* Actual input */}
-              <TextInput
-                ref={inputRef}
-                value={content}
-                onChangeText={handleTextChange}
-                style={styles.input}
-                placeholder="What is happening?!"
-                placeholderTextColor="#71767b"
-                multiline
-                maxLength={MAX + 10}
-                autoFocus
-                selectionColor="#1d9bf0"
-              />
-            </View>
-
-            {/* Image preview */}
+            {/* Image Preview */}
             {imageUrl.trim().length > 0 && (
               <View style={styles.imagePreview}>
-                <Image
-                  source={{ uri: imageUrl }}
-                  style={styles.previewImage}
-                  resizeMode="cover"
-                />
-                <TouchableOpacity
-                  onPress={() => setImageUrl("")}
-                  style={styles.removeImage}
-                >
+                <Image source={{ uri: imageUrl }} style={styles.previewImage} resizeMode="cover" />
+                <TouchableOpacity onPress={() => setImageUrl("")} style={styles.removeImage}>
                   <Text style={styles.removeImageText}>✕</Text>
                 </TouchableOpacity>
               </View>
@@ -401,33 +368,36 @@ export default function CreateScreen() {
               <View style={styles.locationRow}>
                 <HugeiconsIcon icon={Location01Icon} size={14} color="#1d9bf0" />
                 <Text style={styles.locationText}>{location}</Text>
+                <TouchableOpacity onPress={() => setLocation("")} style={styles.removeSmall}>
+                  <Text style={styles.removeText}>✕</Text>
+                </TouchableOpacity>
               </View>
             )}
 
-            {/* Add to thread hint */}
+            {/* Thread Hint */}
             <View style={styles.addThreadRow}>
               <View style={styles.addThreadAvatarSmall} />
-              <Text style={styles.addThreadText}>Add to thread</Text>
+              <Text style={styles.addThreadText}>Add another post to this thread</Text>
             </View>
           </View>
         </View>
       </ScrollView>
 
-      {/* ── Bottom Toolbar ── */}
+      {/* Toolbar */}
       <View style={styles.toolbar}>
         <View style={styles.toolbarLeft}>
-          <ToolbarBtn icon={Image01Icon} onPress={() => {}} />
-          <ToolbarBtn icon={Gif01Icon} onPress={() => {}} />
-          <ToolbarBtn icon={PollIcon} onPress={() => {}} />
-          <ToolbarBtn icon={EmojiIcon} onPress={() => {}} />
-          <ToolbarBtn icon={Calendar01Icon} onPress={() => {}} />
-          <ToolbarBtn icon={Location01Icon} onPress={() => {}} />
+          <ToolbarBtn icon={Image01Icon} onPress={pickImage} accessibilityLabel="Add photo" />
+          <ToolbarBtn icon={Gif01Icon} onPress={pickGif} accessibilityLabel="Add GIF" />
+          <ToolbarBtn icon={PollIcon} onPress={() => {}} accessibilityLabel="Add poll" />
+          <ToolbarBtn icon={EmojiIcon} onPress={() => {}} accessibilityLabel="Add emoji" />
+          <ToolbarBtn icon={Calendar01Icon} onPress={() => {}} accessibilityLabel="Schedule post" />
+          <ToolbarBtn icon={Location01Icon} onPress={() => Alert.alert("Location", "Set location")} accessibilityLabel="Add location" />
         </View>
 
         <View style={styles.toolbarRight}>
           <View style={styles.toolbarDivider} />
           <CharacterArc count={content.length} max={MAX} />
-          <TouchableOpacity style={styles.addPostBtn} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.addPostBtn} activeOpacity={0.7} accessibilityLabel="Add post to thread">
             <Text style={styles.addPostBtnText}>+</Text>
           </TouchableOpacity>
         </View>
@@ -436,7 +406,8 @@ export default function CreateScreen() {
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
+// ─── Styles (Updated for new layout) ────────────────────────────────────────
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const FONT_SIZE = 17;
 const LINE_HEIGHT = 24;
 
@@ -465,7 +436,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   postBtn: {
-    backgroundColor: "#0f1419",
+    backgroundColor: "#1d9bf0",
     borderRadius: 20,
     paddingHorizontal: 18,
     paddingVertical: 8,
@@ -473,37 +444,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   postBtnDisabled: {
-    opacity: 0.35,
+    backgroundColor: "#b8d5ff",
   },
   postBtnText: {
     color: "#fff",
     fontSize: 15,
     fontWeight: "700",
-    letterSpacing: 0.1,
+    letterSpacing: 0.15,
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 80,
+    paddingBottom: 100,
     paddingTop: 4,
   },
   composer: {
     flexDirection: "row",
     paddingHorizontal: 12,
     paddingTop: 12,
-    gap: 10,
+    gap: 12,
   },
   avatarCol: {
     alignItems: "center",
     paddingTop: 2,
   },
   threadLine: {
-    width: 2,
+    width: 2.5,
     flex: 1,
     minHeight: 32,
     marginTop: 8,
-    borderRadius: 1,
+    borderRadius: 1.25,
     backgroundColor: "#cfd9de",
     opacity: 0.6,
     alignSelf: "center",
@@ -516,12 +487,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   displayName: {
     fontSize: 15,
     fontWeight: "700",
     color: "#0f1419",
+    flex: 1,
   },
   audienceBadge: {
     flexDirection: "row",
@@ -543,91 +515,99 @@ const styles = StyleSheet.create({
     color: "#1d9bf0",
     marginLeft: 2,
   },
-  inputWrapper: {
-    position: "relative",
-    minHeight: 80,
-  },
-  highlightLayer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    fontSize: FONT_SIZE,
-    lineHeight: LINE_HEIGHT,
-    color: "transparent",
-  },
-  highlightToken: {
-    color: "#1d9bf0",
-    fontWeight: "500",
-  },
-  highlightPlain: {
-    color: "transparent",
-  },
   input: {
     fontSize: FONT_SIZE,
     lineHeight: LINE_HEIGHT,
     color: "#0f1419",
+    minHeight: 120,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingHorizontal: 4,
+    backgroundColor: "#f7f9fa",
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#e1e8ed",
     textAlignVertical: "top",
-    minHeight: 80,
-    paddingTop: 0,
-    paddingBottom: 0,
-    backgroundColor: "transparent",
   },
   imagePreview: {
-    marginTop: 10,
-    borderRadius: 14,
+    marginTop: 12,
+    borderRadius: 16,
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "#cfd9de",
+    position: "relative",
   },
   previewImage: {
     width: "100%",
     height: 200,
-    borderRadius: 14,
+    borderRadius: 16,
   },
   removeImage: {
     position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor: "rgba(15,20,25,0.75)",
-    borderRadius: 14,
-    width: 30,
-    height: 30,
+    backgroundColor: "rgba(15,20,25,0.9)",
+    borderRadius: 16,
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
   },
   removeImageText: {
     color: "#fff",
-    fontSize: 13,
+    fontSize: 16,
     fontWeight: "700",
   },
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginTop: 8,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#f7f9fa",
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#e1e8ed",
   },
   locationText: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#1d9bf0",
+    flex: 1,
+  },
+  removeSmall: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#71767b",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  removeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
   },
   addThreadRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginTop: 16,
+    marginTop: 20,
+    paddingVertical: 8,
   },
   addThreadAvatarSmall: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: "#cfd9de",
   },
   addThreadText: {
     fontSize: 15,
     color: "#71767b",
+    fontWeight: "400",
   },
   suggestionsContainer: {
+    marginTop: 4,
     marginBottom: 8,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "#cfd9de",
@@ -635,18 +615,17 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: "#fff",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   suggestionItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
     gap: 12,
-    backgroundColor: "#fff",
   },
   suggestionPressed: {
     backgroundColor: "#f7f9f9",
@@ -656,16 +635,16 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e1e8ed",
   },
   suggestionAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "#1d9bf0",
     alignItems: "center",
     justifyContent: "center",
   },
   suggestionAvatarText: {
     color: "#fff",
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
   },
   suggestionName: {
@@ -676,13 +655,13 @@ const styles = StyleSheet.create({
   suggestionUsername: {
     fontSize: 13,
     color: "#71767b",
-    marginTop: 1,
+    marginTop: 2,
   },
   toolbar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "#e1e8ed",
@@ -691,12 +670,12 @@ const styles = StyleSheet.create({
   toolbarLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 2,
+    gap: 4,
   },
   toolbarRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 16,
   },
   toolbarBtn: {
     padding: 8,
@@ -708,18 +687,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#cfd9de",
   },
   addPostBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 1.5,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 2,
     borderColor: "#cfd9de",
     alignItems: "center",
     justifyContent: "center",
   },
   addPostBtnText: {
-    fontSize: 18,
+    fontSize: 20,
     color: "#0f1419",
     fontWeight: "300",
-    lineHeight: 22,
+    lineHeight: 24,
   },
 });
