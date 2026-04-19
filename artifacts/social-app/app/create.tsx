@@ -13,7 +13,6 @@ import {
   Image,
   Pressable,
   StyleSheet,
-  Dimensions,
 } from "react-native";
 import { useCreatePost } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
@@ -30,38 +29,26 @@ import {
 } from "@hugeicons/core-free-icons";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
-type UserSuggestion = { id: string; name: string; username: string };
+type TextSegment = { text: string; type: "plain" | "mention" | "hashtag" };
 
-type TextPart = { text: string; type: "plain" | "mention" | "hashtag" };
-
-// ─── Fixed Helpers ──────────────────────────────────────────────────────────
-const MENTION_REGEX = /@(\w+)/g;
-const HASHTAG_REGEX = /#(\w+)/g;
-
-function parseSegments(text: string): TextPart[] {
+// ─── Helpers ────────────────────────────────────────────────────────────────
+function parseSegments(text: string | undefined | null): TextSegment[] {
   if (!text) return [];
-  const segments: TextPart[] = [];
+  const regex = /(@\w+|#\w+)/g; // ← fixed: no double backslash
+  const segments: TextSegment[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  // Process mentions first
-  MENTION_REGEX.lastIndex = 0;
-  while ((match = MENTION_REGEX.exec(text)) !== null) {
+  while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
       segments.push({ text: text.slice(lastIndex, match.index), type: "plain" });
     }
-    segments.push({ text: match[0], type: "mention" });
-    lastIndex = match.index + match[0].length;
-  }
-
-  // Reset for hashtags (only in remaining text)
-  HASHTAG_REGEX.lastIndex = lastIndex;
-  while ((match = HASHTAG_REGEX.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      segments.push({ text: text.slice(lastIndex, match.index), type: "plain" });
-    }
-    segments.push({ text: match[0], type: "hashtag" });
-    lastIndex = match.index + match[0].length;
+    const token = match[0];
+    segments.push({
+      text: token,
+      type: token.startsWith("@") ? "mention" : "hashtag",
+    });
+    lastIndex = match.index + token.length;
   }
 
   if (lastIndex < text.length) {
@@ -71,29 +58,51 @@ function parseSegments(text: string): TextPart[] {
   return segments;
 }
 
-function extractHashtags(text: string): string[] {
-  const matches = text.match(HASHTAG_REGEX);
-  return matches ? matches.map((m) => m.slice(1).toLowerCase()) : [];
-}
-
-// ─── Rendered Text Display (No Overlay!) ────────────────────────────────────
-const RenderedText: FC<{ segments: TextPart[]; fontSize: number; lineHeight: number }> = ({
-  segments,
+// ─── Highlighted Text Overlay ───────────────────────────────────────────────
+const HighlightedText: FC<{ text: string; fontSize: number; lineHeight: number }> = ({
+  text,
   fontSize,
   lineHeight,
-}) => (
-  <Text style={{ fontSize, lineHeight, opacity: 0.6 }}>
-    {segments.map((seg, i) => {
-      const style = seg.type === "mention" || seg.type === "hashtag"
-        ? { color: "#1d9bf0", fontWeight: "500" }
-        : {};
-      return <Text key={i} style={style}>{seg.text}</Text>;
-    })}
-  </Text>
-);
+}) => {
+  const segments = parseSegments(text);
 
-// ─── Fixed Mention Suggestions ─────────────────────────────────────────────
-const MENTION_SUGGESTIONS: UserSuggestion[] = [
+  return (
+    <Text
+      style={{
+        fontSize,
+        lineHeight,
+        color: "transparent",
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        pointerEvents: "none",
+      }}
+      selectable={false}
+    >
+      {segments.map((seg, i) => {
+        if (seg.type === "mention") {
+          return (
+            <Text key={i} style={{ color: "#1d9bf0", fontWeight: "500" }}>
+              {seg.text}
+            </Text>
+          );
+        }
+        if (seg.type === "hashtag") {
+          return (
+            <Text key={i} style={{ color: "#1d9bf0", fontWeight: "500" }}>
+              {seg.text}
+            </Text>
+          );
+        }
+        return <Text key={i} style={{ color: "transparent" }}>{seg.text}</Text>;
+      })}
+    </Text>
+  );
+};
+
+// ─── Mention Suggestions ────────────────────────────────────────────────────
+const MENTION_SUGGESTIONS = [
   { id: "1", name: "Prasenjeet Howlader", username: "prasenjeet" },
   { id: "2", name: "Rahim Uddin", username: "rahimuddin" },
   { id: "3", name: "Sadia Islam", username: "sadia_islam" },
@@ -103,7 +112,7 @@ const MENTION_SUGGESTIONS: UserSuggestion[] = [
 
 const MentionSuggestions: FC<{
   keyword: string | null;
-  onSuggestionPress: (user: UserSuggestion) => void;
+  onSuggestionPress: (user: { id: string; name: string; username: string }) => void;
 }> = ({ keyword, onSuggestionPress }) => {
   if (!keyword || keyword.trim() === "") return null;
 
@@ -128,10 +137,12 @@ const MentionSuggestions: FC<{
           ]}
         >
           <View style={styles.suggestionAvatar}>
-            <Text style={styles.suggestionAvatarText}>{user.name[0].toUpperCase()}</Text>
+            <Text style={styles.suggestionAvatarText}>
+              {user.name[0].toUpperCase()}
+            </Text>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.suggestionName} numberOfLines={1}>{user.name}</Text>
+          <View>
+            <Text style={styles.suggestionName}>{user.name}</Text>
             <Text style={styles.suggestionUsername}>@{user.username}</Text>
           </View>
         </Pressable>
@@ -140,13 +151,14 @@ const MentionSuggestions: FC<{
   );
 };
 
-// ─── Improved Character Arc ─────────────────────────────────────────────────
+// ─── Character Arc ───────────────────────────────────────────────────────────
 const CharacterArc: FC<{ count: number; max: number }> = ({ count, max }) => {
-  const remaining = Math.max(0, max - count);
-  const pct = Math.min(1, count / max);
+  const remaining = max - count;
+  const pct = count / max;
   const size = 22;
   const stroke = 2.2;
-  const color = remaining === 0 ? "#f4212e" : remaining <= 20 ? "#ffd400" : "#1d9bf0";
+
+  const color = remaining <= 0 ? "#f4212e" : remaining <= 20 ? "#ffd400" : "#1d9bf0";
 
   return (
     <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
@@ -166,7 +178,7 @@ const CharacterArc: FC<{ count: number; max: number }> = ({ count, max }) => {
           height: size,
           borderRadius: size / 2,
           borderWidth: stroke,
-          borderColor: pct === 0 ? "transparent" : color,
+          borderColor: "transparent",
           borderTopColor: pct > 0 ? color : "transparent",
           borderRightColor: pct > 0.25 ? color : "transparent",
           borderBottomColor: pct > 0.5 ? color : "transparent",
@@ -175,39 +187,41 @@ const CharacterArc: FC<{ count: number; max: number }> = ({ count, max }) => {
           transform: [{ rotate: "-90deg" }],
         }}
       />
-      <Text style={{ fontSize: 9, fontWeight: "700", color }}>{remaining}</Text>
+      {remaining <= 20 && remaining > 0 && (
+        <Text style={{ fontSize: 9, fontWeight: "700", color }}>{remaining}</Text>
+      )}
+      {remaining <= 0 && (
+        <Text style={{ fontSize: 9, fontWeight: "700", color }}>{remaining}</Text>
+      )}
     </View>
   );
 };
 
-// ─── Toolbar Button ─────────────────────────────────────────────────────────
-const ToolbarBtn: FC<{ icon: any; onPress: () => void; size?: number; accessibilityLabel: string }> = ({
+// ─── Toolbar Button ───────────────────────────────────────────────────────────
+const ToolbarBtn: FC<{ icon: any; onPress: () => void; size?: number }> = ({
   icon,
   onPress,
   size = 20,
-  accessibilityLabel,
 }) => (
   <TouchableOpacity
     onPress={onPress}
     style={styles.toolbarBtn}
     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     activeOpacity={0.6}
-    accessibilityLabel={accessibilityLabel}
-    accessibilityRole="button"
   >
     <HugeiconsIcon icon={icon} size={size} color="#1d9bf0" strokeWidth={1.5} />
   </TouchableOpacity>
 );
 
-// ─── Audience Badge ─────────────────────────────────────────────────────────
-const AudienceBadge: FC<{ onPress: () => void }> = ({ onPress }) => (
-  <TouchableOpacity onPress={onPress} style={styles.audienceBadge} activeOpacity={0.7}>
+// ─── Audience Badge ───────────────────────────────────────────────────────────
+const AudienceBadge = () => (
+  <View style={styles.audienceBadge}>
     <Text style={styles.audienceBadgeText}>Everyone</Text>
     <Text style={styles.audienceBadgeChevron}>›</Text>
-  </TouchableOpacity>
+  </View>
 );
 
-// ─── Main Screen ───────────────────────────────────────────────────────────
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function CreateScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -221,19 +235,23 @@ export default function CreateScreen() {
 
   const MAX = 280;
   const remaining = MAX - content.length;
-  const segments = useMemo(() => parseSegments(content), [content]);
-  const hashtags = useMemo(() => extractHashtags(content), [content]);
 
   const { mutate: createPost, isPending } = useCreatePost({
     mutation: {
       onSuccess: () => router.push("/(tabs)"),
-      onError: (err: any) => Alert.alert("Error", err?.message ?? "Could not create post"),
+      onError: (err: any) =>
+        Alert.alert("Error", err?.message ?? "Could not create post"),
     },
   });
 
+  const hashtags = useMemo(
+    () => content.match(/#\w+/g)?.map((t) => t.slice(1).toLowerCase()) ?? [],
+    [content]
+  );
+
   const canPost = (content.trim().length > 0 || imageUrl.trim().length > 0) && remaining >= 0;
 
-  const handlePost = useCallback(() => {
+  const handlePost = () => {
     if (!canPost) return;
     createPost({
       data: {
@@ -243,45 +261,36 @@ export default function CreateScreen() {
         hashtags,
       },
     });
-  }, [canPost, content, imageUrl, location, hashtags, createPost]);
+  };
 
   const handleTextChange = useCallback((text: string) => {
-    setContent(text);
-    const match = text.match(/@(\w*)$/i);
+    const safeText = text ?? "";
+    setContent(safeText);
+    const match = safeText.match(/@(\w*)$/i); // ← fixed: \w instead of \\w
     setMentionKeyword(match ? match[1] : null);
-  }, []);
+  }, [setContent, setMentionKeyword]); // ← add deps
 
-  const handleSuggestionPress = useCallback((user: UserSuggestion) => {
-    const cursorPos = content.search(/@(\w*)$/i);
-    if (cursorPos !== -1) {
-      const before = content.slice(0, cursorPos);
-      const after = content.slice(content.length); // Preserve anything after
-      setContent(`${before}@${user.username} ${after}`);
-    }
-    setMentionKeyword(null);
-    inputRef.current?.focus();
-  }, [content]);
+  const handleSuggestionPress = useCallback(
+    (u: { id: string; name: string; username: string }) => {
+      const replaced = content.replace(/@(\w*)$/i, `@${u.username} `); // ← fixed: \w
+      setContent(replaced);
+      setMentionKeyword(null);
+    },
+    [content]
+  );
 
   const displayName = user?.displayName ?? (user as any)?.name ?? "You";
-
-  const pickImage = () => Alert.alert("Image Picker", "Implement image picker");
-  const pickGif = () => Alert.alert("GIF", "Implement GIF picker");
-  // Add other toolbar handlers...
+  const segments = parseSegments(content);
 
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      {/* Header */}
+      {/* ── Header ── */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => router.back()} 
-          style={styles.cancelBtn} 
-          activeOpacity={0.7}
-          accessibilityLabel="Cancel"
-        >
+        <TouchableOpacity onPress={() => router.back()} style={styles.cancelBtn} activeOpacity={0.7}>
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
 
@@ -290,8 +299,6 @@ export default function CreateScreen() {
           disabled={!canPost || isPending}
           style={[styles.postBtn, (!canPost || isPending) && styles.postBtnDisabled]}
           activeOpacity={0.85}
-          accessibilityLabel="Post"
-          accessibilityState={{ disabled: !canPost || isPending }}
         >
           {isPending ? (
             <ActivityIndicator size="small" color="#fff" />
@@ -306,30 +313,25 @@ export default function CreateScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16}
       >
         <View style={styles.composer}>
-          {/* Avatar Column */}
+          {/* Avatar */}
           <View style={styles.avatarCol}>
             <UserAvatar uri={user?.avatarUrl} size={42} />
             <View style={styles.threadLine} />
           </View>
 
-          {/* Content Column */}
+          {/* Right column */}
           <View style={styles.composerRight}>
+            {/* Name + Audience */}
             <View style={styles.nameRow}>
-              <Text style={styles.displayName} numberOfLines={1}>{displayName}</Text>
-              <AudienceBadge onPress={() => Alert.alert("Audience", "Select audience")} />
+              <Text style={styles.displayName} numberOfLines={1}>
+                {displayName}
+              </Text>
+              <AudienceBadge />
             </View>
 
-            {/* Preview Rendered Text */}
-            <RenderedText 
-              segments={segments} 
-              fontSize={17} 
-              lineHeight={24} 
-            />
-
-            {/* Mention Suggestions */}
+            {/* Mention suggestions */}
             {mentionKeyword !== null && (
               <MentionSuggestions
                 keyword={mentionKeyword}
@@ -337,27 +339,58 @@ export default function CreateScreen() {
               />
             )}
 
-            {/* Editable Input (plain, below preview) */}
-            <TextInput
-              ref={inputRef}
-              value={content}
-              onChangeText={handleTextChange}
-              style={styles.input}
-              placeholder="What is happening?!"
-              placeholderTextColor="#71767b"
-              multiline
-              maxLength={MAX}
-              autoFocus
-              textAlignVertical="top"
-              selectionColor="#1d9bf0"
-              accessibilityLabel="Write your post"
-            />
+            {/* Text input with highlight overlay */}
+            <View style={styles.inputWrapper}>
+              {/* Highlight layer */}
+              <Text
+                style={styles.highlightLayer}
+                selectable={false}
+                pointerEvents="none"
+              >
+                {segments.map((seg, i) => {
+                  if (seg.type === "mention" || seg.type === "hashtag") {
+                    return (
+                      <Text key={i} style={styles.highlightToken}>
+                        {seg.text}
+                      </Text>
+                    );
+                  }
+                  return (
+                    <Text key={i} style={styles.highlightPlain}>
+                      {seg.text}
+                    </Text>
+                  );
+                })}
+                {"\u200B"} {/* ← fixed invisible char */}
+              </Text>
 
-            {/* Image Preview */}
+              {/* Actual input */}
+              <TextInput
+                ref={inputRef}
+                value={content}
+                onChangeText={handleTextChange}
+                style={styles.input}
+                placeholder="What is happening?!"
+                placeholderTextColor="#71767b"
+                multiline
+                maxLength={MAX + 10}
+                autoFocus
+                selectionColor="#1d9bf0"
+              />
+            </View>
+
+            {/* Image preview */}
             {imageUrl.trim().length > 0 && (
               <View style={styles.imagePreview}>
-                <Image source={{ uri: imageUrl }} style={styles.previewImage} resizeMode="cover" />
-                <TouchableOpacity onPress={() => setImageUrl("")} style={styles.removeImage}>
+                <Image
+                  source={{ uri: imageUrl }}
+                  style={styles.previewImage}
+                  resizeMode="cover"
+                />
+                <TouchableOpacity
+                  onPress={() => setImageUrl("")}
+                  style={styles.removeImage}
+                >
                   <Text style={styles.removeImageText}>✕</Text>
                 </TouchableOpacity>
               </View>
@@ -368,36 +401,33 @@ export default function CreateScreen() {
               <View style={styles.locationRow}>
                 <HugeiconsIcon icon={Location01Icon} size={14} color="#1d9bf0" />
                 <Text style={styles.locationText}>{location}</Text>
-                <TouchableOpacity onPress={() => setLocation("")} style={styles.removeSmall}>
-                  <Text style={styles.removeText}>✕</Text>
-                </TouchableOpacity>
               </View>
             )}
 
-            {/* Thread Hint */}
+            {/* Add to thread hint */}
             <View style={styles.addThreadRow}>
               <View style={styles.addThreadAvatarSmall} />
-              <Text style={styles.addThreadText}>Add another post to this thread</Text>
+              <Text style={styles.addThreadText}>Add to thread</Text>
             </View>
           </View>
         </View>
       </ScrollView>
 
-      {/* Toolbar */}
+      {/* ── Bottom Toolbar ── */}
       <View style={styles.toolbar}>
         <View style={styles.toolbarLeft}>
-          <ToolbarBtn icon={Image01Icon} onPress={pickImage} accessibilityLabel="Add photo" />
-          <ToolbarBtn icon={Gif01Icon} onPress={pickGif} accessibilityLabel="Add GIF" />
-          <ToolbarBtn icon={PollIcon} onPress={() => {}} accessibilityLabel="Add poll" />
-          <ToolbarBtn icon={EmojiIcon} onPress={() => {}} accessibilityLabel="Add emoji" />
-          <ToolbarBtn icon={Calendar01Icon} onPress={() => {}} accessibilityLabel="Schedule post" />
-          <ToolbarBtn icon={Location01Icon} onPress={() => Alert.alert("Location", "Set location")} accessibilityLabel="Add location" />
+          <ToolbarBtn icon={Image01Icon} onPress={() => {}} />
+          <ToolbarBtn icon={Gif01Icon} onPress={() => {}} />
+          <ToolbarBtn icon={PollIcon} onPress={() => {}} />
+          <ToolbarBtn icon={EmojiIcon} onPress={() => {}} />
+          <ToolbarBtn icon={Calendar01Icon} onPress={() => {}} />
+          <ToolbarBtn icon={Location01Icon} onPress={() => {}} />
         </View>
 
         <View style={styles.toolbarRight}>
           <View style={styles.toolbarDivider} />
           <CharacterArc count={content.length} max={MAX} />
-          <TouchableOpacity style={styles.addPostBtn} activeOpacity={0.7} accessibilityLabel="Add post to thread">
+          <TouchableOpacity style={styles.addPostBtn} activeOpacity={0.7}>
             <Text style={styles.addPostBtnText}>+</Text>
           </TouchableOpacity>
         </View>
@@ -406,8 +436,7 @@ export default function CreateScreen() {
   );
 }
 
-// ─── Styles (Updated for new layout) ────────────────────────────────────────
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+// ─── Styles ──────────────────────────────────────────────────────────────────
 const FONT_SIZE = 17;
 const LINE_HEIGHT = 24;
 
