@@ -20,7 +20,7 @@ import { EmptyState } from "@/components/EmptyState";
 
 type TabId = "foryou" | "following" | "trending";
 
-const TABS: { id: TabId; label: string }[] = [
+const TABS: { id: TabId;label: string } [] = [
   { id: "foryou", label: "For You" },
   { id: "following", label: "Following" },
   { id: "trending", label: "Trending" },
@@ -29,36 +29,42 @@ const TABS: { id: TabId; label: string }[] = [
 export default function FeedScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const [activeTab, setActiveTab] = useState<TabId>("foryou");
-
+  const [activeTab, setActiveTab] = useState < TabId > ("foryou");
+  
   // "For You" & "Trending" — explore endpoint
   const {
     data: exploreData,
     isLoading: exploreLoading,
+    isRefetching: exploreRefetching,
     refetch: refetchExplore,
   } = useGetExplorePosts();
-
+  
   // "Following" — feed endpoint (followed users' posts)
   const {
     data: feedData,
     isLoading: feedLoading,
+    isRefetching: feedRefetching,
     refetch: refetchFeed,
   } = useGetFeed();
-
+  
   // Pick posts & loading state based on active tab
   const isFollowingTab = activeTab === "following";
-  const posts: any[] = isFollowingTab
-    ? (Array.isArray(feedData?.posts) ? feedData.posts : [])
-    : (Array.isArray(exploreData?.posts) ? exploreData.posts : []);
+  const posts: any[] = isFollowingTab ?
+    (Array.isArray(feedData?.posts) ? feedData.posts : []) :
+    (Array.isArray(exploreData?.posts) ? exploreData.posts : []);
   const isLoading = isFollowingTab ? feedLoading : exploreLoading;
+  
+  // FIX 1: `refreshing` was hardcoded to `false` — pull-to-refresh spinner never showed.
+  // Use the isRefetching flag from the active query so the indicator appears correctly.
+  const isRefreshing = isFollowingTab ? feedRefetching : exploreRefetching;
   const refetch = isFollowingTab ? refetchFeed : refetchExplore;
-
+  
   // Sort by likesCount on Trending tab
   const displayPosts =
-    activeTab === "trending"
-      ? [...posts].sort((a: any, b: any) => (b.likesCount ?? 0) - (a.likesCount ?? 0))
-      : posts;
-
+    activeTab === "trending" ?
+    [...posts].sort((a: any, b: any) => (b.likesCount ?? 0) - (a.likesCount ?? 0)) :
+    posts;
+  
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* ── Tab bar ── */}
@@ -121,7 +127,23 @@ export default function FeedScreen() {
         key={activeTab} // remount list when tab changes
         data={displayPosts}
         keyExtractor={(item: any) => item.id}
-        renderItem={({ item }) => <View {...item} />}
+        // FIX 2: `renderItem` was `<View {...item} />` which spread post data as View
+        // props — nothing would render. Now correctly renders a PostCard per item.
+        renderItem={({ item }) => (
+          <PostCard
+            id={item.id}
+            author={item.author}
+            content={item.content}
+            imageUrl={item.imageUrl}
+            hashtags={item.hashtags}
+            likesCount={item.likesCount ?? 0}
+            commentsCount={item.commentsCount ?? 0}
+            repliesCount={item.repliesCount ?? 0}
+            isLiked={item.isLiked ?? false}
+            isSaved={item.isSaved ?? false}
+            createdAt={item.createdAt}
+          />
+        )}
         ListEmptyComponent={
           isLoading ? (
             <View style={{ paddingVertical: 80, alignItems: "center" }}>
@@ -149,7 +171,7 @@ export default function FeedScreen() {
         }
         refreshControl={
           <RefreshControl
-            refreshing={false}
+            refreshing={isRefreshing}
             onRefresh={refetch}
             tintColor={colors.primary}
           />

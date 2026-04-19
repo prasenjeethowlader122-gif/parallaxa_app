@@ -19,6 +19,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "./UserAvatar";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -37,10 +38,12 @@ interface PostCardProps {
   imageUrl?: string | null;
   hashtags?: string[];
   likesCount: number;
-  // BUG FIX: The API schema (api.schemas.ts) defines the Post type with `repliesCount`,
-  // not `commentsCount`. The old prop name `commentsCount` was mismatched with what
-  // the API actually returns, meaning the reply count would always be undefined/0.
-  // Renamed to `repliesCount` to match the Post schema exactly.
+  // Both fields exist on the Post schema and are distinct:
+  // - commentsCount: top-level comments on the post
+  // - repliesCount:  nested replies to comments
+  // The previous code dropped commentsCount entirely and used repliesCount for
+  // the comment button, which would show the wrong number.
+  commentsCount: number;
   repliesCount: number;
   isLiked: boolean;
   isSaved: boolean;
@@ -70,14 +73,14 @@ function formatCount(n: number): string {
 }
 
 // ─── Rich content renderer (mention + hashtag highlight) ─────────────────────
-function RichText({ text }: { text: string }) {
+function RichText({ text, highlightColor }: { text: string; highlightColor: string }) {
   const parts = text.split(/(@\w+|#\w+)/g);
   return (
     <Text style={styles.content}>
       {parts.map((part, i) => {
         if (/^(@|#)\w+/.test(part)) {
           return (
-            <Text key={i} style={styles.contentHighlight}>
+            <Text key={i} style={[styles.contentHighlight, { color: highlightColor }]}>
               {part}
             </Text>
           );
@@ -118,7 +121,7 @@ function ActionBtn({
         strokeWidth={1.5}
       />
       {count !== undefined && count > 0 && (
-        <Text style={[styles.actionCount, active && activeColor ? { color: activeColor } : null]}>
+        <Text style={[styles.actionCount, active && activeColor ? { color } : null]}>
           {formatCount(count)}
         </Text>
       )}
@@ -134,7 +137,7 @@ export function PostCard({
   imageUrl,
   hashtags = [],
   likesCount: initialLikesCount,
-  // BUG FIX (continued): Using corrected prop name `repliesCount`
+  commentsCount,
   repliesCount,
   isLiked: initialIsLiked,
   isSaved: initialIsSaved,
@@ -144,6 +147,7 @@ export function PostCard({
   onComment,
 }: PostCardProps) {
   const router = useRouter();
+  const colors = useColors();
 
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
@@ -176,7 +180,7 @@ export function PostCard({
     <TouchableOpacity
       activeOpacity={1}
       onPress={() => router.push({ pathname: "/post/[id]", params: { id } })}
-      style={styles.card}
+      style={[styles.card, { backgroundColor: colors.background, borderBottomColor: colors.border }]}
     >
       {/* ── Left column: avatar + thread line ── */}
       <View style={styles.leftCol}>
@@ -186,7 +190,7 @@ export function PostCard({
         >
           <UserAvatar uri={author.avatarUrl} size={40} />
         </TouchableOpacity>
-        <View style={styles.threadLine} />
+        <View style={[styles.threadLine, { backgroundColor: colors.border }]} />
       </View>
 
       {/* ── Right column ── */}
@@ -199,7 +203,7 @@ export function PostCard({
             activeOpacity={0.75}
           >
             <View style={styles.nameRow}>
-              <Text style={styles.displayName} numberOfLines={1}>
+              <Text style={[styles.displayName, { color: colors.foreground }]} numberOfLines={1}>
                 {author.displayName}
               </Text>
               {author.isVerified && (
@@ -222,11 +226,11 @@ export function PostCard({
         </View>
 
         {/* Content */}
-        {content ? <RichText text={content} /> : null}
+        {content ? <RichText text={content} highlightColor={colors.primary} /> : null}
 
         {/* Image */}
         {imageUrl ? (
-          <View style={styles.imageWrap}>
+          <View style={[styles.imageWrap, { borderColor: colors.border }]}>
             <Image
               source={{ uri: imageUrl }}
               style={styles.image}
@@ -240,7 +244,7 @@ export function PostCard({
           <View style={styles.hashtagRow}>
             {hashtags.slice(0, 4).map((tag) => (
               <View key={tag} style={styles.hashtagPill}>
-                <Text style={styles.hashtagPillText}>#{tag}</Text>
+                <Text style={[styles.hashtagPillText, { color: colors.primary }]}>#{tag}</Text>
               </View>
             ))}
           </View>
@@ -248,10 +252,10 @@ export function PostCard({
 
         {/* Actions */}
         <View style={styles.actions}>
-          {/* BUG FIX (continued): Was `commentsCount` — now correctly `repliesCount` */}
+          {/* commentsCount = top-level comments; correct field for the comment button */}
           <ActionBtn
             icon={MessageMultiple01Icon}
-            count={repliesCount}
+            count={commentsCount}
             onPress={() => onComment?.(id)}
           />
           <ActionBtn
@@ -291,8 +295,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#eff3f4",
-    backgroundColor: "#fff",
   },
 
   // Left column
@@ -306,7 +308,6 @@ const styles = StyleSheet.create({
     minHeight: 12,
     marginTop: 4,
     borderRadius: 1,
-    backgroundColor: "#cfd9de",
     opacity: 0.4,
   },
 
@@ -336,7 +337,6 @@ const styles = StyleSheet.create({
   displayName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#0f1419",
     flexShrink: 1,
   },
   meta: {
@@ -354,7 +354,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   contentHighlight: {
-    color: "#1d9bf0",
     fontWeight: "500",
   },
 
@@ -363,7 +362,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#cfd9de",
     marginBottom: 10,
   },
   image: {
@@ -386,7 +384,6 @@ const styles = StyleSheet.create({
   },
   hashtagPillText: {
     fontSize: 13,
-    color: "#1d9bf0",
     fontWeight: "500",
   },
 
