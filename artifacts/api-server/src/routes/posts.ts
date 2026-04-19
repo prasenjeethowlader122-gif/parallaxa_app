@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   postsTable, usersTable, likesTable, savedPostsTable,
-  followsTable, hashtagsTable, postHashtagsTable
+  followsTable, hashtagsTable, postHashtagsTable, notificationsTable
 } from "@workspace/db";
 import { eq, and, desc, inArray, sql, isNull } from "drizzle-orm";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
@@ -38,7 +38,7 @@ async function formatPost(post: typeof postsTable.$inferSelect, myId: string) {
     hashtags: hashtagRows.map((h) => h.name),
     likesCount: post.likesCount,
     repliesCount: post.repliesCount,
-    commentsCount: post.repliesCount, // alias for compatibility
+    commentsCount: post.repliesCount,
     isLiked: !!liked,
     isSaved: !!saved,
     createdAt: post.createdAt,
@@ -84,7 +84,6 @@ router.post("/posts", authenticate, async (req: AuthRequest, res) => {
       // Notify parent post author
       const [parent] = await db.select().from(postsTable).where(eq(postsTable.id, parentPostId)).limit(1);
       if (parent && parent.userId !== req.userId) {
-        const { notificationsTable } = await import("@workspace/db");
         await db.insert(notificationsTable).values({
           id: generateId(),
           userId: parent.userId,
@@ -213,7 +212,7 @@ router.get("/feed", authenticate, async (req: AuthRequest, res) => {
         and(
           inArray(postsTable.userId, followingIds),
           eq(postsTable.isArchived, false),
-          isNull(postsTable.parentPostId), // top-level posts only — fixes 500 from replies leaking in
+          isNull(postsTable.parentPostId),
         )
       )
       .orderBy(desc(postsTable.createdAt))
@@ -236,7 +235,7 @@ router.get("/explore", authenticate, async (req: AuthRequest, res) => {
       .where(
         and(
           eq(postsTable.isArchived, false),
-          isNull(postsTable.parentPostId), // top-level posts only
+          isNull(postsTable.parentPostId),
         )
       )
       .orderBy(desc(postsTable.likesCount), desc(postsTable.createdAt))
