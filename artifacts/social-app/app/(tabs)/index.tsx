@@ -47,17 +47,17 @@ export default function FeedScreen() {
 
   // active tab অনুযায়ী posts ও loading state বাছাই
   const isFollowingTab = activeTab === "following";
-  const posts = isFollowingTab
-    ? (feedData?.posts ?? [])
-    : (exploreData?.posts ?? []);
+  const posts: any[] = isFollowingTab ?
+  (Array.isArray(feedData?.posts) ? feedData.posts : []) :
+  (Array.isArray(exploreData?.posts) ? exploreData.posts : []);
   const isLoading = isFollowingTab ? feedLoading : exploreLoading;
   const refetch = isFollowingTab ? refetchFeed : refetchExplore;
 
   // Trending ট্যাবে likesCount অনুযায়ী sort করো
   const displayPosts =
-    activeTab === "trending"
-      ? [...posts].sort((a: any, b: any) => (b.likesCount ?? 0) - (a.likesCount ?? 0))
-      : posts;
+  activeTab === "trending"
+    ? [...posts].sort((a: any, b: any) => (b.likesCount ?? 0) - (a.likesCount ?? 0))
+    : posts ?? [];  // add fallback here too
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
