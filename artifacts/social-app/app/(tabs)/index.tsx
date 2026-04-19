@@ -31,7 +31,7 @@ export default function FeedScreen() {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabId>("foryou");
 
-  // "For You" ও "Trending" — explore endpoint
+  // "For You" & "Trending" — explore endpoint
   const {
     data: exploreData,
     isLoading: exploreLoading,
@@ -45,23 +45,23 @@ export default function FeedScreen() {
     refetch: refetchFeed,
   } = useGetFeed();
 
-  // active tab অনুযায়ী posts ও loading state বাছাই
+  // Pick posts & loading state based on active tab
   const isFollowingTab = activeTab === "following";
-  const posts: any[] = isFollowingTab ?
-  (Array.isArray(feedData?.posts) ? feedData.posts : []) :
-  (Array.isArray(exploreData?.posts) ? exploreData.posts : []);
+  const posts: any[] = isFollowingTab
+    ? (Array.isArray(feedData?.posts) ? feedData.posts : [])
+    : (Array.isArray(exploreData?.posts) ? exploreData.posts : []);
   const isLoading = isFollowingTab ? feedLoading : exploreLoading;
   const refetch = isFollowingTab ? refetchFeed : refetchExplore;
 
-  // Trending ট্যাবে likesCount অনুযায়ী sort করো
+  // Sort by likesCount on Trending tab
   const displayPosts =
-  activeTab === "trending"
-    ? [...posts].sort((a: any, b: any) => (b.likesCount ?? 0) - (a.likesCount ?? 0))
-    : posts ?? [];  // add fallback here too
+    activeTab === "trending"
+      ? [...posts].sort((a: any, b: any) => (b.likesCount ?? 0) - (a.likesCount ?? 0))
+      : posts;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* ── ট্যাব বার ── */}
+      {/* ── Tab bar ── */}
       <View
         style={{
           flexDirection: "row",
@@ -107,9 +107,18 @@ export default function FeedScreen() {
           );
         })}
       </View>
-      {posts.length &&  (
-              <FlatList
-        key={activeTab} // tab বদলালে list পুরো remount হবে
+
+      {/*
+        BUG FIX 1: Previously `{posts.length && <FlatList />}` — when posts.length
+        is 0 (falsy), React renders the number 0 on screen instead of nothing.
+
+        BUG FIX 2: The FlatList was conditionally rendered only when posts.length > 0,
+        which meant ListEmptyComponent (loading spinner + empty states) NEVER appeared
+        because the FlatList itself was hidden. FlatList must always be rendered so its
+        ListEmptyComponent can show loading indicators and empty states properly.
+      */}
+      <FlatList
+        key={activeTab} // remount list when tab changes
         data={displayPosts}
         keyExtractor={(item: any) => item.id}
         renderItem={({ item }) => <PostCard {...item} />}
@@ -148,9 +157,6 @@ export default function FeedScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
       />
-      )}
-      
-
     </View>
   );
 }

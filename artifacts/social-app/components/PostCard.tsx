@@ -37,7 +37,11 @@ interface PostCardProps {
   imageUrl?: string | null;
   hashtags?: string[];
   likesCount: number;
-  commentsCount: number;
+  // BUG FIX: The API schema (api.schemas.ts) defines the Post type with `repliesCount`,
+  // not `commentsCount`. The old prop name `commentsCount` was mismatched with what
+  // the API actually returns, meaning the reply count would always be undefined/0.
+  // Renamed to `repliesCount` to match the Post schema exactly.
+  repliesCount: number;
   isLiked: boolean;
   isSaved: boolean;
   createdAt: string;
@@ -130,7 +134,8 @@ export function PostCard({
   imageUrl,
   hashtags = [],
   likesCount: initialLikesCount,
-  commentsCount,
+  // BUG FIX (continued): Using corrected prop name `repliesCount`
+  repliesCount,
   isLiked: initialIsLiked,
   isSaved: initialIsSaved,
   createdAt,
@@ -181,7 +186,6 @@ export function PostCard({
         >
           <UserAvatar uri={author.avatarUrl} size={40} />
         </TouchableOpacity>
-        {/* thread line — subtle, only when there might be replies */}
         <View style={styles.threadLine} />
       </View>
 
@@ -244,9 +248,10 @@ export function PostCard({
 
         {/* Actions */}
         <View style={styles.actions}>
+          {/* BUG FIX (continued): Was `commentsCount` — now correctly `repliesCount` */}
           <ActionBtn
             icon={MessageMultiple01Icon}
-            count={commentsCount}
+            count={repliesCount}
             onPress={() => onComment?.(id)}
           />
           <ActionBtn

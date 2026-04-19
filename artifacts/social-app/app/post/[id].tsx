@@ -7,7 +7,6 @@ import {
   CheckmarkBadge01Icon,
   Bookmark01Icon,
   MoreHorizontalIcon,
-  ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useCallback, useEffect } from "react";
@@ -32,10 +31,13 @@ import {
   useUnlikePost,
 } from "@workspace/api-client-react";
 import type { Post } from "@workspace/api-client-react";
+// BUG FIX 1: Removed duplicate import. Previously `useAuth` was imported twice:
+//   import { useAuth } from "@/context/AuthContext";
+//   import { useAuth as useAuthContext } from "@/context/AuthContext";
+// Both pointed to the exact same module. One alias is sufficient.
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
 import { getApiBaseUrl } from "@/lib/apiUrl";
-import { useAuth as useAuthContext } from "@/context/AuthContext";
 
 const { width } = Dimensions.get("window");
 
@@ -59,7 +61,8 @@ const X = {
 function useGetReplies(postId: string) {
   const [data, setData] = useState<{ posts: Post[] } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuthContext();
+  // BUG FIX 1 (continued): Now using the single `useAuth` import consistently
+  const { user } = useAuth();
 
   const refetch = useCallback(async () => {
     if (!postId) return;
@@ -257,8 +260,22 @@ export default function PostDetailScreen() {
 
       {/* ── Action bar ── */}
       <View style={s.actionBar}>
-        {/* Reply */}
-        <TouchableOpacity style={s.actionBtn} activeOpacity={0.7}>
+        {/*
+          BUG FIX 2: The Reply button had no onPress handler, so tapping it did nothing
+          even though replyingTo state exists to track which post is being replied to.
+          Fixed by wiring up onPress to focus the reply composer on the main post.
+        */}
+        <TouchableOpacity
+          style={s.actionBtn}
+          activeOpacity={0.7}
+          onPress={() =>
+            setReplyingTo(
+              replyingTo?.postId === id
+                ? null
+                : { postId: id!, username: post?.author?.username ?? "" }
+            )
+          }
+        >
           <HugeiconsIcon icon={MessageCircle01Icon} size={20} strokeWidth={1.75} color={X.textSub} />
         </TouchableOpacity>
 
