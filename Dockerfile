@@ -54,7 +54,7 @@ COPY --from=expo-builder /app/artifacts/social-app/web-export ./artifacts/api-se
 RUN echo '#!/bin/sh\n\
 set -e\n\
 echo "Running database migrations..."\n\
-pnpm --filter @workspace/db run push\n\
+pnpm --filter @workspace/db run push-force\n\
 \n\
 # Clear expo cache and start in background if needed, or just start API\n\
 echo "Starting API server..."\n\
