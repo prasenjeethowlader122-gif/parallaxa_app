@@ -72,7 +72,7 @@ export default function RootLayout() {
   // ── X logo SVG placeholder (uses the Image asset if available) ──
   const XLogo = () => (
     <View style={{ width: 28, height: 28, justifyContent: "center", alignItems: "center" }}>
-      <Image source={require('@/assets/images/placeholder-logo.svg')} style={{ width: 40, height: 40 }} />
+      <Image source={require('@/assets/images/st.svg')} style={{ width: 40, height: 40 }} />
     </View>
   );
 
@@ -102,7 +102,8 @@ export default function RootLayout() {
             onPress={() => setMenuOpen(true)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <UserAvatar uri={user?.avatarUrl} size={34} />
+            <HugeiconsIcon icon={Menu01Icon} size={22} strokeWidth={2} color="#0f1419" />
+
           </TouchableOpacity>
 
           {/* Centre: X logo */}
