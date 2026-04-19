@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import React, { useMemo, useState, FC, useCallback } from "react";
+import React, { useMemo, useState, FC, useCallback, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,6 +12,7 @@ import {
   View,
   Image,
   Pressable,
+  Modal,
 } from "react-native";
 import { useCreatePost } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
@@ -21,10 +22,12 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
   Image01Icon,
   Location01Icon,
-  ArrowLeft01Icon
+  ArrowLeft01Icon,
+  Cancel01Icon,
 } from "@hugeicons/core-free-icons";
 
-const mentionSuggestions = [
+// ─── Static mention suggestions (replace with real API search later) ──────────
+const MENTION_SUGGESTIONS = [
   { id: "1", name: "Prasenjeet Howlader" },
   { id: "2", name: "Rahim" },
   { id: "3", name: "Sadia" },
@@ -32,88 +35,271 @@ const mentionSuggestions = [
   { id: "5", name: "Ayesha" },
 ];
 
+// ─── Mention suggestion dropdown ─────────────────────────────────────────────
 const MentionSuggestions: FC<{
   keyword: string | null;
-  onSuggestionPress: (user: { id: string; name: string }) => void;
-}> = ({ keyword, onSuggestionPress }) => {
-  if (keyword == null || keyword.trim() === "") return null;
-  
-  const filtered = mentionSuggestions.filter((u) =>
-    u.name.toLowerCase().includes(keyword.toLowerCase().trim())
+  onSelect: (user: { id: string; name: string }) => void;
+}> = ({ keyword, onSelect }) => {
+  if (!keyword || keyword.trim() === "") return null;
+
+  const filtered = MENTION_SUGGESTIONS.filter((u) =>
+    u.name.toLowerCase().includes(keyword.toLowerCase().trim()),
   );
-  
+
   if (filtered.length === 0) return null;
-  
+
   return (
     <View
       style={{
-        marginTop: 4,
         marginBottom: 8,
         borderWidth: 1,
         borderColor: "#e1e8ed",
-        borderRadius: 8,
+        borderRadius: 10,
         overflow: "hidden",
         backgroundColor: "#fff",
+        elevation: 3,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
       }}
     >
-      {filtered.slice(0, 5).map((user) => (
+      {filtered.slice(0, 5).map((user, index) => (
         <Pressable
           key={user.id}
-          onPress={() => onSuggestionPress(user)}
-          style={({ pressed }) => [
-            {
-              paddingHorizontal: 12,
-              paddingVertical: 12,
-              backgroundColor: pressed ? "#f7f9fa" : "#fff",
-              borderBottomWidth: 0.5,
-              borderBottomColor: "#e1e8ed",
-            },
-            filtered[filtered.length - 1].id === user.id && { borderBottomWidth: 0 },
-          ]}
+          onPress={() => onSelect(user)}
+          style={({ pressed }) => ({
+            paddingHorizontal: 14,
+            paddingVertical: 11,
+            backgroundColor: pressed ? "#f7f9fa" : "#fff",
+            borderBottomWidth: index < filtered.length - 1 ? 0.5 : 0,
+            borderBottomColor: "#e1e8ed",
+          })}
         >
-          <Text style={{ fontSize: 15, color: "#14171a", fontWeight: "400" }}>
-            {user.name}
-          </Text>
+          <Text style={{ fontSize: 15, color: "#14171a" }}>{user.name}</Text>
         </Pressable>
       ))}
     </View>
   );
 };
 
+// ─── Image URL input modal ────────────────────────────────────────────────────
+const ImageUrlModal: FC<{
+  visible: boolean;
+  value: string;
+  onChange: (v: string) => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+}> = ({ visible, value, onChange, onConfirm, onCancel }) => (
+  <Modal
+    visible={visible}
+    transparent
+    animationType="fade"
+    onRequestClose={onCancel}
+  >
+    <Pressable
+      style={{
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.4)",
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 24,
+      }}
+      onPress={onCancel}
+    >
+      <Pressable
+        onPress={(e) => e.stopPropagation()}
+        style={{
+          width: "100%",
+          backgroundColor: "#fff",
+          borderRadius: 18,
+          padding: 20,
+          gap: 14,
+        }}
+      >
+        <Text style={{ fontSize: 17, fontWeight: "700", color: "#14171a" }}>
+          Add image URL
+        </Text>
+        <TextInput
+          value={value}
+          onChangeText={onChange}
+          placeholder="https://example.com/image.jpg"
+          placeholderTextColor="#aab8c2"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="url"
+          returnKeyType="done"
+          onSubmitEditing={onConfirm}
+          style={{
+            borderWidth: 1,
+            borderColor: "#e1e8ed",
+            borderRadius: 10,
+            paddingHorizontal: 14,
+            paddingVertical: 11,
+            fontSize: 15,
+            color: "#14171a",
+          }}
+        />
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <TouchableOpacity
+            onPress={onCancel}
+            style={{
+              flex: 1,
+              paddingVertical: 11,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: "#e1e8ed",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 15, color: "#657786" }}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onConfirm}
+            disabled={!value.trim()}
+            style={{
+              flex: 1,
+              paddingVertical: 11,
+              borderRadius: 10,
+              backgroundColor: value.trim() ? "#1d9bf0" : "#aab8c2",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 15, fontWeight: "600", color: "#fff" }}>
+              Add
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </Pressable>
+    </Pressable>
+  </Modal>
+);
+
+// ─── Location input modal ─────────────────────────────────────────────────────
+const LocationModal: FC<{
+  visible: boolean;
+  value: string;
+  onChange: (v: string) => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+}> = ({ visible, value, onChange, onConfirm, onCancel }) => (
+  <Modal
+    visible={visible}
+    transparent
+    animationType="fade"
+    onRequestClose={onCancel}
+  >
+    <Pressable
+      style={{
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.4)",
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 24,
+      }}
+      onPress={onCancel}
+    >
+      <Pressable
+        onPress={(e) => e.stopPropagation()}
+        style={{
+          width: "100%",
+          backgroundColor: "#fff",
+          borderRadius: 18,
+          padding: 20,
+          gap: 14,
+        }}
+      >
+        <Text style={{ fontSize: 17, fontWeight: "700", color: "#14171a" }}>
+          Add location
+        </Text>
+        <TextInput
+          value={value}
+          onChangeText={onChange}
+          placeholder="Dhaka, Bangladesh"
+          placeholderTextColor="#aab8c2"
+          returnKeyType="done"
+          onSubmitEditing={onConfirm}
+          style={{
+            borderWidth: 1,
+            borderColor: "#e1e8ed",
+            borderRadius: 10,
+            paddingHorizontal: 14,
+            paddingVertical: 11,
+            fontSize: 15,
+            color: "#14171a",
+          }}
+        />
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <TouchableOpacity
+            onPress={onCancel}
+            style={{
+              flex: 1,
+              paddingVertical: 11,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: "#e1e8ed",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 15, color: "#657786" }}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onConfirm}
+            disabled={!value.trim()}
+            style={{
+              flex: 1,
+              paddingVertical: 11,
+              borderRadius: 10,
+              backgroundColor: value.trim() ? "#1d9bf0" : "#aab8c2",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 15, fontWeight: "600", color: "#fff" }}>
+              Add
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </Pressable>
+    </Pressable>
+  </Modal>
+);
+
+// ─── Main screen ──────────────────────────────────────────────────────────────
 export default function CreateScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user } = useAuth();
-  
+
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [imageDraft, setImageDraft] = useState("");
   const [location, setLocation] = useState("");
+  const [locationDraft, setLocationDraft] = useState("");
   const [mentionKeyword, setMentionKeyword] = useState<string | null>(null);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+
   const { mutate: createPost, isPending } = useCreatePost({
     mutation: {
       onSuccess: () => {
-        router.push("/(tabs)");
+        router.replace("/(tabs)");
       },
       onError: (err: any) =>
         Alert.alert("Error", err?.message ?? "Could not create post"),
     },
   });
-  
+
   const hashtags = useMemo(
-    () => content.match(/#\w+/g)?.map((t) => t.slice(1).toLowerCase()) || [],
-    [content]
+    () =>
+      content.match(/#\w+/g)?.map((t) => t.slice(1).toLowerCase()) ?? [],
+    [content],
   );
-  
+
+  const canPost =
+    !isPending && (content.trim().length > 0 || imageUrl.trim().length > 0);
+
   const handlePost = () => {
-    if (!content.trim() && !imageUrl.trim()) return;
-    
+    if (!canPost) return;
     createPost({
       data: {
         content: content.trim() || undefined,
@@ -124,27 +310,52 @@ export default function CreateScreen() {
     });
   };
 
+  // Detect @mention as the user types
   const handleTextChange = useCallback((text: string) => {
     setContent(text);
-    
-    // Simple mention detection - find last @word
-    const match = text.match(/@(\w+)$/i);
-    if (match) {
-      setMentionKeyword(match[1]);
-      setShowSuggestions(true);
-    } else {
-      setMentionKeyword(null);
-      setShowSuggestions(false);
-    }
+    const match = text.match(/@(\w*)$/i);
+    setMentionKeyword(match ? match[1] : null);
   }, []);
 
-  const handleSuggestionPress = useCallback((user: { id: string; name: string }) => {
-    const parts = content.split(/(@\w+)$/i);
-    const beforeMention = parts[0] || "";
-    setContent(`${beforeMention}@${user.name} `);
-    setMentionKeyword(null);
-    setShowSuggestions(false);
-  }, [content]);
+  // Insert the selected mention into the text
+  const handleSuggestionSelect = useCallback(
+    (suggestionUser: { id: string; name: string }) => {
+      setContent((prev) => {
+        const before = prev.replace(/@\w*$/i, "");
+        return `${before}@${suggestionUser.name} `;
+      });
+      setMentionKeyword(null);
+    },
+    [],
+  );
+
+  // Image modal handlers
+  const openImageModal = () => {
+    setImageDraft(imageUrl);
+    setShowImageModal(true);
+  };
+  const confirmImage = () => {
+    setImageUrl(imageDraft.trim());
+    setShowImageModal(false);
+  };
+  const cancelImage = () => {
+    setImageDraft("");
+    setShowImageModal(false);
+  };
+
+  // Location modal handlers
+  const openLocationModal = () => {
+    setLocationDraft(location);
+    setShowLocationModal(true);
+  };
+  const confirmLocation = () => {
+    setLocation(locationDraft.trim());
+    setShowLocationModal(false);
+  };
+  const cancelLocation = () => {
+    setLocationDraft("");
+    setShowLocationModal(false);
+  };
 
   return (
     <KeyboardAvoidingView
@@ -152,6 +363,7 @@ export default function CreateScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
+      {/* ── Header ── */}
       <View
         style={{
           flexDirection: "row",
@@ -164,122 +376,178 @@ export default function CreateScreen() {
           backgroundColor: "#fff",
         }}
       >
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <HugeiconsIcon
             icon={ArrowLeft01Icon}
             size={24}
             color={colors.foreground}
             strokeWidth={1.5}
-          />        </TouchableOpacity>
+          />
+        </TouchableOpacity>
+
         <TouchableOpacity
-          className = 'rounded-2xl px-4 p-2 bg-gray-900 text-white'
           onPress={handlePost}
-          disabled={isPending || (!content.trim() && !imageUrl.trim())}
+          disabled={!canPost}
           style={{
-            opacity: isPending || (!content.trim() && !imageUrl.trim()) ? 0.5 : 1,
+            backgroundColor: canPost ? "#0f1419" : "#aab8c2",
+            paddingHorizontal: 20,
+            paddingVertical: 8,
+            borderRadius: 20,
+            minWidth: 72,
+            alignItems: "center",
           }}
         >
           {isPending ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}>
+            <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>
               Post
             </Text>
           )}
         </TouchableOpacity>
-        
       </View>
 
-      <ScrollView 
-        contentContainerStyle={{ paddingBottom: 120 }} 
+      {/* ── Body ── */}
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+        <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
           <View style={{ flexDirection: "row", gap: 12 }}>
-            <UserAvatar uri={user?.avatarUrl} size={40} />
-            
-            <View style={{ flex: 1 }}>
-              <Text style={{ 
-                fontSize: 15, 
-                fontWeight: "700", 
-                color: "#14171a", 
-                marginBottom: 4 
-              }}>
-                {user?.name || "Your Name"}
+            {/* Avatar column */}
+            <View style={{ alignItems: "center" }}>
+              <UserAvatar uri={user?.avatarUrl} size={42} />
+              {/* Thread line */}
+              <View
+                style={{
+                  width: 2,
+                  flex: 1,
+                  marginTop: 6,
+                  borderRadius: 1,
+                  backgroundColor: "#e1e8ed",
+                  minHeight: 24,
+                }}
+              />
+            </View>
+
+            {/* Content column */}
+            <View style={{ flex: 1, paddingBottom: 16 }}>
+              {/* Display name */}
+              <Text
+                style={{
+                  fontSize: 15,
+                  fontWeight: "700",
+                  color: "#14171a",
+                  marginBottom: 2,
+                }}
+              >
+                {user?.displayName || "You"}
               </Text>
-              
-              <View style={{ 
-                flexDirection: "row", 
-                alignItems: "center", 
-                paddingHorizontal: 8, 
-                paddingVertical: 4, 
-                borderWidth: 1, 
-                borderColor: "#b8d7f1", 
-                borderRadius: 20, 
-                backgroundColor: "#e8f5fd",
-                alignSelf: "flex-start",
-                marginBottom: 12,
-              }}>
-                <Text style={{
-                  color: "#1d9bf0",
-                  fontSize: 10,
-                  fontWeight: "500",
-                }}>
+
+              {/* Audience badge */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
+                  borderWidth: 1,
+                  borderColor: "#b8d7f1",
+                  borderRadius: 20,
+                  backgroundColor: "#e8f5fd",
+                  alignSelf: "flex-start",
+                  marginBottom: 10,
+                }}
+              >
+                <Text
+                  style={{ color: "#1d9bf0", fontSize: 11, fontWeight: "500" }}
+                >
                   Everyone can reply
                 </Text>
               </View>
 
-              {showSuggestions && (
-                <MentionSuggestions 
-                  keyword={mentionKeyword} 
-                  onSuggestionPress={handleSuggestionPress} 
-                />
+              {/* Mention suggestions */}
+              <MentionSuggestions
+                keyword={mentionKeyword}
+                onSelect={handleSuggestionSelect}
+              />
+
+              {/* Text input */}
+              <TextInput
+                value={content}
+                onChangeText={handleTextChange}
+                style={{
+                  fontSize: 18,
+                  lineHeight: 26,
+                  color: "#14171a",
+                  textAlignVertical: "top",
+                  minHeight: 100,
+                  maxHeight: 400,
+                  padding: 0,
+                }}
+                placeholder="What is happening?!"
+                placeholderTextColor="#aab8c2"
+                multiline
+                maxLength={280}
+                autoFocus
+              />
+
+              {/* Location tag (shown inline when set) */}
+              {location.trim().length > 0 && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginTop: 8,
+                    gap: 4,
+                    alignSelf: "flex-start",
+                    backgroundColor: "#e8f5fd",
+                    borderRadius: 20,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                  }}
+                >
+                  <HugeiconsIcon
+                    icon={Location01Icon}
+                    size={13}
+                    color="#1d9bf0"
+                  />
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: "#1d9bf0",
+                      fontWeight: "500",
+                    }}
+                  >
+                    {location}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setLocation("")}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  >
+                    <HugeiconsIcon
+                      icon={Cancel01Icon}
+                      size={12}
+                      color="#1d9bf0"
+                    />
+                  </TouchableOpacity>
+                </View>
               )}
 
-              <View
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#e1e8ed",
-                  borderRadius: 16,
-                  paddingHorizontal: 16,
-                  paddingVertical: 16,
-                  minHeight: 140,
-                  backgroundColor: "#fff",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 4,
-                  elevation: 2,
-                }}
-              >
-                <TextInput
-                  className = 'outline-none border-none shadow-none'
-                  value={content}
-                  onChangeText={handleTextChange}
-                  style={{
-                    fontSize: 19,
-                    lineHeight: 24,
-                    color: "#14171a",
-                    textAlignVertical: "top",
-                    flex: 1,
-                    maxHeight: 500,
-                  }}
-                  placeholder="What is happening?!"
-                  placeholderTextColor="#71767b"
-                  multiline
-                  maxLength={280}
-                />
-              </View>
-
+              {/* Image preview (shown when URL is set) */}
               {imageUrl.trim().length > 0 && (
                 <View style={{ marginTop: 12 }}>
                   <Image
                     source={{ uri: imageUrl }}
                     style={{
                       width: "100%",
-                      height: 240,
+                      height: 220,
                       borderRadius: 16,
+                      backgroundColor: "#f0f0f0",
                     }}
                     resizeMode="cover"
                   />
@@ -289,15 +557,19 @@ export default function CreateScreen() {
                       position: "absolute",
                       top: 8,
                       right: 8,
-                      backgroundColor: "rgba(0,0,0,0.7)",
-                      borderRadius: 16,
+                      backgroundColor: "rgba(0,0,0,0.65)",
+                      borderRadius: 14,
                       width: 28,
                       height: 28,
                       justifyContent: "center",
                       alignItems: "center",
                     }}
                   >
-                    <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>×</Text>
+                    <HugeiconsIcon
+                      icon={Cancel01Icon}
+                      size={14}
+                      color="#fff"
+                    />
                   </TouchableOpacity>
                 </View>
               )}
@@ -306,46 +578,80 @@ export default function CreateScreen() {
         </View>
       </ScrollView>
 
+      {/* ── Toolbar ── */}
       <View
         style={{
-          borderTopWidth: 1,
+          borderTopWidth: 0.5,
           borderTopColor: "#e1e8ed",
           paddingHorizontal: 16,
-          paddingVertical: 12,
+          paddingVertical: 10,
           flexDirection: "row",
           alignItems: "center",
-          gap: 16,
+          gap: 4,
           backgroundColor: "#fff",
         }}
       >
-        <TouchableOpacity 
-          onPress={() => {}}
-          style={{ padding: 4 }}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        {/* Image URL button */}
+        <TouchableOpacity
+          onPress={openImageModal}
+          style={{ padding: 8 }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <HugeiconsIcon icon={Image01Icon} size={24} color="#1d9bf0" />
+          <HugeiconsIcon
+            icon={Image01Icon}
+            size={22}
+            color={imageUrl ? "#1d9bf0" : "#657786"}
+          />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          onPress={() => {}}
-          style={{ padding: 4 }}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        {/* Location button */}
+        <TouchableOpacity
+          onPress={openLocationModal}
+          style={{ padding: 8 }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <HugeiconsIcon icon={Location01Icon} size={24} color="#1d9bf0" />
+          <HugeiconsIcon
+            icon={Location01Icon}
+            size={22}
+            color={location ? "#1d9bf0" : "#657786"}
+          />
         </TouchableOpacity>
 
         <View style={{ flex: 1 }} />
 
+        {/* Character counter */}
         <Text
           style={{
             fontSize: 13,
             fontWeight: "600",
-            color: content.length > 270 ? "#e0245e" : "#657786",
+            color:
+              content.length > 270
+                ? "#e0245e"
+                : content.length > 240
+                  ? "#ffad1f"
+                  : "#657786",
           }}
         >
           {280 - content.length}
         </Text>
       </View>
+
+      {/* ── Modals ── */}
+      <ImageUrlModal
+        visible={showImageModal}
+        value={imageDraft}
+        onChange={setImageDraft}
+        onConfirm={confirmImage}
+        onCancel={cancelImage}
+      />
+
+      <LocationModal
+        visible={showLocationModal}
+        value={locationDraft}
+        onChange={setLocationDraft}
+        onConfirm={confirmLocation}
+        onCancel={cancelLocation}
+      />
     </KeyboardAvoidingView>
   );
 }
