@@ -11,6 +11,10 @@ module.exports = {
   darkMode: "media",
   theme: {
     extend: {
+      fontFamily: {
+        inter: ["Inter-Regular"],
+        "inter-bold": ["Inter-Bold"],
+      },
       colors: {
         primary: "#0095F6",
         accent: "#E91E8C",
