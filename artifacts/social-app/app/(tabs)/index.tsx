@@ -121,7 +121,7 @@ export default function FeedScreen() {
         key={activeTab} // remount list when tab changes
         data={displayPosts}
         keyExtractor={(item: any) => item.id}
-        renderItem={({ item }) => <PostCard {...item} />}
+        renderItem={({ item }) => <View {...item} />}
         ListEmptyComponent={
           isLoading ? (
             <View style={{ paddingVertical: 80, alignItems: "center" }}>

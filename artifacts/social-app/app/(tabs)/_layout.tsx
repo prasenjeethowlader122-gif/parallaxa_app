@@ -71,8 +71,8 @@ export default function RootLayout() {
 
   // ── X logo SVG placeholder (uses the Image asset if available) ──
   const XLogo = () => (
-    <View style={{ width: 28, height: 28, justifyContent: "center", alignItems: "center" }}>
-      <Image source={require('@/assets/images/parallaxa-logo.svg')} style={{ width: 40, height: 40 }} />
+    <View style={{ width: 35, height: 35, justifyContent: "center", alignItems: "center" }}>
+      <Image source={require('@/assets/images/parallaxa-logo.svg')} style={{ width: 45, height: 45 }} />
     </View>
   );
 
