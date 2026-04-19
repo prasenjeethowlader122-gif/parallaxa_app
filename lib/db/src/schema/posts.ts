@@ -5,8 +5,14 @@ import { usersTable } from "./users";
 
 export const postsTable = pgTable("posts", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
-  parentPostId: text("parent_post_id"), // null = top-level post, set = comment/reply
+  userId: text("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  // null = top-level post; set = reply/comment on another post
+  parentPostId: text("parent_post_id").references(
+    (): any => postsTable.id,
+    { onDelete: "cascade" },
+  ),
   content: text("content"),
   imageUrl: text("image_url"),
   videoUrl: text("video_url"),
@@ -26,5 +32,5 @@ export const insertPostSchema = createInsertSchema(postsTable).omit({
   updatedAt: true,
 });
 
-export type InsertPost = z.infer < typeof insertPostSchema > ;
+export type InsertPost = z.infer<typeof insertPostSchema>;
 export type Post = typeof postsTable.$inferSelect;
