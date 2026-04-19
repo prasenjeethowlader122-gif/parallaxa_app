@@ -42,6 +42,7 @@ const { width } = Dimensions.get("window");
 const GRID_COL = 3;
 const GRID_GAP = 1;
 const GRID_ITEM = (width - GRID_GAP * (GRID_COL - 1)) / GRID_COL;
+const insets = useSafeAreaInsets();
 const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
 type Tab = "posts" | "replies" | "media" | "likes";
