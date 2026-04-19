@@ -53,16 +53,14 @@ COPY --from=expo-builder /app/artifacts/social-app/web-export ./artifacts/api-se
 # Create migration entrypoint script
 RUN echo '#!/bin/sh\n\
 set -e\n\
-\n\
-echo "Wiping existing database schema..."\n\
-# Assuming PostgreSQL: This drops the public schema and recreates it empty\n\
-# You must have the DATABASE_URL environment variable available\n\
-pnpm drizzle-kit exec --content "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" \n\
-\n\
 echo "Running database migrations..."\n\
-pnpm --filter @workspace/db run push-force\n\
+ pnpm --filter @workspace/db run push-force\n\
 \n\
+# Clear expo cache and start in background if needed, or just start API\n\
 echo "Starting API server..."\n\
+# If you need to clear expo cache specifically before the node process starts:\n\
+# npx expo start -c --non-interactive &\n\
+\n\
 node --enable-source-maps ./artifacts/api-server/dist/index.mjs' > /app/start.sh && chmod +x /app/start.sh
 
 ENV NODE_ENV=production
