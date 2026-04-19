@@ -72,9 +72,7 @@ export default function RootLayout() {
   // ── X logo SVG placeholder (uses the Image asset if available) ──
   const XLogo = () => (
     <View style={{ width: 28, height: 28, justifyContent: "center", alignItems: "center" }}>
-      <Text style={{ fontSize: 22, fontWeight: "900", color: "#000", fontFamily: Platform.OS === "ios" ? "Georgia" : "serif" }}>
-        𝕏
-      </Text>
+      <Image source={require('@/assets/images/placeholder-logo.svg')} style={{ width: 40, height: 40 }} />
     </View>
   );
 
