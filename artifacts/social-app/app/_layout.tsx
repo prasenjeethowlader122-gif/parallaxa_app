@@ -86,7 +86,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView style={{ flex: 1 , fontFamily: 'Inter-Regular'}}>
+          <GestureHandlerRootView className = "font-['Inter-Regular']" style={{ flex: 1}}>
             <KeyboardProvider>
               <AuthProvider>
                 <RootLayoutNav />
