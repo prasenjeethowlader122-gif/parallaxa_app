@@ -393,7 +393,6 @@ export default function RegisterScreen() {
                   height: 8,
                   borderRadius: 4,
                   backgroundColor: i === step ? "#000" : i < step ? "#000" : "#e5e7eb",
-                  transition: "width 0.3s",
                 }}
               />
             ))}

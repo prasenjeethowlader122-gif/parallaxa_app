@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useGetUserPosts } from "@workspace/api-client-react";
