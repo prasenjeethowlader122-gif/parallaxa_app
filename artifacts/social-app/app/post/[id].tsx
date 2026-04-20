@@ -8,16 +8,17 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  StyleSheet,
 } from "react-native";
 import { Text } from "@/components/Text";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
   ArrowLeft01Icon,
-  Heart01Icon,
-  MessageCircle01Icon,
+  FavouriteIcon,
+  AiChatIcon,
   Share01Icon,
   CheckmarkBadge01Icon,
-  Bookmark01Icon,
+  Bookmark02Icon,
   MoreHorizontalIcon,
   ArrowUp01Icon,
 } from "@hugeicons/core-free-icons";
@@ -27,141 +28,16 @@ import {
   useGetPost,
   useLikePost,
   useUnlikePost,
+  useGetComments,
+  useCreateComment,
+  useSavePost,
+  useUnsavePost,
+  Comment,
 } from "@workspace/api-client-react";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
-
-// ── Mock comment type ─────────────────────────────────────────────────────────
-interface MockComment {
-  id: string;
-  author: {
-    id: string;
-    username: string;
-    displayName: string;
-    avatarUrl: string;
-    isVerified: boolean;
-  };
-  content: string;
-  likesCount: number;
-  repliesCount: number;
-  createdAt: string;
-  isLiked: boolean;
-}
-
-// ── Mock data ─────────────────────────────────────────────────────────────────
-const MOCK_COMMENTS: MockComment[] = [
-  {
-    id: "c1",
-    author: {
-      id: "u1",
-      username: "elonmusk",
-      displayName: "Elon Musk",
-      avatarUrl: "https://i.pravatar.cc/150?img=11",
-      isVerified: true,
-    },
-    content: "This is absolutely wild. The implications for the next decade are huge 🚀",
-    likesCount: 4821,
-    repliesCount: 312,
-    createdAt: new Date(Date.now() - 1000 * 60 * 14).toISOString(),
-    isLiked: false,
-  },
-  {
-    id: "c2",
-    author: {
-      id: "u2",
-      username: "sama",
-      displayName: "Sam Altman",
-      avatarUrl: "https://i.pravatar.cc/150?img=33",
-      isVerified: true,
-    },
-    content:
-      "Agreed. We've been working on something very similar internally. Exciting times ahead for everyone in this space.",
-    likesCount: 2103,
-    repliesCount: 87,
-    createdAt: new Date(Date.now() - 1000 * 60 * 42).toISOString(),
-    isLiked: true,
-  },
-  {
-    id: "c3",
-    author: {
-      id: "u3",
-      username: "karpathy",
-      displayName: "Andrej Karpathy",
-      avatarUrl: "https://i.pravatar.cc/150?img=52",
-      isVerified: true,
-    },
-    content:
-      "The neural scaling laws here are particularly interesting. Would love to see the full ablation study on tokenizer choice.",
-    likesCount: 1540,
-    repliesCount: 44,
-    createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-    isLiked: false,
-  },
-  {
-    id: "c4",
-    author: {
-      id: "u4",
-      username: "naval",
-      displayName: "Naval",
-      avatarUrl: "https://i.pravatar.cc/150?img=60",
-      isVerified: false,
-    },
-    content:
-      "First principles: if compute doubles every 18 months and we're training on all human knowledge... the math speaks for itself.",
-    likesCount: 987,
-    repliesCount: 56,
-    createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-    isLiked: false,
-  },
-  {
-    id: "c5",
-    author: {
-      id: "u5",
-      username: "lexfridman",
-      displayName: "Lex Fridman",
-      avatarUrl: "https://i.pravatar.cc/150?img=7",
-      isVerified: true,
-    },
-    content:
-      "Would love to have you on the podcast to discuss this further. The world needs to hear more nuanced takes on AI development.",
-    likesCount: 3410,
-    repliesCount: 211,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    isLiked: true,
-  },
-  {
-    id: "c6",
-    author: {
-      id: "u6",
-      username: "paulg",
-      displayName: "Paul Graham",
-      avatarUrl: "https://i.pravatar.cc/150?img=15",
-      isVerified: false,
-    },
-    content:
-      "What most people miss: it's not about replacing humans, it's about amplifying what humans can accomplish. Every great technology follows this pattern.",
-    likesCount: 2876,
-    repliesCount: 134,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
-    isLiked: false,
-  },
-  {
-    id: "c7",
-    author: {
-      id: "u7",
-      username: "balajis",
-      displayName: "Balaji Srinivasan",
-      avatarUrl: "https://i.pravatar.cc/150?img=22",
-      isVerified: false,
-    },
-    content:
-      "Network states + AI = the most underrated macro trend of the decade. Sovereignties will be redefined.",
-    likesCount: 654,
-    repliesCount: 29,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-    isLiked: false,
-  },
-];
+import { useColors } from "@/hooks/useColors";
+import * as Haptics from "expo-haptics";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function timeAgo(dateStr: string): string {
@@ -199,35 +75,50 @@ function fmtCount(n: number): string {
 export default function PostDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const inputRef = useRef<TextInput>(null);
 
-  const [comments, setComments] = useState<MockComment[]>(MOCK_COMMENTS);
   const [replyText, setReplyText] = useState("");
   const [replyTarget, setReplyTarget] = useState<{
     commentId: string | null;
     username: string;
   } | null>(null);
-  const [isSaved, setIsSaved] = useState(false);
 
-  const { data: post, isLoading: postLoading } = useGetPost(id ?? "");
+  const { data: post, isLoading: postLoading, refetch: refetchPost } = useGetPost(id ?? "");
+  const { data: commentsData, isLoading: commentsLoading, refetch: refetchComments } = useGetComments(id ?? "");
+
   const { mutate: likePost } = useLikePost();
   const { mutate: unlikePost } = useUnlikePost();
+  const { mutate: savePost } = useSavePost();
+  const { mutate: unsavePost } = useUnsavePost();
+  const { mutate: createComment, isPending: isSubmittingComment } = useCreateComment();
 
   const [localLiked, setLocalLiked] = useState<boolean | null>(null);
   const [localCount, setLocalCount] = useState<number | null>(null);
+  const [localSaved, setLocalSaved] = useState<boolean | null>(null);
 
   const isLiked = localLiked !== null ? localLiked : (post?.isLiked ?? false);
   const likesCount = localCount !== null ? localCount : (post?.likesCount ?? 0);
+  const isSaved = localSaved !== null ? localSaved : (post?.isSaved ?? false);
 
   const handleLike = useCallback(() => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const next = !isLiked;
     setLocalLiked(next);
     setLocalCount(likesCount + (next ? 1 : -1));
     if (next) likePost({ postId: id! });
     else unlikePost({ postId: id! });
   }, [isLiked, likesCount, id, likePost, unlikePost]);
+
+  const handleSave = useCallback(() => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const next = !isSaved;
+    setLocalSaved(next);
+    if (next) savePost({ postId: id! });
+    else unsavePost({ postId: id! });
+  }, [isSaved, id, savePost, unsavePost]);
 
   const openReply = useCallback(
     (commentId: string | null, username: string) => {
@@ -240,45 +131,47 @@ export default function PostDetailScreen() {
 
   const handleSend = useCallback(() => {
     const text = replyText.trim();
-    if (!text) return;
-    const newComment: MockComment = {
-      id: `local-${Date.now()}`,
-      author: {
-        id: (user as any)?.id ?? "me",
-        username: (user as any)?.username ?? "you",
-        displayName: (user as any)?.displayName ?? "You",
-        avatarUrl:
-          (user as any)?.avatarUrl ?? "https://i.pravatar.cc/150?img=3",
-        isVerified: false,
-      },
-      content: replyTarget ? `@${replyTarget.username} ${text}` : text,
-      likesCount: 0,
-      repliesCount: 0,
-      createdAt: new Date().toISOString(),
-      isLiked: false,
-    };
-    setComments((prev) => [newComment, ...prev]);
-    setReplyText("");
-    setReplyTarget(null);
-  }, [replyText, replyTarget, user]);
+    if (!text || !id) return;
+
+    createComment({
+      postId: id,
+      data: {
+        content: text,
+        parentId: replyTarget?.commentId ?? undefined,
+      }
+    }, {
+      onSuccess: () => {
+        setReplyText("");
+        setReplyTarget(null);
+        refetchComments();
+        refetchPost();
+      }
+    });
+  }, [replyText, replyTarget, id, createComment, refetchComments, refetchPost]);
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
 
   if (postLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#1D9BF0" />
+      <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
+
+  const comments = commentsData?.comments ?? [];
 
   // ── List Header ───────────────────────────────────────────────────────────
   const ListHeader = (
     <View>
       {/* Nav */}
       <View
-        className="flex-row items-center justify-between px-4 pb-3 bg-white border-b border-[#EFF3F4]"
-        style={{ paddingTop: topPad + 12 }}
+        className="flex-row items-center justify-between px-4 pb-3 border-b"
+        style={{
+          paddingTop: topPad + 12,
+          backgroundColor: colors.background,
+          borderBottomColor: colors.border
+        }}
       >
         <TouchableOpacity
           onPress={() => router.back()}
@@ -290,10 +183,10 @@ export default function PostDetailScreen() {
             icon={ArrowLeft01Icon}
             size={20}
             strokeWidth={2.2}
-            color="#0F1419"
+            color={colors.foreground}
           />
         </TouchableOpacity>
-        <Text className="text-[17px] font-bold text-[#0F1419] tracking-tight">
+        <Text className="text-[17px] font-bold tracking-tight" style={{ color: colors.foreground }}>
           Post
         </Text>
         <View className="w-9" />
@@ -316,7 +209,8 @@ export default function PostDetailScreen() {
           >
             <View className="flex-row items-center gap-1">
               <Text
-                className="text-[15px] font-bold text-[#0F1419] tracking-tight"
+                className="text-[15px] font-bold tracking-tight"
+                style={{ color: colors.foreground }}
                 numberOfLines={1}
               >
                 {post.author.displayName ?? post.author.username}
@@ -325,11 +219,11 @@ export default function PostDetailScreen() {
                 <HugeiconsIcon
                   icon={CheckmarkBadge01Icon}
                   size={16}
-                  color="#1D9BF0"
+                  color={colors.primary}
                 />
               )}
             </View>
-            <Text className="text-sm text-[#536471] mt-0.5">
+            <Text className="text-sm mt-0.5" style={{ color: colors.mutedForeground }}>
               @{post.author.username}
             </Text>
           </TouchableOpacity>
@@ -343,7 +237,7 @@ export default function PostDetailScreen() {
               icon={MoreHorizontalIcon}
               size={18}
               strokeWidth={2}
-              color="#536471"
+              color={colors.mutedForeground}
             />
           </TouchableOpacity>
         </View>
@@ -351,7 +245,10 @@ export default function PostDetailScreen() {
 
       {/* Post content */}
       {post?.content ? (
-        <Text className="text-[20px] leading-[28px] text-[#0F1419] tracking-tight px-4 pt-3 pb-2">
+        <Text
+          className="text-[20px] leading-[28px] tracking-tight px-4 pt-3 pb-2"
+          style={{ color: colors.foreground }}
+        >
           {post.content}
         </Text>
       ) : null}
@@ -362,7 +259,7 @@ export default function PostDetailScreen() {
           <Image
             source={{ uri: post.imageUrl }}
             className="w-full rounded-2xl"
-            style={{ aspectRatio: 16 / 9 }}
+            style={{ aspectRatio: 16 / 9, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border }}
             resizeMode="cover"
           />
         </View>
@@ -370,25 +267,28 @@ export default function PostDetailScreen() {
 
       {/* Timestamp */}
       {post?.createdAt ? (
-        <Text className="text-sm text-[#536471] px-4 py-3 border-t border-b border-[#EFF3F4]">
-          {formatFullDate(post.createdAt as unknown as string)}
+        <Text
+          className="text-sm px-4 py-3 border-t border-b"
+          style={{ color: colors.mutedForeground, borderColor: colors.border }}
+        >
+          {formatFullDate(post.createdAt)}
         </Text>
       ) : null}
 
       {/* Stats row */}
       {(likesCount > 0 || (post?.repliesCount ?? 0) > 0) ? (
-        <View className="flex-row gap-4 px-4 py-3 border-b border-[#EFF3F4]">
+        <View className="flex-row gap-4 px-4 py-3 border-b" style={{ borderColor: colors.border }}>
           {(post?.repliesCount ?? 0) > 0 && (
-            <Text className="text-sm text-[#536471]">
-              <Text className="font-bold text-[#0F1419]">
+            <Text className="text-sm" style={{ color: colors.mutedForeground }}>
+              <Text className="font-bold" style={{ color: colors.foreground }}>
                 {fmtCount(post?.repliesCount ?? 0)}
               </Text>
               {" Replies"}
             </Text>
           )}
           {likesCount > 0 && (
-            <Text className="text-sm text-[#536471]">
-              <Text className="font-bold text-[#0F1419]">
+            <Text className="text-sm" style={{ color: colors.mutedForeground }}>
+              <Text className="font-bold" style={{ color: colors.foreground }}>
                 {fmtCount(likesCount)}
               </Text>
               {likesCount === 1 ? " Like" : " Likes"}
@@ -398,7 +298,7 @@ export default function PostDetailScreen() {
       ) : null}
 
       {/* Action bar */}
-      <View className="flex-row px-2 border-b border-[#EFF3F4]">
+      <View className="flex-row px-2 border-b" style={{ borderColor: colors.border }}>
         <TouchableOpacity
           onPress={() => openReply(null, post?.author?.username ?? "")}
           activeOpacity={0.7}
@@ -406,10 +306,10 @@ export default function PostDetailScreen() {
           className="flex-1 items-center py-2.5"
         >
           <HugeiconsIcon
-            icon={MessageCircle01Icon}
+            icon={AiChatIcon}
             size={20}
-            strokeWidth={replyTarget?.commentId === null ? 0 : 1.75}
-            color={replyTarget?.commentId === null ? "#1D9BF0" : "#536471"}
+            strokeWidth={2}
+            color={replyTarget?.commentId === null ? colors.primary : colors.mutedForeground}
           />
         </TouchableOpacity>
 
@@ -421,8 +321,8 @@ export default function PostDetailScreen() {
           <HugeiconsIcon
             icon={ArrowUp01Icon}
             size={20}
-            strokeWidth={1.75}
-            color="#536471"
+            strokeWidth={2}
+            color={colors.mutedForeground}
           />
         </TouchableOpacity>
 
@@ -433,24 +333,24 @@ export default function PostDetailScreen() {
           className="flex-1 items-center py-2.5"
         >
           <HugeiconsIcon
-            icon={Heart01Icon}
+            icon={FavouriteIcon}
             size={20}
-            strokeWidth={isLiked ? 0 : 1.75}
-            color={isLiked ? "#F4212E" : "#536471"}
+            strokeWidth={2}
+            color={isLiked ? "#F4212E" : colors.mutedForeground}
           />
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => setIsSaved((v) => !v)}
+          onPress={handleSave}
           activeOpacity={0.7}
           hitSlop={8}
           className="flex-1 items-center py-2.5"
         >
           <HugeiconsIcon
-            icon={Bookmark01Icon}
+            icon={Bookmark02Icon}
             size={20}
-            strokeWidth={isSaved ? 0 : 1.75}
-            color={isSaved ? "#1D9BF0" : "#536471"}
+            strokeWidth={2}
+            color={isSaved ? colors.primary : colors.mutedForeground}
           />
         </TouchableOpacity>
 
@@ -462,28 +362,37 @@ export default function PostDetailScreen() {
           <HugeiconsIcon
             icon={Share01Icon}
             size={20}
-            strokeWidth={1.75}
-            color="#536471"
+            strokeWidth={2}
+            color={colors.mutedForeground}
           />
         </TouchableOpacity>
       </View>
 
       {/* Replies label */}
-      <View className="px-4 py-2.5 bg-[#F7F9F9] border-b border-[#EFF3F4]">
-        <Text className="text-[11px] font-bold text-[#536471] tracking-widest uppercase">
+      <View
+        className="px-4 py-2.5 border-b"
+        style={{ backgroundColor: colors.muted, borderColor: colors.border }}
+      >
+        <Text
+          className="text-[11px] font-bold tracking-widest uppercase"
+          style={{ color: colors.mutedForeground }}
+        >
           Replies
         </Text>
       </View>
 
       {/* Replying-to banner */}
       {replyTarget ? (
-        <View className="flex-row items-center justify-between px-4 py-2 bg-[#E8F5FD] border-b border-[#EFF3F4]">
-          <Text className="text-[13px] text-[#536471]">
+        <View
+          className="flex-row items-center justify-between px-4 py-2 border-b"
+          style={{ backgroundColor: colors.primary + "10", borderColor: colors.border }}
+        >
+          <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>
             Replying to{" "}
-            <Text className="text-[#1D9BF0]">@{replyTarget.username}</Text>
+            <Text style={{ color: colors.primary }}>@{replyTarget.username}</Text>
           </Text>
           <TouchableOpacity onPress={() => setReplyTarget(null)} hitSlop={8}>
-            <Text className="text-[13px] font-semibold text-[#1D9BF0]">
+            <Text className="text-[13px] font-semibold" style={{ color: colors.primary }}>
               Cancel
             </Text>
           </TouchableOpacity>
@@ -492,7 +401,7 @@ export default function PostDetailScreen() {
     </View>
   );
 
-  const renderItem = ({ item }: { item: MockComment }) => (
+  const renderItem = ({ item }: { item: Comment }) => (
     <CommentItem
       comment={item}
       isTargeted={replyTarget?.commentId === item.id}
@@ -503,47 +412,62 @@ export default function PostDetailScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <FlatList
-        
+        data={comments}
+        renderItem={renderItem}
         keyExtractor={(item) => item.id}
-      
         ListHeaderComponent={ListHeader}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
         ListEmptyComponent={
-          <View className="items-center pt-12 px-8">
-            <Text className="text-4xl mb-3">💬</Text>
-            <Text className="text-[18px] font-bold text-[#0F1419] mb-1.5">
-              No replies yet
-            </Text>
-            <Text className="text-sm text-[#536471] text-center">
-              Be the first to reply to this post
-            </Text>
-          </View>
+          commentsLoading ? (
+            <View className="items-center pt-12">
+               <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          ) : (
+            <View className="items-center pt-12 px-8">
+              <Text className="text-4xl mb-3">💬</Text>
+              <Text
+                className="text-[18px] font-bold mb-1.5"
+                style={{ color: colors.foreground }}
+              >
+                No replies yet
+              </Text>
+              <Text className="text-sm text-center" style={{ color: colors.mutedForeground }}>
+                Be the first to reply to this post
+              </Text>
+            </View>
+          )
         }
       />
 
       {/* Composer */}
       <View
-        className="flex-row items-center px-3.5 pt-2.5 gap-2.5 border-t border-[#EFF3F4] bg-white"
+        className="flex-row items-center px-3.5 pt-2.5 gap-2.5 border-t"
         style={{
           paddingBottom: insets.bottom + (Platform.OS === "web" ? 16 : 8),
+          backgroundColor: colors.background,
+          borderTopColor: colors.border,
         }}
       >
         <UserAvatar uri={user?.avatarUrl} size={36} />
         <TextInput
           ref={inputRef}
-          className="flex-1 text-[15px] text-[#0F1419] min-h-[38px] max-h-[100px]"
-          style={{ paddingTop: Platform.OS === "ios" ? 8 : 4 }}
+          className="flex-1 text-[15px] min-h-[38px] max-h-[100px]"
+          style={{
+            paddingTop: Platform.OS === "ios" ? 8 : 4,
+            color: colors.foreground
+          }}
           placeholder={
             replyTarget
               ? `Reply to @${replyTarget.username}…`
               : "Post your reply"
           }
-          placeholderTextColor="#536471"
+          placeholderTextColor={colors.mutedForeground}
           value={replyText}
           onChangeText={setReplyText}
           multiline
@@ -551,13 +475,19 @@ export default function PostDetailScreen() {
         />
         <TouchableOpacity
           onPress={handleSend}
-          disabled={!replyText.trim()}
+          disabled={!replyText.trim() || isSubmittingComment}
           activeOpacity={0.85}
-          className={`px-4 py-2 rounded-full items-center justify-center min-w-[68px] ${
-            replyText.trim() ? "bg-[#1D9BF0]" : "bg-[#CFD9DE]"
-          }`}
+          className="px-4 py-2 rounded-full items-center justify-center min-w-[68px]"
+          style={{
+            backgroundColor: replyText.trim() && !isSubmittingComment ? colors.primary : colors.muted,
+            opacity: isSubmittingComment ? 0.7 : 1
+          }}
         >
-          <Text className="text-sm font-bold text-white">Reply</Text>
+          {isSubmittingComment ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Text className="text-sm font-bold text-white">Reply</Text>
+          )}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -566,7 +496,7 @@ export default function PostDetailScreen() {
 
 // ── Comment Item ──────────────────────────────────────────────────────────────
 interface CommentItemProps {
-  comment: MockComment;
+  comment: Comment;
   isTargeted: boolean;
   onReply: () => void;
   onAuthorPress: () => void;
@@ -578,27 +508,25 @@ function CommentItem({
   onReply,
   onAuthorPress,
 }: CommentItemProps) {
-  const [liked, setLiked] = useState(comment.isLiked);
-  const [likeCount, setLikeCount] = useState(comment.likesCount);
-
-  const handleLike = () => {
-    const next = !liked;
-    setLiked(next);
-    setLikeCount((c) => c + (next ? 1 : -1));
-  };
+  const colors = useColors();
 
   return (
     <View
-      className={`flex-row pl-3.5 pr-3.5 pt-3 border-b border-[#EFF3F4] gap-2.5 ${
-        isTargeted ? "bg-[#E8F5FD]" : "bg-white"
-      }`}
+      className="flex-row pl-3.5 pr-3.5 pt-3 border-b gap-2.5"
+      style={{
+        backgroundColor: isTargeted ? colors.primary + "10" : colors.background,
+        borderBottomColor: colors.border
+      }}
     >
       {/* Left column: avatar + thread line */}
       <View className="items-center w-10">
         <TouchableOpacity onPress={onAuthorPress} activeOpacity={0.85}>
           <UserAvatar uri={comment.author.avatarUrl} size={38} />
         </TouchableOpacity>
-        <View className="w-0.5 flex-1 mt-1.5 min-h-5 bg-[#EFF3F4] rounded-full" />
+        <View
+          className="w-0.5 flex-1 mt-1.5 min-h-5 rounded-full"
+          style={{ backgroundColor: colors.border }}
+        />
       </View>
 
       {/* Right column: content */}
@@ -612,7 +540,8 @@ function CommentItem({
           >
             <View className="flex-row items-center gap-0.5">
               <Text
-                className="text-[14px] font-bold text-[#0F1419] max-w-[110px]"
+                className="text-[14px] font-bold max-w-[110px]"
+                style={{ color: colors.foreground }}
                 numberOfLines={1}
               >
                 {comment.author.displayName}
@@ -621,19 +550,20 @@ function CommentItem({
                 <HugeiconsIcon
                   icon={CheckmarkBadge01Icon}
                   size={13}
-                  color="#1D9BF0"
+                  color={colors.primary}
                 />
               )}
             </View>
           </TouchableOpacity>
           <Text
-            className="text-[13px] text-[#536471] shrink ml-1"
+            className="text-[13px] shrink ml-1"
+            style={{ color: colors.mutedForeground }}
             numberOfLines={1}
           >
             @{comment.author.username}
           </Text>
-          <Text className="text-[13px] text-[#536471] mx-1">·</Text>
-          <Text className="text-[13px] text-[#536471]">
+          <Text className="text-[13px] mx-1" style={{ color: colors.mutedForeground }}>·</Text>
+          <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>
             {timeAgo(comment.createdAt)}
           </Text>
           <TouchableOpacity className="ml-auto" activeOpacity={0.7} hitSlop={8}>
@@ -641,13 +571,16 @@ function CommentItem({
               icon={MoreHorizontalIcon}
               size={15}
               strokeWidth={2}
-              color="#536471"
+              color={colors.mutedForeground}
             />
           </TouchableOpacity>
         </View>
 
         {/* Comment text */}
-        <Text className="text-[14px] leading-5 text-[#0F1419] mb-2">
+        <Text
+          className="text-[14px] leading-5 mb-2"
+          style={{ color: colors.foreground }}
+        >
           {comment.content}
         </Text>
 
@@ -661,42 +594,17 @@ function CommentItem({
             className="flex-row items-center gap-1"
           >
             <HugeiconsIcon
-              icon={MessageCircle01Icon}
+              icon={AiChatIcon}
               size={16}
-              strokeWidth={1.75}
-              color={isTargeted ? "#1D9BF0" : "#536471"}
+              strokeWidth={2}
+              color={isTargeted ? colors.primary : colors.mutedForeground}
             />
             {comment.repliesCount > 0 && (
               <Text
-                className={`text-[12px] ${
-                  isTargeted ? "text-[#1D9BF0]" : "text-[#536471]"
-                }`}
+                className="text-[12px]"
+                style={{ color: isTargeted ? colors.primary : colors.mutedForeground }}
               >
                 {fmtCount(comment.repliesCount)}
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          {/* Like */}
-          <TouchableOpacity
-            onPress={handleLike}
-            activeOpacity={0.7}
-            hitSlop={8}
-            className="flex-row items-center gap-1"
-          >
-            <HugeiconsIcon
-              icon={Heart01Icon}
-              size={16}
-              strokeWidth={liked ? 0 : 1.75}
-              color={liked ? "#F4212E" : "#536471"}
-            />
-            {likeCount > 0 && (
-              <Text
-                className={`text-[12px] ${
-                  liked ? "text-[#F4212E]" : "text-[#536471]"
-                }`}
-              >
-                {fmtCount(likeCount)}
               </Text>
             )}
           </TouchableOpacity>
@@ -710,8 +618,8 @@ function CommentItem({
             <HugeiconsIcon
               icon={Share01Icon}
               size={16}
-              strokeWidth={1.75}
-              color="#536471"
+              strokeWidth={2}
+              color={colors.mutedForeground}
             />
           </TouchableOpacity>
         </View>
