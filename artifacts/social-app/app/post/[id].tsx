@@ -507,9 +507,9 @@ export default function PostDetailScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <FlatList
-        data={comments}
+        
         keyExtractor={(item) => item.id}
-        renderItem={renderItem}
+      
         ListHeaderComponent={ListHeader}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
