@@ -29,9 +29,9 @@ const queryClient = new QueryClient({
 
 function RootLayoutNav() {
   const { user, isLoading } = useAuth();
-
+  
   if (isLoading) return null;
-
+  
   if (!user) {
     return (
       <Stack screenOptions={{ headerShown: false }}>
@@ -46,7 +46,7 @@ function RootLayoutNav() {
       </Stack>
     );
   }
-
+  
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" redirect />
@@ -64,21 +64,20 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    "SpaceGrotesk-Regular": require("@/assets/fonts/sora/Sora-Regular.ttf"),
-    "SpaceGrotesk-Medium": require("@/assets/fonts/sora/Sora-Medium.ttf"),
-    "SpaceGrotesk-SemiBold": require("@/assets/fonts/sora/Sora-SemiBold.ttf"),
-    "SpaceGrotesk-Bold": require("@/assets/fonts/sora/Sora-Bold.ttf"),
+    "Sora-Regular": require("@/assets/fonts/sora/Sora-Regular.ttf"),
+    "Sora-Medium": require("@/assets/fonts/sora/Sora-Medium.ttf"),
+    "Sora-SemiBold": require("@/assets/fonts/sora/Sora-SemiBold.ttf"),
+    "Sora-Bold": require("@/assets/fonts/sora/Sora-Bold.ttf"),
   });
-
   useEffect(() => {
     if (fontError) console.error("Font load error:", fontError);
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
-
+  
   if (!fontsLoaded && !fontError) return null;
-
+  
   return (
     <SafeAreaProvider>
       <ErrorBoundary>

@@ -16,31 +16,31 @@ import {
  *   <Text style={{ fontWeight: "700" }}>Bold text</Text>
  */
 
-function resolveFontFamily(style?: TextStyle | TextStyle[]): string {
+function resolveFontFamily(style ? : TextStyle | TextStyle[]): string {
   const flat: TextStyle = StyleSheet.flatten(style) ?? {};
   const weight = flat.fontWeight;
-
+  
   switch (weight) {
     case "700":
     case "800":
     case "900":
     case "bold":
-      return "SpaceGrotesk-Bold";
+      return "Sora-Bold";
     case "600":
-      return "SpaceGrotesk-SemiBold";
+      return "Sora-SemiBold";
     case "500":
-      return "SpaceGrotesk-Medium";
+      return "Sora-Medium";
     default:
-      return "SpaceGrotesk-Regular";
+      return "Sora-Regular";
   }
 }
 
 export function Text({ style, ...props }: TextProps) {
   const flatStyle = StyleSheet.flatten(style) ?? {};
-
+  
   // If a fontFamily is already explicitly set, respect it.
   const fontFamily = flatStyle.fontFamily ?? resolveFontFamily(flatStyle);
-
+  
   return (
     <RNText
       {...props}
