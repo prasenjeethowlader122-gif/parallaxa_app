@@ -1,16 +1,3 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
-import {
-  ActivityIndicator,
-  Dimensions,
-  FlatList,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Text,
-} from "react-native";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
   ArrowLeft01Icon,
@@ -20,9 +7,23 @@ import {
   CheckmarkBadge01Icon,
   Bookmark01Icon,
   MoreHorizontalIcon,
-  ArrowUp01Icon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useState, useCallback, useEffect } from "react";
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   useGetPost,
@@ -34,35 +35,31 @@ import type { Post } from "@workspace/api-client-react";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
 import { getApiBaseUrl } from "@/lib/apiUrl";
+import { useAuth as useAuthContext } from "@/context/AuthContext";
 
 const { width } = Dimensions.get("window");
 
-// ── Design Tokens (X / Twitter Light) ───────────────────────────────────────
+// ── X / Twitter Light Theme Tokens ──────────────────────────────────────────
 const X = {
   bg: "#FFFFFF",
-  bgSecondary: "#F7F9F9",
+  bgHover: "#F7F9F9",
   border: "#EFF3F4",
   borderStrong: "#CFD9DE",
   text: "#0F1419",
   textSub: "#536471",
   blue: "#1D9BF0",
-  blueLight: "#E8F5FD",
   red: "#F4212E",
+  redLight: "#FEF2F2",
   green: "#00BA7C",
+  blueLight: "#E8F5FD",
+  muted: "#F7F9F9",
   verified: "#1D9BF0",
-  pill: "rgba(29,155,240,0.12)",
 };
 
-// ── Type Guard ───────────────────────────────────────────────────────────────
-function isValidPost(post: any): post is Post {
-  return post && post.id && post.author && post.author.username;
-}
-
-// ── Custom hook: fetch replies ───────────────────────────────────────────────
 function useGetReplies(postId: string) {
   const [data, setData] = useState<{ posts: Post[] } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
+  const { user } = useAuthContext();
 
   const refetch = useCallback(async () => {
     if (!postId) return;
@@ -77,79 +74,35 @@ function useGetReplies(postId: string) {
         const json = await res.json();
         setData(json);
       }
-    } catch (_) {
+    } catch (e) {
       // silently fail
     } finally {
       setIsLoading(false);
     }
   }, [postId, user]);
 
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
+  useEffect(() => { refetch(); }, [refetch]);
 
   return { data, isLoading, refetch };
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-function timeAgo(dateStr: string): string {
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return "just now";
-  
-  const diff = Date.now() - date.getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}d`;
-}
-
-function formatFullDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return "Unknown time";
-  
-  const time = d.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-  const date = d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-  return `${time} · ${date}`;
-}
-
-function fmtCount(n: number): string {
-  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
-  return String(n);
-}
-
-// ── Main Screen ──────────────────────────────────────────────────────────────
 export default function PostDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
-  const inputRef = useRef<TextInput>(null);
 
   const [replyText, setReplyText] = useState("");
-  const [replyTarget, setReplyTarget] = useState<{
-    postId: string;
-    username: string;
-  } | null>(null);
+  const [replyingTo, setReplyingTo] = useState<{ postId: string; username: string } | null>(null);
 
-  const { data: post, isLoading: postLoading } = useGetPost(id ?? "");
-  const { data: repliesData, refetch: refetchReplies } = useGetReplies(id ?? "");
+  const { data: post, isLoading: postLoading } = useGetPost(id!);
+  const { data: repliesData, refetch: refetchReplies } = useGetReplies(id!);
 
   const { mutate: createPost, isPending: replyPending } = useCreatePost({
     mutation: {
       onSuccess: () => {
         setReplyText("");
-        setReplyTarget(null);
+        setReplyingTo(null);
         refetchReplies();
       },
     },
@@ -160,10 +113,9 @@ export default function PostDetailScreen() {
 
   const [localLiked, setLocalLiked] = useState<boolean | null>(null);
   const [localCount, setLocalCount] = useState<number | null>(null);
-  const [isSaved, setIsSaved] = useState(false);
 
-  const isLiked = localLiked !== null ? localLiked : (post?.isLiked ?? false);
-  const likesCount = localCount !== null ? localCount : (post?.likesCount ?? 0);
+  const isLiked = localLiked !== null ? localLiked : post?.isLiked ?? false;
+  const likesCount = localCount !== null ? localCount : post?.likesCount ?? 0;
 
   const handleLike = useCallback(() => {
     const newLiked = !isLiked;
@@ -171,420 +123,307 @@ export default function PostDetailScreen() {
     setLocalCount(likesCount + (newLiked ? 1 : -1));
     if (newLiked) likePost({ postId: id! });
     else unlikePost({ postId: id! });
-  }, [isLiked, likesCount, id, likePost, unlikePost]);
+  }, [isLiked, likesCount, id]);
 
-  const openReply = useCallback(
-    (postId: string, username: string) => {
-      setReplyTarget(
-        replyTarget?.postId === postId ? null : { postId, username }
-      );
-      setTimeout(() => inputRef.current?.focus(), 100);
-    },
-    [replyTarget]
-  );
-
-  const handleSend = useCallback(() => {
-    if (!replyText.trim() || replyPending) return;
+  const handleReply = () => {
+    if (!replyText.trim()) return;
     createPost({
       data: {
         content: replyText.trim(),
-        parentPostId: replyTarget?.postId ?? id!,
+        parentPostId: replyingTo?.postId ?? id!,
       } as any,
     });
-  }, [replyText, replyPending, replyTarget, id, createPost]);
+  };
 
-  // SAFER replies array
-  const replies: Post[] = repliesData?.posts?.filter(isValidPost) ?? [];
-  
-  const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
+  const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
+  const replies: Post[] = repliesData?.posts ?? [];
 
-  // ── Loading & Error States ──────────────────────────────────────────────────
-  if (postLoading || !post || !isValidPost(post)) {
+  const timeAgo = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "just now";
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h`;
+    return `${Math.floor(h / 24)}d`;
+  };
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) +
+      " · " +
+      d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+
+  if (postLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View style={[s.center, { backgroundColor: X.bg }]}>
         <ActivityIndicator size="large" color={X.blue} />
       </View>
     );
   }
 
-  // ── List Header ────────────────────────────────────────────────────────────
-  const ListHeader = (
+  const PostHeader = () => (
     <View>
-      {/* Nav */}
-      <View className="flex-row items-center justify-between px-4 pb-3 bg-white border-b border-b-[#EFF3F4]" style={{ paddingTop: topPad + 12 }}>
+      {/* ── Nav bar ── */}
+      <View style={[s.navBar, { paddingTop: topPadding + 10 }]}>
         <TouchableOpacity
           onPress={() => router.back()}
-          className="w-9 h-9 rounded-full items-center justify-center active:opacity-70"
-          hitSlop={8}
+          style={s.backBtn}
+          activeOpacity={0.7}
         >
-          <HugeiconsIcon
-            icon={ArrowLeft01Icon}
-            size={20}
-            strokeWidth={2.2}
-            color={X.text}
-          />
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={20} strokeWidth={2} color={X.text} />
         </TouchableOpacity>
-        <Text className="text-base font-bold text-[#0F1419] -tracking-[0.3px]">Post</Text>
-        <View className="w-9" />
+        <Text style={s.navTitle}>Post</Text>
+        <View style={{ width: 36 }} />
       </View>
 
-      {/* Author row */}
-      <View className="flex-row items-center px-4 pt-4 pb-1 gap-x-2.5">
-        <TouchableOpacity
-          onPress={() => router.push(`/profile/${post.author.id}` as any)}
-          activeOpacity={0.85}
-        >
-          <UserAvatar uri={post.author.avatarUrl} size={44} />
-        </TouchableOpacity>
-
-        <View className="flex-1">
+      {/* ── Author row ── */}
+      {post?.author && (
+        <View style={s.authorRow}>
           <TouchableOpacity
             onPress={() => router.push(`/profile/${post.author.id}` as any)}
-            activeOpacity={0.85}
+            activeOpacity={0.8}
           >
-            <View className="flex-row items-center">
-              <Text className="text-[15px] font-bold text-[#0F1419] -tracking-[0.2px] mr-0.5" numberOfLines={1}>
+            <UserAvatar uri={post.author.avatarUrl} size={40} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            onPress={() => router.push(`/profile/${post.author.id}` as any)}
+            activeOpacity={0.8}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Text style={s.displayName} numberOfLines={1}>
                 {post.author.displayName ?? post.author.username}
               </Text>
               {post.author.isVerified && (
-                <HugeiconsIcon
-                  icon={CheckmarkBadge01Icon}
-                  size={16}
-                  color={X.verified}
-                />
+                <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} color={X.verified} />
               )}
             </View>
-            <Text className="text-[14px] text-[#536471] mt-0.5">@{post.author.username}</Text>
+            <Text style={s.username}>@{post.author.username}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={s.moreBtn} activeOpacity={0.7}>
+            <HugeiconsIcon icon={MoreHorizontalIcon} size={18} strokeWidth={2} color={X.textSub} />
           </TouchableOpacity>
         </View>
+      )}
 
-        <TouchableOpacity className="w-9 h-9 rounded-full items-center justify-center active:opacity-70" hitSlop={8}>
-          <HugeiconsIcon
-            icon={MoreHorizontalIcon}
-            size={18}
-            strokeWidth={2}
-            color={X.textSub}
-          />
-        </TouchableOpacity>
-      </View>
+      {/* ── Post content ── */}
+      {post?.content && (
+        <View style={s.contentBlock}>
+          <Text style={s.postText}>{post.content}</Text>
+        </View>
+      )}
 
-      {/* Post content */}
-      {post.content ? (
-        <Text className="text-[20px] leading-[28px] text-[#0F1419] -tracking-[0.2px] px-4 pt-3 pb-2">{post.content}</Text>
-      ) : null}
-
-      {/* Post image */}
-      {post.imageUrl ? (
-        <View className="px-4 pb-2">
+      {/* ── Image ── */}
+      {post?.imageUrl && (
+        <View style={s.imageWrapper}>
           <Image
             source={{ uri: post.imageUrl }}
-            className="w-[calc(100vw-32px)] h-[calc(100vw-32px)*0.5625] rounded-3xl"
+            style={{ width: width - 28, height: (width - 28) * 0.56, borderRadius: 16 }}
             resizeMode="cover"
           />
         </View>
-      ) : null}
+      )}
 
-      {/* Timestamp */}
-      <Text className="text-[14px] text-[#536471] px-4 py-3 border-t border-t-[#EFF3F4] border-b border-b-[#EFF3F4]">
-        {formatFullDate(post.createdAt as unknown as string)}
-      </Text>
+      {/* ── Timestamp ── */}
+      {post?.createdAt && (
+        <Text style={s.timestamp}>
+          {formatDate(post.createdAt as unknown as string)}
+        </Text>
+      )}
 
-      {/* Stats row */}
-      {(likesCount > 0 || (post.repliesCount ?? 0) > 0 || (post.commentsCount ?? 0) > 0) ? (
-        <View className="flex-row gap-x-4 px-4 py-3 border-b border-b-[#EFF3F4]">
-          {((post.repliesCount ?? 0) > 0 || (post.commentsCount ?? 0) > 0) ? (
-            <View className="flex-row items-baseline">
-              <Text className="text-[14px] font-bold text-[#0F1419]">
-                {fmtCount(post.repliesCount ?? post.commentsCount ?? 0)}
-              </Text>
-              <Text className="text-[14px] text-[#536471]"> Replies</Text>
-            </View>
-          ) : null}
-          {likesCount > 0 ? (
-            <View className="flex-row items-baseline">
-              <Text className="text-[14px] font-bold text-[#0F1419]">{fmtCount(likesCount)}</Text>
-              <Text className="text-[14px] text-[#536471]">
-                {likesCount === 1 ? " Like" : " Likes"}
-              </Text>
-            </View>
-          ) : null}
+      {/* ── Stats row ── */}
+      {(likesCount > 0 || (post?.repliesCount ?? 0) > 0) && (
+        <View style={s.statsRow}>
+          {(post?.repliesCount ?? 0) > 0 && (
+            <Text style={s.statText}>
+              <Text style={s.statNum}>{post?.repliesCount?.toLocaleString()}</Text>
+              {" "}
+              <Text style={s.statLabel}>Replies</Text>
+            </Text>
+          )}
+          {likesCount > 0 && (
+            <Text style={s.statText}>
+              <Text style={s.statNum}>{likesCount.toLocaleString()}</Text>
+              {" "}
+              <Text style={s.statLabel}>{likesCount === 1 ? "Like" : "Likes"}</Text>
+            </Text>
+          )}
         </View>
-      ) : null}
+      )}
 
-      {/* Action bar */}
-      <View className="flex-row px-2 py-0.5 border-b border-b-[#EFF3F4]">
-        <ActionBtn
-          icon={MessageCircle01Icon}
-          color={X.textSub}
-          activeColor={X.blue}
-          active={replyTarget?.postId === id}
-          onPress={() => openReply(id!, post.author.username)}
-        />
-        <ActionBtn
-          icon={ArrowUp01Icon}
-          color={X.textSub}
-          activeColor={X.green}
-          active={false}
-          onPress={() => {}}
-        />
-        <ActionBtn
-          icon={Heart01Icon}
-          color={X.textSub}
-          activeColor={X.red}
-          active={isLiked}
-          onPress={handleLike}
-        />
-        <ActionBtn
-          icon={Bookmark01Icon}
-          color={X.textSub}
-          activeColor={X.blue}
-          active={isSaved}
-          onPress={() => setIsSaved((v) => !v)}
-        />
-        <ActionBtn
-          icon={Share01Icon}
-          color={X.textSub}
-          activeColor={X.blue}
-          active={false}
-          onPress={() => {}}
-        />
+      {/* ── Action bar ── */}
+      <View style={s.actionBar}>
+        {/* Reply */}
+        <TouchableOpacity style={s.actionBtn} activeOpacity={0.7}>
+          <HugeiconsIcon icon={MessageCircle01Icon} size={20} strokeWidth={1.75} color={X.textSub} />
+        </TouchableOpacity>
+
+        {/* Like */}
+        <TouchableOpacity onPress={handleLike} style={s.actionBtn} activeOpacity={0.7}>
+          <HugeiconsIcon
+            icon={Heart01Icon}
+            size={20}
+            strokeWidth={isLiked ? 0 : 1.75}
+            color={isLiked ? X.red : X.textSub}
+          />
+        </TouchableOpacity>
+
+        {/* Bookmark */}
+        <TouchableOpacity style={s.actionBtn} activeOpacity={0.7}>
+          <HugeiconsIcon icon={Bookmark01Icon} size={20} strokeWidth={1.75} color={X.textSub} />
+        </TouchableOpacity>
+
+        {/* Share */}
+        <TouchableOpacity style={s.actionBtn} activeOpacity={0.7}>
+          <HugeiconsIcon icon={Share01Icon} size={20} strokeWidth={1.75} color={X.textSub} />
+        </TouchableOpacity>
       </View>
 
-      {/* Replies header */}
-      <View className="px-4 py-2.5 border-b border-b-[#EFF3F4] bg-[#F7F9F9]">
-        <Text className="text-xs font-bold text-[#536471] tracking-[0.8px] uppercase">Replies</Text>
+      {/* ── Replies section label ── */}
+      <View style={s.repliesLabel}>
+        <Text style={s.repliesLabelText}>Replies</Text>
       </View>
 
-      {/* Replying-to banner */}
-      {replyTarget ? (
-        <View className="flex-row items-center justify-between px-4 py-2 bg-[#E8F5FD] border-b border-b-[#EFF3F4]">
-          <Text className="text-[13px] text-[#536471]">
+      {/* ── Replying-to banner ── */}
+      {replyingTo && (
+        <View style={s.replyingBanner}>
+          <Text style={s.replyingBannerText}>
             Replying to{" "}
-            <Text className="text-[#1D9BF0]">@{replyTarget.username}</Text>
+            <Text style={{ color: X.blue }}>@{replyingTo.username}</Text>
           </Text>
-          <TouchableOpacity onPress={() => setReplyTarget(null)} hitSlop={8}>
-            <Text className="text-[13px] font-semibold text-[#1D9BF0]">Cancel</Text>
+          <TouchableOpacity onPress={() => setReplyingTo(null)}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: X.blue }}>Cancel</Text>
           </TouchableOpacity>
         </View>
-      ) : null}
+      )}
     </View>
   );
 
-  // ── Render reply item ──────────────────────────────────────────────────────
-  const renderItem = ({ item }: { item: Post }) => {
-    if (!isValidPost(item)) return null;
-    return (
-      <ReplyItem
-        reply={item}
-        isTargeted={replyTarget?.postId === item.id}
-        onReply={() => openReply(item.id, item.author.username)}
-        onAuthorPress={() => router.push(`/profile/${item.author.id}` as any)}
-      />
-    );
-  };
+  const renderReply = ({ item }: { item: Post }) => (
+    <ReplyItem
+      reply={item}
+      timeAgo={timeAgo}
+      replyingTo={replyingTo}
+      onReply={() =>
+        setReplyingTo(
+          replyingTo?.postId === item.id
+            ? null
+            : { postId: item.id, username: item.author.username }
+        )
+      }
+      onAuthorPress={() => router.push(`/profile/${item.author.id}` as any)}
+    />
+  );
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      style={{ flex: 1, backgroundColor: X.bg }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
     >
       <FlatList
         data={replies}
         keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        ListHeaderComponent={ListHeader}
+        renderItem={renderReply}
+        ListHeaderComponent={<PostHeader />}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
-        ListEmptyComponent={
-          <View className="items-center pt-12 px-8">
-            <Text className="text-3xl mb-3">💬</Text>
-            <Text className="text-lg font-bold text-[#0F1419] mb-1.5">No replies yet</Text>
-            <Text className="text-[14px] text-[#536471] text-center">Be the first to reply to this post</Text>
-          </View>
-        }
+        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
       />
 
-      {/* Reply composer */}
+      {/* ── Reply composer ── */}
       <View
-        className="flex-row items-center px-3.5 pt-2.5 gap-x-2.5 border-t border-t-[#EFF3F4] bg-white"
-        style={{
-          paddingBottom: insets.bottom + (Platform.OS === "web" ? 16 : 8),
-        }}
+        style={[
+          s.composer,
+          { paddingBottom: insets.bottom + (Platform.OS === "web" ? 16 : 8) },
+        ]}
       >
         <UserAvatar uri={user?.avatarUrl} size={36} />
         <TextInput
-          ref={inputRef}
-          className="flex-1 text-[15px] text-[#0F1419] min-h-[38px] max-h-24 pt-2 ios:pt-2 android:pt-1"
+          style={s.composerInput}
           placeholder={
-            replyTarget
-              ? `Reply to @${replyTarget.username}…`
-              : "Post your reply"
+            replyingTo ? `Reply to @${replyingTo.username}…` : "Post your reply"
           }
           placeholderTextColor={X.textSub}
           value={replyText}
           onChangeText={setReplyText}
           multiline
-          maxLength={280}
         />
         <TouchableOpacity
-          onPress={handleSend}
+          onPress={handleReply}
           disabled={!replyText.trim() || replyPending}
+          style={[
+            s.replyBtn,
+            { backgroundColor: replyText.trim() ? X.blue : X.borderStrong },
+          ]}
           activeOpacity={0.85}
-          className="px-4.5 py-2.25 rounded-5.5 items-center justify-center min-w-[68px] bg-[#1D9BF0] disabled:bg-[#CFD9DE]"
         >
-          {replyPending ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text className="text-[14px] font-bold text-white">Reply</Text>
-          )}
+          <Text style={s.replyBtnText}>Reply</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
-// ── Action button helper ─────────────────────────────────────────────────────
-interface ActionBtnProps {
-  icon: any;
-  color: string;
-  activeColor: string;
-  active: boolean;
-  onPress: () => void;
-}
-
-function ActionBtn({ icon, color, activeColor, active, onPress }: ActionBtnProps) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      className="flex-1 items-center py-2.5"
-      hitSlop={8}
-    >
-      <HugeiconsIcon
-        icon={icon}
-        size={20}
-        strokeWidth={active ? 0 : 1.75}
-        color={active ? activeColor : color}
-      />
-    </TouchableOpacity>
-  );
-}
-
-// ── Reply Item (FULLY SAFE) ──────────────────────────────────────────────────
+// ── Reply Item ───────────────────────────────────────────────────────────────
 interface ReplyItemProps {
   reply: Post;
-  isTargeted: boolean;
+  timeAgo: (date: string) => string;
+  replyingTo: { postId: string; username: string } | null;
   onReply: () => void;
   onAuthorPress: () => void;
 }
 
-function ReplyItem({ reply, isTargeted, onReply, onAuthorPress }: ReplyItemProps) {
-  // SAFETY FIRST: Early return if invalid
-  if (!reply || !reply.author || !reply.author.username) {
-    return null;
-  }
-
-  const [liked, setLiked] = useState(reply.isLiked ?? false);
-  const [likeCount, setLikeCount] = useState(reply.likesCount ?? 0);
-
-  const handleLike = useCallback(() => {
-    const next = !liked;
-    setLiked(next);
-    setLikeCount((c) => c + (next ? 1 : -1));
-  }, [liked]);
+function ReplyItem({ reply, timeAgo, replyingTo, onReply, onAuthorPress }: ReplyItemProps) {
+  const isActive = replyingTo?.postId === reply.id;
+  const [liked, setLiked] = useState(false);
 
   return (
-    <View className={`flex-row pl-3.5 pr-3.5 pt-3 pb-3 border-b border-b-[#EFF3F4] bg-white gap-x-2.5 ${isTargeted ? 'bg-[#E8F5FD]' : ''}`}>
-      {/* Left: avatar + thread line */}
-      <View className="items-center w-10">
-        <TouchableOpacity onPress={onAuthorPress} activeOpacity={0.85}>
-          <UserAvatar uri={reply.author.avatarUrl ?? undefined} size={38} />
+    <View style={[s.replyRow, isActive && { backgroundColor: X.blueLight }]}>
+      {/* Thread line + avatar */}
+      <View style={{ alignItems: "center", width: 40 }}>
+        <TouchableOpacity onPress={onAuthorPress} activeOpacity={0.8}>
+          <UserAvatar uri={reply.author.avatarUrl} size={38} />
         </TouchableOpacity>
-        <View className="w-[2px] flex-1 mt-1.5 min-h-5 bg-[#EFF3F4] rounded" />
+        <View style={s.threadLine} />
       </View>
 
-      {/* Right: content */}
-      <View className="flex-1 pb-3">
-        {/* Meta */}
-        <View className="flex-row items-center mb-0.75 flex-nowrap">
-          <TouchableOpacity
-            onPress={onAuthorPress}
-            activeOpacity={0.85}
-            className="flex-shrink"
-          >
-            <View className="flex-row items-center gap-x-0.75">
-              <Text className="text-[14px] font-bold text-[#0F1419] max-w-[110px]" numberOfLines={1}>
-                {reply.author.displayName ?? reply.author.username ?? 'Unknown'}
-              </Text>
-              {reply.author.isVerified && (
-                <HugeiconsIcon
-                  icon={CheckmarkBadge01Icon}
-                  size={13}
-                  color={X.verified}
-                />
-              )}
-            </View>
+      {/* Content */}
+      <View style={{ flex: 1, paddingBottom: 12 }}>
+        {/* Author */}
+        <View style={s.replyMeta}>
+          <TouchableOpacity onPress={onAuthorPress} activeOpacity={0.8}>
+            <Text style={s.replyName} numberOfLines={1}>
+              {reply.author.displayName ?? reply.author.username}
+            </Text>
           </TouchableOpacity>
-          <Text className="text-[13px] text-[#536471] flex-shrink" numberOfLines={1}>
-            {"  "}@{reply.author.username}
-          </Text>
-          <Text className="text-[13px] text-[#536471] mx-0.75">·</Text>
-          <Text className="text-[13px] text-[#536471]">
+          <Text style={s.replyUsername}>@{reply.author.username}</Text>
+          <Text style={s.replyDot}>·</Text>
+          <Text style={s.replyTime}>
             {timeAgo(reply.createdAt as unknown as string)}
           </Text>
-          <TouchableOpacity
-            className="ml-auto"
-            activeOpacity={0.7}
-            hitSlop={8}
-          >
-            <HugeiconsIcon
-              icon={MoreHorizontalIcon}
-              size={15}
-              strokeWidth={2}
-              color={X.textSub}
-            />
+          <TouchableOpacity style={{ marginLeft: "auto" }} activeOpacity={0.7}>
+            <HugeiconsIcon icon={MoreHorizontalIcon} size={16} strokeWidth={2} color={X.textSub} />
           </TouchableOpacity>
         </View>
 
-        {/* Content */}
-        {reply.content ? (
-          <Text className="text-[14px] leading-5 text-[#0F1419] mb-2">{reply.content}</Text>
-        ) : null}
-
-        {/* Reply image */}
-        {reply.imageUrl ? (
-          <Image
-            source={{ uri: reply.imageUrl }}
-            className="w-full h-[180px] rounded-3xl mb-2"
-            resizeMode="cover"
-          />
-        ) : null}
+        {/* Text */}
+        <Text style={s.replyText}>{reply.content}</Text>
 
         {/* Reply actions */}
-        <View className="flex-row gap-x-6 items-center pt-0.5">
-          <TouchableOpacity
-            onPress={onReply}
-            className="flex-row items-center gap-x-1.25 active:opacity-70"
-            hitSlop={8}
-          >
-            <HugeiconsIcon
-              icon={MessageCircle01Icon}
-              size={16}
-              strokeWidth={1.75}
-              color={isTargeted ? X.blue : X.textSub}
-            />
+        <View style={s.replyActions}>
+          <TouchableOpacity onPress={onReply} style={s.replyAction} activeOpacity={0.7}>
+            <HugeiconsIcon icon={MessageCircle01Icon} size={16} strokeWidth={1.75} color={X.textSub} />
             {(reply.repliesCount ?? 0) > 0 && (
-              <Text className={`text-xs ${isTargeted ? 'text-[#1D9BF0]' : 'text-[#536471]'}`}>
-                {fmtCount(reply.repliesCount ?? 0)}
-              </Text>
+              <Text style={s.replyActionCount}>{reply.repliesCount}</Text>
             )}
           </TouchableOpacity>
-
           <TouchableOpacity
-            onPress={handleLike}
-            className="flex-row items-center gap-x-1.25 active:opacity-70"
-            hitSlop={8}
+            onPress={() => setLiked((l) => !l)}
+            style={s.replyAction}
+            activeOpacity={0.7}
           >
             <HugeiconsIcon
               icon={Heart01Icon}
@@ -592,26 +431,249 @@ function ReplyItem({ reply, isTargeted, onReply, onAuthorPress }: ReplyItemProps
               strokeWidth={liked ? 0 : 1.75}
               color={liked ? X.red : X.textSub}
             />
-            {likeCount > 0 && (
-              <Text className={`text-xs ${liked ? 'text-[#F4212E]' : 'text-[#536471]'}`}>
-                {fmtCount(likeCount)}
+            {(reply.likesCount ?? 0) > 0 && (
+              <Text style={[s.replyActionCount, liked && { color: X.red }]}>
+                {reply.likesCount}
               </Text>
             )}
           </TouchableOpacity>
-
-          <TouchableOpacity
-            className="flex-row items-center gap-x-1.25 active:opacity-70"
-            hitSlop={8}
-          >
-            <HugeiconsIcon
-              icon={Share01Icon}
-              size={16}
-              strokeWidth={1.75}
-              color={X.textSub}
-            />
+          <TouchableOpacity style={s.replyAction} activeOpacity={0.7}>
+            <HugeiconsIcon icon={Share01Icon} size={16} strokeWidth={1.75} color={X.textSub} />
           </TouchableOpacity>
         </View>
       </View>
     </View>
   );
 }
+
+// ── Styles ───────────────────────────────────────────────────────────────────
+const s = StyleSheet.create({
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+
+  // Nav
+  navBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    backgroundColor: X.bg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: X.border,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  navTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: X.text,
+    letterSpacing: -0.2,
+  },
+
+  // Author
+  authorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 2,
+  },
+  displayName: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: X.text,
+    letterSpacing: -0.1,
+  },
+  username: {
+    fontSize: 14,
+    color: X.textSub,
+    marginTop: 1,
+  },
+  moreBtn: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 16,
+  },
+
+  // Content
+  contentBlock: {
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  postText: {
+    fontSize: 20,
+    lineHeight: 28,
+    color: X.text,
+    letterSpacing: -0.2,
+  },
+  imageWrapper: {
+    paddingHorizontal: 14,
+    paddingTop: 10,
+  },
+
+  // Timestamp
+  timestamp: {
+    fontSize: 14,
+    color: X.textSub,
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: X.border,
+  },
+
+  // Stats
+  statsRow: {
+    flexDirection: "row",
+    gap: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: X.border,
+  },
+  statText: { flexDirection: "row" },
+  statNum: { fontSize: 14, fontWeight: "700", color: X.text },
+  statLabel: { fontSize: 14, color: X.textSub },
+
+  // Actions
+  actionBar: {
+    flexDirection: "row",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: X.border,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+  },
+  actionBtn: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+
+  // Replies label
+  repliesLabel: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: X.border,
+  },
+  repliesLabelText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: X.textSub,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+
+  // Replying banner
+  replyingBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: X.blueLight,
+  },
+  replyingBannerText: { fontSize: 13, color: X.textSub },
+
+  // Composer
+  composer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    gap: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: X.border,
+    backgroundColor: X.bg,
+  },
+  composerInput: {
+    flex: 1,
+    fontSize: 15,
+    color: X.text,
+    minHeight: 36,
+    maxHeight: 100,
+  },
+  replyBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  replyBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#fff",
+  },
+
+  // Reply row
+  replyRow: {
+    flexDirection: "row",
+    paddingLeft: 14,
+    paddingRight: 14,
+    paddingTop: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: X.border,
+    backgroundColor: X.bg,
+    gap: 10,
+  },
+  threadLine: {
+    width: 2,
+    flex: 1,
+    backgroundColor: X.border,
+    marginTop: 6,
+    borderRadius: 1,
+    minHeight: 20,
+  },
+  replyMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 2,
+  },
+  replyName: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: X.text,
+    maxWidth: 100,
+  },
+  replyUsername: {
+    fontSize: 13,
+    color: X.textSub,
+  },
+  replyDot: {
+    fontSize: 13,
+    color: X.textSub,
+  },
+  replyTime: {
+    fontSize: 13,
+    color: X.textSub,
+  },
+  replyText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: X.text,
+    marginBottom: 8,
+  },
+  replyActions: {
+    flexDirection: "row",
+    gap: 20,
+    alignItems: "center",
+  },
+  replyAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  replyActionCount: {
+    fontSize: 12,
+    color: X.textSub,
+  },
+});

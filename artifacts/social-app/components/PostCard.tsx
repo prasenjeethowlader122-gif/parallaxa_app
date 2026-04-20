@@ -163,25 +163,7 @@ export function PostCard({
       )}
 
       {/* ── Hashtag Pills (Matching Skeleton Pill Design) ── */}
-      {hashtags.length > 0 && (
-        <View style={styles.hashtagRow}>
-          {hashtags.map(tag => (
-            <View 
-              key={tag} 
-              style={{ 
-                paddingHorizontal: 12, 
-                paddingVertical: 4, 
-                borderRadius: 12, 
-                backgroundColor: 'rgba(29, 155, 240, 0.1)' // Light blue background
-              }}
-            >
-              <Text className="text-[13px] font-medium" style={{ color: '#1d9bf0' }}>
-                #{tag}
-              </Text>
-            </View>
-          ))}
-        </View>
-      )}
+
 
       {/* ── Action bar ── */}
       <View style={styles.actionRow}>
