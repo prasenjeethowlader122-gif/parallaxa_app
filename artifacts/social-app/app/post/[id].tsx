@@ -33,7 +33,9 @@ import {
   useSavePost,
   useUnsavePost,
   Comment,
+  getGetCommentsQueryKey,
 } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useColors } from "@/hooks/useColors";
@@ -71,6 +73,34 @@ function fmtCount(n: number): string {
   return String(n);
 }
 
+// ── Tree Logic ────────────────────────────────────────────────────────────────
+type CommentWithReplies = Comment & { replies: CommentWithReplies[] };
+
+function buildCommentTree(flatComments: Comment[]): CommentWithReplies[] {
+  const map = new Map<string, CommentWithReplies>();
+  const roots: CommentWithReplies[] = [];
+
+  // Sort by date to ensure stable order
+  const sorted = [...flatComments].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+
+  sorted.forEach((c) => {
+    map.set(c.id, { ...c, replies: [] });
+  });
+
+  sorted.forEach((c) => {
+    const node = map.get(c.id)!;
+    if (c.parentId && map.has(c.parentId)) {
+      map.get(c.parentId)!.replies.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  return roots;
+}
+
 // ── Main Screen ───────────────────────────────────────────────────────────────
 export default function PostDetailScreen() {
   const insets = useSafeAreaInsets();
@@ -79,6 +109,7 @@ export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const inputRef = useRef<TextInput>(null);
+  const queryClient = useQueryClient();
 
   const [replyText, setReplyText] = useState("");
   const [replyTarget, setReplyTarget] = useState<{
@@ -131,23 +162,65 @@ export default function PostDetailScreen() {
 
   const handleSend = useCallback(() => {
     const text = replyText.trim();
-    if (!text || !id) return;
+    if (!text || !id || !user) return;
+
+    const parentId = replyTarget?.commentId ?? undefined;
 
     createComment({
       postId: id,
       data: {
         content: text,
-        parentId: replyTarget?.commentId ?? undefined,
+        parentId,
       }
     }, {
-      onSuccess: () => {
+      onMutate: async (newComment) => {
         setReplyText("");
         setReplyTarget(null);
-        refetchComments();
+
+        // Cancel any outgoing refetches
+        await queryClient.cancelQueries({ queryKey: getGetCommentsQueryKey(id) });
+
+        // Snapshot the previous value
+        const previousComments = queryClient.getQueryData(getGetCommentsQueryKey(id));
+
+        // Optimistically update to the new value
+        if (previousComments) {
+          const optimisticComment: Comment = {
+            id: Math.random().toString(36).substring(7),
+            postId: id,
+            content: text,
+            parentId: parentId ?? null,
+            author: {
+              id: user.id,
+              username: user.username,
+              displayName: user.displayName,
+              avatarUrl: user.avatarUrl,
+              isVerified: user.isVerified,
+              isFollowing: false,
+            },
+            repliesCount: 0,
+            createdAt: new Date().toISOString(),
+          };
+
+          queryClient.setQueryData(getGetCommentsQueryKey(id), (old: any) => ({
+            ...old,
+            comments: [optimisticComment, ...(old?.comments ?? [])],
+          }));
+        }
+
+        return { previousComments };
+      },
+      onError: (err, newComment, context) => {
+        if (context?.previousComments) {
+          queryClient.setQueryData(getGetCommentsQueryKey(id), context.previousComments);
+        }
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: getGetCommentsQueryKey(id) });
         refetchPost();
       }
     });
-  }, [replyText, replyTarget, id, createComment, refetchComments, refetchPost]);
+  }, [replyText, replyTarget, id, user, createComment, queryClient, refetchPost]);
 
   const topPad = insets.top + (Platform.OS === "web" ? 20 : 8);
 
@@ -160,6 +233,7 @@ export default function PostDetailScreen() {
   }
 
   const comments = commentsData?.comments ?? [];
+  const rootComments = React.useMemo(() => buildCommentTree(comments), [comments]);
 
   // ── List Header ───────────────────────────────────────────────────────────
   const ListHeader = (
@@ -400,14 +474,15 @@ export default function PostDetailScreen() {
       ) : null}
     </View>
   );
-  const navigateToPost = (id_) => router.push({ pathname: "/post/[id]", params: {id_} });
+  const navigateToPost = (postId: string) => router.push(`/post/${postId}` as any);
 
-  const renderItem = ({ item }: { item: Comment }) => (
+  const renderItem = ({ item }: { item: CommentWithReplies }) => (
     <CommentItem
       comment={item}
       isTargeted={replyTarget?.commentId === item.id}
-      onReply={() => openReply(item.id, item.author.username)}
-      onAuthorPress={() => navigateToPost(item.id)}
+      onReply={openReply}
+      onAuthorPress={navigateToPost}
+      depth={0}
     />
   );
 
@@ -418,7 +493,7 @@ export default function PostDetailScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <FlatList
-        data={comments}
+        data={rootComments}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={ListHeader}
@@ -497,10 +572,11 @@ export default function PostDetailScreen() {
 
 // ── Comment Item ──────────────────────────────────────────────────────────────
 interface CommentItemProps {
-  comment: Comment;
+  comment: CommentWithReplies;
   isTargeted: boolean;
-  onReply: () => void;
-  onAuthorPress: () => void;
+  onReply: (id: string, username: string) => void;
+  onAuthorPress: (id: string) => void;
+  depth?: number;
 }
 
 function CommentItem({
@@ -508,123 +584,155 @@ function CommentItem({
   isTargeted,
   onReply,
   onAuthorPress,
+  depth = 0,
 }: CommentItemProps) {
   const colors = useColors();
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const hasReplies = comment.replies.length > 0;
+  const showSeeMore = hasReplies && !isExpanded;
 
   return (
     <View
-      className="flex-row pl-3.5 pr-3.5 pt-3 border-b gap-2.5"
       style={{
         backgroundColor: isTargeted ? colors.primary + "10" : colors.background,
-        borderBottomColor: colors.border
+        paddingLeft: depth > 0 ? 12 : 0,
       }}
     >
-      {/* Left column: avatar + thread line */}
-      <View className="items-center w-10">
-        <TouchableOpacity onPress={onAuthorPress} activeOpacity={0.85}>
-          <UserAvatar uri={comment.author.avatarUrl} size={38} />
-        </TouchableOpacity>
-        <View
-          className="w-0.5 flex-1 mt-1.5 min-h-5 rounded-full"
-          style={{ backgroundColor: colors.border }}
-        />
-      </View>
-
-      {/* Right column: content */}
-      <View className="flex-1 pb-3">
-        {/* Meta */}
-        <View className="flex-row items-center mb-0.5">
-          <TouchableOpacity
-            onPress={onAuthorPress}
-            activeOpacity={0.85}
-            className="shrink"
-          >
-            <View className="flex-row items-center gap-0.5">
-              <Text
-                className="text-[14px] font-bold max-w-[110px]"
-                style={{ color: colors.foreground }}
-                numberOfLines={1}
-              >
-                {comment.author.displayName}
-              </Text>
-              {comment.author.isVerified && (
-                <HugeiconsIcon
-                  icon={CheckmarkBadge01Icon}
-                  size={13}
-                  color={colors.primary}
-                />
-              )}
-            </View>
+      <View
+        className="flex-row pl-3.5 pr-3.5 pt-3 gap-2.5"
+        style={{
+          borderBottomWidth: !hasReplies || !isExpanded ? StyleSheet.hairlineWidth : 0,
+          borderBottomColor: colors.border
+        }}
+      >
+        {/* Left column: avatar + thread line */}
+        <View className="items-center w-10">
+          <TouchableOpacity onPress={() => onAuthorPress(comment.author.id)} activeOpacity={0.85}>
+            <UserAvatar uri={comment.author.avatarUrl} size={depth > 0 ? 32 : 38} />
           </TouchableOpacity>
+          {((hasReplies && isExpanded) || depth > 0) && (
+            <View
+              className="w-0.5 flex-1 mt-1.5 min-h-[10px] rounded-full"
+              style={{ backgroundColor: colors.border, marginBottom: (hasReplies && isExpanded) ? 0 : 12 }}
+            />
+          )}
+        </View>
+
+        {/* Right column: content */}
+        <View className="flex-1 pb-3">
+          {/* Meta */}
+          <View className="flex-row items-center mb-0.5">
+            <TouchableOpacity
+              onPress={() => onAuthorPress(comment.author.id)}
+              activeOpacity={0.85}
+              className="shrink"
+            >
+              <View className="flex-row items-center gap-0.5">
+                <Text
+                  className="text-[14px] font-bold max-w-[110px]"
+                  style={{ color: colors.foreground }}
+                  numberOfLines={1}
+                >
+                  {comment.author.displayName}
+                </Text>
+                {comment.author.isVerified && (
+                  <HugeiconsIcon
+                    icon={CheckmarkBadge01Icon}
+                    size={13}
+                    color={colors.primary}
+                  />
+                )}
+              </View>
+            </TouchableOpacity>
+            <Text
+              className="text-[13px] shrink ml-1"
+              style={{ color: colors.mutedForeground }}
+              numberOfLines={1}
+            >
+              @{comment.author.username}
+            </Text>
+            <Text className="text-[13px] mx-1" style={{ color: colors.mutedForeground }}>·</Text>
+            <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>
+              {timeAgo(comment.createdAt)}
+            </Text>
+          </View>
+
+          {/* Comment text */}
           <Text
-            className="text-[13px] shrink ml-1"
-            style={{ color: colors.mutedForeground }}
-            numberOfLines={1}
+            className="text-[14px] leading-5 mb-2"
+            style={{ color: colors.foreground }}
           >
-            @{comment.author.username}
+            {comment.content}
           </Text>
-          <Text className="text-[13px] mx-1" style={{ color: colors.mutedForeground }}>·</Text>
-          <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>
-            {timeAgo(comment.createdAt)}
-          </Text>
-          <TouchableOpacity className="ml-auto" activeOpacity={0.7} hitSlop={8}>
-            <HugeiconsIcon
-              icon={MoreHorizontalIcon}
-              size={15}
-              strokeWidth={2}
-              color={colors.mutedForeground}
-            />
-          </TouchableOpacity>
-        </View>
 
-        {/* Comment text */}
-        <Text
-          className="text-[14px] leading-5 mb-2"
-          style={{ color: colors.foreground }}
-        >
-          {comment.content}
-        </Text>
+          {/* Actions */}
+          <View className="flex-row gap-6 items-center pt-0.5">
+            <TouchableOpacity
+              onPress={() => onReply(comment.id, comment.author.username)}
+              activeOpacity={0.7}
+              hitSlop={8}
+              className="flex-row items-center gap-1"
+            >
+              <HugeiconsIcon
+                icon={AiChatIcon}
+                size={16}
+                strokeWidth={2}
+                color={isTargeted ? colors.primary : colors.mutedForeground}
+              />
+              {comment.repliesCount > 0 && (
+                <Text
+                  className="text-[12px]"
+                  style={{ color: isTargeted ? colors.primary : colors.mutedForeground }}
+                >
+                  {fmtCount(comment.repliesCount)}
+                </Text>
+              )}
+            </TouchableOpacity>
 
-        {/* Actions */}
-        <View className="flex-row gap-6 items-center pt-0.5">
-          {/* Reply */}
-          <TouchableOpacity
-            onPress={onReply}
-            activeOpacity={0.7}
-            hitSlop={8}
-            className="flex-row items-center gap-1"
-          >
-            <HugeiconsIcon
-              icon={AiChatIcon}
-              size={16}
-              strokeWidth={2}
-              color={isTargeted ? colors.primary : colors.mutedForeground}
-            />
-            {comment.repliesCount > 0 && (
-              <Text
-                className="text-[12px]"
-                style={{ color: isTargeted ? colors.primary : colors.mutedForeground }}
-              >
-                {fmtCount(comment.repliesCount)}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              hitSlop={8}
+              className="flex-row items-center"
+            >
+              <HugeiconsIcon
+                icon={Share01Icon}
+                size={16}
+                strokeWidth={2}
+                color={colors.mutedForeground}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {showSeeMore && (
+            <TouchableOpacity
+              onPress={() => setIsExpanded(true)}
+              className="mt-3 py-1"
+              activeOpacity={0.7}
+            >
+              <Text className="text-sm font-bold" style={{ color: colors.primary }}>
+                {comment.replies.length > 1 ? "See More" : "View reply"}
               </Text>
-            )}
-          </TouchableOpacity>
-
-          {/* Share */}
-          <TouchableOpacity
-            activeOpacity={0.7}
-            hitSlop={8}
-            className="flex-row items-center"
-          >
-            <HugeiconsIcon
-              icon={Share01Icon}
-              size={16}
-              strokeWidth={2}
-              color={colors.mutedForeground}
-            />
-          </TouchableOpacity>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
+
+      {/* Nested Replies */}
+      {isExpanded && hasReplies && (
+        <View style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }}>
+          {comment.replies.map((reply) => (
+            <CommentItem
+              key={reply.id}
+              comment={reply}
+              isTargeted={isTargeted}
+              onReply={onReply}
+              onAuthorPress={onAuthorPress}
+              depth={depth + 1}
+            />
+          ))}
+        </View>
+      )}
     </View>
   );
 }
