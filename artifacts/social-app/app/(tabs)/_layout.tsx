@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,12 +6,19 @@ import {
   Image,
   Platform,
   StyleSheet,
-  Pressable,
   ScrollView,
-  Animated,
 } from "react-native";
 import { Stack, useRouter, usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  runOnJS,
+  Easing,
+} from "react-native-reanimated";
+import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
   Menu01Icon,
@@ -20,9 +27,7 @@ import {
   Notification01Icon,
   Settings01Icon,
   Add01Icon,
-  Cancel01Icon,
   Message01Icon,
-  UserIcon,
   BookmarkIcon,
   ArrowLeft01Icon,
 } from "@hugeicons/core-free-icons";
@@ -32,52 +37,112 @@ import { UserAvatar } from "@/components/UserAvatar";
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const MAIN_NAV = [
-  { id: "index",         label: "Home",          icon: Home01Icon },
-  { id: "explore",       label: "Explore",        icon: Search01Icon },
-  { id: "notifications", label: "Notifications",  icon: Notification01Icon },
-  { id: "messages",      label: "Messages",       icon: Message01Icon },
+  { id: "index",         label: "Home",         icon: Home01Icon },
+  { id: "explore",       label: "Explore",       icon: Search01Icon },
+  { id: "notifications", label: "Notifications", icon: Notification01Icon },
+  { id: "messages",      label: "Messages",      icon: Message01Icon },
 ];
 
 const SECONDARY_NAV = [
-  { id: "bookmarks",     label: "Bookmarks",      icon: BookmarkIcon },
-  { id: "settings",      label: "Settings",       icon: Settings01Icon },
+  { id: "bookmarks", label: "Bookmarks", icon: BookmarkIcon },
+  { id: "settings",  label: "Settings",  icon: Settings01Icon },
 ];
 
-// ─── Drawer width ─────────────────────────────────────────────────────────────
 const DRAWER_WIDTH = 300;
 
-export default function RootLayout() {
-  const colors = useColors();
-  const insets = useSafeAreaInsets();
-  const router = useRouter();
-  const pathname = usePathname();
-  const { user, logout } = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
+// Animation constants
+const SPRING_CONFIG = { damping: 22, stiffness: 220, mass: 0.8 };
+const CLOSE_TIMING  = { duration: 220, easing: Easing.out(Easing.cubic) };
 
+export default function RootLayout() {
+  const colors      = useColors();
+  const insets      = useSafeAreaInsets();
+  const router      = useRouter();
+  const pathname    = usePathname();
+  const { user, logout } = useAuth();
+
+  // ── Drawer state ──────────────────────────────────────────────────────────
+  const [drawerMounted, setDrawerMounted] = useState(false);
+
+  const translateX  = useSharedValue(-DRAWER_WIDTH);
+  const overlayAlpha = useSharedValue(0);
+
+  const openDrawer = useCallback(() => {
+    setDrawerMounted(true);
+    translateX.value   = withSpring(0, SPRING_CONFIG);
+    overlayAlpha.value = withTiming(1, { duration: 250 });
+  }, []);
+
+  const closeDrawer = useCallback(() => {
+    translateX.value   = withTiming(-DRAWER_WIDTH, CLOSE_TIMING, (done) => {
+      if (done) runOnJS(setDrawerMounted)(false);
+    });
+    overlayAlpha.value = withTiming(0, { duration: 200 });
+  }, []);
+
+  // Swipe-to-close gesture on the drawer panel
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-8, 999])           // only trigger on leftward drag
+    .onUpdate((e) => {
+      const next = Math.min(0, e.translationX);
+      translateX.value = next;
+      overlayAlpha.value = 1 + next / DRAWER_WIDTH; // fade as it slides away
+    })
+    .onEnd((e) => {
+      if (e.translationX < -DRAWER_WIDTH * 0.35 || e.velocityX < -400) {
+        // dismiss
+        translateX.value   = withTiming(-DRAWER_WIDTH, CLOSE_TIMING, (done) => {
+          if (done) runOnJS(setDrawerMounted)(false);
+        });
+        overlayAlpha.value = withTiming(0, { duration: 200 });
+      } else {
+        // snap back
+        translateX.value   = withSpring(0, SPRING_CONFIG);
+        overlayAlpha.value = withTiming(1, { duration: 180 });
+      }
+    });
+
+  // Animated styles
+  const drawerStyle  = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: overlayAlpha.value,
+  }));
+
+  // ── Routing helpers ────────────────────────────────────────────────────────
   const currentRoute =
     pathname === "/" || pathname === "/(tabs)"
       ? "index"
       : pathname.split("/").pop();
 
-  const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
   const isHome = pathname === "/" || pathname === "/(tabs)";
+  const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
   const navigateTo = (id: string) => {
-    setMenuOpen(false);
-    if (id === "index") { router.push("/"); return; }
-    if (id === "messages") { router.push("/messages" as any); return; }
-    router.push(`/${id}` as any);
+    closeDrawer();
+    setTimeout(() => {
+      if (id === "index")    { router.push("/"); return; }
+      if (id === "messages") { router.push("/messages" as any); return; }
+      router.push(`/${id}` as any);
+    }, 50); // let close animation start first
   };
 
-  // ── X logo SVG placeholder (uses the Image asset if available) ──
+  // ── Logo ──────────────────────────────────────────────────────────────────
   const XLogo = () => (
     <View style={{ width: 35, height: 35, justifyContent: "center", alignItems: "center" }}>
-      <Image source={require('@/assets/images/parallaxa-logo.svg')} style={{ width: 45, height: 45 }} />
+      <Image
+        source={require("@/assets/images/parallaxa-logo.svg")}
+        style={{ width: 45, height: 45 }}
+      />
     </View>
   );
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#fff" }}>
+
       {/* ── GLOBAL HEADER ── */}
       <View
         style={{
@@ -97,25 +162,16 @@ export default function RootLayout() {
             paddingBottom: 10,
           }}
         >
-          <View style = {{
-            flexDirection: "row",
-            alignItems:"center",
-            justifyContent: "start",
-            gap: 15
-          }}>
-          {/* Left: avatar (opens drawer) */}
-          <TouchableOpacity
-            onPress={() => setMenuOpen(true)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <HugeiconsIcon icon={Menu01Icon} size={22} strokeWidth={2} color="#0f1419" />
-
-          </TouchableOpacity>
-
-          {/* Centre: X logo */}
-          <XLogo />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
+            <TouchableOpacity
+              onPress={openDrawer}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <HugeiconsIcon icon={Menu01Icon} size={22} strokeWidth={2} color="#0f1419" />
+            </TouchableOpacity>
+            <XLogo />
           </View>
-          {/* Right: icons */}
+
           <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
             <TouchableOpacity
               onPress={() => router.push("/(tabs)/explore" as any)}
@@ -133,7 +189,7 @@ export default function RootLayout() {
         </View>
       </View>
 
-      {/* ── CONTENT ── */}
+      {/* ── SCREEN CONTENT ── */}
       <Stack screenOptions={{ headerShown: false }} />
 
       {/* ── FAB: New Post ── */}
@@ -160,269 +216,264 @@ export default function RootLayout() {
         <HugeiconsIcon icon={Add01Icon} size={24} color="#fff" strokeWidth={2} />
       </TouchableOpacity>
 
-      {/* ── DRAWER OVERLAY ── */}
-      {menuOpen && (
-        <Pressable
-          onPress={() => setMenuOpen(false)}
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.4)",
-            zIndex: 99,
-          }}
+      {/* ── DRAWER OVERLAY (animated fade) ── */}
+      {drawerMounted && (
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              zIndex: 99,
+            },
+            overlayStyle,
+          ]}
+          pointerEvents={drawerMounted ? "auto" : "none"}
+          onTouchEnd={closeDrawer}
         />
       )}
 
-      {/* ── DRAWER PANEL ── */}
-      {menuOpen && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            bottom: 0,
-            width: DRAWER_WIDTH,
-            backgroundColor: "#fff",
-            zIndex: 100,
-            borderRightWidth: StyleSheet.hairlineWidth,
-            borderRightColor: "#e1e8ed",
-          }}
-        >
-          {/* ── Drawer top bar ── */}
-          <View
-            style={{
-              paddingTop: insets.top + 12,
-              paddingHorizontal: 16,
-              paddingBottom: 14,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-start",
-              gap: 15
-            }}
+      {/* ── DRAWER PANEL (animated slide) ── */}
+      {drawerMounted && (
+        <GestureDetector gesture={panGesture}>
+          <Animated.View
+            style={[
+              {
+                position: "absolute",
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: DRAWER_WIDTH,
+                backgroundColor: "#fff",
+                zIndex: 100,
+                borderRightWidth: StyleSheet.hairlineWidth,
+                borderRightColor: "#e1e8ed",
+              },
+              drawerStyle,
+            ]}
           >
-            
-            {/* Close (arrow back) */}
-            <TouchableOpacity
-              onPress={() => setMenuOpen(false)}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <HugeiconsIcon
-                icon={ArrowLeft01Icon}
-                size={22}
-                strokeWidth={2}
-                color="#0f1419"
-              />
-            </TouchableOpacity>
-
-            {/* X logo centred */}
-            <XLogo />
-
-            {/* Spacer to keep logo centred */}
-            <View style={{ width: 22 }} />
-          </View>
-
-          <View>
-            {/* ── Profile block ── */}
-            <TouchableOpacity
-              onPress={() => {
-                setMenuOpen(false);
-                router.push(`/profile/${user?.id}` as any);
-              }}
-              activeOpacity={0.8}
-              style={{ paddingHorizontal: 20, paddingVertical: 12 }}
-            >
-              <UserAvatar uri={user?.avatarUrl} size={52} />
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: "800",
-                  color: "#0f1419",
-                  marginTop: 10,
-                  letterSpacing: -0.3,
-                }}
-              >
-                {user?.displayName ?? "You"}
-              </Text>
-              {user?.username ? (
-                <Text style={{ fontSize: 14, color: "#536471", marginTop: 2 }}>
-                  @{user.username}
-                </Text>
-              ) : null}
-
-              {/* Followers / Following row */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  gap: 18,
-                  marginTop: 12,
-                }}
-              >
-                <View style={{ flexDirection: "row", gap: 4, alignItems: "baseline" }}>
-                  <Text style={{ fontSize: 14, fontWeight: "700", color: "#0f1419" }}>
-                    {user?.followingCount ?? 0}
-                  </Text>
-                  <Text style={{ fontSize: 13, color: "#536471" }}>Following</Text>
-                </View>
-                <View style={{ flexDirection: "row", gap: 4, alignItems: "baseline" }}>
-                  <Text style={{ fontSize: 14, fontWeight: "700", color: "#0f1419" }}>
-                    {user?.followersCount ?? 0}
-                  </Text>
-                  <Text style={{ fontSize: 13, color: "#536471" }}>Followers</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            {/* Thin divider */}
+            {/* ── Drawer top bar ── */}
             <View
               style={{
-                height: StyleSheet.hairlineWidth,
-                backgroundColor: "#e1e8ed",
-                marginVertical: 6,
-                marginHorizontal: 20,
+                paddingTop: insets.top + 12,
+                paddingHorizontal: 16,
+                paddingBottom: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 15,
               }}
-            />
-            <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
-         >
-            {/* ── Main nav ── */}
-            {MAIN_NAV.map((item) => {
-              const isActive = currentRoute === item.id;
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  onPress={() => navigateTo(item.id)}
-                  activeOpacity={0.7}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 16,
-                    paddingHorizontal: 20,
-                    paddingVertical: 14,
-                  }}
-                >
-                  <HugeiconsIcon
-                    icon={item.icon}
-                    size={24}
-                    color="#0f1419"
-                    strokeWidth={isActive ? 2.5 : 1.8}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 19,
-                      fontWeight: isActive ? "800" : "500",
-                      color: "#0f1419",
-                      letterSpacing: -0.2,
-                    }}
-                  >
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-</ScrollView>
-            {/* Thin divider */}
-            <View
-              style={{
-                height: StyleSheet.hairlineWidth,
-                backgroundColor: "#e1e8ed",
-                marginVertical: 10,
-                marginHorizontal: 20,
-              }}
-            />
-
-            {/* ── Secondary nav ── */}
-            {SECONDARY_NAV.map((item) => {
-              const isActive = currentRoute === item.id;
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  onPress={() => navigateTo(item.id)}
-                  activeOpacity={0.7}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 16,
-                    paddingHorizontal: 20,
-                    paddingVertical: 12,
-                  }}
-                >
-                  <HugeiconsIcon
-                    icon={item.icon}
-                    size={22}
-                    color="#536471"
-                    strokeWidth={isActive ? 2.5 : 1.8}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      fontWeight: isActive ? "700" : "400",
-                      color: "#536471",
-                    }}
-                  >
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-
-            {/* ── New Post CTA ── */}
-            <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
+            >
               <TouchableOpacity
-                onPress={() => {
-                  setMenuOpen(false);
-                  router.push("/create" as any);
-                }}
-                style={{
-                  backgroundColor: "#1d9bf0",
-                  borderRadius: 28,
-                  paddingVertical: 14,
-                  paddingHorizontal: 24,
-                  alignItems: "center",
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  gap: 10,
-                }}
+                onPress={closeDrawer}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <HugeiconsIcon icon={Add01Icon} size={18} color="#fff" strokeWidth={2.5} />
-                <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
-                  New Post
-                </Text>
+                <HugeiconsIcon
+                  icon={ArrowLeft01Icon}
+                  size={22}
+                  strokeWidth={2}
+                  color="#0f1419"
+                />
               </TouchableOpacity>
+              <XLogo />
+              <View style={{ width: 22 }} />
             </View>
 
-            {/* ── Log out ── */}
-            {logout && (
-              <>
-                <View
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+            >
+              {/* ── Profile block ── */}
+              <TouchableOpacity
+                onPress={() => {
+                  closeDrawer();
+                  router.push(`/profile/${user?.id}` as any);
+                }}
+                activeOpacity={0.8}
+                style={{ paddingHorizontal: 20, paddingVertical: 12 }}
+              >
+                <UserAvatar uri={user?.avatarUrl} size={52} />
+                <Text
                   style={{
-                    height: StyleSheet.hairlineWidth,
-                    backgroundColor: "#e1e8ed",
-                    marginTop: 20,
-                    marginHorizontal: 20,
+                    fontSize: 18,
+                    fontWeight: "800",
+                    color: "#0f1419",
+                    marginTop: 10,
+                    letterSpacing: -0.3,
                   }}
-                />
+                >
+                  {user?.displayName ?? "You"}
+                </Text>
+                {user?.username ? (
+                  <Text style={{ fontSize: 14, color: "#536471", marginTop: 2 }}>
+                    @{user.username}
+                  </Text>
+                ) : null}
+
+                <View style={{ flexDirection: "row", gap: 18, marginTop: 12 }}>
+                  <View style={{ flexDirection: "row", gap: 4, alignItems: "baseline" }}>
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: "#0f1419" }}>
+                      {user?.followingCount ?? 0}
+                    </Text>
+                    <Text style={{ fontSize: 13, color: "#536471" }}>Following</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 4, alignItems: "baseline" }}>
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: "#0f1419" }}>
+                      {user?.followersCount ?? 0}
+                    </Text>
+                    <Text style={{ fontSize: 13, color: "#536471" }}>Followers</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+
+              {/* Divider */}
+              <View
+                style={{
+                  height: StyleSheet.hairlineWidth,
+                  backgroundColor: "#e1e8ed",
+                  marginVertical: 6,
+                  marginHorizontal: 20,
+                }}
+              />
+
+              {/* ── Main nav ── */}
+              {MAIN_NAV.map((item) => {
+                const isActive = currentRoute === item.id;
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    onPress={() => navigateTo(item.id)}
+                    activeOpacity={0.7}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 16,
+                      paddingHorizontal: 20,
+                      paddingVertical: 14,
+                    }}
+                  >
+                    <HugeiconsIcon
+                      icon={item.icon}
+                      size={24}
+                      color="#0f1419"
+                      strokeWidth={isActive ? 2.5 : 1.8}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 19,
+                        fontWeight: isActive ? "800" : "500",
+                        color: "#0f1419",
+                        letterSpacing: -0.2,
+                      }}
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+
+              {/* Divider */}
+              <View
+                style={{
+                  height: StyleSheet.hairlineWidth,
+                  backgroundColor: "#e1e8ed",
+                  marginVertical: 10,
+                  marginHorizontal: 20,
+                }}
+              />
+
+              {/* ── Secondary nav ── */}
+              {SECONDARY_NAV.map((item) => {
+                const isActive = currentRoute === item.id;
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    onPress={() => navigateTo(item.id)}
+                    activeOpacity={0.7}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 16,
+                      paddingHorizontal: 20,
+                      paddingVertical: 12,
+                    }}
+                  >
+                    <HugeiconsIcon
+                      icon={item.icon}
+                      size={22}
+                      color="#536471"
+                      strokeWidth={isActive ? 2.5 : 1.8}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: isActive ? "700" : "400",
+                        color: "#536471",
+                      }}
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+
+              {/* ── New Post CTA ── */}
+              <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
                 <TouchableOpacity
                   onPress={() => {
-                    setMenuOpen(false);
-                    logout();
+                    closeDrawer();
+                    router.push("/create" as any);
                   }}
-                  style={{ paddingHorizontal: 20, paddingVertical: 16 }}
+                  style={{
+                    backgroundColor: "#1d9bf0",
+                    borderRadius: 28,
+                    paddingVertical: 14,
+                    paddingHorizontal: 24,
+                    alignItems: "center",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    gap: 10,
+                  }}
                 >
-                  <Text style={{ fontSize: 15, color: "#e0245e", fontWeight: "500" }}>
-                    Log out
+                  <HugeiconsIcon icon={Add01Icon} size={18} color="#fff" strokeWidth={2.5} />
+                  <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
+                    New Post
                   </Text>
-                  {user?.username ? (
-                    <Text style={{ fontSize: 13, color: "#aab8c2", marginTop: 2 }}>
-                      @{user.username}
-                    </Text>
-                  ) : null}
                 </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </View>
+              </View>
+
+              {/* ── Log out ── */}
+              {logout && (
+                <>
+                  <View
+                    style={{
+                      height: StyleSheet.hairlineWidth,
+                      backgroundColor: "#e1e8ed",
+                      marginTop: 20,
+                      marginHorizontal: 20,
+                    }}
+                  />
+                  <TouchableOpacity
+                    onPress={() => {
+                      closeDrawer();
+                      logout();
+                    }}
+                    style={{ paddingHorizontal: 20, paddingVertical: 16 }}
+                  >
+                    <Text style={{ fontSize: 15, color: "#e0245e", fontWeight: "500" }}>
+                      Log out
+                    </Text>
+                    {user?.username ? (
+                      <Text style={{ fontSize: 13, color: "#aab8c2", marginTop: 2 }}>
+                        @{user.username}
+                      </Text>
+                    ) : null}
+                  </TouchableOpacity>
+                </>
+              )}
+            </ScrollView>
+          </Animated.View>
+        </GestureDetector>
       )}
-    </View>
+    </GestureHandlerRootView>
   );
 }
