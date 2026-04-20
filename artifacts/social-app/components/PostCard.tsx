@@ -10,8 +10,9 @@ import {
 } from '@hugeicons/core-free-icons';
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
+import { Text } from "@/components/Text"
 import React, { useState, useCallback } from "react";
-import { Image, Platform, Text, TouchableOpacity, View } from "react-native";
+import { Image, Platform, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "./UserAvatar";
 

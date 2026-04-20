@@ -7,11 +7,11 @@ import {
   Platform,
   RefreshControl,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
   Animated,
 } from "react-native";
+import { Text } from "@/components/Text"
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HugeiconsIcon } from "@hugeicons/react-native";

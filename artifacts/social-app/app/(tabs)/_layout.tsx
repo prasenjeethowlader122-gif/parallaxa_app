@@ -1,13 +1,13 @@
 import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
-  Text,
   TouchableOpacity,
   Image,
   Platform,
   StyleSheet,
   ScrollView,
 } from "react-native";
+import { Text } from "@/components/Text"
 import { Stack, useRouter, usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
