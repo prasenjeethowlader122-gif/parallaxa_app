@@ -2,7 +2,7 @@ import "../global.css";
 
 import { useFonts } from "expo-font";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Redirect, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -16,9 +16,6 @@ import { getApiBaseUrl } from "@/lib/apiUrl";
 
 SplashScreen.preventAutoHideAsync();
 
-// Works in all environments:
-// - Replit dev / EAS mobile: uses EXPO_PUBLIC_DOMAIN env var
-// - Docker/Render production web: uses window.location.origin (same origin as API)
 setBaseUrl(getApiBaseUrl());
 
 const queryClient = new QueryClient({
@@ -32,9 +29,9 @@ const queryClient = new QueryClient({
 
 function RootLayoutNav() {
   const { user, isLoading } = useAuth();
-  
+
   if (isLoading) return null;
-  
+
   if (!user) {
     return (
       <Stack screenOptions={{ headerShown: false }}>
@@ -49,7 +46,7 @@ function RootLayoutNav() {
       </Stack>
     );
   }
-  
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" redirect />
@@ -66,27 +63,27 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  // app/_layout.tsx
   const [fontsLoaded, fontError] = useFonts({
-    'Inter-Regular': require('@/assets/fonts/s_g/SpaceGrotesk-Regular.ttf'),
-    'Inter-Medium': require('@/assets/fonts/s_g/SpaceGrotesk-Medium.ttf'),
-    'Inter-SemiBold': require('@/assets/fonts/s_g/SpaceGrotesk-SemiBold.ttf'),
-    'Inter-Bold': require('@/assets/fonts/s_g/SpaceGrotesk-Bold.ttf'),
+    "SpaceGrotesk-Regular": require("@/assets/fonts/s_g/SpaceGrotesk-Regular.ttf"),
+    "SpaceGrotesk-Medium": require("@/assets/fonts/s_g/SpaceGrotesk-Medium.ttf"),
+    "SpaceGrotesk-SemiBold": require("@/assets/fonts/s_g/SpaceGrotesk-SemiBold.ttf"),
+    "SpaceGrotesk-Bold": require("@/assets/fonts/s_g/SpaceGrotesk-Bold.ttf"),
   });
-  
+
   useEffect(() => {
+    if (fontError) console.error("Font load error:", fontError);
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
-  
+
   if (!fontsLoaded && !fontError) return null;
-  
+
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView className = "font-['Inter-Regular']" style={{ flex: 1}}>
+          <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
               <AuthProvider>
                 <RootLayoutNav />

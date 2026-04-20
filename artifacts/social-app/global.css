@@ -1,10 +1,11 @@
-/* global.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  * {
-    font-family: "'Inter-Regular'";
-  }
+/*
+  NativeWind v4 applies * rules to every component,
+  so this cascades SpaceGrotesk as the default font app-wide.
+*/
+* {
+  font-family: "SpaceGrotesk-Regular";
 }
