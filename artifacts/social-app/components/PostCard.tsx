@@ -137,9 +137,7 @@ export function PostCard({
           </View>
 
           {/* More button */}
-          <TouchableOpacity hitSlop={12} className="ml-2">
-            <HugeiconsIcon icon={MoreHorizontalIcon} size={18} color={colors.mutedForeground} />
-          </TouchableOpacity>
+
         </View>
 
         {/* Post Text */}
@@ -183,7 +181,7 @@ export function PostCard({
             className="flex-row items-center"
             style={{ gap: 5, paddingHorizontal: 4, paddingVertical: 6 }}
           >
-            <HugeiconsIcon icon={AiChatIcon} size={18} color={colors.mutedForeground} />
+            <HugeiconsIcon icon={AiChatIcon} strokeWidth={2} size={18} color={colors.mutedForeground} />
             {commentsCount > 0 && (
               <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>
                 {commentsCount}
@@ -197,7 +195,7 @@ export function PostCard({
             className="flex-row items-center"
             style={{ gap: 5, paddingHorizontal: 4, paddingVertical: 6 }}
           >
-            <HugeiconsIcon icon={ArrowUp01Icon} size={18} color={colors.mutedForeground} />
+            <HugeiconsIcon icon={ArrowUp01Icon} size={18} strokeWidth={2} color={colors.mutedForeground} />
             {repostCount > 0 && (
               <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>
                 {repostCount}
@@ -215,6 +213,7 @@ export function PostCard({
             <HugeiconsIcon
               icon={FavouriteIcon}
               size={18}
+              strokeWidth={2}
               color={isLiked ? "#f91880" : colors.mutedForeground}
               variant={isLiked ? "solid" : "stroke"}
             />
@@ -236,6 +235,7 @@ export function PostCard({
           >
             <HugeiconsIcon
               icon={Bookmark02Icon}
+              strokeWidth={2}
               size={18}
               color={isSaved ? "#1d9bf0" : colors.mutedForeground}
               variant={isSaved ? "solid" : "stroke"}
@@ -247,9 +247,14 @@ export function PostCard({
             hitSlop={10}
             style={{ paddingHorizontal: 4, paddingVertical: 6 }}
           >
-            <HugeiconsIcon icon={Share01Icon} size={18} color={colors.mutedForeground} />
+            <HugeiconsIcon icon={Share01Icon} size={18} strokeWidth={2} color={colors.mutedForeground} />
           </TouchableOpacity>
-
+          <TouchableOpacity
+          hitSlop={10}
+            style={{ paddingHorizontal: 4, paddingVertical: 6 }}
+          >
+            <HugeiconsIcon icon={MoreHorizontalIcon} size={18} strokeWidth={2} color={colors.mutedForeground} />
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
