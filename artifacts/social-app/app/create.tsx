@@ -12,6 +12,7 @@ import {
   Image,
   Pressable,
   Modal,
+  StyleSheet,
 } from "react-native";
 import { Text } from "@/components/Text"
 import { useCreatePost } from "@workspace/api-client-react";
@@ -24,6 +25,9 @@ import {
   Location01Icon,
   ArrowLeft01Icon,
   Cancel01Icon,
+  Calendar03Icon,
+  Layout01Icon,
+  EarthIcon,
 } from "@hugeicons/core-free-icons";
 
 // ─── Static mention suggestions (replace with real API search later) ──────────
@@ -448,27 +452,28 @@ export default function CreateScreen() {
                 {user?.displayName || "You"}
               </Text>
 
-              {/* Audience badge */}
-              <View
+              {/* Audience selection button (Twitter style) */}
+              <TouchableOpacity
+                activeOpacity={0.7}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  paddingHorizontal: 8,
-                  paddingVertical: 3,
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
                   borderWidth: 1,
-                  borderColor: "#b8d7f1",
+                  borderColor: "#cfd9de",
                   borderRadius: 20,
-                  backgroundColor: "#e8f5fd",
                   alignSelf: "flex-start",
-                  marginBottom: 10,
+                  marginBottom: 12,
+                  gap: 4,
                 }}
               >
                 <Text
-                  style={{ color: "#1d9bf0", fontSize: 11, fontWeight: "500" }}
+                  style={{ color: "#1d9bf0", fontSize: 13, fontWeight: "700" }}
                 >
-                  Everyone can reply
+                  Everyone
                 </Text>
-              </View>
+              </TouchableOpacity>
 
               {/* Mention suggestions */}
               <MentionSuggestions
@@ -476,25 +481,55 @@ export default function CreateScreen() {
                 onSelect={handleSuggestionSelect}
               />
 
-              {/* Text input */}
-              <TextInput
-                value={content}
-                onChangeText={handleTextChange}
-                style={{
-                  fontSize: 18,
-                  lineHeight: 26,
-                  color: "#14171a",
-                  outline: 'none',
-                  textAlignVertical: "top",
-                  maxHeight: 400,
-                  padding: 0,
-                }}
-                placeholder="What is happening?!"
-                placeholderTextColor="#aab8c2"
-                multiline
-                maxLength={280}
-                autoFocus
-              />
+              {/* Advanced Text input with Highlighting */}
+              <View style={{ minHeight: 120 }}>
+                {/* Highlights overlay */}
+                <View
+                  pointerEvents="none"
+                  style={[
+                    StyleSheet.absoluteFill,
+                    { padding: 0, marginTop: 0 }
+                  ]}
+                >
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      lineHeight: 28,
+                      color: "transparent",
+                    }}
+                  >
+                    {content.split(/(\s+)/).map((part, i) => {
+                      if (part.startsWith("@") || part.startsWith("#")) {
+                        return (
+                          <Text key={i} style={{ color: "#1d9bf0" }}>
+                            {part}
+                          </Text>
+                        );
+                      }
+                      return part;
+                    })}
+                  </Text>
+                </View>
+
+                <TextInput
+                  value={content}
+                  onChangeText={handleTextChange}
+                  style={{
+                    fontSize: 20,
+                    lineHeight: 28,
+                    color: Platform.OS === 'web' ? 'rgba(0,0,0,0.8)' : "#14171a",
+                    outline: 'none',
+                    textAlignVertical: "top",
+                    padding: 0,
+                    backgroundColor: 'transparent',
+                  }}
+                  placeholder="What is happening?!"
+                  placeholderTextColor="#536471"
+                  multiline
+                  maxLength={280}
+                  autoFocus
+                />
+              </View>
 
               {/* Location tag (shown inline when set) */}
               {location.trim().length > 0 && (
@@ -578,62 +613,97 @@ export default function CreateScreen() {
         </View>
       </ScrollView>
 
+      {/* Reply Permission Selector */}
+      <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#eff3f4' }}>
+        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <HugeiconsIcon icon={EarthIcon} size={16} color="#1d9bf0" />
+          <Text style={{ color: '#1d9bf0', fontSize: 14, fontWeight: '700' }}>Everyone can reply</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* ── Toolbar ── */}
       <View
         style={{
           borderTopWidth: 1,
-          borderTopColor: "#f2f2f2",
+          borderTopColor: "#eff3f4",
           paddingHorizontal: 16,
-          paddingVertical: 10,
+          paddingVertical: 8,
           flexDirection: "row",
           alignItems: "center",
-          gap: 4,
           backgroundColor: "#fff",
         }}
       >
-        {/* Image URL button */}
+        <View style={{ flexDirection: 'row', flex: 1, gap: 4 }}>
+          {/* Image URL button */}
+          <TouchableOpacity
+            onPress={openImageModal}
+            style={{ padding: 8 }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <HugeiconsIcon
+              icon={Image01Icon}
+              size={20}
+              color="#1d9bf0"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={{ padding: 8 }}>
+            <HugeiconsIcon icon={Layout01Icon} size={20} color="#1d9bf0" />
+          </TouchableOpacity>
+
+          {/* Location button */}
+          <TouchableOpacity
+            onPress={openLocationModal}
+            style={{ padding: 8 }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <HugeiconsIcon
+              icon={Location01Icon}
+              size={20}
+              color="#1d9bf0"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={{ padding: 8 }}>
+            <HugeiconsIcon icon={Calendar03Icon} size={20} color="#1d9bf0" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Character counter (Circular style hint) */}
+        {content.length > 0 && (
+          <View style={{ marginRight: 16 }}>
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: "600",
+                color:
+                  content.length > 270
+                    ? "#e0245e"
+                    : content.length > 240
+                      ? "#ffad1f"
+                      : "#657786",
+              }}
+            >
+              {280 - content.length}
+            </Text>
+          </View>
+        )}
+
+        <View style={{ width: 1, height: 24, backgroundColor: '#cfd9de', marginRight: 16 }} />
+
         <TouchableOpacity
-          onPress={openImageModal}
-          style={{ padding: 8 }}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <HugeiconsIcon
-            icon={Image01Icon}
-            size={22}
-            color={imageUrl ? "#1d9bf0" : "#657786"}
-          />
-        </TouchableOpacity>
-
-        {/* Location button */}
-        <TouchableOpacity
-          onPress={openLocationModal}
-          style={{ padding: 8 }}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <HugeiconsIcon
-            icon={Location01Icon}
-            size={22}
-            color={location ? "#1d9bf0" : "#657786"}
-          />
-        </TouchableOpacity>
-
-        <View style={{ flex: 1 }} />
-
-        {/* Character counter */}
-        <Text
           style={{
-            fontSize: 13,
-            fontWeight: "600",
-            color:
-              content.length > 270
-                ? "#e0245e"
-                : content.length > 240
-                  ? "#ffad1f"
-                  : "#657786",
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor: '#cfd9de',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
         >
-          {280 - content.length}
-        </Text>
+          <Text style={{ color: '#1d9bf0', fontSize: 20, fontWeight: '300' }}>+</Text>
+        </TouchableOpacity>
       </View>
 
       {/* ── Modals ── */}
