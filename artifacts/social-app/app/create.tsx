@@ -282,7 +282,11 @@ export default function CreateScreen() {
   const { mutate: createPost, isPending } = useCreatePost({
     mutation: {
       onSuccess: () => {
-        router.replace("/(tabs)");
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace("/(tabs)");
+        }
       },
       onError: (err: any) =>
         Alert.alert("Error", err?.message ?? "Could not create post"),
@@ -328,6 +332,20 @@ export default function CreateScreen() {
     },
     [],
   );
+
+  const renderContentWithHighlights = (text: string) => {
+    const parts = text.split(/((?:@|#)\w+)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith("@") || part.startsWith("#")) {
+        return (
+          <Text key={index} style={{ color: "#1d9bf0" }}>
+            {part}
+          </Text>
+        );
+      }
+      return <Text key={index}>{part}</Text>;
+    });
+  };
 
   // Image modal handlers
   const openImageModal = () => {
@@ -476,25 +494,45 @@ export default function CreateScreen() {
                 onSelect={handleSuggestionSelect}
               />
 
-              {/* Text input */}
-              <TextInput
-                value={content}
-                onChangeText={handleTextChange}
-                style={{
-                  fontSize: 18,
-                  lineHeight: 26,
-                  color: "#14171a",
-                  outline: 'none',
-                  textAlignVertical: "top",
-                  maxHeight: 400,
-                  padding: 0,
-                }}
-                placeholder="What is happening?!"
-                placeholderTextColor="#aab8c2"
-                multiline
-                maxLength={280}
-                autoFocus
-              />
+              {/* Text input wrapper for highlighting */}
+              <View style={{ position: "relative", minHeight: 120 }}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    lineHeight: 26,
+                    color: "transparent",
+                    textAlignVertical: "top",
+                    padding: 0,
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                  }}
+                  pointerEvents="none"
+                >
+                  {renderContentWithHighlights(content)}
+                  {content.endsWith("\n") ? " " : ""}
+                </Text>
+                <TextInput
+                  value={content}
+                  onChangeText={handleTextChange}
+                  style={{
+                    fontSize: 18,
+                    lineHeight: 26,
+                    color: content ? "transparent" : "#14171a",
+                    textAlignVertical: "top",
+                    maxHeight: 400,
+                    padding: 0,
+                    backgroundColor: "transparent",
+                    zIndex: 1,
+                  }}
+                  placeholder="What is happening?!"
+                  placeholderTextColor="#aab8c2"
+                  multiline
+                  maxLength={280}
+                  autoFocus
+                />
+              </View>
 
               {/* Location tag (shown inline when set) */}
               {location.trim().length > 0 && (
@@ -619,21 +657,24 @@ export default function CreateScreen() {
 
         <View style={{ flex: 1 }} />
 
-        {/* Character counter */}
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: "600",
-            color:
-              content.length > 270
-                ? "#e0245e"
-                : content.length > 240
-                  ? "#ffad1f"
-                  : "#657786",
-          }}
-        >
-          {280 - content.length}
-        </Text>
+        {/* Character counter circle */}
+        <View style={{ width: 30, height: 30, justifyContent: "center", alignItems: "center" }}>
+          <View
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 12,
+              borderWidth: 2,
+              borderColor: content.length > 280 ? "#e0245e" : "#e1e8ed",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+             <Text style={{ fontSize: 10, color: content.length > 270 ? "#e0245e" : "#657786" }}>
+              {280 - content.length <= 20 ? 280 - content.length : ""}
+             </Text>
+          </View>
+        </View>
       </View>
 
       {/* ── Modals ── */}
