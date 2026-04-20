@@ -31,6 +31,7 @@ import {
   useGetUserPosts,
   useFollowUser,
   useUnfollowUser,
+  useStartConversation,
 } from "@workspace/api-client-react";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -154,8 +155,23 @@ export default function UserProfileScreen() {
   const { mutate: unfollowUser } = useUnfollowUser({
     mutation: { onSuccess: () => refetch() },
   });
+  const { mutate: startConversation } = useStartConversation({
+    mutation: {
+      onSuccess: (data) => {
+        router.push(`/messages/${data.id}` as any);
+      },
+    },
+  });
 
-  const posts = postsData?.posts ?? [];
+  const posts = useMemo(() => {
+    const allPosts = postsData?.posts ?? [];
+    if (activeTab === "posts") return allPosts;
+    if (activeTab === "replies") return allPosts.filter(p => !!p.parentPostId);
+    if (activeTab === "media") return allPosts.filter(p => !!p.imageUrl || !!p.videoUrl);
+    if (activeTab === "likes") return []; // Not supported by API yet
+    return allPosts;
+  }, [postsData, activeTab]);
+
   const isOwnProfile = me?.id === id;
 
   const handleRefresh = async () => {
@@ -169,25 +185,9 @@ export default function UserProfileScreen() {
     profile?.isFollowing ? unfollowUser({ userId: id }) : followUser({ userId: id });
   };
 
-  const handleMessage = async () => {
+  const handleMessage = () => {
     if (!id || !me?.id) return;
-    const baseUrl = getApiBaseUrl();
-    try {
-      const res = await fetch(`${baseUrl}/api/conversations/start`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${me.id}`,
-        },
-        body: JSON.stringify({ userId: id }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        router.push(`/messages/${data.id}` as any);
-      }
-    } catch (e) {
-      console.error("Failed to start conversation", e);
-    }
+    startConversation({ data: { userId: id } });
   };
 
   const joinedDate = profile?.createdAt
@@ -333,7 +333,7 @@ export default function UserProfileScreen() {
   return (
     <View style={styles.root}>
       <FlatList
-        data={activeTab === "posts" ? posts : []}
+        data={posts}
         keyExtractor={(item: any) => item.id}
         numColumns={3}
         columnWrapperStyle={styles.gridRow}

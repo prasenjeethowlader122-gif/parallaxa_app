@@ -45,6 +45,84 @@ const STEPS = [
   { title: "Secure it", subtitle: "Create a strong password" },
 ];
 
+/* ─── reusable input ─── */
+const InputRow = ({
+  icon,
+  placeholder,
+  value,
+  onChange,
+  focused,
+  onFocus,
+  onBlur,
+  error,
+  secure = false,
+  right,
+  keyboardType,
+  autoCapitalize = "none",
+  isLoading,
+  clearError,
+}: {
+  icon: any; // Accepts the icon object from @hugeicons/core-free-icons
+  placeholder: string;
+  value: string;
+  onChange: (t: string) => void;
+  focused: boolean;
+  onFocus: () => void;
+  onBlur: () => void;
+  error?: string;
+  secure?: boolean;
+  right?: React.ReactNode;
+  keyboardType?: any;
+  autoCapitalize?: any;
+  isLoading?: boolean;
+  clearError: () => void;
+}) => (
+  <View className="mb-5">
+    <View
+      className={`border rounded-full px-4 py-3 flex-row items-center ${
+        focused
+          ? "border-black"
+          : error
+          ? "border-red-300"
+          : "border-gray-100"
+      }`}
+    >
+      <HugeiconsIcon
+        icon={icon}
+        size={18}
+        color={focused ? "#000" : error ? "#dc2626" : "#9ca3af"}
+      />
+      <TextInput
+        className="flex-1 ml-3 text-gray-900 text-base font-medium outline-none"
+        placeholder={placeholder}
+        placeholderTextColor="#9ca3af"
+        value={value}
+        onChangeText={(t) => {
+          onChange(t);
+          if (error) clearError();
+        }}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        secureTextEntry={secure}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={false}
+        editable={!isLoading}
+      />
+      {value && !error && !secure && (
+        <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} color="#10b981" />
+      )}
+      {right}
+    </View>
+    {error && (
+      <View className="mt-2 flex-row items-center gap-1.5">
+        <HugeiconsIcon icon={InformationCircleIcon} size={14} color="#dc2626" />
+        <Text className="text-red-600 text-xs font-medium">{error}</Text>
+      </View>
+    )}
+  </View>
+);
+
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -152,79 +230,6 @@ export default function RegisterScreen() {
     }
   };
   
-  /* ─── reusable input ─── */
-  const InputRow = ({
-    icon,
-    placeholder,
-    value,
-    onChange,
-    focused,
-    onFocus,
-    onBlur,
-    error,
-    secure = false,
-    right,
-    keyboardType,
-    autoCapitalize = "none",
-  }: {
-    icon: any; // Accepts the icon object from @hugeicons/core-free-icons
-    placeholder: string;
-    value: string;
-    onChange: (t: string) => void;
-    focused: boolean;
-    onFocus: () => void;
-    onBlur: () => void;
-    error?: string;
-    secure?: boolean;
-    right?: React.ReactNode;
-    keyboardType?: any;
-    autoCapitalize?: any;
-  }) => (
-    <View className="mb-5">
-      <View
-        className={`border rounded-full px-4 py-3 flex-row items-center ${
-          focused
-            ? "border-black"
-            : error
-            ? "border-red-300"
-            : "border-gray-100"
-        }`}
-      >
-        <HugeiconsIcon
-          icon={icon}
-          size={18}
-          color={focused ? "#000" : error ? "#dc2626" : "#9ca3af"}
-        />
-        <TextInput
-          className="flex-1 ml-3 text-gray-900 text-base font-medium outline-none"
-          placeholder={placeholder}
-          placeholderTextColor="#9ca3af"
-          value={value}
-          onChangeText={(t) => {
-            onChange(t);
-            if (error) setErrors(prev => ({ ...prev }));
-          }}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          secureTextEntry={secure}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          autoCorrect={false}
-          editable={!isLoading}
-        />
-        {value && !error && !secure && (
-          <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} color="#10b981" />
-        )}
-        {right}
-      </View>
-      {error && (
-        <View className="mt-2 flex-row items-center gap-1.5">
-          <HugeiconsIcon icon={InformationCircleIcon} size={14} color="#dc2626" />
-          <Text className="text-red-600 text-xs font-medium">{error}</Text>
-        </View>
-      )}
-    </View>
-  );
   
   /* ─── step content ─── */
   const renderStep = () => {
@@ -237,12 +242,14 @@ export default function RegisterScreen() {
             icon={UserIcon}
             placeholder="John Doe"
             value={displayName}
-            onChange={(t) => { setDisplayName(t); setErrors(p => ({ ...p, displayName: undefined })); }}
+            onChange={setDisplayName}
             focused={displayNameFocused}
             onFocus={() => setDNF(true)}
             onBlur={() => setDNF(false)}
             error={errors.displayName}
             autoCapitalize="words"
+            isLoading={isLoading}
+            clearError={() => setErrors(p => ({ ...p, displayName: undefined }))}
           />
         </View>
 
@@ -253,11 +260,13 @@ export default function RegisterScreen() {
             icon={AtIcon}
             placeholder="john_doe"
             value={username}
-            onChange={(t) => { setUsername(t); setErrors(p => ({ ...p, username: undefined })); }}
+            onChange={setUsername}
             focused={usernameFocused}
             onFocus={() => setUNF(true)}
             onBlur={() => setUNF(false)}
             error={errors.username}
+            isLoading={isLoading}
+            clearError={() => setErrors(p => ({ ...p, username: undefined }))}
           />
         </View>
       </>
@@ -270,12 +279,14 @@ export default function RegisterScreen() {
           icon={Mail01Icon}
           placeholder="your.email@example.com"
           value={email}
-          onChange={(t) => { setEmail(t); setErrors(p => ({ ...p, email: undefined })); }}
+          onChange={setEmail}
           focused={emailFocused}
           onFocus={() => setEF(true)}
           onBlur={() => setEF(false)}
           error={errors.email}
           keyboardType="email-address"
+          isLoading={isLoading}
+          clearError={() => setErrors(p => ({ ...p, email: undefined }))}
         />
       </View>
     );
@@ -288,12 +299,14 @@ export default function RegisterScreen() {
             icon={LockPasswordIcon}
             placeholder="At least 6 characters"
             value={password}
-            onChange={(t) => { setPassword(t); setErrors(p => ({ ...p, password: undefined })); }}
+            onChange={setPassword}
             focused={passwordFocused}
             onFocus={() => setPF(true)}
             onBlur={() => setPF(false)}
             error={errors.password}
             secure={!showPassword}
+            isLoading={isLoading}
+            clearError={() => setErrors(p => ({ ...p, password: undefined }))}
             right={
               <TouchableOpacity onPress={() => setShowPassword(v => !v)} disabled={isLoading} className="p-1">
                 <HugeiconsIcon 
@@ -312,12 +325,14 @@ export default function RegisterScreen() {
             icon={LockPasswordIcon}
             placeholder="Repeat your password"
             value={confirmPassword}
-            onChange={(t) => { setConfirmPass(t); setErrors(p => ({ ...p, confirmPassword: undefined })); }}
+            onChange={setConfirmPass}
             focused={confirmFocused}
             onFocus={() => setCF(true)}
             onBlur={() => setCF(false)}
             error={errors.confirmPassword}
             secure={!showConfirm}
+            isLoading={isLoading}
+            clearError={() => setErrors(p => ({ ...p, confirmPassword: undefined }))}
             right={
               <TouchableOpacity onPress={() => setShowConfirm(v => !v)} disabled={isLoading} className="p-1">
                 <HugeiconsIcon 
@@ -343,13 +358,20 @@ export default function RegisterScreen() {
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 24,
-          paddingTop: topPt + 32,
+          paddingTop: topPt + 16,
           paddingBottom: bottomPb,
           flexGrow: 1,
         }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* ── Logo ── */}
+        <View className="items-center mb-6">
+          <View className="w-12 h-12 bg-black rounded-xl items-center justify-center">
+            <HugeiconsIcon icon={AtIcon} size={28} color="#fff" />
+          </View>
+        </View>
+
         {/* ── Top bar ── */}
         <View className="flex-row items-center mb-10">
           <TouchableOpacity

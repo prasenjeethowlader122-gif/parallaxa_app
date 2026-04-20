@@ -30,8 +30,8 @@ import {
 const { width } = Dimensions.get("window");
 const ITEM = (width - 2) / 3;
 
-type ActiveTab = "posts" | "saved";
-const TABS = ["posts", "saved"] as const;
+type ActiveTab = "posts" | "replies" | "media" | "likes" | "saved";
+const TABS = ["posts", "replies", "media", "likes", "saved"] as const;
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -59,8 +59,16 @@ export default function ProfileScreen() {
       (postsData as any)?.posts ??
       (postsData as any)?.data?.posts ??
       postsData;
-    return Array.isArray(raw) ? raw : [];
-  }, [postsData]);
+    const allPosts = Array.isArray(raw) ? raw : [];
+
+    if (activeTab === "posts") return allPosts;
+    if (activeTab === "replies") return allPosts.filter((p: any) => !!p.parentPostId);
+    if (activeTab === "media") return allPosts.filter((p: any) => !!p.imageUrl || !!p.videoUrl);
+    if (activeTab === "likes") return []; // Not supported yet
+    if (activeTab === "saved") return []; // TODO: fetch saved posts if needed
+
+    return allPosts;
+  }, [postsData, activeTab]);
 
   const ListHeader = useMemo(
     () => (
@@ -253,9 +261,10 @@ export default function ProfileScreen() {
         </View>
 
         {/* Grid / Saved tabs */}
-        <View
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
           style={{
-            flexDirection: "row",
             borderTopWidth: StyleSheet.hairlineWidth,
             borderBottomWidth: StyleSheet.hairlineWidth,
             borderColor: colors.border,
@@ -265,7 +274,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               key={tab}
               style={{
-                flex: 1,
+                width: width / 4,
                 height: 44,
                 alignItems: "center",
                 justifyContent: "center",
@@ -273,29 +282,30 @@ export default function ProfileScreen() {
               }}
               onPress={() => setActiveTab(tab)}
             >
-              <HugeiconsIcon
-                icon={tab === "posts" ? Grid01Icon : Bookmark02Icon}
-                size={22}
-                color={
-                  activeTab === tab ? colors.foreground : colors.mutedForeground
-                }
-                strokeWidth={1.5}
-              />
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: activeTab === tab ? "700" : "500",
+                  color: activeTab === tab ? colors.foreground : colors.mutedForeground,
+                }}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </Text>
               {activeTab === tab && (
                 <View
                   style={{
                     position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
+                    bottom: 0,
+                    left: "15%",
+                    right: "15%",
                     height: 2,
-                    backgroundColor: colors.foreground,
+                    backgroundColor: colors.primary,
                   }}
                 />
               )}
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       </View>
     ),
     [user, activeTab, colors]
