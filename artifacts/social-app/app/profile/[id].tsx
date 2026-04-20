@@ -237,7 +237,7 @@ export default function UserProfileScreen() {
         {!isLoading && profile && (
           <View style={styles.actionRow}>
             {isOwnProfile ? (
-              <TouchableOpacity style={styles.editBtn} activeOpacity={0.8}>
+              <TouchableOpacity style={styles.editBtn} activeOpacity={0.8} onPress = {()=> router.push('/edit-profile')}>
                 <Text style={styles.editBtnText}>Edit profile</Text>
               </TouchableOpacity>
             ) : (
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    marginTop: -45,
+    marginTop: -48,
     marginBottom: 12,
   },
   avatarRing: {

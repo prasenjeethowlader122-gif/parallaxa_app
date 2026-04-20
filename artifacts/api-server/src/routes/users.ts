@@ -4,6 +4,7 @@ import { usersTable, postsTable, followsTable, storiesTable } from "@workspace/d
 import { eq, and, desc, isNull, sql } from "drizzle-orm";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
+import generateTextLogoSVGBase64 from './svg-logo'
 
 const router = Router();
 
@@ -91,7 +92,11 @@ router.put("/users/:userId", authenticate, async (req: AuthRequest, res) => {
       res.status(403).json({ error: "Forbidden", message: "Cannot update another user" });
       return;
     }
+    
     const { displayName, bio, avatarUrl, website } = req.body;
+    if (displayName) {
+      avatarUrl = generateTextLogoSVGBase64(displayName)
+    }
     const [updated] = await db
       .update(usersTable)
       .set({ displayName, bio, avatarUrl, website, updatedAt: new Date() })

@@ -10,13 +10,12 @@ import {
   ViewIcon,
   ViewOffIcon
 } from '@hugeicons/core-free-icons';
-
+import { Text } from "@/components/Text";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
