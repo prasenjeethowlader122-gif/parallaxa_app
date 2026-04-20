@@ -6,6 +6,7 @@ import {
   Image,
   RefreshControl,
   StyleSheet,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,

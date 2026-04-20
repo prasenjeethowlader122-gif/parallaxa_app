@@ -286,7 +286,7 @@ export default function RootLayout() {
               <TouchableOpacity
                 onPress={() => {
                   closeDrawer();
-                  router.push(`/profile/${user?.id}` as any);
+                  router.push(`/profile` as any);
                 }}
                 activeOpacity={0.8}
                 style={{ paddingHorizontal: 20, paddingVertical: 12 }}
