@@ -32,7 +32,7 @@ export default function ConversationScreen() {
     sendMessage({ conversationId: id, data: { content: message.trim() } });
   };
 
-  const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
+  const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
   const messages = messagesData?.messages ?? [];
   const participant = (convoData as any)?.participant;
 

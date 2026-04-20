@@ -343,7 +343,7 @@ export default function CreateScreen() {
           </Text>
         );
       }
-      return <Text key={index}>{part}</Text>;
+      return <Text key={index} className='text-black'>{part}</Text>;
     });
   };
 
@@ -519,6 +519,7 @@ export default function CreateScreen() {
                   style={{
                     fontSize: 18,
                     lineHeight: 26,
+                    outline:'none',
                     color: content ? "transparent" : "#14171a",
                     textAlignVertical: "top",
                     maxHeight: 400,

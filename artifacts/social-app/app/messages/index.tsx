@@ -26,7 +26,7 @@ export default function MessagesScreen() {
     setRefreshing(false);
   };
 
-  const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
+  const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
   const conversations = Array.isArray(data) ? data : [];
 
   return (
