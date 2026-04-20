@@ -12,6 +12,7 @@ import {
   InformationCircleIcon,
   LogOut02Icon,
   ArrowLeft01Icon,
+  ArrowLeft01Icon,
 } from "@hugeicons/core-free-icons";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";

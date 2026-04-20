@@ -15,6 +15,9 @@ import {
  *   import { Text } from "@/components/Text";
  *   <Text style={{ fontWeight: "700" }}>Bold text</Text>
  */
+function hasBengali(text: string): boolean {
+  return /[\u0980-\u09FF]/.test(text)
+}
 
 function resolveFontFamily(style ? : TextStyle | TextStyle[]): string {
   const flat: TextStyle = StyleSheet.flatten(style) ?? {};
