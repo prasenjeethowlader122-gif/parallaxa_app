@@ -1,30 +1,144 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
-  ActivityIndicator,
+  Animated,
+  Easing,
   FlatList,
   RefreshControl,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
-import { Text } from "@/components/Text"
+import { Text } from "@/components/Text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  useGetFeed,
-  useGetExplorePosts,
-} from "@workspace/api-client-react";
+import { useGetFeed, useGetExplorePosts } from "@workspace/api-client-react";
 import { Image01Icon, Fire01Icon, UserGroup01Icon } from "@hugeicons/core-free-icons";
 import { useColors } from "@/hooks/useColors";
 import { PostCard } from "@/components/PostCard";
 import { EmptyState } from "@/components/EmptyState";
+import { FeedSkeleton } from "@/components/SkeletonLoader";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type TabId = "foryou" | "following" | "trending";
 
-const TABS: { id: TabId;label: string } [] = [
+interface Tab {
+  id: TabId;
+  label: string;
+}
+
+const TABS: Tab[] = [
   { id: "foryou", label: "For You" },
   { id: "following", label: "Following" },
   { id: "trending", label: "Trending" },
 ];
+
+// ─── AnimatedTabIndicator ─────────────────────────────────────────────────────
+// Slides a bottom-border under the active tab label with a spring animation.
+
+interface AnimatedTabBarProps {
+  activeTab: TabId;
+  onPress: (id: TabId) => void;
+  colors: ReturnType < typeof useColors > ;
+}
+
+function AnimatedTabBar({ activeTab, onPress, colors }: AnimatedTabBarProps) {
+  // Measure each tab's x-offset + width so we can slide the indicator precisely.
+  const tabLayouts = useRef < { x: number;width: number } [] > ([]);
+  const indicatorX = useRef(new Animated.Value(0)).current;
+  const indicatorW = useRef(new Animated.Value(0)).current;
+  
+  function handleLayout(index: number, x: number, width: number) {
+    tabLayouts.current[index] = { x, width };
+    // Initialise indicator under the first tab on first layout
+    if (index === 0 && TABS[0].id === activeTab) {
+      indicatorX.setValue(x + 16);
+      indicatorW.setValue(width - 32);
+    }
+  }
+  
+  function handlePress(tab: Tab, index: number) {
+    onPress(tab.id);
+    const layout = tabLayouts.current[index];
+    if (!layout) return;
+    Animated.parallel([
+      Animated.spring(indicatorX, {
+        toValue: layout.x + 16,
+        speed: 20,
+        bounciness: 6,
+        useNativeDriver: false, // 'left' is a layout prop, needs false
+      }),
+      Animated.spring(indicatorW, {
+        toValue: layout.width - 32,
+        speed: 20,
+        bounciness: 6,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }
+  
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: colors.border,
+        backgroundColor: colors.background,
+      }}
+    >
+      {TABS.map((tab, index) => {
+        const isActive = activeTab === tab.id;
+        const labelOpacity = useRef(new Animated.Value(isActive ? 1 : 0.4)).current;
+
+        // Fade label opacity when tab changes
+        Animated.timing(labelOpacity, {
+          toValue: isActive ? 1 : 0.4,
+          duration: 200,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }).start();
+
+        return (
+          <TouchableOpacity
+            key={tab.id}
+            onPress={() => handlePress(tab, index)}
+            onLayout={(e) => {
+              const { x, width } = e.nativeEvent.layout;
+              handleLayout(index, x, width);
+            }}
+            style={{ paddingVertical: 13, paddingHorizontal: 16 }}
+            activeOpacity={0.8}
+          >
+            <Animated.Text
+              style={{
+                fontSize: 14,
+                fontWeight: "700",
+                color: colors.foreground,
+                opacity: labelOpacity,
+              }}
+            >
+              {tab.label}
+            </Animated.Text>
+          </TouchableOpacity>
+        );
+      })}
+
+      {/* Sliding indicator line */}
+      <Animated.View
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: indicatorX,
+          width: indicatorW,
+          height: 2,
+          borderRadius: 1,
+          backgroundColor: colors.foreground,
+        }}
+      />
+    </View>
+  );
+}
+
+// ─── FeedScreen ───────────────────────────────────────────────────────────────
 
 export default function FeedScreen() {
   const colors = useColors();
@@ -39,97 +153,82 @@ export default function FeedScreen() {
     refetch: refetchExplore,
   } = useGetExplorePosts();
   
-  // "Following" — feed endpoint (followed users' posts)
+  // "Following" — only fetch when that tab is active
   const {
     data: feedData,
     isLoading: feedLoading,
     isRefetching: feedRefetching,
     refetch: refetchFeed,
-  } = useGetFeed();
+  } = useGetFeed({ enabled: activeTab === "following" });
   
-  // Pick posts & loading state based on active tab
   const isFollowingTab = activeTab === "following";
-  const posts: any[] = isFollowingTab ?
-    (Array.isArray(feedData?.posts) ? feedData.posts : []) :
-    (Array.isArray(exploreData?.posts) ? exploreData.posts : []);
-  const isLoading = isFollowingTab ? feedLoading : exploreLoading;
+  const rawPosts: any[] = isFollowingTab ?
+    Array.isArray(feedData?.posts) ? feedData.posts : [] :
+    Array.isArray(exploreData?.posts) ? exploreData.posts : [];
   
-  // FIX 1: `refreshing` was hardcoded to `false` — pull-to-refresh spinner never showed.
-  // Use the isRefetching flag from the active query so the indicator appears correctly.
+  const isLoading = isFollowingTab ? feedLoading : exploreLoading;
   const isRefreshing = isFollowingTab ? feedRefetching : exploreRefetching;
   const refetch = isFollowingTab ? refetchFeed : refetchExplore;
   
-  // Sort by likesCount on Trending tab
-  const displayPosts =
+  // Memoised sort — only re-computes when posts array or tab changes
+  const displayPosts = useMemo(
+    () =>
     activeTab === "trending" ?
-    [...posts].sort((a: any, b: any) => (b.likesCount ?? 0) - (a.likesCount ?? 0)) :
-    posts;
+    [...rawPosts].sort(
+      (a: any, b: any) => (b.likesCount ?? 0) - (a.likesCount ?? 0)
+    ) :
+    rawPosts,
+    [activeTab, rawPosts]
+  );
+  
+  // ── Animated header (collapse on scroll) ──────────────────────────────────
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const TAB_BAR_HEIGHT = 44;
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 30],
+    outputRange: [1, 0.96],
+    extrapolate: "clamp",
+  });
+  
+  // ── Empty state icon map ───────────────────────────────────────────────────
+  const emptyIcon =
+    activeTab === "following" ?
+    UserGroup01Icon :
+    activeTab === "trending" ?
+    Fire01Icon :
+    Image01Icon;
+  
+  const emptyTitle =
+    activeTab === "following" ?
+    "No posts from following" :
+    activeTab === "trending" ?
+    "No trending posts" :
+    "Nothing to see here";
+  
+  const emptySubtitle =
+    activeTab === "following" ?
+    "Follow some people to see their posts here" :
+    activeTab === "trending" ?
+    "Check back later for trending content" :
+    "Explore posts will appear here";
   
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* ── Tab bar ── */}
-      <View
-        style={{
-          flexDirection: "row",
-          paddingHorizontal: 8,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: colors.border,
-          backgroundColor: colors.background,
-        }}
-      >
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <TouchableOpacity
-              key={tab.id}
-              onPress={() => setActiveTab(tab.id)}
-              style={{ paddingVertical: 12, paddingHorizontal: 16 }}
-              activeOpacity={0.7}
-            >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  color: colors.foreground,
-                  opacity: isActive ? 1 : 0.4,
-                }}
-              >
-                {tab.label}
-              </Text>
-              {isActive && (
-                <View
-                  style={{
-                    position: "absolute",
-                    bottom: 0,
-                    left: 16,
-                    right: 16,
-                    height: 2,
-                    borderRadius: 1,
-                    backgroundColor: colors.foreground,
-                  }}
-                />
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
+      {/* ── Animated tab bar ── */}
+      <Animated.View style={{ opacity: headerOpacity }}>
+        <AnimatedTabBar
+          activeTab={activeTab}
+          onPress={setActiveTab}
+          colors={colors}
+        />
+      </Animated.View>
 
-      {/*
-        BUG FIX 1: Previously `{posts.length && <FlatList />}` — when posts.length
-        is 0 (falsy), React renders the number 0 on screen instead of nothing.
-
-        BUG FIX 2: The FlatList was conditionally rendered only when posts.length > 0,
-        which meant ListEmptyComponent (loading spinner + empty states) NEVER appeared
-        because the FlatList itself was hidden. FlatList must always be rendered so its
-        ListEmptyComponent can show loading indicators and empty states properly.
-      */}
-      <FlatList
-        key={activeTab} // remount list when tab changes
-        data={displayPosts}
+      {/* ── Feed list ── */}
+      <Animated.FlatList
+        key={activeTab}
+        data={isLoading ? [] : displayPosts}
         keyExtractor={(item: any) => item.id}
-        // FIX 2: `renderItem` was `<View {...item} />` which spread post data as View
-        // props — nothing would render. Now correctly renders a PostCard per item.
-        renderItem={({ item }) => (
+        renderItem={({ item }: { item: any }) => (
           <PostCard
             id={item.id}
             author={item.author}
@@ -144,28 +243,16 @@ export default function FeedScreen() {
             createdAt={item.createdAt}
           />
         )}
+        ListHeaderComponent={
+          // Show skeleton cards while loading, inline above any real content
+          isLoading ? <FeedSkeleton count={5} /> : null
+        }
         ListEmptyComponent={
-          isLoading ? (
-            <View style={{ paddingVertical: 80, alignItems: "center" }}>
-              <ActivityIndicator color={colors.primary} />
-            </View>
-          ) : activeTab === "following" ? (
+          isLoading ? null : (
             <EmptyState
-              icon={UserGroup01Icon}
-              title="No posts from following"
-              subtitle="Follow some people to see their posts here"
-            />
-          ) : activeTab === "trending" ? (
-            <EmptyState
-              icon={Fire01Icon}
-              title="No trending posts"
-              subtitle="Check back later for trending content"
-            />
-          ) : (
-            <EmptyState
-              icon={Image01Icon}
-              title="Nothing to see here"
-              subtitle="Explore posts will appear here"
+              icon={emptyIcon}
+              title={emptyTitle}
+              subtitle={emptySubtitle}
             />
           )
         }
@@ -176,6 +263,11 @@ export default function FeedScreen() {
             tintColor={colors.primary}
           />
         }
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
       />
