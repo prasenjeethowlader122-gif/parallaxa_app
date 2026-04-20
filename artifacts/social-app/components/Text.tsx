@@ -22,10 +22,13 @@ function resolveFontFamily(style ? : TextStyle | TextStyle[]): string {
   
   switch (weight) {
     case "700":
+      return "Sora-SemiBold";
     case "800":
+      return "Sora-SemiBold";
     case "900":
+      return "Sora-SemiBold";
     case "bold":
-      return "Sora-Bold";
+      return "Sora-SemiBold";
     case "600":
       return "Sora-SemiBold";
     case "500":

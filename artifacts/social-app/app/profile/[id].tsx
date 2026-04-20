@@ -126,7 +126,7 @@ const GridItem = ({ item, onPress }: { item: any; onPress: () => void }) => (
 
 // ─── Cover gradient ───────────────────────────────────────────────────────────
 const CoverBanner = ({ uri }: { uri?: string | null }) => (
-  <View style={styles.cover}>
+  <View style={styles.cover} className = 'm-4 rounded-2xl'>
     {uri ? (
       <Image source={{ uri }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
     ) : (
@@ -415,7 +415,8 @@ const styles = StyleSheet.create({
 
   // Cover
   cover: {
-    height: 128,
+    height: 158,
+    borderRadius:20,
     backgroundColor: "#cfd9de",
     overflow: "hidden",
   },

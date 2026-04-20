@@ -97,7 +97,7 @@ export function PostCard({
       activeOpacity={1}
       onPress={navigateToPost}
       className="flex-row px-4 pt-3 pb-1"
-      style={{ borderBottomWidth: 2, borderBottomColor: '#f2f2f2' }}
+      style={{ borderBottomWidth: 1, borderBottomColor: '#f2f2f2' }}
     >
       {/* Left Column: Avatar */}
       <View className="mr-3 items-center">

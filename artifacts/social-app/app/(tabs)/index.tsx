@@ -81,7 +81,7 @@ function AnimatedTabBar({ activeTab, onPress, colors }: AnimatedTabBarProps) {
       style={{
         flexDirection: "row",
         borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: colors.border,
+        borderBottomColor: '#f1f1f1',
         backgroundColor: colors.background,
       }}
     >
@@ -112,6 +112,7 @@ function AnimatedTabBar({ activeTab, onPress, colors }: AnimatedTabBarProps) {
               style={{
                 fontSize: 14,
                 fontWeight: "700",
+                fontFamily: 'Sora-SemiBold',
                 color: colors.foreground,
                 opacity: labelOpacity,
               }}
@@ -129,7 +130,7 @@ function AnimatedTabBar({ activeTab, onPress, colors }: AnimatedTabBarProps) {
           bottom: 0,
           left: indicatorX,
           width: indicatorW,
-          height: 2,
+          height: 1,
           borderRadius: 1,
           backgroundColor: colors.foreground,
         }}
