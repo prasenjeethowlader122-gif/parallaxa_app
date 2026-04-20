@@ -149,7 +149,7 @@ export default function PostDetailScreen() {
     });
   }, [replyText, replyTarget, id, createComment, refetchComments, refetchPost]);
 
-  const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
+  const topPad = insets.top + (Platform.OS === "web" ? 20 : 8);
 
   if (postLoading) {
     return (
@@ -168,7 +168,7 @@ export default function PostDetailScreen() {
       <View
         className="flex-row items-center justify-between px-4 pb-3 border-b"
         style={{
-          paddingTop: topPad + 12,
+          paddingTop: topPad,
           backgroundColor: colors.background,
           borderBottomColor: colors.border
         }}
@@ -269,7 +269,7 @@ export default function PostDetailScreen() {
       {post?.createdAt ? (
         <Text
           className="text-sm px-4 py-3 border-t border-b"
-          style={{ color: colors.mutedForeground, borderColor: colors.border }}
+          style={{ color: colors.mutedForeground, borderColor: '#f2f2f2' }}
         >
           {formatFullDate(post.createdAt)}
         </Text>
@@ -298,7 +298,7 @@ export default function PostDetailScreen() {
       ) : null}
 
       {/* Action bar */}
-      <View className="flex-row px-2 border-b" style={{ borderColor: colors.border }}>
+      <View className="flex-row px-2 border-b" style={{ borderColor: '#f2f2f2' }}>
         <TouchableOpacity
           onPress={() => openReply(null, post?.author?.username ?? "")}
           activeOpacity={0.7}
@@ -400,13 +400,14 @@ export default function PostDetailScreen() {
       ) : null}
     </View>
   );
+  const navigateToPost = (id_) => router.push({ pathname: "/post/[id]", params: {id_} });
 
   const renderItem = ({ item }: { item: Comment }) => (
     <CommentItem
       comment={item}
       isTargeted={replyTarget?.commentId === item.id}
       onReply={() => openReply(item.id, item.author.username)}
-      onAuthorPress={() => router.push(`/profile/${item.author.id}` as any)}
+      onAuthorPress={() => navigateToPost(item.id)}
     />
   );
 
