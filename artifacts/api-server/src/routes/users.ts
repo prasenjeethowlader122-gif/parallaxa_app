@@ -45,7 +45,7 @@ router.get("/users/suggested", authenticate, async (req: AuthRequest, res) => {
       .select({ followingId: followsTable.followingId })
       .from(followsTable)
       .where(eq(followsTable.followerId, myId));
-
+    
     const users = await db
       .select()
       .from(usersTable)
@@ -53,7 +53,7 @@ router.get("/users/suggested", authenticate, async (req: AuthRequest, res) => {
         sql`${usersTable.id} != ${myId} AND ${usersTable.id} NOT IN (${alreadyFollowing})`
       )
       .limit(10);
-
+    
     res.json(users.map((u) => formatUserSummary(u, false)));
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
@@ -92,11 +92,10 @@ router.put("/users/:userId", authenticate, async (req: AuthRequest, res) => {
       res.status(403).json({ error: "Forbidden", message: "Cannot update another user" });
       return;
     }
-    
-    const { displayName, bio, avatarUrl, website } = req.body;
-    if (displayName) {
-      avatarUrl = generateTextLogoSVGBase64(displayName)
-    }
+    // AFTER
+    const { displayName, bio, website } = req.body;
+    let { avatarUrl } = req.body;
+    if (displayName && !avatarUrl) { avatarUrl = generateTextLogoSVGBase64(displayName) }
     const [updated] = await db
       .update(usersTable)
       .set({ displayName, bio, avatarUrl, website, updatedAt: new Date() })
@@ -112,7 +111,7 @@ router.get("/users/:userId/posts", authenticate, async (req: AuthRequest, res) =
   try {
     const { userId } = req.params;
     const limit = Math.min(Number(req.query.limit) || 20, 100);
-
+    
     // Only fetch top-level posts (no replies)
     const posts = await db
       .select()
@@ -126,10 +125,10 @@ router.get("/users/:userId/posts", authenticate, async (req: AuthRequest, res) =
       )
       .orderBy(desc(postsTable.createdAt))
       .limit(limit);
-
+    
     // Fetch author info once
     const [author] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-
+    
     res.json({
       posts: posts.map((p) => ({
         id: p.id,
@@ -232,8 +231,10 @@ router.post("/users/:userId/follow", authenticate, async (req: AuthRequest, res)
       .limit(1);
     if (!existing) {
       await db.insert(followsTable).values({ id: generateId(), followerId: myId, followingId: userId });
-      await db.update(usersTable).set({ followingCount: sql`${usersTable.followingCount} + 1` }).where(eq(usersTable.id, myId));
-      await db.update(usersTable).set({ followersCount: sql`${usersTable.followersCount} + 1` }).where(eq(usersTable.id, userId));
+      await db.update(usersTable).set({ followingCount: sql`${usersTable.followingCount} + 1` }).where(
+        eq(usersTable.id, myId));
+      await db.update(usersTable).set({ followersCount: sql`${usersTable.followersCount} + 1` }).where(
+        eq(usersTable.id, userId));
     }
     res.json({ message: "Followed" });
   } catch (err) {
@@ -251,9 +252,14 @@ router.delete("/users/:userId/follow", authenticate, async (req: AuthRequest, re
       .where(and(eq(followsTable.followerId, myId), eq(followsTable.followingId, userId)))
       .limit(1);
     if (existing) {
-      await db.delete(followsTable).where(and(eq(followsTable.followerId, myId), eq(followsTable.followingId, userId)));
-      await db.update(usersTable).set({ followingCount: sql`GREATEST(${usersTable.followingCount} - 1, 0)` }).where(eq(usersTable.id, myId));
-      await db.update(usersTable).set({ followersCount: sql`GREATEST(${usersTable.followersCount} - 1, 0)` }).where(eq(usersTable.id, userId));
+      await db.delete(followsTable).where(and(eq(followsTable.followerId, myId), eq(followsTable
+        .followingId, userId)));
+      await db.update(usersTable)
+    .set({ followingCount: sql`GREATEST(${usersTable.followingCount} - 1, 0)` }).where(eq(usersTable
+        .id, myId));
+      await db.update(usersTable)
+    .set({ followersCount: sql`GREATEST(${usersTable.followersCount} - 1, 0)` }).where(eq(usersTable
+        .id, userId));
     }
     res.json({ message: "Unfollowed" });
   } catch (err) {
