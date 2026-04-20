@@ -64,10 +64,10 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    "SpaceGrotesk-Regular": require("@/assets/fonts/s_g/SpaceGrotesk-Regular.ttf"),
-    "SpaceGrotesk-Medium": require("@/assets/fonts/s_g/SpaceGrotesk-Medium.ttf"),
-    "SpaceGrotesk-SemiBold": require("@/assets/fonts/s_g/SpaceGrotesk-SemiBold.ttf"),
-    "SpaceGrotesk-Bold": require("@/assets/fonts/s_g/SpaceGrotesk-Bold.ttf"),
+    "SpaceGrotesk-Regular": require("@/assets/fonts/sora/Sora-Regular.ttf"),
+    "SpaceGrotesk-Medium": require("@/assets/fonts/sora/Sora-Medium.ttf"),
+    "SpaceGrotesk-SemiBold": require("@/assets/fonts/sora/Sora-SemiBold.ttf"),
+    "SpaceGrotesk-Bold": require("@/assets/fonts/sora/Sora-Bold.ttf"),
   });
 
   useEffect(() => {

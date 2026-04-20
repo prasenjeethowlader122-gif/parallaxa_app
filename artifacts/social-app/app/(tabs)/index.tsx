@@ -4,10 +4,10 @@ import {
   FlatList,
   RefreshControl,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Text } from "@/components/Text"
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   useGetFeed,
