@@ -75,6 +75,7 @@ function useGetReplies(postId: string) {
         setData(json);
       }
     } catch (e) {
+      setData([])
       // silently fail
     } finally {
       setIsLoading(false);
