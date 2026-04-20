@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    marginTop: -38,
+    marginTop: -45,
     marginBottom: 12,
   },
   avatarRing: {
