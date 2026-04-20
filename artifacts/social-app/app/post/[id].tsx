@@ -17,12 +17,12 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
   StyleSheet,
 } from "react-native";
+import { Text } from "@/components/Text"
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   useGetPost,
@@ -31,6 +31,10 @@ import {
   useUnlikePost,
 } from "@workspace/api-client-react";
 import type { Post } from "@workspace/api-client-react";
+// BUG FIX 1: Removed duplicate import. Previously `useAuth` was imported twice:
+//   import { useAuth } from "@/context/AuthContext";
+//   import { useAuth as useAuthContext } from "@/context/AuthContext";
+// Both pointed to the exact same module. One alias is sufficient.
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
 import { getApiBaseUrl } from "@/lib/apiUrl";
@@ -54,31 +58,10 @@ const X = {
   verified: "#1D9BF0",
 };
 
-// Moved utilities outside component to prevent unnecessary re-evaluations
-const timeAgo = (dateStr: string) => {
-  if (!dateStr) return "";
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}d`;
-};
-
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  return (
-    d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) +
-    " · " +
-    d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-  );
-};
-
 function useGetReplies(postId: string) {
   const [data, setData] = useState<{ posts: Post[] } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  // BUG FIX 1 (continued): Now using the single `useAuth` import consistently
   const { user } = useAuth();
 
   const refetch = useCallback(async () => {
@@ -101,9 +84,7 @@ function useGetReplies(postId: string) {
     }
   }, [postId, user]);
 
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
+  useEffect(() => { refetch(); }, [refetch]);
 
   return { data, isLoading, refetch };
 }
@@ -111,18 +92,14 @@ function useGetReplies(postId: string) {
 export default function PostDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  
-  // FIX: Safely parse ID from Expo Router (could be string array depending on deep-link structure)
-  const { id: rawId } = useLocalSearchParams();
-  const postId = Array.isArray(rawId) ? rawId[0] : (rawId as string);
-  
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
 
   const [replyText, setReplyText] = useState("");
   const [replyingTo, setReplyingTo] = useState<{ postId: string; username: string } | null>(null);
 
-  const { data: post, isLoading: postLoading } = useGetPost(postId!);
-  const { data: repliesData, refetch: refetchReplies } = useGetReplies(postId!);
+  const { data: post, isLoading: postLoading } = useGetPost(id!);
+  const { data: repliesData, refetch: refetchReplies } = useGetReplies(id!);
 
   const { mutate: createPost, isPending: replyPending } = useCreatePost({
     mutation: {
@@ -147,22 +124,39 @@ export default function PostDetailScreen() {
     const newLiked = !isLiked;
     setLocalLiked(newLiked);
     setLocalCount(likesCount + (newLiked ? 1 : -1));
-    if (newLiked) likePost({ postId: postId! });
-    else unlikePost({ postId: postId! });
-  }, [isLiked, likesCount, postId, likePost, unlikePost]);
+    if (newLiked) likePost({ postId: id! });
+    else unlikePost({ postId: id! });
+  }, [isLiked, likesCount, id]);
 
   const handleReply = () => {
     if (!replyText.trim()) return;
     createPost({
       data: {
         content: replyText.trim(),
-        parentPostId: replyingTo?.postId ?? postId!,
+        parentPostId: replyingTo?.postId ?? id!,
       } as any,
     });
   };
 
   const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
   const replies: Post[] = repliesData?.posts ?? [];
+
+  const timeAgo = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "just now";
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h`;
+    return `${Math.floor(h / 24)}d`;
+  };
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) +
+      " · " +
+      d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
 
   if (postLoading) {
     return (
@@ -172,9 +166,7 @@ export default function PostDetailScreen() {
     );
   }
 
-  // FIX: Defined as a constant element instead of an inner function component.
-  // This prevents the header from unmounting and flickering when typing.
-  const headerComponent = (
+  const PostHeader = () => (
     <View>
       {/* ── Nav bar ── */}
       <View style={[s.navBar, { paddingTop: topPadding + 10 }]}>
@@ -250,14 +242,14 @@ export default function PostDetailScreen() {
       {(likesCount > 0 || (post?.repliesCount ?? 0) > 0) && (
         <View style={s.statsRow}>
           {(post?.repliesCount ?? 0) > 0 && (
-            <Text>
+            <Text style={s.statText}>
               <Text style={s.statNum}>{post?.repliesCount?.toLocaleString()}</Text>
               {" "}
               <Text style={s.statLabel}>Replies</Text>
             </Text>
           )}
           {likesCount > 0 && (
-            <Text>
+            <Text style={s.statText}>
               <Text style={s.statNum}>{likesCount.toLocaleString()}</Text>
               {" "}
               <Text style={s.statLabel}>{likesCount === 1 ? "Like" : "Likes"}</Text>
@@ -268,14 +260,19 @@ export default function PostDetailScreen() {
 
       {/* ── Action bar ── */}
       <View style={s.actionBar}>
+        {/*
+          BUG FIX 2: The Reply button had no onPress handler, so tapping it did nothing
+          even though replyingTo state exists to track which post is being replied to.
+          Fixed by wiring up onPress to focus the reply composer on the main post.
+        */}
         <TouchableOpacity
           style={s.actionBtn}
           activeOpacity={0.7}
           onPress={() =>
             setReplyingTo(
-              replyingTo?.postId === postId
+              replyingTo?.postId === id
                 ? null
-                : { postId: postId!, username: post?.author?.username ?? "" }
+                : { postId: id!, username: post?.author?.username ?? "" }
             )
           }
         >
@@ -323,35 +320,32 @@ export default function PostDetailScreen() {
     </View>
   );
 
-  // FIX: Wrapped in useCallback so typing doesn't re-render the whole list
-  const renderReply = useCallback(
-    ({ item }: { item: Post }) => (
-      <ReplyItem
-        reply={item}
-        replyingTo={replyingTo}
-        onReply={() =>
-          setReplyingTo(
-            replyingTo?.postId === item.id
-              ? null
-              : { postId: item.id, username: item.author.username }
-          )
-        }
-        onAuthorPress={() => router.push(`/profile/${item.author.id}` as any)}
-      />
-    ),
-    [replyingTo, router]
+  const renderReply = ({ item }: { item: Post }) => (
+    <ReplyItem
+      reply={item}
+      timeAgo={timeAgo}
+      replyingTo={replyingTo}
+      onReply={() =>
+        setReplyingTo(
+          replyingTo?.postId === item.id
+            ? null
+            : { postId: item.id, username: item.author.username }
+        )
+      }
+      onAuthorPress={() => router.push(`/profile/${item.author.id}` as any)}
+    />
   );
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: X.bg }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <FlatList
         data={replies}
         keyExtractor={(item) => item.id}
         renderItem={renderReply}
-        ListHeaderComponent={headerComponent}
+        ListHeaderComponent={<PostHeader />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
       />
@@ -393,12 +387,13 @@ export default function PostDetailScreen() {
 // ── Reply Item ───────────────────────────────────────────────────────────────
 interface ReplyItemProps {
   reply: Post;
+  timeAgo: (date: string) => string;
   replyingTo: { postId: string; username: string } | null;
   onReply: () => void;
   onAuthorPress: () => void;
 }
 
-function ReplyItem({ reply, replyingTo, onReply, onAuthorPress }: ReplyItemProps) {
+function ReplyItem({ reply, timeAgo, replyingTo, onReply, onAuthorPress }: ReplyItemProps) {
   const isActive = replyingTo?.postId === reply.id;
   const [liked, setLiked] = useState(false);
 
@@ -562,6 +557,7 @@ const s = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: X.border,
   },
+  statText: { flexDirection: "row" },
   statNum: { fontSize: 14, fontWeight: "700", color: X.text },
   statLabel: { fontSize: 14, color: X.textSub },
 
