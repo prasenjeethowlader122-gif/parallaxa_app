@@ -17,7 +17,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
-import { useUpdateUser, useGetMe } from "@/lib/api-client-react/src/generated/api";
+import { useUpdateUser, useGetMe } from "@workspace/api-client-react";
 import { Switch } from "react-native";
 
 export default function SettingsScreen() {
