@@ -1,6 +1,7 @@
-import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react-native";
+import { ArrowLeft01Icon, PencilEdit01Icon, Message01Icon } from "@hugeicons/core-free-icons";
 import {
   ActivityIndicator, FlatList, Platform, RefreshControl, Text, TouchableOpacity, View,
 } from "react-native";
@@ -41,11 +42,11 @@ export default function MessagesScreen() {
         }}
       >
         <TouchableOpacity onPress={() => router.back()} className="p-1">
-          <Feather name="arrow-left" size={24} color={colors.foreground} />
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text className="text-xl font-bold" style={{ color: colors.foreground }}>Messages</Text>
         <TouchableOpacity className="p-1">
-          <Feather name="edit" size={22} color={colors.foreground} />
+          <HugeiconsIcon icon={PencilEdit01Icon} size={22} color={colors.foreground} />
         </TouchableOpacity>
       </View>
 
@@ -68,7 +69,7 @@ export default function MessagesScreen() {
           )}
           ListEmptyComponent={
             <EmptyState
-              icon="message-circle"
+              icon={Message01Icon}
               title="No messages yet"
               subtitle="Send a message to start a conversation"
             />

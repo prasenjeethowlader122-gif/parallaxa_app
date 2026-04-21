@@ -1,4 +1,6 @@
 import app from "./app";
+import { createServer } from "http";
+import { setupSocket } from "./socket";
 import { logger } from "./lib/logger";
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
@@ -17,6 +19,9 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
+const httpServer = createServer(app);
+export const io = setupSocket(httpServer);
+
 // Verify DB connection and schema on startup — logs clearly if migrations haven't been run
 async function checkDb() {
   try {
@@ -29,11 +34,6 @@ async function checkDb() {
 
 checkDb();
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
-  }
-
-  logger.info({ port }, "Server listening");
+httpServer.listen(port, () => {
+  logger.info({ port }, "Server listening with Socket.io");
 });

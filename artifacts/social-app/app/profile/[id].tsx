@@ -19,7 +19,7 @@ import {
   ArrowLeft01Icon,
   MoreHorizontalIcon,
   GridIcon,
-  AiIcon,
+  ApiIcon,
   Message01Icon,
   CheckmarkBadge01Icon,
   Calendar03Icon,

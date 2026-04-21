@@ -1,6 +1,5 @@
-import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   ActivityIndicator, FlatList, KeyboardAvoidingView, Platform,
   Text, TextInput, TouchableOpacity, View,
@@ -9,7 +8,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetMessages, useGetConversation, useSendMessage } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
+import { useSocket } from "@/context/SocketContext";
 import { UserAvatar } from "@/components/UserAvatar";
+import { HugeiconsIcon } from "@hugeicons/react-native";
+import {
+  ArrowLeft01Icon,
+  InformationCircleIcon,
+  SentIcon,
+} from "@hugeicons/core-free-icons";
 
 export default function ConversationScreen() {
   const colors = useColors();
@@ -17,15 +23,65 @@ export default function ConversationScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const { socket } = useSocket();
   const [message, setMessage] = useState("");
+  const [typingUser, setTypingUser] = useState<{ userId: string; isTyping: boolean } | null>(null);
   const flatListRef = useRef<FlatList>(null);
+  const [localMessages, setLocalMessages] = useState<any[]>([]);
 
   // Fix: hooks take plain string, not an object
   const { data: convoData } = useGetConversation(id ?? "");
   const { data: messagesData, refetch } = useGetMessages(id ?? "");
+
+  useEffect(() => {
+    if (messagesData?.messages) {
+      setLocalMessages(messagesData.messages);
+    }
+  }, [messagesData]);
+
+  useEffect(() => {
+    if (!socket || !id) return;
+
+    socket.emit("join_conversation", id);
+
+    socket.on("new_message", (newMsg: any) => {
+      setLocalMessages((prev) => {
+        if (prev.find((m) => m.id === newMsg.id)) return prev;
+        return [newMsg, ...prev];
+      });
+    });
+
+    socket.on("user_typing", (data: { userId: string; isTyping: boolean }) => {
+      if (data.userId !== user?.id) {
+        setTypingUser(data.isTyping ? data : null);
+      }
+    });
+
+    return () => {
+      socket.emit("leave_conversation", id);
+      socket.off("new_message");
+      socket.off("user_typing");
+    };
+  }, [socket, id, user?.id]);
+
   const { mutate: sendMessage, isPending } = useSendMessage({
-    mutation: { onSuccess: () => { setMessage(""); refetch(); } },
+    mutation: {
+      onSuccess: (data) => {
+        setMessage("");
+        // Already handled by socket for real-time, but updating local state just in case
+        setLocalMessages((prev) => {
+          if (prev.find((m) => m.id === data.id)) return prev;
+          return [data, ...prev];
+        });
+        socket?.emit("typing", { conversationId: id, isTyping: false });
+      },
+    },
   });
+
+  const handleTyping = (text: string) => {
+    setMessage(text);
+    socket?.emit("typing", { conversationId: id, isTyping: text.length > 0 });
+  };
 
   const handleSend = () => {
     if (!message.trim() || !id) return;
@@ -58,7 +114,7 @@ export default function ConversationScreen() {
         }}
       >
         <TouchableOpacity onPress={() => router.back()} className="p-1 mr-1">
-          <Feather name="arrow-left" size={24} color={colors.foreground} />
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={24} color={colors.foreground} />
         </TouchableOpacity>
         {participant && (
           <TouchableOpacity
@@ -66,18 +122,23 @@ export default function ConversationScreen() {
             onPress={() => router.push(`/profile/${participant.id}` as any)}
           >
             <UserAvatar uri={participant.avatarUrl} size={36} />
-            <Text className="text-base font-semibold" style={{ color: colors.foreground }}>{participant.username}</Text>
+            <View>
+              <Text className="text-base font-semibold" style={{ color: colors.foreground }}>{participant.username}</Text>
+              {typingUser?.isTyping && (
+                <Text className="text-[11px]" style={{ color: colors.primary }}>typing...</Text>
+              )}
+            </View>
           </TouchableOpacity>
         )}
         <TouchableOpacity className="p-1">
-          <Feather name="info" size={22} color={colors.foreground} />
+          <HugeiconsIcon icon={InformationCircleIcon} size={22} color={colors.foreground} />
         </TouchableOpacity>
       </View>
 
       {/* Messages */}
       <FlatList
         ref={flatListRef}
-        data={messages}
+        data={localMessages}
         keyExtractor={(item: any) => item.id}
         inverted
         renderItem={({ item }: { item: any }) => {
@@ -125,7 +186,7 @@ export default function ConversationScreen() {
             placeholder="Message..."
             placeholderTextColor={colors.mutedForeground}
             value={message}
-            onChangeText={setMessage}
+            onChangeText={handleTyping}
             multiline
             maxLength={1000}
           />
@@ -138,7 +199,7 @@ export default function ConversationScreen() {
             {isPending ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Feather name="send" size={16} color={message.trim() ? "#FFFFFF" : colors.mutedForeground} />
+              <HugeiconsIcon icon={SentIcon} size={18} color={message.trim() ? "#FFFFFF" : colors.mutedForeground} />
             )}
           </TouchableOpacity>
         </View>

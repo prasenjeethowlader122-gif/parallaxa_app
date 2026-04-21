@@ -1,10 +1,10 @@
-import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { HugeiconsIcon } from "@hugeicons/react-native";
 
 interface EmptyStateProps {
-  icon: keyof typeof Feather.glyphMap;
+  icon: any;
   title: string;
   subtitle?: string;
   actionLabel?: string;
@@ -20,7 +20,7 @@ export function EmptyState({ icon, title, subtitle, actionLabel, onAction }: Emp
         className="w-20 h-20 rounded-full items-center justify-center mb-5"
         style={{ backgroundColor: colors.muted }}
       >
-        <Feather name={icon} size={36} color={colors.mutedForeground} />
+        <HugeiconsIcon icon={icon} size={36} color={colors.mutedForeground} />
       </View>
       <Text
         className="text-lg font-semibold text-center mb-2"

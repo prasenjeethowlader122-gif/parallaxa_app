@@ -5,12 +5,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
   Edit01Icon,
-  Bell01Icon,
-  Lock01Icon,
+  Notification01Icon,
+  LockPasswordIcon,
   Shield01Icon,
-  HelpCircle01Icon,
+  HelpCircleIcon,
   InformationCircleIcon,
-  LogOut02Icon,
+  Logout01Icon,
   ArrowRight01Icon,
   ArrowLeft01Icon,
 } from "@hugeicons/core-free-icons";
@@ -39,12 +39,12 @@ export default function SettingsScreen() {
       onPress: () => router.push("/edit-profile" as any),
     },
     {
-      icon: Bell01Icon,
+      icon: Notification01Icon,
       label: "Notifications",
       onPress: () => {}, // add route or modal if needed
     },
     {
-      icon: Lock01Icon,
+      icon: LockPasswordIcon,
       label: "Privacy",
       onPress: () => {},
     },
@@ -54,7 +54,7 @@ export default function SettingsScreen() {
       onPress: () => {},
     },
     {
-      icon: HelpCircle01Icon,
+      icon: HelpCircleIcon,
       label: "Help",
       onPress: () => {},
     },
@@ -125,7 +125,7 @@ export default function SettingsScreen() {
           activeOpacity={0.7}
         >
           <HugeiconsIcon
-            icon={LogOut02Icon}
+            icon={Logout01Icon}
             size={20}
             color={colors.destructive}
             strokeWidth={1.5}

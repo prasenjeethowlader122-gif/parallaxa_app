@@ -1,6 +1,7 @@
-import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react-native";
+import { Search01Icon, Cancel01Icon, Tag01Icon, ImageIcon } from "@hugeicons/core-free-icons";
 import {
   ActivityIndicator,
   Dimensions,
@@ -66,7 +67,7 @@ export default function ExploreScreen() {
             backgroundColor: colors.muted,
           }}
         >
-          <Feather name="search" size={16} color={colors.mutedForeground} />
+          <HugeiconsIcon icon={Search01Icon} size={16} color={colors.mutedForeground} />
           <TextInput
             style={{ flex: 1, fontSize: 15, color: colors.foreground }}
             placeholder="Search users, tags, posts..."
@@ -82,7 +83,7 @@ export default function ExploreScreen() {
                 setDebouncedQuery("");
               }}
             >
-              <Feather name="x" size={16} color={colors.mutedForeground} />
+              <HugeiconsIcon icon={Cancel01Icon} size={16} color={colors.mutedForeground} />
             </TouchableOpacity>
           )}
         </View>
@@ -154,7 +155,7 @@ export default function ExploreScreen() {
                       backgroundColor: colors.muted,
                     }}
                   >
-                    <Feather name="hash" size={22} color={colors.foreground} />
+                    <HugeiconsIcon icon={Tag01Icon} size={22} color={colors.foreground} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text
@@ -239,7 +240,7 @@ export default function ExploreScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  <Feather name="image" size={20} color={colors.mutedForeground} />
+                  <HugeiconsIcon icon={ImageIcon} size={20} color={colors.mutedForeground} />
                 </View>
               )}
             </TouchableOpacity>
