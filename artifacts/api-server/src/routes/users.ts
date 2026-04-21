@@ -79,7 +79,25 @@ router.get("/users/:userId", authenticate, async (req: AuthRequest, res) => {
       .from(followsTable)
       .where(and(eq(followsTable.followerId, userId), eq(followsTable.followingId, myId)))
       .limit(1);
-    res.json(formatUser(user, !!followingRow, !!followedByRow));
+
+    const isSelf = myId === userId;
+    const isFollowing = !!followingRow;
+
+    const profile = formatUser(user, isFollowing, !!followedByRow);
+
+    // Privacy check
+    if (user.isPrivate && !isSelf && !isFollowing) {
+      return res.json({
+        ...profile,
+        postsCount: user.postsCount,
+        followersCount: user.followersCount,
+        followingCount: user.followingCount,
+        isPrivate: true,
+        // Hide sensitive info if needed, or handled by frontend
+      });
+    }
+
+    res.json(profile);
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
@@ -92,13 +110,19 @@ router.put("/users/:userId", authenticate, async (req: AuthRequest, res) => {
       res.status(403).json({ error: "Forbidden", message: "Cannot update another user" });
       return;
     }
-    // AFTER
-    const { displayName, bio, website } = req.body;
+    const { displayName, bio, website, isPrivate } = req.body;
     let { avatarUrl } = req.body;
     if (displayName && !avatarUrl) { avatarUrl = generateTextLogoSVGBase64(displayName) }
     const [updated] = await db
       .update(usersTable)
-      .set({ displayName, bio, avatarUrl, website, updatedAt: new Date() })
+      .set({
+        displayName,
+        bio,
+        avatarUrl,
+        website,
+        isPrivate,
+        updatedAt: new Date()
+      })
       .where(eq(usersTable.id, userId))
       .returning();
     res.json(formatUser(updated));
@@ -110,8 +134,27 @@ router.put("/users/:userId", authenticate, async (req: AuthRequest, res) => {
 router.get("/users/:userId/posts", authenticate, async (req: AuthRequest, res) => {
   try {
     const { userId } = req.params;
+    const myId = req.userId!;
     const limit = Math.min(Number(req.query.limit) || 20, 100);
     
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!user) {
+      return res.status(404).json({ error: "Not Found", message: "User not found" });
+    }
+
+    // Privacy check
+    if (user.isPrivate && myId !== userId) {
+      const [following] = await db
+        .select()
+        .from(followsTable)
+        .where(and(eq(followsTable.followerId, myId), eq(followsTable.followingId, userId)))
+        .limit(1);
+
+      if (!following) {
+        return res.json({ posts: [], nextCursor: null, isPrivate: true });
+      }
+    }
+
     // Only fetch top-level posts (no replies)
     const posts = await db
       .select()
@@ -127,7 +170,7 @@ router.get("/users/:userId/posts", authenticate, async (req: AuthRequest, res) =
       .limit(limit);
     
     // Fetch author info once
-    const [author] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    const [author] = [user];
     
     res.json({
       posts: posts.map((p) => ({

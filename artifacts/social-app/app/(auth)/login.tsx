@@ -32,7 +32,9 @@ export default function LoginScreen() {
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showTotpInput, setShowTotpInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
@@ -53,6 +55,10 @@ export default function LoginScreen() {
       newErrors.password = "Password must be at least 6 characters";
     }
     
+    if (showTotpInput && (!totpCode.trim() || totpCode.length !== 6)) {
+      newErrors.general = "Please enter a valid 6-digit 2FA code";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -67,6 +73,23 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       const baseUrl = getApiBaseUrl();
+
+      if (showTotpInput) {
+        const response = await fetch(`${baseUrl}/api/auth/2fa/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim(), code: totpCode }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          setErrors({ general: data.message || "Invalid 2FA code" });
+          setIsLoading(false);
+          return;
+        }
+        await login(data.token, data.user);
+        return;
+      }
+
       const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -79,6 +102,12 @@ export default function LoginScreen() {
         setErrors({
           general: data.message || "Invalid email or password. Please try again.",
         });
+        return;
+      }
+
+      if (data.twoFactorRequired) {
+        setShowTotpInput(true);
+        setIsLoading(false);
         return;
       }
       
@@ -135,7 +164,7 @@ export default function LoginScreen() {
         )}
 
         {/* Email Input */}
-        <View className="mb-5">
+        <View className={`mb-5 ${showTotpInput ? 'opacity-50' : ''}`}>
           <Text className="text-slate-700 font-semibold mb-2 text-sm">
             Email Address
           </Text>
@@ -185,7 +214,7 @@ export default function LoginScreen() {
         </View>
 
         {/* Password Input */}
-        <View className="mb-4">
+        <View className={`mb-4 ${showTotpInput ? 'opacity-50' : ''}`}>
           <Text className="text-slate-700 font-semibold mb-2 text-sm">
             Password
           </Text>
@@ -241,17 +270,46 @@ export default function LoginScreen() {
         </View>
 
         {/* Forgot Password Link */}
-        <TouchableOpacity className="self-end mb-8">
-          <Text className="text-blue-600 font-semibold text-sm">
-            Forgot password?
-          </Text>
-        </TouchableOpacity>
+        {!showTotpInput && (
+          <TouchableOpacity className="self-end mb-8">
+            <Text className="text-blue-600 font-semibold text-sm">
+              Forgot password?
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* 2FA Input */}
+        {showTotpInput && (
+          <View className="mb-6 mt-4">
+            <Text className="text-slate-700 font-semibold mb-2 text-sm">
+              2FA Code
+            </Text>
+            <View className="border rounded-full border-black px-4 py-3 flex-row items-center">
+              <HugeiconsIcon icon={LockPasswordIcon} size={18} color="#000" strokeWidth={1} />
+              <TextInput
+                className="flex-1 ml-3 outline-none text-gray-900 text-base font-medium"
+                placeholder="000000"
+                placeholderTextColor="#9ca3af"
+                value={totpCode}
+                onChangeText={setTotpCode}
+                keyboardType="number-pad"
+                maxLength={6}
+                autoFocus
+              />
+            </View>
+            <TouchableOpacity onPress={() => setShowTotpInput(false)} className="mt-4">
+              <Text className="text-blue-600 font-semibold text-sm text-center">
+                Back to password
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Sign In Button */}
         <TouchableOpacity
           className="h-14 rounded-full items-center justify-center mb-4 bg-black"
           onPress={handleLogin}
-          disabled={isLoading || !email || !password}
+          disabled={isLoading || !email || !password || (showTotpInput && totpCode.length !== 6)}
           activeOpacity={0.8}
         >
           {isLoading ? (

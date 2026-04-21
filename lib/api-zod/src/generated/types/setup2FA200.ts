@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Hashtag {
-  name: string;
-  postCount: number;
-}
+export type Setup2FA200 = {
+  qrCodeUri: string;
+  secret: string;
+};

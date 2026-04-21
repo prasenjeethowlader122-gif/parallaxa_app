@@ -110,6 +110,114 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /auth/2fa/setup:
+    post:
+      operationId: setup2FA
+      tags: [auth]
+      summary: Setup 2FA (returns QR code URI)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: 2FA setup data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  qrCodeUri:
+                    type: string
+                  secret:
+                    type: string
+                required: [qrCodeUri, secret]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/2fa/enable:
+    post:
+      operationId: enable2FA
+      tags: [auth]
+      summary: Enable 2FA after verification
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+              required: [code]
+      responses:
+        "200":
+          description: 2FA enabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/2fa/disable:
+    post:
+      operationId: disable2FA
+      tags: [auth]
+      summary: Disable 2FA
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+              required: [code]
+      responses:
+        "200":
+          description: 2FA disabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/2fa/verify:
+    post:
+      operationId: verify2FA
+      tags: [auth]
+      summary: Verify 2FA code during login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                code:
+                  type: string
+              required: [email, code]
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   /users/{userId}:
     get:
       operationId: getUser
@@ -846,7 +954,9 @@ components:
           type: string
         user:
           $ref: "#/components/schemas/User"
-      required: [token, user]
+        twoFactorRequired:
+          type: boolean
+      required: [twoFactorRequired]
 
     User:
       type: object
@@ -870,6 +980,10 @@ components:
           nullable: true
         isVerified:
           type: boolean
+        twoFactorEnabled:
+          type: boolean
+        isPrivate:
+          type: boolean
         followersCount:
           type: integer
         followingCount:
@@ -879,7 +993,7 @@ components:
         createdAt:
           type: string
           format: date-time
-      required: [id, username, email, displayName, isVerified, followersCount, followingCount, postsCount, createdAt]
+      required: [id, username, email, displayName, isVerified, twoFactorEnabled, isPrivate, followersCount, followingCount, postsCount, createdAt]
 
     UserSummary:
       type: object
@@ -921,6 +1035,8 @@ components:
           type: string
         website:
           type: string
+        isPrivate:
+          type: boolean
 
     UserPage:
       type: object

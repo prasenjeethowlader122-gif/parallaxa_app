@@ -9,6 +9,7 @@ import {
   LockPasswordIcon,
   Shield01Icon,
   HelpCircleIcon,
+  CheckmarkCircle01Icon,
   InformationCircleIcon,
   Logout01Icon,
   ArrowRight01Icon,
@@ -16,14 +17,31 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
+import { useUpdateUser, useGetMe } from "@/lib/api-client-react/src/generated/api";
+import { Switch } from "react-native";
 
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { logout } = useAuth();
+  const { data: me, refetch } = useGetMe();
+  const updateUser = useUpdateUser();
 
   const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
+
+  const togglePrivate = async (value: boolean) => {
+    if (!me) return;
+    try {
+      await updateUser.mutateAsync({
+        userId: me.id,
+        data: { isPrivate: value },
+      });
+      refetch();
+    } catch (err) {
+      Alert.alert("Error", "Failed to update privacy settings");
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert("Log out", "Are you sure you want to log out?", [
@@ -45,13 +63,8 @@ export default function SettingsScreen() {
     },
     {
       icon: LockPasswordIcon,
-      label: "Privacy",
-      onPress: () => {},
-    },
-    {
-      icon: Shield01Icon,
-      label: "Security",
-      onPress: () => {},
+      label: "Two-Factor Auth",
+      onPress: () => router.push("/two-factor-setup" as any),
     },
     {
       icon: HelpCircleIcon,
@@ -92,6 +105,27 @@ export default function SettingsScreen() {
 
       {/* Settings list */}
       <View className="mt-2">
+        <View
+          className="flex-row items-center px-5 py-4 gap-3.5"
+          style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
+        >
+          <HugeiconsIcon
+            icon={Shield01Icon}
+            size={20}
+            color={colors.foreground}
+            strokeWidth={1.5}
+          />
+          <Text className="flex-1 text-base" style={{ color: colors.foreground }}>
+            Private account
+          </Text>
+          <Switch
+            value={me?.isPrivate ?? false}
+            onValueChange={togglePrivate}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={Platform.OS === "ios" ? undefined : colors.background}
+          />
+        </View>
+
         {options.map(({ icon, label, onPress }) => (
           <TouchableOpacity
             key={label}

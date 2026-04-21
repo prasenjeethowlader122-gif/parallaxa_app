@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Hashtag {
-  name: string;
-  postCount: number;
-}
+export type Enable2FABody = {
+  code: string;
+};
