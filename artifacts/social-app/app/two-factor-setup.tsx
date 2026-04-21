@@ -19,7 +19,7 @@ import {
   useEnable2FA,
   useDisable2FA,
   useGetMe,
-} from "@/lib/api-client-react/src/generated/api";
+} from "@workspace/api-client-react";
 
 export default function TwoFactorSetupScreen() {
   const colors = useColors();
