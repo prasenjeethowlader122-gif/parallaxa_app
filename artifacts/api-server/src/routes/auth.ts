@@ -6,7 +6,7 @@ import { generateId, generateToken, hashPassword, comparePassword } from "../lib
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 import { logger } from "../lib/logger";
 import generateTextLogoSVGBase64 from './svg-logo'
-import { authenticator } from 'otplib/preset-default';
+import { generateSecret, verify, generateURI } from 'otplib';
 import QRCode from 'qrcode';
 
 const router = Router();
@@ -38,9 +38,6 @@ router.post("/auth/register", async (req, res) => {
     }
     const passwordHash = await hashPassword(password);
     const id = generateId();
-    /**
-     * genarete a profile picture 
-     */
     const logoSVGBase64 = generateTextLogoSVGBase64(displayName, {
       width: 1200,
       height: 400,
@@ -100,9 +97,7 @@ router.post("/auth/login", async (req, res) => {
       return;
     }
     if (user.twoFactorEnabled) {
-      res.json({
-        twoFactorRequired: true,
-      });
+      res.json({ twoFactorRequired: true });
       return;
     }
 
@@ -150,8 +145,8 @@ router.post("/auth/2fa/setup", authenticate, async (req: AuthRequest, res) => {
       return;
     }
 
-    const secret = authenticator.generateSecret();
-    const otpauth = authenticator.keyuri(user.email, "Pulse", secret);
+    const secret = generateSecret();
+    const otpauth = generateURI({ issuer: "Pulse", label: user.email, secret });
     const qrCodeUri = await QRCode.toDataURL(otpauth);
 
     await db
@@ -180,8 +175,8 @@ router.post("/auth/2fa/enable", authenticate, async (req: AuthRequest, res) => {
       return;
     }
 
-    const isValid = authenticator.verify({ token: code, secret: user.twoFactorSecret });
-    if (!isValid) {
+    const result = await verify({ token: code, secret: user.twoFactorSecret });
+    if (!result.valid) {
       res.status(400).json({ error: "Bad Request", message: "Invalid code" });
       return;
     }
@@ -212,8 +207,8 @@ router.post("/auth/2fa/disable", authenticate, async (req: AuthRequest, res) => 
       return;
     }
 
-    const isValid = authenticator.verify({ token: code, secret: user.twoFactorSecret });
-    if (!isValid) {
+    const result = await verify({ token: code, secret: user.twoFactorSecret });
+    if (!result.valid) {
       res.status(400).json({ error: "Bad Request", message: "Invalid code" });
       return;
     }
@@ -244,8 +239,8 @@ router.post("/auth/2fa/verify", async (req, res) => {
       return;
     }
 
-    const isValid = authenticator.verify({ token: code, secret: user.twoFactorSecret });
-    if (!isValid) {
+    const result = await verify({ token: code, secret: user.twoFactorSecret });
+    if (!result.valid) {
       res.status(401).json({ error: "Unauthorized", message: "Invalid code" });
       return;
     }
