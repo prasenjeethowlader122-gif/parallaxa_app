@@ -19,7 +19,7 @@ import {
   useEnable2FA,
   useDisable2FA,
   useGetMe,
-} from "@/lib/api-client-react/src/generated/api";
+} from "@workspace/api-client-react";
 
 export default function TwoFactorSetupScreen() {
   const colors = useColors();
@@ -43,7 +43,7 @@ export default function TwoFactorSetupScreen() {
 
   const handleSetup = async () => {
     try {
-      const data = await setup2FA.mutateAsync({});
+      const data = await (setup2FA.mutateAsync as any)();
       setSetupData(data);
     } catch (err) {
       Alert.alert("Error", "Failed to start 2FA setup");
