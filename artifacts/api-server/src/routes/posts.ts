@@ -275,16 +275,30 @@ router.delete("/posts/:postId", authenticate, async (req: AuthRequest, res) => {
 router.get("/feed", authenticate, async (req: AuthRequest, res) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 20, 100);
+    const myId = req.userId!;
 
     const following = await db
       .select({ followingId: followsTable.followingId })
       .from(followsTable)
-      .where(eq(followsTable.followerId, req.userId!));
+      .where(eq(followsTable.followerId, myId));
 
-    const followingIds = [req.userId!, ...following.map((f) => f.followingId)];
+    const followingIds = [myId, ...following.map((f) => f.followingId)];
 
+    /**
+     * Algorithm for feed:
+     * 1. Engagement: (likesCount * 2) + (repliesCount * 3)
+     * 2. Recency: Exponential decay based on time.
+     *
+     * Score = (Engagement + 1) / (TimeDeltaHours + 2)^1.5
+     */
     const posts = await db
-      .select()
+      .select({
+        post: postsTable,
+        score: sql<number>`
+          ((${postsTable.likesCount} * 2) + (${postsTable.repliesCount} * 3) + 1) /
+          POWER(EXTRACT(EPOCH FROM (NOW() - ${postsTable.createdAt})) / 3600 + 2, 1.5)
+        `
+      })
       .from(postsTable)
       .where(
         and(
@@ -293,10 +307,10 @@ router.get("/feed", authenticate, async (req: AuthRequest, res) => {
           isNull(postsTable.parentPostId),
         ),
       )
-      .orderBy(desc(postsTable.createdAt))
+      .orderBy(desc(sql`score`))
       .limit(limit);
 
-    const formatted = await Promise.all(posts.map((p) => formatPost(p, req.userId!)));
+    const formatted = await Promise.all(posts.map((p) => formatPost(p.post, myId)));
     res.json({ posts: formatted, nextCursor: null });
   } catch (err) {
     logger.error({ err }, "GET /feed error");

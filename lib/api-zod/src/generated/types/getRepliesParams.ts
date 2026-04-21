@@ -8,7 +8,7 @@
 import type { CursorParameter } from './cursorParameter';
 import type { LimitParameter } from './limitParameter';
 
-export type GetMessagesParams = {
+export type GetRepliesParams = {
 cursor?: CursorParameter;
 /**
  * @minimum 1
