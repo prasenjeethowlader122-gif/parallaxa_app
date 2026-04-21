@@ -20,11 +20,11 @@ import { EmptyState } from "@/components/EmptyState";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
   Menu01Icon,
-  Grid01Icon,
+  GridIcon,
   Bookmark02Icon,
-  UserPlus01Icon,
+  UserAdd01Icon,
   Logout01Icon,
-  AiTypeIcon,
+  ApiIcon,
   Camera01Icon,
 } from "@hugeicons/core-free-icons";
 
@@ -231,7 +231,7 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
             >
               <HugeiconsIcon
-                icon={UserPlus01Icon}
+                icon={UserAdd01Icon}
                 size={16}
                 color={colors.foreground}
                 strokeWidth={1.5}
@@ -350,7 +350,7 @@ export default function ProfileScreen() {
                   }}
                 >
                   <HugeiconsIcon
-                    icon={AiTypeIcon}
+                    icon={ApiIcon}
                     size={16}
                     color={colors.mutedForeground}
                     strokeWidth={1.5}

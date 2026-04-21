@@ -118,7 +118,7 @@ export function PostCard({
               {author.displayName}
             </Text>
             {author.isVerified && (
-              <HugeiconsIcon icon={CheckmarkBadge01Icon} size={15} color="#1d9bf0" variant="solid" />
+              <HugeiconsIcon icon={CheckmarkBadge01Icon} size={15} color="#1d9bf0" />
             )}
           </View>
           {/* Username & Time */}
@@ -205,7 +205,6 @@ export function PostCard({
             size={20}
             strokeWidth={2}
             color={isLiked ? "#f91880" : colors.mutedForeground}
-            variant={isLiked ? "solid" : "stroke"}
           />
           {likesCount > 0 && (
             <Text
@@ -228,7 +227,6 @@ export function PostCard({
             strokeWidth={2}
             size={20}
             color={isSaved ? "#1d9bf0" : colors.mutedForeground}
-            variant={isSaved ? "solid" : "stroke"}
           />
         </TouchableOpacity>
 

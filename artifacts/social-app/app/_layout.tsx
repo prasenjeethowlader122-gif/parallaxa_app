@@ -12,6 +12,7 @@ import { setBaseUrl } from "@workspace/api-client-react";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { SocketProvider } from "@/context/SocketContext";
 import { getApiBaseUrl } from "@/lib/apiUrl";
 
 SplashScreen.preventAutoHideAsync();
@@ -85,7 +86,9 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
               <AuthProvider>
-                <RootLayoutNav />
+                <SocketProvider>
+                  <RootLayoutNav />
+                </SocketProvider>
               </AuthProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>

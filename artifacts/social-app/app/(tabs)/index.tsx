@@ -11,7 +11,7 @@ import {
 import { Text } from "@/components/Text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetFeed, useGetExplorePosts } from "@workspace/api-client-react";
-import { Image01Icon, Fire01Icon, UserGroup01Icon } from "@hugeicons/core-free-icons";
+import { Image01Icon, FlashIcon, UserGroup02Icon } from "@hugeicons/core-free-icons";
 import { useColors } from "@/hooks/useColors";
 import { PostCard } from "@/components/PostCard";
 import { EmptyState } from "@/components/EmptyState";
@@ -194,9 +194,9 @@ export default function FeedScreen() {
   // ── Empty state icon map ───────────────────────────────────────────────────
   const emptyIcon =
     activeTab === "following" ?
-    UserGroup01Icon :
+    UserGroup02Icon :
     activeTab === "trending" ?
-    Fire01Icon :
+    FlashIcon :
     Image01Icon;
   
   const emptyTitle =

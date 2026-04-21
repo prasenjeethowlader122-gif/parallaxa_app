@@ -4,6 +4,7 @@ import { conversationsTable, messagesTable, usersTable } from "@workspace/db";
 import { eq, or, and, desc, sql } from "drizzle-orm";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
+import { io } from "../index";
 
 const router = Router();
 
@@ -196,7 +197,7 @@ router.post("/conversations/:conversationId/messages", authenticate, async (req:
       unreadCount2: isP1 ? sql`${conversationsTable.unreadCount2} + 1` : convo.unreadCount2,
     }).where(eq(conversationsTable.id, conversationId));
 
-    res.status(201).json({
+    const formattedMsg = {
       id: msg.id,
       conversationId: msg.conversationId,
       senderId: msg.senderId,
@@ -204,7 +205,11 @@ router.post("/conversations/:conversationId/messages", authenticate, async (req:
       mediaUrl: msg.mediaUrl,
       isRead: msg.isRead,
       createdAt: msg.createdAt,
-    });
+    };
+
+    io.to(`conversation:${conversationId}`).emit("new_message", formattedMsg);
+
+    res.status(201).json(formattedMsg);
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }

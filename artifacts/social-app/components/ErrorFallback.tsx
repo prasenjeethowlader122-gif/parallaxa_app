@@ -1,6 +1,7 @@
-import { Feather } from "@expo/vector-icons";
 import * as Updates from "expo-updates";
 import React, { useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react-native";
+import { InformationCircleIcon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import {
   Modal,
   Platform,
@@ -58,7 +59,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
           },
         ]}
       >
-        <Feather name="alert-circle" size={20} color={colors.foreground} />
+        <HugeiconsIcon icon={InformationCircleIcon} size={20} color={colors.foreground} />
       </Pressable>
 
       <View style={styles.content}>
@@ -107,7 +108,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
                   { opacity: pressed ? 0.6 : 1 },
                 ]}
               >
-                <Feather name="x" size={24} color={colors.foreground} />
+                <HugeiconsIcon icon={Cancel01Icon} size={24} color={colors.foreground} />
               </Pressable>
             </View>
 

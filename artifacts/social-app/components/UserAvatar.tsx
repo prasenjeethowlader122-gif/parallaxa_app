@@ -1,7 +1,8 @@
-import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Image, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { HugeiconsIcon } from "@hugeicons/react-native";
+import { UserIcon } from "@hugeicons/core-free-icons";
 
 interface UserAvatarProps {
   uri?: string | null;
@@ -47,7 +48,7 @@ export function UserAvatar({ uri, size = 40, hasStory, hasUnviewedStory }: UserA
             resizeMode="cover"
           />
         ) : (
-          <Feather name="user" size={size * 0.5} color={colors.mutedForeground} />
+          <HugeiconsIcon icon={UserIcon} size={size * 0.5} color={colors.mutedForeground} />
         )}
       </View>
     </View>
