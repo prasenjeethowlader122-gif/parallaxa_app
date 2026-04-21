@@ -6,7 +6,7 @@ import { generateId, generateToken, hashPassword, comparePassword } from "../lib
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 import { logger } from "../lib/logger";
 import generateTextLogoSVGBase64 from './svg-logo'
-import { authenticator } from 'otplib';
+import { authenticator } from 'otplib/preset-default';
 import QRCode from 'qrcode';
 
 const router = Router();
