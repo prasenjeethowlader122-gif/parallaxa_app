@@ -5,6 +5,7 @@
  * SocialApp API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { UserVerificationStatus } from './userVerificationStatus';
 
 export interface User {
   id: string;
@@ -15,10 +16,12 @@ export interface User {
   avatarUrl?: string | null;
   website?: string | null;
   isVerified: boolean;
+  verificationStatus: UserVerificationStatus;
   twoFactorEnabled: boolean;
   isPrivate: boolean;
   followersCount: number;
   followingCount: number;
   postsCount: number;
+  dateOfBirth?: Date | null;
   createdAt: Date;
 }

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { generateId, generateToken, hashPassword, comparePassword } from "../lib/auth";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 import { logger } from "../lib/logger";
@@ -13,11 +13,22 @@ const router = Router();
 
 router.post("/auth/register", async (req, res) => {
   try {
-    const { username, email, password, displayName } = req.body;
-    if (!username || !email || !password || !displayName) {
+    const { username, email, password, displayName, dateOfBirth } = req.body;
+    if (!username || !email || !password || !displayName || !dateOfBirth) {
       res.status(400).json({ error: "Bad Request", message: "Missing required fields" });
       return;
     }
+
+    const dob = new Date(dateOfBirth);
+    const age = new Date().getFullYear() - dob.getFullYear();
+    const monthDiff = new Date().getMonth() - dob.getMonth();
+    const isUnderage = age < 18 || (age === 18 && monthDiff < 0) || (age === 18 && monthDiff === 0 && new Date().getDate() < dob.getDate());
+
+    if (isUnderage) {
+      res.status(400).json({ error: "Bad Request", message: "You must be at least 18 years old to register" });
+      return;
+    }
+
     const existing = await db
       .select()
       .from(usersTable)
@@ -50,7 +61,8 @@ router.post("/auth/register", async (req, res) => {
       email,
       passwordHash,
       displayName,
-      avatarUrl: logoSVGBase64
+      avatarUrl: logoSVGBase64,
+      dateOfBirth: dob
     }).returning();
     const token = generateToken(id);
     res.status(201).json({
@@ -65,11 +77,13 @@ router.post("/auth/register", async (req, res) => {
         avatarUrl: user.avatarUrl,
         website: user.website,
         isVerified: user.isVerified,
+        verificationStatus: user.verificationStatus,
         twoFactorEnabled: user.twoFactorEnabled,
         isPrivate: user.isPrivate,
         followersCount: user.followersCount,
         followingCount: user.followingCount,
         postsCount: user.postsCount,
+        dateOfBirth: user.dateOfBirth,
         createdAt: user.createdAt,
       },
     });
@@ -292,15 +306,115 @@ router.get("/auth/me", authenticate, async (req: AuthRequest, res) => {
       avatarUrl: user.avatarUrl,
       website: user.website,
       isVerified: user.isVerified,
+      verificationStatus: user.verificationStatus,
       twoFactorEnabled: user.twoFactorEnabled,
       isPrivate: user.isPrivate,
       followersCount: user.followersCount,
       followingCount: user.followingCount,
       postsCount: user.postsCount,
+      dateOfBirth: user.dateOfBirth,
       createdAt: user.createdAt,
     });
   } catch (err) {
     logger.error({ err }, "auth/me error");
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
+router.post("/auth/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+    if (!user) {
+      res.status(404).json({ error: "Not Found", message: "User with this email not found" });
+      return;
+    }
+
+    const token = generateId(); // Use generateId as a simple reset token
+    const expires = new Date(Date.now() + 3600000); // 1 hour
+
+    await db
+      .update(usersTable)
+      .set({ resetPasswordToken: token, resetPasswordExpires: expires })
+      .where(eq(usersTable.id, user.id));
+
+    logger.info({ email, token }, "Password reset token generated");
+    res.json({ message: "Password reset link sent to your email (Demo: Token is in server logs)" });
+  } catch (err) {
+    logger.error({ err }, "forgot-password error");
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
+router.post("/auth/reset-password", async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.resetPasswordToken, token))
+      .limit(1);
+
+    if (!user || !user.resetPasswordExpires || user.resetPasswordExpires < new Date()) {
+      res.status(400).json({ error: "Bad Request", message: "Invalid or expired token" });
+      return;
+    }
+
+    const passwordHash = await hashPassword(password);
+    await db
+      .update(usersTable)
+      .set({
+        passwordHash,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+      })
+      .where(eq(usersTable.id, user.id));
+
+    res.json({ message: "Password reset successful" });
+  } catch (err) {
+    logger.error({ err }, "reset-password error");
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
+router.get("/auth/check-username", async (req, res) => {
+  try {
+    const username = String(req.query.username).toLowerCase();
+    const [existing] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, username))
+      .limit(1);
+
+    res.json({ available: !existing });
+  } catch (err) {
+    logger.error({ err }, "check-username error");
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
+router.get("/auth/suggest-usernames", async (req, res) => {
+  try {
+    const username = String(req.query.username).toLowerCase();
+    const suggestions = [
+      `${username}${Math.floor(Math.random() * 1000)}`,
+      `${username}_`,
+      `the${username}`,
+      `${username}official`,
+    ];
+
+    // Filter suggestions that are already taken by checking all of them in the DB
+    const existing = await db
+      .select({ username: usersTable.username })
+      .from(usersTable)
+      .where(sql`${usersTable.username} IN (${suggestions})`);
+
+    const existingSet = new Set(existing.map((u: { username: string }) => u.username.toLowerCase()));
+    const filtered = suggestions.filter((s: string) => !existingSet.has(s));
+
+    res.json({ suggestions: filtered });
+  } catch (err) {
+    logger.error({ err }, "suggest-usernames error");
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
 });

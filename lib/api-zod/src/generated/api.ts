@@ -30,7 +30,8 @@ export const RegisterBody = zod.object({
   "username": zod.string().min(registerBodyUsernameMin).max(registerBodyUsernameMax),
   "email": zod.string().email(),
   "password": zod.string().min(registerBodyPasswordMin),
-  "displayName": zod.string()
+  "displayName": zod.string(),
+  "dateOfBirth": zod.coerce.date()
 })
 
 
@@ -53,11 +54,13 @@ export const LoginResponse = zod.object({
   "avatarUrl": zod.string().nullish(),
   "website": zod.string().nullish(),
   "isVerified": zod.boolean(),
+  "verificationStatus": zod.enum(['none', 'pending', 'verified']),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
   "followersCount": zod.number(),
   "followingCount": zod.number(),
   "postsCount": zod.number(),
+  "dateOfBirth": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "twoFactorRequired": zod.boolean()
@@ -84,12 +87,67 @@ export const GetMeResponse = zod.object({
   "avatarUrl": zod.string().nullish(),
   "website": zod.string().nullish(),
   "isVerified": zod.boolean(),
+  "verificationStatus": zod.enum(['none', 'pending', 'verified']),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
   "followersCount": zod.number(),
   "followingCount": zod.number(),
   "postsCount": zod.number(),
+  "dateOfBirth": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Request password reset
+ */
+export const ForgotPasswordBody = zod.object({
+  "email": zod.string().email()
+})
+
+export const ForgotPasswordResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Reset password using token
+ */
+export const resetPasswordBodyPasswordMin = 6;
+
+
+
+export const ResetPasswordBody = zod.object({
+  "token": zod.string(),
+  "password": zod.string().min(resetPasswordBodyPasswordMin)
+})
+
+export const ResetPasswordResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Check if username is available
+ */
+export const CheckUsernameQueryParams = zod.object({
+  "username": zod.coerce.string()
+})
+
+export const CheckUsernameResponse = zod.object({
+  "available": zod.boolean()
+})
+
+
+/**
+ * @summary Get username suggestions
+ */
+export const SuggestUsernamesQueryParams = zod.object({
+  "username": zod.coerce.string()
+})
+
+export const SuggestUsernamesResponse = zod.object({
+  "suggestions": zod.array(zod.string())
 })
 
 
@@ -145,14 +203,24 @@ export const Verify2FAResponse = zod.object({
   "avatarUrl": zod.string().nullish(),
   "website": zod.string().nullish(),
   "isVerified": zod.boolean(),
+  "verificationStatus": zod.enum(['none', 'pending', 'verified']),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
   "followersCount": zod.number(),
   "followingCount": zod.number(),
   "postsCount": zod.number(),
+  "dateOfBirth": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "twoFactorRequired": zod.boolean()
+})
+
+
+/**
+ * @summary Request account verification
+ */
+export const RequestVerificationResponse = zod.object({
+  "message": zod.string()
 })
 
 
@@ -172,11 +240,13 @@ export const GetUserResponse = zod.object({
   "avatarUrl": zod.string().nullish(),
   "website": zod.string().nullish(),
   "isVerified": zod.boolean(),
+  "verificationStatus": zod.enum(['none', 'pending', 'verified']),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
   "followersCount": zod.number(),
   "followingCount": zod.number(),
   "postsCount": zod.number(),
+  "dateOfBirth": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 }).and(zod.object({
   "isFollowing": zod.boolean(),
@@ -208,11 +278,13 @@ export const UpdateUserResponse = zod.object({
   "avatarUrl": zod.string().nullish(),
   "website": zod.string().nullish(),
   "isVerified": zod.boolean(),
+  "verificationStatus": zod.enum(['none', 'pending', 'verified']),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
   "followersCount": zod.number(),
   "followingCount": zod.number(),
   "postsCount": zod.number(),
+  "dateOfBirth": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 })
 

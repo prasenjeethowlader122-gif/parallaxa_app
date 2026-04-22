@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -26,21 +26,25 @@ import {
   UserIcon,
   ViewIcon,
   ViewOffIcon,
+  Calendar01Icon,
 } from '@hugeicons/core-free-icons';
+import { useCheckUsername, useSuggestUsernames } from "@workspace/api-client-react";
 
 type FormErrors = {
   displayName?: string;
   username?: string;
   email?: string;
+  dateOfBirth?: string;
   password?: string;
   confirmPassword?: string;
   general?: string;
 };
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
 
 const STEPS = [
   { title: "Who are you?", subtitle: "Let's start with your name and username" },
+  { title: "Your birthday", subtitle: "You must be at least 18 years old" },
   { title: "Your email", subtitle: "We'll use this to sign you in" },
   { title: "Secure it", subtitle: "Create a strong password" },
 ];
@@ -109,8 +113,12 @@ const InputRow = ({
         autoCorrect={false}
         editable={!isLoading}
       />
-      {value && !error && !secure && (
-        <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} color="#10b981" />
+      {isLoading ? (
+        <ActivityIndicator size="small" color="#9ca3af" />
+      ) : (
+        value && !error && !secure && (
+          <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} color="#10b981" />
+        )
       )}
       {right}
     </View>
@@ -133,6 +141,7 @@ export default function RegisterScreen() {
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPass] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -143,9 +152,21 @@ export default function RegisterScreen() {
   /* ─── focus state ─── */
   const [displayNameFocused, setDNF] = useState(false);
   const [usernameFocused, setUNF] = useState(false);
+  const [dobFocused, setDOBF] = useState(false);
   const [emailFocused, setEF] = useState(false);
   const [passwordFocused, setPF] = useState(false);
   const [confirmFocused, setCF] = useState(false);
+
+  /* ─── Live Username Check ─── */
+  const { data: availability, isLoading: isCheckingUsername } = useCheckUsername(
+    { username: username.trim().toLowerCase() },
+    { enabled: step === 0 && username.trim().length >= 3 }
+  );
+
+  const { data: suggestionData } = useSuggestUsernames(
+    { username: username.trim().toLowerCase() },
+    { enabled: step === 0 && availability?.available === false }
+  );
   
   const topPt = insets.top + (Platform.OS === "web" ? 24 : 0);
   const bottomPb = insets.bottom + 24;
@@ -165,15 +186,31 @@ export default function RegisterScreen() {
       else if (username.trim().length > 30) newErrors.username = "Username must be less than 30 characters";
       else if (!/^[a-zA-Z0-9_-]+$/.test(username.trim()))
         newErrors.username = "Letters, numbers, _ and - only";
+      else if (availability?.available === false)
+        newErrors.username = "Username is already taken";
     }
-    
+
     if (step === 1) {
+      if (!dateOfBirth.trim()) {
+        newErrors.dateOfBirth = "Date of birth is required";
+      } else {
+        const dob = new Date(dateOfBirth);
+        if (isNaN(dob.getTime())) {
+          newErrors.dateOfBirth = "Invalid date format (YYYY-MM-DD)";
+        } else {
+          const age = new Date().getFullYear() - dob.getFullYear();
+          if (age < 18) newErrors.dateOfBirth = "You must be at least 18 years old";
+        }
+      }
+    }
+
+    if (step === 2) {
       if (!email.trim()) newErrors.email = "Email address is required";
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
         newErrors.email = "Please enter a valid email address";
     }
     
-    if (step === 2) {
+    if (step === 3) {
       if (!password) newErrors.password = "Password is required";
       else if (password.length < 6) newErrors.password = "Password must be at least 6 characters";
       else if (password.length > 128) newErrors.password = "Password must be less than 128 characters";
@@ -212,6 +249,7 @@ export default function RegisterScreen() {
           username: username.trim().toLowerCase(),
           email: email.trim().toLowerCase(),
           password,
+          dateOfBirth,
         }),
       });
       const data = await response.json();
@@ -265,14 +303,54 @@ export default function RegisterScreen() {
             onFocus={() => setUNF(true)}
             onBlur={() => setUNF(false)}
             error={errors.username}
-            isLoading={isLoading}
+            isLoading={isLoading || isCheckingUsername}
             clearError={() => setErrors(p => ({ ...p, username: undefined }))}
           />
         </View>
+
+        {/* Username Suggestions */}
+        {availability?.available === false && suggestionData?.suggestions && (
+          <View className="mb-4 -mt-2">
+            <Text className="text-xs text-slate-500 mb-2 ml-1">Suggested usernames:</Text>
+            <View className="flex-row flex-wrap gap-2">
+              {suggestionData.suggestions.map((s: string) => (
+                <TouchableOpacity
+                  key={s}
+                  onPress={() => setUsername(s)}
+                  className="bg-slate-100 px-3 py-1.5 rounded-full"
+                >
+                  <Text className="text-blue-600 text-xs font-bold">@{s}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
       </>
     );
-    
+
     if (step === 1) return (
+      <View className="mb-2">
+        <Text className="text-slate-700 font-semibold mb-2 text-sm">Birthday</Text>
+        <InputRow
+          icon={Calendar01Icon}
+          placeholder="YYYY-MM-DD"
+          value={dateOfBirth}
+          onChange={setDateOfBirth}
+          focused={dobFocused}
+          onFocus={() => setDOBF(true)}
+          onBlur={() => setDOBF(false)}
+          error={errors.dateOfBirth}
+          keyboardType="numbers-and-punctuation"
+          isLoading={isLoading}
+          clearError={() => setErrors(p => ({ ...p, dateOfBirth: undefined }))}
+        />
+        <Text className="text-xs text-slate-400 mt-1 ml-1">
+          This will not be shown publicly. You must be at least 18.
+        </Text>
+      </View>
+    );
+
+    if (step === 2) return (
       <View className="mb-2">
         <Text className="text-slate-700 font-semibold mb-2 text-sm">Email Address</Text>
         <InputRow
@@ -291,7 +369,7 @@ export default function RegisterScreen() {
       </View>
     );
     
-    if (step === 2) return (
+    if (step === 3) return (
       <>
         <View className="mb-2">
           <Text className="text-slate-700 font-semibold mb-2 text-sm">Password</Text>
@@ -393,7 +471,6 @@ export default function RegisterScreen() {
                   height: 8,
                   borderRadius: 4,
                   backgroundColor: i === step ? "#000" : i < step ? "#000" : "#e5e7eb",
-                  transition: "width 0.3s",
                 }}
               />
             ))}

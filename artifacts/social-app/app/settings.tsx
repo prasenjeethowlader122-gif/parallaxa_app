@@ -67,6 +67,11 @@ export default function SettingsScreen() {
       onPress: () => router.push("/two-factor-setup" as any),
     },
     {
+      icon: CheckmarkCircle01Icon,
+      label: "Account Verification",
+      onPress: () => router.push("/account-verification" as any),
+    },
+    {
       icon: HelpCircleIcon,
       label: "Help",
       onPress: () => {},

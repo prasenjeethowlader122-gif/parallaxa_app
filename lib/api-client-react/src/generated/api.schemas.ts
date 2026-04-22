@@ -32,12 +32,22 @@ export interface RegisterInput {
   /** @minLength 6 */
   password: string;
   displayName: string;
+  dateOfBirth: string;
 }
 
 export interface LoginInput {
   email: string;
   password: string;
 }
+
+export type UserVerificationStatus = typeof UserVerificationStatus[keyof typeof UserVerificationStatus];
+
+
+export const UserVerificationStatus = {
+  none: 'none',
+  pending: 'pending',
+  verified: 'verified',
+} as const;
 
 export interface User {
   id: string;
@@ -48,11 +58,13 @@ export interface User {
   avatarUrl?: string | null;
   website?: string | null;
   isVerified: boolean;
+  verificationStatus: UserVerificationStatus;
   twoFactorEnabled: boolean;
   isPrivate: boolean;
   followersCount: number;
   followingCount: number;
   postsCount: number;
+  dateOfBirth?: string | null;
   createdAt: string;
 }
 
@@ -255,6 +267,32 @@ export type ConflictResponse = ErrorResponse;
 export type CursorParameter = string;
 
 export type LimitParameter = number;
+
+export type ForgotPasswordBody = {
+  email: string;
+};
+
+export type ResetPasswordBody = {
+  token: string;
+  /** @minLength 6 */
+  password: string;
+};
+
+export type CheckUsernameParams = {
+username: string;
+};
+
+export type CheckUsername200 = {
+  available: boolean;
+};
+
+export type SuggestUsernamesParams = {
+username: string;
+};
+
+export type SuggestUsernames200 = {
+  suggestions: string[];
+};
 
 export type Setup2FA200 = {
   qrCodeUri: string;

@@ -22,12 +22,15 @@ import type {
 import type {
   AuthResponse,
   BadRequestResponse,
+  CheckUsername200,
+  CheckUsernameParams,
   ConflictResponse,
   Conversation,
   CreatePostInput,
   CreateStoryInput,
   Disable2FABody,
   Enable2FABody,
+  ForgotPasswordBody,
   GetExplorePostsParams,
   GetFeedParams,
   GetFollowersParams,
@@ -47,6 +50,7 @@ import type {
   Post,
   PostPage,
   RegisterInput,
+  ResetPasswordBody,
   SearchParams,
   SearchResults,
   SendMessageInput,
@@ -54,6 +58,8 @@ import type {
   StartConversationInput,
   Story,
   StoryGroup,
+  SuggestUsernames200,
+  SuggestUsernamesParams,
   UnauthorizedResponse,
   UnreadCount,
   UpdateUserInput,
@@ -443,6 +449,316 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Err
 
 
 /**
+ * @summary Request password reset
+ */
+export const getForgotPasswordUrl = () => {
+
+
+
+
+  return `/api/auth/forgot-password`
+}
+
+export const forgotPassword = async (forgotPasswordBody: ForgotPasswordBody, options?: RequestInit): Promise<MessageResponse> => {
+
+  return customFetch<MessageResponse>(getForgotPasswordUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      forgotPasswordBody,)
+  }
+);}
+
+
+
+
+export const getForgotPasswordMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPassword>>, TError,{data: BodyType<ForgotPasswordBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof forgotPassword>>, TError,{data: BodyType<ForgotPasswordBody>}, TContext> => {
+
+const mutationKey = ['forgotPassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof forgotPassword>>, {data: BodyType<ForgotPasswordBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  forgotPassword(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ForgotPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof forgotPassword>>>
+    export type ForgotPasswordMutationBody = BodyType<ForgotPasswordBody>
+    export type ForgotPasswordMutationError = ErrorType<NotFoundResponse>
+
+    /**
+ * @summary Request password reset
+ */
+export const useForgotPassword = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPassword>>, TError,{data: BodyType<ForgotPasswordBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof forgotPassword>>,
+        TError,
+        {data: BodyType<ForgotPasswordBody>},
+        TContext
+      > => {
+      return useMutation(getForgotPasswordMutationOptions(options));
+    }
+
+/**
+ * @summary Reset password using token
+ */
+export const getResetPasswordUrl = () => {
+
+
+
+
+  return `/api/auth/reset-password`
+}
+
+export const resetPassword = async (resetPasswordBody: ResetPasswordBody, options?: RequestInit): Promise<MessageResponse> => {
+
+  return customFetch<MessageResponse>(getResetPasswordUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      resetPasswordBody,)
+  }
+);}
+
+
+
+
+export const getResetPasswordMutationOptions = <TError = ErrorType<BadRequestResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,{data: BodyType<ResetPasswordBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,{data: BodyType<ResetPasswordBody>}, TContext> => {
+
+const mutationKey = ['resetPassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resetPassword>>, {data: BodyType<ResetPasswordBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  resetPassword(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof resetPassword>>>
+    export type ResetPasswordMutationBody = BodyType<ResetPasswordBody>
+    export type ResetPasswordMutationError = ErrorType<BadRequestResponse>
+
+    /**
+ * @summary Reset password using token
+ */
+export const useResetPassword = <TError = ErrorType<BadRequestResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,{data: BodyType<ResetPasswordBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof resetPassword>>,
+        TError,
+        {data: BodyType<ResetPasswordBody>},
+        TContext
+      > => {
+      return useMutation(getResetPasswordMutationOptions(options));
+    }
+
+/**
+ * @summary Check if username is available
+ */
+export const getCheckUsernameUrl = (params: CheckUsernameParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/auth/check-username?${stringifiedParams}` : `/api/auth/check-username`
+}
+
+export const checkUsername = async (params: CheckUsernameParams, options?: RequestInit): Promise<CheckUsername200> => {
+
+  return customFetch<CheckUsername200>(getCheckUsernameUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getCheckUsernameQueryKey = (params?: CheckUsernameParams,) => {
+    return [
+    `/api/auth/check-username`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getCheckUsernameQueryOptions = <TData = Awaited<ReturnType<typeof checkUsername>>, TError = ErrorType<unknown>>(params: CheckUsernameParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkUsername>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCheckUsernameQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof checkUsername>>> = ({ signal }) => checkUsername(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof checkUsername>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type CheckUsernameQueryResult = NonNullable<Awaited<ReturnType<typeof checkUsername>>>
+export type CheckUsernameQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Check if username is available
+ */
+
+export function useCheckUsername<TData = Awaited<ReturnType<typeof checkUsername>>, TError = ErrorType<unknown>>(
+ params: CheckUsernameParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkUsername>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getCheckUsernameQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get username suggestions
+ */
+export const getSuggestUsernamesUrl = (params: SuggestUsernamesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/auth/suggest-usernames?${stringifiedParams}` : `/api/auth/suggest-usernames`
+}
+
+export const suggestUsernames = async (params: SuggestUsernamesParams, options?: RequestInit): Promise<SuggestUsernames200> => {
+
+  return customFetch<SuggestUsernames200>(getSuggestUsernamesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSuggestUsernamesQueryKey = (params?: SuggestUsernamesParams,) => {
+    return [
+    `/api/auth/suggest-usernames`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuggestUsernamesQueryOptions = <TData = Awaited<ReturnType<typeof suggestUsernames>>, TError = ErrorType<unknown>>(params: SuggestUsernamesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof suggestUsernames>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuggestUsernamesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof suggestUsernames>>> = ({ signal }) => suggestUsernames(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof suggestUsernames>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SuggestUsernamesQueryResult = NonNullable<Awaited<ReturnType<typeof suggestUsernames>>>
+export type SuggestUsernamesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get username suggestions
+ */
+
+export function useSuggestUsernames<TData = Awaited<ReturnType<typeof suggestUsernames>>, TError = ErrorType<unknown>>(
+ params: SuggestUsernamesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof suggestUsernames>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSuggestUsernamesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+/**
  * @summary Setup 2FA (returns QR code URI)
  */
 export const getSetup2FAUrl = () => {
@@ -723,6 +1039,76 @@ export const useVerify2FA = <TError = ErrorType<UnauthorizedResponse>,
         TContext
       > => {
       return useMutation(getVerify2FAMutationOptions(options));
+    }
+
+/**
+ * @summary Request account verification
+ */
+export const getRequestVerificationUrl = () => {
+
+
+
+
+  return `/api/users/verify-request`
+}
+
+export const requestVerification = async ( options?: RequestInit): Promise<MessageResponse> => {
+
+  return customFetch<MessageResponse>(getRequestVerificationUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRequestVerificationMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestVerification>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestVerification>>, TError,void, TContext> => {
+
+const mutationKey = ['requestVerification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestVerification>>, void> = () => {
+
+
+          return  requestVerification(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof requestVerification>>>
+
+    export type RequestVerificationMutationError = ErrorType<UnauthorizedResponse>
+
+    /**
+ * @summary Request account verification
+ */
+export const useRequestVerification = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestVerification>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof requestVerification>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRequestVerificationMutationOptions(options));
     }
 
 /**
