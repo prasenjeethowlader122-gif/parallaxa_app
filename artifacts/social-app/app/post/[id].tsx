@@ -543,7 +543,7 @@ export default function PostDetailScreen() {
         <UserAvatar uri={user?.avatarUrl} size={36} />
         <TextInput
           ref={inputRef}
-          className="flex-1 text-[15px] min-h-[38px] max-h-[100px]"
+          className="flex-1 text-[15px] min-h-[38px] max-h-[100px] outline-none"
           style={{
             paddingTop: Platform.OS === "ios" ? 8 : 4,
             color: colors.foreground
@@ -556,7 +556,7 @@ export default function PostDetailScreen() {
           placeholderTextColor={colors.mutedForeground}
           value={replyText}
           onChangeText={setReplyText}
-          multiline
+          numberOfLines={1}
           maxLength={280}
         />
         <TouchableOpacity

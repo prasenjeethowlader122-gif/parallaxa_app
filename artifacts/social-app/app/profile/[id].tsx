@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
   tabs: {
     flexDirection: "row",
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e1e8ed",
+    borderBottomColor: "#f2f2f2",
   },
   tab: {
     flex: 1,

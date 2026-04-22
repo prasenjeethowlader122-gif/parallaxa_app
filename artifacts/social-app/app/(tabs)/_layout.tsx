@@ -150,7 +150,7 @@ export default function RootLayout() {
           backgroundColor: "#fff",
           zIndex: 50,
           borderBottomWidth: !isHome ? StyleSheet.hairlineWidth : 0,
-          borderBottomColor: "#e1e8ed",
+          borderBottomColor: "#f2f2f2",
         }}
       >
         <View

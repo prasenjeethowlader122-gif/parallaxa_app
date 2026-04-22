@@ -188,13 +188,13 @@ export function PostCard({
             marginHorizontal: 16,
             marginBottom: 14,
             borderRadius: 12,
-            borderWidth: 1,
+            borderWidth: 0,
             borderColor: colors.border,
             padding: 12,
             flexDirection: 'row',
             alignItems: 'center',
             gap: 12,
-            backgroundColor: colors.card
+            backgroundColor: '#f1f1f1'
           }}
         >
           <View style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: colors.muted, justifyContent: 'center', alignItems: 'center' }}>
@@ -214,7 +214,7 @@ export function PostCard({
       {/* ── Image ── */}
       {imageUrl && (
         <View
-          style={[styles.imageContainer, { borderColor: colors.border || '#2f3336' }]}
+          style={[styles.imageContainer]}
         >
           <Image
             source={{ uri: imageUrl }}
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     marginBottom: 14,
-    borderWidth: 0.5,
+    borderWidth: 0,
   },
   hashtagRow: {
     flexDirection: "row",

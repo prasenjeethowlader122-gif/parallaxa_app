@@ -73,7 +73,7 @@ const MentionSuggestions: FC<{
               paddingVertical: 11,
               backgroundColor: pressed ? "#f7f9fa" : "#fff",
               borderBottomWidth: index < Math.min(users.length, 5) - 1 ? 0.5 : 0,
-              borderBottomColor: "#e1e8ed",
+              borderBottomColor: "#f2f2f2",
             })}
           >
             <View>
