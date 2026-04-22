@@ -325,6 +325,7 @@ export const GetUserPostsResponse = zod.object({
   "hashtags": zod.array(zod.string()),
   "likesCount": zod.number(),
   "repliesCount": zod.number().describe('Number of direct replies\/comments on this post'),
+  "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -490,6 +491,7 @@ export const GetPostResponse = zod.object({
   "hashtags": zod.array(zod.string()),
   "likesCount": zod.number(),
   "repliesCount": zod.number().describe('Number of direct replies\/comments on this post'),
+  "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -544,6 +546,7 @@ export const GetRepliesResponse = zod.object({
   "hashtags": zod.array(zod.string()),
   "likesCount": zod.number(),
   "repliesCount": zod.number().describe('Number of direct replies\/comments on this post'),
+  "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -632,6 +635,7 @@ export const GetFeedResponse = zod.object({
   "hashtags": zod.array(zod.string()),
   "likesCount": zod.number(),
   "repliesCount": zod.number().describe('Number of direct replies\/comments on this post'),
+  "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -672,6 +676,7 @@ export const GetExplorePostsResponse = zod.object({
   "hashtags": zod.array(zod.string()),
   "likesCount": zod.number(),
   "repliesCount": zod.number().describe('Number of direct replies\/comments on this post'),
+  "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -787,6 +792,7 @@ export const GetNotificationsResponse = zod.object({
   "hashtags": zod.array(zod.string()),
   "likesCount": zod.number(),
   "repliesCount": zod.number().describe('Number of direct replies\/comments on this post'),
+  "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -963,6 +969,7 @@ export const SearchResponse = zod.object({
   "hashtags": zod.array(zod.string()),
   "likesCount": zod.number(),
   "repliesCount": zod.number().describe('Number of direct replies\/comments on this post'),
+  "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -1006,6 +1013,7 @@ export const GetSavedPostsResponse = zod.object({
   "hashtags": zod.array(zod.string()),
   "likesCount": zod.number(),
   "repliesCount": zod.number().describe('Number of direct replies\/comments on this post'),
+  "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
   "createdAt": zod.coerce.date()

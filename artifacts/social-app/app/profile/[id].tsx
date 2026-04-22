@@ -149,6 +149,15 @@ export default function UserProfileScreen() {
   const { data: profile, isLoading, refetch } = useGetUser(id!);
   const { data: postsData, refetch: refetchPosts } = useGetUserPosts(id!);
 
+  const posts = React.useMemo(() => {
+    const allPosts = postsData?.posts ?? [];
+    if (activeTab === "posts") return allPosts;
+    if (activeTab === "replies") return allPosts.filter((p: any) => !!p.parentPostId);
+    if (activeTab === "media") return allPosts.filter((p: any) => !!p.imageUrl || !!p.videoUrl);
+    if (activeTab === "likes") return []; // Not supported by API yet
+    return allPosts;
+  }, [postsData, activeTab]);
+
   const { mutate: followUser } = useFollowUser({
     mutation: { onSuccess: () => refetch() },
   });
@@ -163,14 +172,6 @@ export default function UserProfileScreen() {
     },
   });
 
-  const posts = useMemo(() => {
-    const allPosts = postsData?.posts ?? [];
-    if (activeTab === "posts") return allPosts;
-    if (activeTab === "replies") return allPosts.filter(p => !!p.parentPostId);
-    if (activeTab === "media") return allPosts.filter(p => !!p.imageUrl || !!p.videoUrl);
-    if (activeTab === "likes") return []; // Not supported by API yet
-    return allPosts;
-  }, [postsData, activeTab]);
 
   const isOwnProfile = me?.id === id;
 

@@ -1,0 +1,18 @@
+Scope: 8 of 9 workspace projects
+artifacts/mockup-sandbox dev$ vite dev
+artifacts/mockup-sandbox dev: failed to load config from /app/artifacts/mockup-sandbox/vite.config.ts
+artifacts/mockup-sandbox dev: error when starting dev server:
+artifacts/mockup-sandbox dev: Error: BASE_PATH environment variable is required but was not provided.
+artifacts/mockup-sandbox dev:     at file:///app/artifacts/mockup-sandbox/node_modules/.vite-temp/vite.config.ts.timestamp-1776839226319-b03f29658e042.mjs:155:9
+artifacts/mockup-sandbox dev:     at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+artifacts/mockup-sandbox dev:     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:665:26)
+artifacts/mockup-sandbox dev:     at async loadConfigFromBundledFile (file:///app/node_modules/.pnpm/vite@7.3.2_@types+node@25.6.0_jiti@2.6.1_lightningcss@1.32.0_terser@5.46.1_tsx@4.21.0_yaml@2.8.3/node_modules/vite/dist/node/chunks/config.js:35920:12)
+artifacts/mockup-sandbox dev:     at async bundleAndLoadConfigFile (file:///app/node_modules/.pnpm/vite@7.3.2_@types+node@25.6.0_jiti@2.6.1_lightningcss@1.32.0_terser@5.46.1_tsx@4.21.0_yaml@2.8.3/node_modules/vite/dist/node/chunks/config.js:35808:17)
+artifacts/mockup-sandbox dev:     at async loadConfigFromFile (file:///app/node_modules/.pnpm/vite@7.3.2_@types+node@25.6.0_jiti@2.6.1_lightningcss@1.32.0_terser@5.46.1_tsx@4.21.0_yaml@2.8.3/node_modules/vite/dist/node/chunks/config.js:35775:42)
+artifacts/mockup-sandbox dev:     at async resolveConfig (file:///app/node_modules/.pnpm/vite@7.3.2_@types+node@25.6.0_jiti@2.6.1_lightningcss@1.32.0_terser@5.46.1_tsx@4.21.0_yaml@2.8.3/node_modules/vite/dist/node/chunks/config.js:35424:22)
+artifacts/mockup-sandbox dev:     at async _createServer (file:///app/node_modules/.pnpm/vite@7.3.2_@types+node@25.6.0_jiti@2.6.1_lightningcss@1.32.0_terser@5.46.1_tsx@4.21.0_yaml@2.8.3/node_modules/vite/dist/node/chunks/config.js:25365:67)
+artifacts/mockup-sandbox dev:     at async CAC.<anonymous> (file:///app/node_modules/.pnpm/vite@7.3.2_@types+node@25.6.0_jiti@2.6.1_lightningcss@1.32.0_terser@5.46.1_tsx@4.21.0_yaml@2.8.3/node_modules/vite/dist/node/cli.js:572:18)
+artifacts/mockup-sandbox dev: Failed
+/app/artifacts/mockup-sandbox:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/mockup-sandbox@2.0.0 dev: `vite dev`
+Exit status 1

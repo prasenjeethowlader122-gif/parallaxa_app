@@ -63,7 +63,7 @@ const MentionSuggestions: FC<{
           <ActivityIndicator size="small" color="#1d9bf0" />
         </View>
       ) : (
-        users.slice(0, 5).map((user, index) => (
+        users.slice(0, 5).map((user: any, index: number) => (
           <Pressable
             key={user.id}
             onPress={() => onSelect(user)}
