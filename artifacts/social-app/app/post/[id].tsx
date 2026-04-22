@@ -343,7 +343,6 @@ export default function PostDetailScreen() {
           <Image
             source={{ uri: post.imageUrl }}
             className="w-full rounded-2xl"
-            style={{ aspectRatio: 16 / 9, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border }}
             resizeMode="cover"
           />
         </View>
@@ -382,7 +381,7 @@ export default function PostDetailScreen() {
       ) : null}
 
       {/* Action bar */}
-      <View className="flex-row px-2 border-b" style={{ borderColor: '#f2f2f2' }}>
+      <View className="flex-row px-2" style={{ borderColor: '#f2f2f2' }}>
         <TouchableOpacity
           onPress={() => openReply(null, post?.author?.username ?? "")}
           activeOpacity={0.7}
@@ -454,11 +453,10 @@ export default function PostDetailScreen() {
 
       {/* Replies label */}
       <View
-        className="px-4 py-2.5 border-b"
-        style={{ backgroundColor: colors.muted, borderColor: colors.border }}
+        className="px-4 py-2.5 border-b border-[#f2f2f2]"
       >
         <Text
-          className="text-[11px] font-bold tracking-widest uppercase"
+          className="text-[14px] font-bold tracking-widest uppercase"
           style={{ color: colors.mutedForeground }}
         >
           Replies
