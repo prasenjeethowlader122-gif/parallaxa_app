@@ -4,42 +4,36 @@
     "slug": "social-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/placeholder.svg",
     "scheme": "social-app",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./assets/images/placeholder-logo.svg",
       "resizeMode": "contain",
       "backgroundColor": "#0095F6"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.parallaxa.socialapp"
+      "bundleIdentifier": "com.parallaxa.social"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
+        "foregroundImage": "./assets/images/placeholder.svg",
         "backgroundColor": "#0095F6"
       },
-      "package": "com.pulse.socialapp"
+      "package": "com.parallaxa.social"
     },
     "web": {
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/placeholder.svg"
     },
     "plugins": [
-      [
-        "expo-router",
-        {
-          "origin": "https://replit.com/"
-        }
-      ],
+      "expo-router",
       "expo-font",
       "expo-web-browser"
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     },
     "extra": {
       "eas": {
