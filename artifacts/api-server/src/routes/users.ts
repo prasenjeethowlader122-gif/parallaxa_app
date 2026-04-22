@@ -18,9 +18,11 @@ function formatUser(user: typeof usersTable.$inferSelect, isFollowing = false, i
     avatarUrl: user.avatarUrl,
     website: user.website,
     isVerified: user.isVerified,
+    verificationStatus: user.verificationStatus,
     followersCount: user.followersCount,
     followingCount: user.followingCount,
     postsCount: user.postsCount,
+    dateOfBirth: user.dateOfBirth,
     createdAt: user.createdAt,
     isFollowing,
     isFollowedBy,
@@ -54,13 +56,26 @@ router.get("/users/suggested", authenticate, async (req: AuthRequest, res) => {
       )
       .limit(10);
     
-    res.json(users.map((u) => formatUserSummary(u, false)));
+    res.json(users.map((u: any) => formatUserSummary(u, false)));
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
 });
 
-router.get("/users/:userId", authenticate, async (req: AuthRequest, res) => {
+router.post("/users/verify-request", authenticate, async (req: AuthRequest, res) => {
+  try {
+    await db
+      .update(usersTable)
+      .set({ verificationStatus: "pending" })
+      .where(eq(usersTable.id, req.userId!));
+
+    res.json({ message: "Verification request submitted" });
+  } catch (err) {
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
+router.get("/users/:userId", authenticate, async (req: AuthRequest, res): Promise<any> => {
   try {
     const { userId } = req.params;
     const myId = req.userId!;
@@ -87,7 +102,7 @@ router.get("/users/:userId", authenticate, async (req: AuthRequest, res) => {
 
     // Privacy check
     if (user.isPrivate && !isSelf && !isFollowing) {
-      return res.json({
+      res.json({
         ...profile,
         postsCount: user.postsCount,
         followersCount: user.followersCount,
@@ -95,6 +110,7 @@ router.get("/users/:userId", authenticate, async (req: AuthRequest, res) => {
         isPrivate: true,
         // Hide sensitive info if needed, or handled by frontend
       });
+      return;
     }
 
     res.json(profile);
@@ -131,7 +147,7 @@ router.put("/users/:userId", authenticate, async (req: AuthRequest, res) => {
   }
 });
 
-router.get("/users/:userId/posts", authenticate, async (req: AuthRequest, res) => {
+router.get("/users/:userId/posts", authenticate, async (req: AuthRequest, res): Promise<any> => {
   try {
     const { userId } = req.params;
     const myId = req.userId!;
@@ -173,7 +189,7 @@ router.get("/users/:userId/posts", authenticate, async (req: AuthRequest, res) =
     const [author] = [user];
     
     res.json({
-      posts: posts.map((p) => ({
+      posts: posts.map((p: any) => ({
         id: p.id,
         author: {
           id: userId,
@@ -211,7 +227,7 @@ router.get("/users/:userId/stories", authenticate, async (req: AuthRequest, res)
       .from(storiesTable)
       .where(and(eq(storiesTable.userId, userId), sql`${storiesTable.expiresAt} > ${now}`))
       .orderBy(desc(storiesTable.createdAt));
-    res.json(stories.map((s) => ({
+    res.json(stories.map((s: any) => ({
       id: s.id,
       userId: s.userId,
       mediaUrl: s.mediaUrl,
@@ -237,7 +253,7 @@ router.get("/users/:userId/followers", authenticate, async (req: AuthRequest, re
       .innerJoin(usersTable, eq(followsTable.followerId, usersTable.id))
       .where(eq(followsTable.followingId, userId))
       .limit(limit);
-    res.json({ users: rows.map((r) => formatUserSummary(r.user)), nextCursor: null });
+    res.json({ users: rows.map((r: any) => formatUserSummary(r.user)), nextCursor: null });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
@@ -253,7 +269,7 @@ router.get("/users/:userId/following", authenticate, async (req: AuthRequest, re
       .innerJoin(usersTable, eq(followsTable.followingId, usersTable.id))
       .where(eq(followsTable.followerId, userId))
       .limit(limit);
-    res.json({ users: rows.map((r) => formatUserSummary(r.user)), nextCursor: null });
+    res.json({ users: rows.map((r: any) => formatUserSummary(r.user)), nextCursor: null });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }

@@ -143,6 +143,10 @@ export default function ExploreScreen() {
                     borderBottomWidth: 0.5,
                     borderBottomColor: colors.border,
                   }}
+                  onPress={() => {
+                    setQuery(`#${item.name}`);
+                    setDebouncedQuery(`#${item.name}`);
+                  }}
                   activeOpacity={0.7}
                 >
                   <View
@@ -236,11 +240,20 @@ export default function ExploreScreen() {
                 <View
                   style={{
                     flex: 1,
-                    alignItems: "center",
-                    justifyContent: "center",
+                    padding: 8,
+                    backgroundColor: colors.muted,
                   }}
                 >
-                  <HugeiconsIcon icon={ImageIcon} size={20} color={colors.mutedForeground} />
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: colors.foreground,
+                      fontWeight: '500'
+                    }}
+                    numberOfLines={6}
+                  >
+                    {item.content}
+                  </Text>
                 </View>
               )}
             </TouchableOpacity>

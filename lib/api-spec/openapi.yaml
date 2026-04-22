@@ -110,6 +110,108 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      tags: [auth]
+      summary: Request password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              required: [email]
+      responses:
+        "200":
+          description: Reset token sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /auth/reset-password:
+    post:
+      operationId: resetPassword
+      tags: [auth]
+      summary: Reset password using token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                password:
+                  type: string
+                  minLength: 6
+              required: [token, password]
+      responses:
+        "200":
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /auth/check-username:
+    get:
+      operationId: checkUsername
+      tags: [auth]
+      summary: Check if username is available
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Username availability
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available:
+                    type: boolean
+                required: [available]
+
+  /auth/suggest-usernames:
+    get:
+      operationId: suggestUsernames
+      tags: [auth]
+      summary: Get username suggestions
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of suggested usernames
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+                required: [suggestions]
+
   /auth/2fa/setup:
     post:
       operationId: setup2FA
@@ -215,6 +317,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /users/verify-request:
+    post:
+      operationId: requestVerification
+      tags: [users]
+      summary: Request account verification
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Verification request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -935,7 +1054,10 @@ components:
           minLength: 6
         displayName:
           type: string
-      required: [username, email, password, displayName]
+        dateOfBirth:
+          type: string
+          format: date-time
+      required: [username, email, password, displayName, dateOfBirth]
 
     LoginInput:
       type: object
@@ -980,6 +1102,9 @@ components:
           nullable: true
         isVerified:
           type: boolean
+        verificationStatus:
+          type: string
+          enum: [none, pending, verified]
         twoFactorEnabled:
           type: boolean
         isPrivate:
@@ -990,10 +1115,14 @@ components:
           type: integer
         postsCount:
           type: integer
+        dateOfBirth:
+          type: string
+          format: date-time
+          nullable: true
         createdAt:
           type: string
           format: date-time
-      required: [id, username, email, displayName, isVerified, twoFactorEnabled, isPrivate, followersCount, followingCount, postsCount, createdAt]
+      required: [id, username, email, displayName, isVerified, verificationStatus, twoFactorEnabled, isPrivate, followersCount, followingCount, postsCount, createdAt]
 
     UserSummary:
       type: object

@@ -14,7 +14,7 @@ import {
   Modal,
 } from "react-native";
 import { Text } from "@/components/Text"
-import { useCreatePost } from "@workspace/api-client-react";
+import { useCreatePost, useSearch } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -26,27 +26,21 @@ import {
   Cancel01Icon,
 } from "@hugeicons/core-free-icons";
 
-// ─── Static mention suggestions (replace with real API search later) ──────────
-const MENTION_SUGGESTIONS = [
-  { id: "1", name: "Prasenjeet Howlader" },
-  { id: "2", name: "Rahim" },
-  { id: "3", name: "Sadia" },
-  { id: "4", name: "Nayeem" },
-  { id: "5", name: "Ayesha" },
-];
-
 // ─── Mention suggestion dropdown ─────────────────────────────────────────────
 const MentionSuggestions: FC<{
   keyword: string | null;
-  onSelect: (user: { id: string; name: string }) => void;
+  onSelect: (user: { id: string; username: string }) => void;
 }> = ({ keyword, onSelect }) => {
   if (!keyword || keyword.trim() === "") return null;
 
-  const filtered = MENTION_SUGGESTIONS.filter((u) =>
-    u.name.toLowerCase().includes(keyword.toLowerCase().trim()),
+  const { data: searchResults, isLoading } = useSearch(
+    { q: keyword, type: "users" },
+    { enabled: keyword.length >= 1 }
   );
 
-  if (filtered.length === 0) return null;
+  const users = searchResults?.users ?? [];
+
+  if (users.length === 0 && !isLoading) return null;
 
   return (
     <View
@@ -64,21 +58,30 @@ const MentionSuggestions: FC<{
         shadowRadius: 4,
       }}
     >
-      {filtered.slice(0, 5).map((user, index) => (
-        <Pressable
-          key={user.id}
-          onPress={() => onSelect(user)}
-          style={({ pressed }) => ({
-            paddingHorizontal: 14,
-            paddingVertical: 11,
-            backgroundColor: pressed ? "#f7f9fa" : "#fff",
-            borderBottomWidth: index < filtered.length - 1 ? 0.5 : 0,
-            borderBottomColor: "#e1e8ed",
-          })}
-        >
-          <Text style={{ fontSize: 15, color: "#14171a" }}>{user.name}</Text>
-        </Pressable>
-      ))}
+      {isLoading ? (
+        <View style={{ padding: 12, alignItems: 'center' }}>
+          <ActivityIndicator size="small" color="#1d9bf0" />
+        </View>
+      ) : (
+        users.slice(0, 5).map((user, index) => (
+          <Pressable
+            key={user.id}
+            onPress={() => onSelect(user)}
+            style={({ pressed }) => ({
+              paddingHorizontal: 14,
+              paddingVertical: 11,
+              backgroundColor: pressed ? "#f7f9fa" : "#fff",
+              borderBottomWidth: index < Math.min(users.length, 5) - 1 ? 0.5 : 0,
+              borderBottomColor: "#e1e8ed",
+            })}
+          >
+            <View>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: "#14171a" }}>{user.displayName}</Text>
+              <Text style={{ fontSize: 13, color: "#657786" }}>@{user.username}</Text>
+            </View>
+          </Pressable>
+        ))
+      )}
     </View>
   );
 };
@@ -276,6 +279,7 @@ export default function CreateScreen() {
   const [location, setLocation] = useState("");
   const [locationDraft, setLocationDraft] = useState("");
   const [mentionKeyword, setMentionKeyword] = useState<string | null>(null);
+  const [validMentions, setValidMentions] = useState<Set<string>>(new Set());
   const [showImageModal, setShowImageModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
 
@@ -323,10 +327,11 @@ export default function CreateScreen() {
 
   // Insert the selected mention into the text
   const handleSuggestionSelect = useCallback(
-    (suggestionUser: { id: string; name: string }) => {
+    (suggestionUser: { id: string; username: string }) => {
+      setValidMentions(prev => new Set(prev).add(suggestionUser.username.toLowerCase()));
       setContent((prev) => {
         const before = prev.replace(/@\w*$/i, "");
-        return `${before}@${suggestionUser.name} `;
+        return `${before}@${suggestionUser.username} `;
       });
       setMentionKeyword(null);
     },
@@ -336,9 +341,18 @@ export default function CreateScreen() {
   const renderContentWithHighlights = (text: string) => {
     const parts = text.split(/((?:@|#)\w+)/g);
     return parts.map((part, index) => {
-      if (part.startsWith("@") || part.startsWith("#")) {
+      if (part.startsWith("#")) {
         return (
           <Text key={index} style={{ color: "#1d9bf0" }}>
+            {part}
+          </Text>
+        );
+      }
+      if (part.startsWith("@")) {
+        const username = part.slice(1).toLowerCase();
+        const isValid = validMentions.has(username);
+        return (
+          <Text key={index} style={{ color: isValid ? "#1d9bf0" : "#14171a" }}>
             {part}
           </Text>
         );
@@ -519,7 +533,6 @@ export default function CreateScreen() {
                   style={{
                     fontSize: 18,
                     lineHeight: 26,
-                    outline:'none',
                     color: content ? "transparent" : "#14171a",
                     textAlignVertical: "top",
                     maxHeight: 400,

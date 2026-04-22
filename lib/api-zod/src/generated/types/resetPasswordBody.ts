@@ -6,15 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RegisterInput {
-  /**
-     * @minLength 3
-     * @maxLength 30
-     */
-  username: string;
-  email: string;
+export type ResetPasswordBody = {
+  token: string;
   /** @minLength 6 */
   password: string;
-  displayName: string;
-  dateOfBirth: Date;
-}
+};
