@@ -114,6 +114,8 @@ export interface Post {
   likesCount: number;
   /** Number of direct replies/comments on this post */
   repliesCount: number;
+  /** Alias for repliesCount */
+  commentsCount?: number;
   isLiked: boolean;
   isSaved: boolean;
   createdAt: string;

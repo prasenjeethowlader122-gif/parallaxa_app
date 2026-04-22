@@ -238,7 +238,6 @@ export default function FeedScreen() {
             hashtags={item.hashtags}
             likesCount={item.likesCount ?? 0}
             commentsCount={item.commentsCount ?? 0}
-            repliesCount={item.repliesCount ?? 0}
             isLiked={item.isLiked ?? false}
             isSaved={item.isSaved ?? false}
             createdAt={item.createdAt}

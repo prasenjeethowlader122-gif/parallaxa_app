@@ -28,12 +28,12 @@ import {
   useGetPost,
   useLikePost,
   useUnlikePost,
-  useGetComments,
-  useCreateComment,
+  useGetReplies,
+  useCreatePost,
   useSavePost,
   useUnsavePost,
-  Comment,
-  getGetCommentsQueryKey,
+  Post,
+  getGetRepliesQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
@@ -74,9 +74,9 @@ function fmtCount(n: number): string {
 }
 
 // ── Tree Logic ────────────────────────────────────────────────────────────────
-type CommentWithReplies = Comment & { replies: CommentWithReplies[] };
+type CommentWithReplies = Post & { replies: CommentWithReplies[] };
 
-function buildCommentTree(flatComments: Comment[]): CommentWithReplies[] {
+function buildCommentTree(flatComments: Post[]): CommentWithReplies[] {
   const map = new Map<string, CommentWithReplies>();
   const roots: CommentWithReplies[] = [];
 
@@ -91,8 +91,8 @@ function buildCommentTree(flatComments: Comment[]): CommentWithReplies[] {
 
   sorted.forEach((c) => {
     const node = map.get(c.id)!;
-    if (c.parentId && map.has(c.parentId)) {
-      map.get(c.parentId)!.replies.push(node);
+    if (c.parentPostId && map.has(c.parentPostId)) {
+      map.get(c.parentPostId)!.replies.push(node);
     } else {
       roots.push(node);
     }
@@ -118,13 +118,66 @@ export default function PostDetailScreen() {
   } | null>(null);
 
   const { data: post, isLoading: postLoading, refetch: refetchPost } = useGetPost(id ?? "");
-  const { data: commentsData, isLoading: commentsLoading, refetch: refetchComments } = useGetComments(id ?? "");
+  const { data: commentsData, isLoading: commentsLoading, refetch: refetchComments } = useGetReplies(id ?? "");
 
   const { mutate: likePost } = useLikePost();
   const { mutate: unlikePost } = useUnlikePost();
   const { mutate: savePost } = useSavePost();
   const { mutate: unsavePost } = useUnsavePost();
-  const { mutate: createComment, isPending: isSubmittingComment } = useCreateComment();
+  const { mutate: createPost, isPending: isSubmittingComment } = useCreatePost({
+    mutation: {
+      onMutate: async (variables) => {
+        const text = variables.data.content?.trim();
+        const parentId = variables.data.parentPostId;
+        if (!text || !id || !user) return;
+
+        // Cancel any outgoing refetches
+        await queryClient.cancelQueries({ queryKey: getGetRepliesQueryKey(id) });
+
+        // Snapshot the previous value
+        const previousComments = queryClient.getQueryData(getGetRepliesQueryKey(id));
+
+        // Optimistically update to the new value
+        if (previousComments) {
+          const optimisticComment: Post = {
+            id: Math.random().toString(36).substring(7),
+            parentPostId: parentId === id ? null : parentId,
+            content: text,
+            author: {
+              id: user.id,
+              username: user.username,
+              displayName: user.displayName,
+              avatarUrl: user.avatarUrl,
+              isVerified: user.isVerified,
+              isFollowing: false,
+            },
+            hashtags: [],
+            likesCount: 0,
+            repliesCount: 0,
+            isLiked: false,
+            isSaved: false,
+            createdAt: new Date().toISOString(),
+          };
+
+          queryClient.setQueryData(getGetRepliesQueryKey(id), (old: any) => ({
+            ...old,
+            posts: [optimisticComment, ...(old?.posts ?? [])],
+          }));
+        }
+
+        return { previousComments };
+      },
+      onError: (_err: any, _variables: any, context: any) => {
+        if (context?.previousComments) {
+          queryClient.setQueryData(getGetRepliesQueryKey(id), context.previousComments);
+        }
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: getGetRepliesQueryKey(id) });
+        refetchPost();
+      }
+    }
+  });
 
   const [localLiked, setLocalLiked] = useState<boolean | null>(null);
   const [localCount, setLocalCount] = useState<number | null>(null);
@@ -164,63 +217,20 @@ export default function PostDetailScreen() {
     const text = replyText.trim();
     if (!text || !id || !user) return;
 
-    const parentId = replyTarget?.commentId ?? undefined;
+    const parentId = replyTarget?.commentId ?? id;
 
-    createComment({
-      postId: id,
+    createPost({
       data: {
         content: text,
-        parentId,
+        parentPostId: parentId,
       }
     }, {
-      onMutate: async (newComment) => {
+      onSuccess: () => {
         setReplyText("");
         setReplyTarget(null);
-
-        // Cancel any outgoing refetches
-        await queryClient.cancelQueries({ queryKey: getGetCommentsQueryKey(id) });
-
-        // Snapshot the previous value
-        const previousComments = queryClient.getQueryData(getGetCommentsQueryKey(id));
-
-        // Optimistically update to the new value
-        if (previousComments) {
-          const optimisticComment: Comment = {
-            id: Math.random().toString(36).substring(7),
-            postId: id,
-            content: text,
-            parentId: parentId ?? null,
-            author: {
-              id: user.id,
-              username: user.username,
-              displayName: user.displayName,
-              avatarUrl: user.avatarUrl,
-              isVerified: user.isVerified,
-              isFollowing: false,
-            },
-            repliesCount: 0,
-            createdAt: new Date().toISOString(),
-          };
-
-          queryClient.setQueryData(getGetCommentsQueryKey(id), (old: any) => ({
-            ...old,
-            comments: [optimisticComment, ...(old?.comments ?? [])],
-          }));
-        }
-
-        return { previousComments };
-      },
-      onError: (err, newComment, context) => {
-        if (context?.previousComments) {
-          queryClient.setQueryData(getGetCommentsQueryKey(id), context.previousComments);
-        }
-      },
-      onSettled: () => {
-        queryClient.invalidateQueries({ queryKey: getGetCommentsQueryKey(id) });
-        refetchPost();
       }
     });
-  }, [replyText, replyTarget, id, user, createComment, queryClient, refetchPost]);
+  }, [replyText, replyTarget, id, user, createPost, queryClient, refetchPost]);
 
   const topPad = insets.top + (Platform.OS === "web" ? 20 : 8);
 
@@ -232,7 +242,7 @@ export default function PostDetailScreen() {
     );
   }
 
-  const comments = commentsData?.comments ?? [];
+  const comments = commentsData?.posts ?? [];
   const rootComments = React.useMemo(() => buildCommentTree(comments), [comments]);
 
   // ── List Header ───────────────────────────────────────────────────────────
@@ -721,7 +731,7 @@ function CommentItem({
       {/* Nested Replies */}
       {isExpanded && hasReplies && (
         <View style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }}>
-          {comment.replies.map((reply) => (
+          {comment.replies.map((reply: CommentWithReplies) => (
             <CommentItem
               key={reply.id}
               comment={reply}

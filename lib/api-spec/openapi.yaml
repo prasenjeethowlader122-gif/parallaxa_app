@@ -1212,6 +1212,9 @@ components:
         repliesCount:
           type: integer
           description: "Number of direct replies/comments on this post"
+        commentsCount:
+          type: integer
+          description: "Alias for repliesCount"
         isLiked:
           type: boolean
         isSaved:
