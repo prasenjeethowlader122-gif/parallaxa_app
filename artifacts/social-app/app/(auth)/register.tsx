@@ -160,12 +160,12 @@ export default function RegisterScreen() {
   /* ─── Live Username Check ─── */
   const { data: availability, isLoading: isCheckingUsername } = useCheckUsername(
     { username: username.trim().toLowerCase() },
-    { enabled: step === 0 && username.trim().length >= 3 }
+    { query: { enabled: step === 0 && username.trim().length >= 3 } as any }
   );
 
   const { data: suggestionData } = useSuggestUsernames(
     { username: username.trim().toLowerCase() },
-    { enabled: step === 0 && availability?.available === false }
+    { query: { enabled: step === 0 && availability?.available === false } as any }
   );
   
   const topPt = insets.top + (Platform.OS === "web" ? 24 : 0);

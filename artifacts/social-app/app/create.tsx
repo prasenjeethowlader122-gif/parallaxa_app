@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import React, { useMemo, useState, FC, useCallback, useRef } from "react";
+import React, { useMemo, useState, FC, useCallback, useRef, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,7 @@ import {
   Pressable,
   Modal,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "@/components/Text"
 import { useCreatePost, useSearch } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
@@ -35,7 +36,7 @@ const MentionSuggestions: FC<{
 
   const { data: searchResults, isLoading } = useSearch(
     { q: keyword, type: "users" },
-    { enabled: keyword.length >= 1 }
+    { query: { enabled: keyword.length >= 1 } as any }
   );
 
   const users = searchResults?.users ?? [];
@@ -270,8 +271,11 @@ const LocationModal: FC<{
 // ─── Main screen ──────────────────────────────────────────────────────────────
 export default function CreateScreen() {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
+
+  const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -339,11 +343,11 @@ export default function CreateScreen() {
   );
 
   const renderContentWithHighlights = (text: string) => {
-    const parts = text.split(/((?:@|#)\w+)/g);
+    const parts = text.split(/((?:@|#)\w+|(?:https?:\/\/[^\s]+))/g);
     return parts.map((part, index) => {
       if (part.startsWith("#")) {
         return (
-          <Text key={index} style={{ color: "#1d9bf0" }}>
+          <Text key={index} style={{ color: colors.primary }}>
             {part}
           </Text>
         );
@@ -352,12 +356,19 @@ export default function CreateScreen() {
         const username = part.slice(1).toLowerCase();
         const isValid = validMentions.has(username);
         return (
-          <Text key={index} style={{ color: isValid ? "#1d9bf0" : "#14171a" }}>
+          <Text key={index} style={{ color: isValid ? colors.primary : colors.foreground }}>
             {part}
           </Text>
         );
       }
-      return <Text key={index} className='text-black'>{part}</Text>;
+      if (part.startsWith("http")) {
+        return (
+          <Text key={index} style={{ color: colors.primary }}>
+            {part}
+          </Text>
+        );
+      }
+      return <Text key={index} style={{ color: colors.foreground }}>{part}</Text>;
     });
   };
 
@@ -402,10 +413,11 @@ export default function CreateScreen() {
           justifyContent: "space-between",
           alignItems: "center",
           paddingHorizontal: 16,
-          paddingVertical: 12,
+          paddingTop: topPadding,
+          paddingBottom: 12,
           borderBottomWidth: 1,
-          borderBottomColor: "#f2f2f2",
-          backgroundColor: "#fff",
+          borderBottomColor: colors.border,
+          backgroundColor: colors.background,
         }}
       >
         <TouchableOpacity
@@ -592,14 +604,13 @@ export default function CreateScreen() {
 
               {/* Image preview (shown when URL is set) */}
               {imageUrl.trim().length > 0 && (
-                <View style={{ marginTop: 12 }}>
+                <View style={{ marginTop: 12, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.border }}>
                   <Image
                     source={{ uri: imageUrl }}
                     style={{
                       width: "100%",
-                      height: 220,
-                      borderRadius: 16,
-                      backgroundColor: "#f0f0f0",
+                      aspectRatio: 16 / 9,
+                      backgroundColor: colors.muted,
                     }}
                     resizeMode="cover"
                   />
@@ -607,22 +618,51 @@ export default function CreateScreen() {
                     onPress={() => setImageUrl("")}
                     style={{
                       position: "absolute",
-                      top: 8,
-                      right: 8,
-                      backgroundColor: "rgba(0,0,0,0.65)",
-                      borderRadius: 14,
-                      width: 28,
-                      height: 28,
+                      top: 10,
+                      right: 10,
+                      backgroundColor: "rgba(0,0,0,0.5)",
+                      borderRadius: 15,
+                      width: 30,
+                      height: 30,
                       justifyContent: "center",
                       alignItems: "center",
                     }}
                   >
                     <HugeiconsIcon
                       icon={Cancel01Icon}
-                      size={14}
+                      size={16}
                       color="#fff"
                     />
                   </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Link preview placeholder */}
+              {!imageUrl.trim() && content.match(/https?:\/\/[^\s]+/) && (
+                <View
+                  style={{
+                    marginTop: 12,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    padding: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    backgroundColor: colors.card
+                  }}
+                >
+                  <View style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: colors.muted, justifyContent: 'center', alignItems: 'center' }}>
+                    <HugeiconsIcon icon={Image01Icon} size={20} color={colors.mutedForeground} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }} numberOfLines={1}>
+                      {content.match(/https?:\/\/([^\/\s]+)/)?.[1] || "Link Preview"}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: colors.mutedForeground }} numberOfLines={1}>
+                      {content.match(/(https?:\/\/[^\s]+)/)?.[0]}
+                    </Text>
+                  </View>
                 </View>
               )}
             </View>
