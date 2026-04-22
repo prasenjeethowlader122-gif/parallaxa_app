@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/placeholder-logo.svg",
+      "image": "./assets/images/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0095F6"
     },
