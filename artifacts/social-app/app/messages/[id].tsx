@@ -270,13 +270,13 @@ export default function ConversationScreen() {
           </TouchableOpacity>
 
           <TextInput
-            className="flex-1 text-[15px] max-h-[100px] px-2"
+            className="flex-1 text-[15px] max-h-[100px] px-2 outline-none"
             style={{ color: colors.foreground }}
             placeholder="Message..."
             placeholderTextColor={colors.mutedForeground}
             value={message}
             onChangeText={handleTyping}
-            multiline
+            numberOfLine={1}
             maxLength={1000}
           />
 

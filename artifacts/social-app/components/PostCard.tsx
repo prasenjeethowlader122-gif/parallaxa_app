@@ -121,7 +121,7 @@ export function PostCard({
       onPress={navigateToPost}
       style={[
         styles.card,
-        { borderBottomColor: colors.border || '#f2f2f2' }
+        { borderBottomColor: '#f2f2f2' }
       ]}
     >
       {/* ── Author row (Matching Skeleton) ── */}

@@ -82,12 +82,12 @@ export default function RootLayout() {
     if (Platform.OS === 'web') {
       return (
         <View style={{ flex: 1, backgroundColor: '#f1f1f1', justifyContent: 'center', alignItems: 'center' }}>
-          <View style={{ width: 60, height: 60, justifyContent: "center", alignItems: "center" }}>
+          
             <Image
             source={require("@/assets/images/parallaxa-logo.svg")}
-            style={{ width: 60, height: 60 }}
+            style={{ width: 80, height: 80 }}
       />
-    </View>
+    
         </View>
       );
     }

@@ -549,6 +549,7 @@ export default function CreateScreen() {
                     textAlignVertical: "top",
                     maxHeight: 400,
                     padding: 0,
+                    outline: 'none',
                     backgroundColor: "transparent",
                     zIndex: 1,
                   }}
