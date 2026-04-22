@@ -160,7 +160,7 @@ export default function FeedScreen() {
     isLoading: feedLoading,
     isRefetching: feedRefetching,
     refetch: refetchFeed,
-  } = useGetFeed({ enabled: activeTab === "following" });
+  } = useGetFeed({}, { query: { enabled: activeTab === "following" } as any });
   
   const isFollowingTab = activeTab === "following";
   const rawPosts: any[] = isFollowingTab ?

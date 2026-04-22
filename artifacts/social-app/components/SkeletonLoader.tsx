@@ -111,7 +111,7 @@ export function SkeletonBox({
           width,
           height,
           borderRadius,
-          backgroundColor: colors.foreground,
+          backgroundColor: colors.muted,
           opacity,
         },
         style,

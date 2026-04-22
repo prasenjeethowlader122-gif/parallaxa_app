@@ -43,7 +43,7 @@ export default function TwoFactorSetupScreen() {
 
   const handleSetup = async () => {
     try {
-      const data = await setup2FA.mutateAsync({});
+      const data = await setup2FA.mutateAsync();
       setSetupData(data);
     } catch (err) {
       Alert.alert("Error", "Failed to start 2FA setup");

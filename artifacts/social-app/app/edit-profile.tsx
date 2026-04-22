@@ -34,7 +34,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 interface FieldConfig {
   key: "displayName" | "bio" | "website";
   label: string;
-  icon: React.ComponentType<any>; // hugeicons icon object (not JSX)
+  icon: any; // hugeicons icon object (not JSX)
   placeholder: string;
   multiline?: boolean;
   autoCapitalize?: "none" | "words" | "sentences" | "characters";
@@ -179,7 +179,7 @@ export default function EditProfileScreen() {
     });
   };
 
-  const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
+  const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 

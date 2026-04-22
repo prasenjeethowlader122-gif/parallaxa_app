@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { setBaseUrl } from "@workspace/api-client-react";
+import { Platform, View, ActivityIndicator } from "react-native";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
@@ -77,7 +78,16 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
   
-  if (!fontsLoaded && !fontError) return null;
+  if (!fontsLoaded && !fontError) {
+    if (Platform.OS === 'web') {
+      return (
+        <View style={{ flex: 1, backgroundColor: '#0095F6', justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#ffffff" />
+        </View>
+      );
+    }
+    return null;
+  }
   
   return (
     <SafeAreaProvider>

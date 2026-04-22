@@ -31,7 +31,7 @@ export default function ExploreScreen() {
   const { data: exploreData, isLoading } = useGetExplorePosts({ limit: 30 });
   const { data: searchData } = useSearch(
     { q: debouncedQuery, type: "all" },
-    { enabled: debouncedQuery.length > 1 }
+    { query: { enabled: debouncedQuery.length > 1 } as any }
   );
 
   const handleQueryChange = (text: string) => {

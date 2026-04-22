@@ -12,9 +12,10 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { Text } from "@/components/Text";
 import React, { useState, useCallback } from "react";
-import { Image, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Image, Platform, StyleSheet, TouchableOpacity, View, Share } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "./UserAvatar";
+import { useCreatePost } from "@workspace/api-client-react";
 
 interface Author {
   id: string;
@@ -57,6 +58,7 @@ export function PostCard({
 }: PostCardProps) {
   const colors = useColors();
   const router = useRouter();
+  const { mutate: createPost } = useCreatePost();
 
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
@@ -76,6 +78,27 @@ export function PostCard({
     setIsSaved(newSaved);
     onSave?.(id, newSaved);
   }, [isSaved, id, onSave]);
+
+  const handleShare = useCallback(async () => {
+    try {
+      await Share.share({
+        message: content || '',
+        url: imageUrl || '',
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }, [content, imageUrl]);
+
+  const handleRepost = useCallback(() => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    createPost({
+      data: {
+        parentPostId: id,
+        content: "Reposted",
+      },
+    });
+  }, [id, createPost]);
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -144,8 +167,47 @@ export function PostCard({
             className="text-[15px] leading-[21px]"
             style={{ color: colors.foreground }}
           >
-            {content}
+            {content.split(/((?:@|#)\w+|(?:https?:\/\/[^\s]+))/g).map((part, index) => {
+              if (part.startsWith('#') || part.startsWith('@') || part.startsWith('http')) {
+                return (
+                  <Text key={index} style={{ color: colors.primary }}>
+                    {part}
+                  </Text>
+                );
+              }
+              return part;
+            })}
           </Text>
+        </View>
+      )}
+
+      {/* ── Link Preview ── */}
+      {!imageUrl && content?.match(/https?:\/\/[^\s]+/) && (
+        <View
+          style={{
+            marginHorizontal: 16,
+            marginBottom: 14,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: colors.border,
+            padding: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            backgroundColor: colors.card
+          }}
+        >
+          <View style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: colors.muted, justifyContent: 'center', alignItems: 'center' }}>
+            <HugeiconsIcon icon={Share01Icon} size={20} color={colors.mutedForeground} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }} numberOfLines={1}>
+              {content.match(/https?:\/\/([^\/\s]+)/)?.[1] || "Link Preview"}
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.mutedForeground }} numberOfLines={1}>
+              {content.match(/(https?:\/\/[^\s]+)/)?.[0]}
+            </Text>
+          </View>
         </View>
       )}
 
@@ -183,6 +245,7 @@ export function PostCard({
 
         {/* Repost */}
         <TouchableOpacity
+          onPress={handleRepost}
           hitSlop={10}
           style={styles.actionItem}
         >
@@ -231,7 +294,7 @@ export function PostCard({
         </TouchableOpacity>
 
         {/* Share */}
-        <TouchableOpacity hitSlop={10} style={styles.actionItem}>
+        <TouchableOpacity onPress={handleShare} hitSlop={10} style={styles.actionItem}>
           <HugeiconsIcon icon={Share01Icon} size={20} strokeWidth={2} color={colors.mutedForeground} />
         </TouchableOpacity>
       </View>

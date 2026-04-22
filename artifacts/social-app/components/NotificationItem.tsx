@@ -1,5 +1,6 @@
 import React from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, TouchableOpacity, View } from "react-native";
+import { Text } from "@/components/Text";
 import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "./UserAvatar";

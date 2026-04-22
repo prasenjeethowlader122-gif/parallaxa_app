@@ -112,10 +112,10 @@ export default function MyProfileScreen() {
 
   // We fetch full user data to get joinedDate etc, even though we have 'me' from AuthContext
   const { data: profile, isLoading, refetch } = useGetUser(me?.id ?? "", {
-    query: { enabled: !!me?.id },
+    query: { enabled: !!me?.id } as any,
   });
   const { data: postsData, refetch: refetchPosts } = useGetUserPosts(me?.id ?? "", undefined, {
-    query: { enabled: !!me?.id },
+    query: { enabled: !!me?.id } as any,
   });
 
   const posts = useMemo(() => {

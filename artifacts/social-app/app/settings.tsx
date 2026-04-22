@@ -1,5 +1,6 @@
 import React from "react";
-import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, TouchableOpacity, View, ScrollView } from "react-native";
+import { Text } from "@/components/Text";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HugeiconsIcon } from "@hugeicons/react-native";
@@ -28,7 +29,7 @@ export default function SettingsScreen() {
   const { data: me, refetch } = useGetMe();
   const updateUser = useUpdateUser();
 
-  const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
+  const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
   const togglePrivate = async (value: boolean) => {
     if (!me) return;
@@ -50,36 +51,53 @@ export default function SettingsScreen() {
     ]);
   };
 
-  const options = [
+  const sections = [
     {
-      icon: Edit01Icon,
-      label: "Edit profile",
-      onPress: () => router.push("/edit-profile" as any),
+      title: "Account",
+      items: [
+        {
+          icon: Edit01Icon,
+          label: "Edit profile",
+          onPress: () => router.push("/edit-profile" as any),
+        },
+        {
+          icon: CheckmarkCircle01Icon,
+          label: "Account Verification",
+          onPress: () => router.push("/account-verification" as any),
+        },
+      ],
     },
     {
-      icon: Notification01Icon,
-      label: "Notifications",
-      onPress: () => {}, // add route or modal if needed
+      title: "Security & Privacy",
+      items: [
+        {
+          icon: LockPasswordIcon,
+          label: "Two-Factor Auth",
+          onPress: () => router.push("/two-factor-setup" as any),
+        },
+        {
+          icon: Shield01Icon,
+          label: "Private account",
+          isSwitch: true,
+          value: me?.isPrivate ?? false,
+          onValueChange: togglePrivate,
+        },
+      ],
     },
     {
-      icon: LockPasswordIcon,
-      label: "Two-Factor Auth",
-      onPress: () => router.push("/two-factor-setup" as any),
-    },
-    {
-      icon: CheckmarkCircle01Icon,
-      label: "Account Verification",
-      onPress: () => router.push("/account-verification" as any),
-    },
-    {
-      icon: HelpCircleIcon,
-      label: "Help",
-      onPress: () => {},
-    },
-    {
-      icon: InformationCircleIcon,
-      label: "About",
-      onPress: () => {},
+      title: "Support & About",
+      items: [
+        {
+          icon: HelpCircleIcon,
+          label: "Help",
+          onPress: () => {},
+        },
+        {
+          icon: InformationCircleIcon,
+          label: "About",
+          onPress: () => {},
+        },
+      ],
     },
   ];
 
@@ -89,7 +107,7 @@ export default function SettingsScreen() {
       <View
         className="flex-row justify-between items-center px-4 pb-3"
         style={{
-          paddingTop: topPadding + 12,
+          paddingTop: topPadding,
           backgroundColor: colors.background,
           borderBottomWidth: 0.5,
           borderBottomColor: colors.border,
@@ -108,73 +126,80 @@ export default function SettingsScreen() {
         <View style={{ width: 36 }} />
       </View>
 
-      {/* Settings list */}
-      <View className="mt-2">
-        <View
-          className="flex-row items-center px-5 py-4 gap-3.5"
-          style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
-        >
-          <HugeiconsIcon
-            icon={Shield01Icon}
-            size={20}
-            color={colors.foreground}
-            strokeWidth={1.5}
-          />
-          <Text className="flex-1 text-base" style={{ color: colors.foreground }}>
-            Private account
-          </Text>
-          <Switch
-            value={me?.isPrivate ?? false}
-            onValueChange={togglePrivate}
-            trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor={Platform.OS === "ios" ? undefined : colors.background}
-          />
-        </View>
+      <ScrollView className="flex-1">
+        {sections.map((section, sectionIdx) => (
+          <View key={section.title} className="mt-6">
+            <Text
+              className="px-5 mb-2 text-[13px] font-bold uppercase tracking-wider"
+              style={{ color: colors.mutedForeground }}
+            >
+              {section.title}
+            </Text>
+            <View style={{ backgroundColor: colors.card, borderTopWidth: 0.5, borderBottomWidth: 0.5, borderColor: colors.border }}>
+              {section.items.map((item, index) => (
+                <View key={item.label}>
+                  <TouchableOpacity
+                    className="flex-row items-center px-5 py-4 gap-3.5"
+                    onPress={item.onPress}
+                    disabled={item.isSwitch}
+                    activeOpacity={0.7}
+                  >
+                    <HugeiconsIcon
+                      icon={item.icon}
+                      size={20}
+                      color={item.isSwitch && item.value ? colors.primary : colors.foreground}
+                      strokeWidth={1.5}
+                    />
+                    <Text className="flex-1 text-base" style={{ color: colors.foreground }}>
+                      {item.label}
+                    </Text>
+                    {item.isSwitch ? (
+                      <Switch
+                        value={item.value}
+                        onValueChange={item.onValueChange}
+                        trackColor={{ false: colors.border, true: colors.primary }}
+                        thumbColor={Platform.OS === "ios" ? undefined : colors.background}
+                      />
+                    ) : (
+                      <HugeiconsIcon
+                        icon={ArrowRight01Icon}
+                        size={18}
+                        color={colors.mutedForeground}
+                        strokeWidth={1.5}
+                      />
+                    )}
+                  </TouchableOpacity>
+                  {index < section.items.length - 1 && (
+                    <View className="ml-14" style={{ height: 0.5, backgroundColor: colors.border }} />
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
 
-        {options.map(({ icon, label, onPress }) => (
+        <View className="mt-8 mb-10">
           <TouchableOpacity
-            key={label}
             className="flex-row items-center px-5 py-4 gap-3.5"
-            style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
-            onPress={onPress}
+            style={{ backgroundColor: colors.card, borderTopWidth: 0.5, borderBottomWidth: 0.5, borderColor: colors.border }}
+            onPress={handleLogout}
             activeOpacity={0.7}
           >
             <HugeiconsIcon
-              icon={icon}
+              icon={Logout01Icon}
               size={20}
-              color={colors.foreground}
+              color={colors.destructive}
               strokeWidth={1.5}
             />
-            <Text className="flex-1 text-base" style={{ color: colors.foreground }}>
-              {label}
+            <Text className="flex-1 text-base font-semibold" style={{ color: colors.destructive }}>
+              Log out
             </Text>
-            <HugeiconsIcon
-              icon={ArrowRight01Icon ?? ArrowLeft01Icon} // change if you have a right‑arrow icon
-              size={18}
-              color={colors.mutedForeground}
-              strokeWidth={1.5}
-            />
           </TouchableOpacity>
-        ))}
-
-        <TouchableOpacity
-          className="flex-row items-center px-5 py-4 gap-3.5"
-          style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
-          onPress={handleLogout}
-          activeOpacity={0.7}
-        >
-          <HugeiconsIcon
-            icon={Logout01Icon}
-            size={20}
-            color={colors.destructive}
-            strokeWidth={1.5}
-          />
-          <Text className="flex-1 text-base" style={{ color: colors.destructive }}>
-            Log out
+          <Text className="text-center mt-4 text-[13px]" style={{ color: colors.mutedForeground }}>
+            Version 1.0.0
           </Text>
-          <View style={{ width: 18 }} /> {/* placeholder; remove if you want chevron */}
-        </TouchableOpacity>
-      </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
