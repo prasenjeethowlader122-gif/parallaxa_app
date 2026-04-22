@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useRef, useEffect } from "react";
 import {
   ActivityIndicator, FlatList, KeyboardAvoidingView, Platform,
-  Text, TextInput, TouchableOpacity, View,
+  Text, TextInput, TouchableOpacity, View, LayoutAnimation,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetMessages, useGetConversation, useSendMessage } from "@workspace/api-client-react";
@@ -15,7 +15,14 @@ import {
   ArrowLeft01Icon,
   InformationCircleIcon,
   SentIcon,
+  SmileIcon,
+  Image02Icon,
 } from "@hugeicons/core-free-icons";
+import { TypingIndicator } from "@/components/TypingIndicator";
+import { EmojiPicker } from "@/components/EmojiPicker";
+import { GifPicker } from "@/components/GifPicker";
+import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 
 export default function ConversationScreen() {
   const colors = useColors();
@@ -26,12 +33,13 @@ export default function ConversationScreen() {
   const { socket } = useSocket();
   const [message, setMessage] = useState("");
   const [typingUser, setTypingUser] = useState<{ userId: string; isTyping: boolean } | null>(null);
+  const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
+  const [isGifPickerVisible, setIsGifPickerVisible] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const [localMessages, setLocalMessages] = useState<any[]>([]);
 
-  // Fix: hooks take plain string, not an object
   const { data: convoData } = useGetConversation(id ?? "");
-  const { data: messagesData, refetch } = useGetMessages(id ?? "");
+  const { data: messagesData } = useGetMessages(id ?? "");
 
   useEffect(() => {
     if (messagesData?.messages) {
@@ -45,6 +53,7 @@ export default function ConversationScreen() {
     socket.emit("join_conversation", id);
 
     socket.on("new_message", (newMsg: any) => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setLocalMessages((prev) => {
         if (prev.find((m) => m.id === newMsg.id)) return prev;
         return [newMsg, ...prev];
@@ -53,6 +62,7 @@ export default function ConversationScreen() {
 
     socket.on("user_typing", (data: { userId: string; isTyping: boolean }) => {
       if (data.userId !== user?.id) {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setTypingUser(data.isTyping ? data : null);
       }
     });
@@ -68,7 +78,7 @@ export default function ConversationScreen() {
     mutation: {
       onSuccess: (data) => {
         setMessage("");
-        // Already handled by socket for real-time, but updating local state just in case
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setLocalMessages((prev) => {
           if (prev.find((m) => m.id === data.id)) return prev;
           return [data, ...prev];
@@ -83,13 +93,21 @@ export default function ConversationScreen() {
     socket?.emit("typing", { conversationId: id, isTyping: text.length > 0 });
   };
 
-  const handleSend = () => {
-    if (!message.trim() || !id) return;
-    sendMessage({ conversationId: id, data: { content: message.trim() } });
+  const handleSend = (content?: string, mediaUrl?: string) => {
+    const finalContent = content ?? message.trim();
+    if (!finalContent && !mediaUrl) return;
+    if (!id) return;
+
+    sendMessage({
+      conversationId: id,
+      data: {
+        content: finalContent || undefined,
+        mediaUrl: mediaUrl || undefined
+      }
+    });
   };
 
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
-  const messages = messagesData?.messages ?? [];
   const participant = (convoData as any)?.participant;
 
   const timeLabel = (dateStr: string) => {
@@ -102,6 +120,7 @@ export default function ConversationScreen() {
       className="flex-1"
       style={{ backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
     >
       {/* Header */}
       <View
@@ -111,6 +130,7 @@ export default function ConversationScreen() {
           backgroundColor: colors.background,
           borderBottomWidth: 0.5,
           borderBottomColor: colors.border,
+          zIndex: 10,
         }}
       >
         <TouchableOpacity onPress={() => router.back()} className="p-1 mr-1">
@@ -130,7 +150,10 @@ export default function ConversationScreen() {
             </View>
           </TouchableOpacity>
         )}
-        <TouchableOpacity className="p-1">
+        <TouchableOpacity
+          className="p-1"
+          onPress={() => router.push(`/messages/settings/${id}` as any)}
+        >
           <HugeiconsIcon icon={InformationCircleIcon} size={22} color={colors.foreground} />
         </TouchableOpacity>
       </View>
@@ -141,28 +164,80 @@ export default function ConversationScreen() {
         data={localMessages}
         keyExtractor={(item: any) => item.id}
         inverted
-        renderItem={({ item }: { item: any }) => {
+        renderItem={({ item, index }: { item: any, index: number }) => {
           const isMine = item.senderId === user?.id;
+          const showAvatar = !isMine && (index === 0 || localMessages[index - 1]?.senderId !== item.senderId);
+
           return (
-            <View className={`flex-row items-end mb-1.5 gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
-              {!isMine && participant && <UserAvatar uri={participant.avatarUrl} size={28} />}
-              <View style={{ maxWidth: "70%" }}>
-                <View
-                  className="px-3.5 py-2.5 rounded-[20px]"
-                  style={{ backgroundColor: isMine ? colors.primary : colors.muted }}
-                >
-                  <Text className="text-[15px] leading-5" style={{ color: isMine ? "#FFFFFF" : colors.foreground }}>
-                    {item.content}
-                  </Text>
-                </View>
-                <Text className="text-[11px] mt-0.5 mx-1.5" style={{ color: colors.mutedForeground }}>
+            <View className={`flex-row items-end mb-1 gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
+              <View style={{ width: 28 }}>
+                {showAvatar && participant && <UserAvatar uri={participant.avatarUrl} size={28} />}
+              </View>
+              <View style={{ maxWidth: "75%" }}>
+                {isMine ? (
+                  <LinearGradient
+                    colors={[colors.primary, colors.primary]} // You can add a second color for a real gradient
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 10,
+                      borderBottomRightRadius: 4,
+                    }}
+                  >
+                    {item.mediaUrl && (
+                      <Image
+                        source={{ uri: item.mediaUrl }}
+                        style={{ width: 200, height: 200, borderRadius: 12, marginBottom: item.content ? 8 : 0 }}
+                        contentFit="cover"
+                      />
+                    )}
+                    {item.content && (
+                      <Text className="text-[15px] leading-5" style={{ color: "#FFFFFF" }}>
+                        {item.content}
+                      </Text>
+                    )}
+                  </LinearGradient>
+                ) : (
+                  <View
+                    style={{
+                      backgroundColor: colors.muted,
+                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 10,
+                      borderBottomLeftRadius: 4,
+                    }}
+                  >
+                    {item.mediaUrl && (
+                      <Image
+                        source={{ uri: item.mediaUrl }}
+                        style={{ width: 200, height: 200, borderRadius: 12, marginBottom: item.content ? 8 : 0 }}
+                        contentFit="cover"
+                      />
+                    )}
+                    {item.content && (
+                      <Text className="text-[15px] leading-5" style={{ color: colors.foreground }}>
+                        {item.content}
+                      </Text>
+                    )}
+                  </View>
+                )}
+                <Text className="text-[10px] mt-1 mx-1" style={{ color: colors.mutedForeground, textAlign: isMine ? 'right' : 'left' }}>
                   {timeLabel(item.createdAt)}
                 </Text>
               </View>
             </View>
           );
         }}
-        contentContainerStyle={{ padding: 12, gap: 8, flexGrow: 1, justifyContent: "flex-end" }}
+        ListHeaderComponent={() => (
+          typingUser?.isTyping ? (
+            <View className="mb-4 ml-10">
+              <TypingIndicator />
+            </View>
+          ) : null
+        )}
+        contentContainerStyle={{ padding: 12, flexGrow: 1, justifyContent: "flex-end" }}
         showsVerticalScrollIndicator={false}
       />
 
@@ -177,11 +252,25 @@ export default function ConversationScreen() {
         }}
       >
         <View
-          className="flex-row items-center rounded-3xl px-3.5 py-1.5"
+          className="flex-row items-center rounded-3xl px-2 py-1.5"
           style={{ backgroundColor: colors.muted, borderColor: colors.border, borderWidth: 0.5 }}
         >
+          <TouchableOpacity
+            className="p-1.5"
+            onPress={() => setIsEmojiPickerVisible(true)}
+          >
+            <HugeiconsIcon icon={SmileIcon} size={22} color={colors.mutedForeground} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="p-1.5"
+            onPress={() => setIsGifPickerVisible(true)}
+          >
+            <HugeiconsIcon icon={Image02Icon} size={22} color={colors.mutedForeground} />
+          </TouchableOpacity>
+
           <TextInput
-            className="flex-1 text-[15px] max-h-[100px]"
+            className="flex-1 text-[15px] max-h-[100px] px-2"
             style={{ color: colors.foreground }}
             placeholder="Message..."
             placeholderTextColor={colors.mutedForeground}
@@ -190,20 +279,37 @@ export default function ConversationScreen() {
             multiline
             maxLength={1000}
           />
+
           <TouchableOpacity
-            onPress={handleSend}
-            disabled={isPending || !message.trim()}
-            className="w-[34px] h-[34px] rounded-full items-center justify-center ml-2"
-            style={{ backgroundColor: message.trim() ? colors.primary : colors.muted }}
+            onPress={() => handleSend()}
+            disabled={isPending || (!message.trim())}
+            className="w-[34px] h-[34px] rounded-full items-center justify-center ml-1"
+            style={{ backgroundColor: message.trim() ? colors.primary : "transparent" }}
           >
             {isPending ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <HugeiconsIcon icon={SentIcon} size={18} color={message.trim() ? "#FFFFFF" : colors.mutedForeground} />
+              <HugeiconsIcon
+                icon={SentIcon}
+                size={18}
+                color={message.trim() ? "#FFFFFF" : colors.mutedForeground}
+              />
             )}
           </TouchableOpacity>
         </View>
       </View>
+
+      <EmojiPicker
+        visible={isEmojiPickerVisible}
+        onClose={() => setIsEmojiPickerVisible(false)}
+        onSelect={(emoji) => setMessage(prev => prev + emoji)}
+      />
+
+      <GifPicker
+        visible={isGifPickerVisible}
+        onClose={() => setIsGifPickerVisible(false)}
+        onSelect={(url) => handleSend("", url)}
+      />
     </KeyboardAvoidingView>
   );
 }
