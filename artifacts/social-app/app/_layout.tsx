@@ -66,10 +66,10 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    "Sora-Regular": require("@/assets/fonts/sora/Sora-Regular.ttf"),
-    "Sora-Medium": require("@/assets/fonts/sora/Sora-Medium.ttf"),
-    "Sora-SemiBold": require("@/assets/fonts/sora/Sora-SemiBold.ttf"),
-    "Sora-Bold": require("@/assets/fonts/sora/Sora-Bold.ttf"),
+    "Sora-Regular": require("@/assets/fonts/mm/MirandaSans-Regular.ttf"),
+    "Sora-Medium": require("@/assets/fonts/mm/MirandaSans-Medium.ttf"),
+    "Sora-SemiBold": require("@/assets/fonts/mm/MirandaSans-Medium.ttf"),
+    "Sora-Bold": require("@/assets/fonts/mm/MirandaSans-Bold.ttf"),
   });
   useEffect(() => {
     if (fontError) console.error("Font load error:", fontError);
