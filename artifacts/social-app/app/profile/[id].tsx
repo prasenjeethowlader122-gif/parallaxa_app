@@ -182,12 +182,12 @@ export default function UserProfileScreen() {
   };
 
   const handleFollow = () => {
-    if (!id) return;
+    if (!id || !me) return;
     profile?.isFollowing ? unfollowUser({ userId: id }) : followUser({ userId: id });
   };
 
   const handleMessage = () => {
-    if (!id || !me?.id) return;
+    if (!id || !me) return;
     startConversation({ data: { userId: id } });
   };
 
@@ -235,7 +235,7 @@ export default function UserProfileScreen() {
           <UserAvatar uri={profile?.avatarUrl ?? undefined} size={76} />
         </View>
 
-        {!isLoading && profile && (
+        {!isLoading && profile && me && (
           <View style={styles.actionRow}>
             {isOwnProfile ? (
               <TouchableOpacity style={styles.editBtn} activeOpacity={0.8} onPress = {()=> router.push('/edit-profile')}>

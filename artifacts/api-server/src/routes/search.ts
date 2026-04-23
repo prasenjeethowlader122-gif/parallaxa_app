@@ -2,11 +2,11 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, postsTable, hashtagsTable, likesTable, savedPostsTable } from "@workspace/db";
 import { like, sql } from "drizzle-orm";
-import { authenticate, type AuthRequest } from "../middleware/authenticate";
+import { authenticate, optionalAuthenticate, type AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
 
-router.get("/search", authenticate, async (req: AuthRequest, res) => {
+router.get("/search", optionalAuthenticate, async (req: AuthRequest, res) => {
   try {
     const q = String(req.query.q ?? "").trim();
     const type = String(req.query.type ?? "all");
@@ -44,8 +44,8 @@ router.get("/search", authenticate, async (req: AuthRequest, res) => {
         .limit(10);
       posts = await Promise.all(rows.map(async (p) => {
         const [author] = await db.select().from(usersTable).where(sql`${usersTable.id} = ${p.userId}`).limit(1);
-        const [liked] = await db.select().from(likesTable).where(sql`${likesTable.userId} = ${req.userId} AND ${likesTable.postId} = ${p.id}`).limit(1);
-        const [saved] = await db.select().from(savedPostsTable).where(sql`${savedPostsTable.userId} = ${req.userId} AND ${savedPostsTable.postId} = ${p.id}`).limit(1);
+        const liked = req.userId ? (await db.select().from(likesTable).where(sql`${likesTable.userId} = ${req.userId} AND ${likesTable.postId} = ${p.id}`).limit(1))[0] : null;
+        const saved = req.userId ? (await db.select().from(savedPostsTable).where(sql`${savedPostsTable.userId} = ${req.userId} AND ${savedPostsTable.postId} = ${p.id}`).limit(1))[0] : null;
         return {
           id: p.id,
           author: author ? { id: author.id, username: author.username, displayName: author.displayName, avatarUrl: author.avatarUrl, isVerified: author.isVerified, isFollowing: false } : null,

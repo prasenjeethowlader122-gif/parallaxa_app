@@ -15,6 +15,7 @@ import { Image01Icon, FlashIcon, UserGroup02Icon } from "@hugeicons/core-free-ic
 import { useColors } from "@/hooks/useColors";
 import { PostCard } from "@/components/PostCard";
 import { EmptyState } from "@/components/EmptyState";
+import { useAuth } from "@/context/AuthContext";
 import { FeedSkeleton } from "@/components/SkeletonLoader";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -32,6 +33,11 @@ const TABS: Tab[] = [
   { id: "trending", label: "Trending" },
 ];
 
+const GUEST_TABS: Tab[] = [
+  { id: "foryou", label: "For You" },
+  { id: "trending", label: "Trending" },
+];
+
 // ─── AnimatedTabIndicator ─────────────────────────────────────────────────────
 // Slides a bottom-border under the active tab label with a spring animation.
 
@@ -41,21 +47,28 @@ interface AnimatedTabBarProps {
   colors: ReturnType < typeof useColors > ;
 }
 
-function AnimatedTabBar({ activeTab, onPress, colors }: AnimatedTabBarProps) {
+interface AnimatedTabBarProps {
+  activeTab: TabId;
+  onPress: (id: TabId) => void;
+  colors: ReturnType<typeof useColors>;
+  tabs: Tab[];
+}
+
+function AnimatedTabBar({ activeTab, onPress, colors, tabs }: AnimatedTabBarProps) {
   // Measure each tab's x-offset + width so we can slide the indicator precisely.
-  const tabLayouts = useRef < { x: number;width: number } [] > ([]);
+  const tabLayouts = useRef<{ x: number; width: number }[]>([]);
   const indicatorX = useRef(new Animated.Value(0)).current;
   const indicatorW = useRef(new Animated.Value(0)).current;
-  
+
   function handleLayout(index: number, x: number, width: number) {
     tabLayouts.current[index] = { x, width };
     // Initialise indicator under the first tab on first layout
-    if (index === 0 && TABS[0].id === activeTab) {
+    if (index === 0 && tabs[0].id === activeTab) {
       indicatorX.setValue(x + 16);
       indicatorW.setValue(width - 32);
     }
   }
-  
+
   function handlePress(tab: Tab, index: number) {
     onPress(tab.id);
     const layout = tabLayouts.current[index];
@@ -75,17 +88,17 @@ function AnimatedTabBar({ activeTab, onPress, colors }: AnimatedTabBarProps) {
       }),
     ]).start();
   }
-  
+
   return (
     <View
       style={{
         flexDirection: "row",
         borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: '#f1f1f1',
+        borderBottomColor: "#f1f1f1",
         backgroundColor: colors.background,
       }}
     >
-      {TABS.map((tab, index) => {
+      {tabs.map((tab, index) => {
         const isActive = activeTab === tab.id;
         const labelOpacity = useRef(new Animated.Value(isActive ? 1 : 0.4)).current;
 
@@ -112,7 +125,7 @@ function AnimatedTabBar({ activeTab, onPress, colors }: AnimatedTabBarProps) {
               style={{
                 fontSize: 14,
                 fontWeight: "700",
-                fontFamily: 'Sora-SemiBold',
+                fontFamily: "Sora-SemiBold",
                 color: colors.foreground,
                 opacity: labelOpacity,
               }}
@@ -144,6 +157,7 @@ function AnimatedTabBar({ activeTab, onPress, colors }: AnimatedTabBarProps) {
 export default function FeedScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState < TabId > ("foryou");
   
   // "For You" & "Trending" — explore endpoint
@@ -221,6 +235,7 @@ export default function FeedScreen() {
           activeTab={activeTab}
           onPress={setActiveTab}
           colors={colors}
+          tabs={user ? TABS : GUEST_TABS}
         />
       </Animated.View>
 

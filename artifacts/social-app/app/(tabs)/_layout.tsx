@@ -59,7 +59,7 @@ export default function RootLayout() {
   const insets      = useSafeAreaInsets();
   const router      = useRouter();
   const pathname    = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading: authLoading } = useAuth();
 
   // ── Drawer state ──────────────────────────────────────────────────────────
   const [drawerMounted, setDrawerMounted] = useState(false);
@@ -193,28 +193,30 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }} />
 
       {/* ── FAB: New Post ── */}
-      <TouchableOpacity
-        onPress={() => router.push("/create" as any)}
-        style={{
-          position: "absolute",
-          bottom: insets.bottom + 20,
-          right: 20,
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          backgroundColor: "#1d9bf0",
-          justifyContent: "center",
-          alignItems: "center",
-          elevation: 6,
-          shadowColor: "#1d9bf0",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.35,
-          shadowRadius: 8,
-          zIndex: 40,
-        }}
-      >
-        <HugeiconsIcon icon={Add01Icon} size={24} color="#fff" strokeWidth={2} />
-      </TouchableOpacity>
+      {user && (
+        <TouchableOpacity
+          onPress={() => router.push("/create" as any)}
+          style={{
+            position: "absolute",
+            bottom: insets.bottom + 20,
+            right: 20,
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: "#1d9bf0",
+            justifyContent: "center",
+            alignItems: "center",
+            elevation: 6,
+            shadowColor: "#1d9bf0",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.35,
+            shadowRadius: 8,
+            zIndex: 40,
+          }}
+        >
+          <HugeiconsIcon icon={Add01Icon} size={24} color="#fff" strokeWidth={2} />
+        </TouchableOpacity>
+      )}
 
       {/* ── DRAWER OVERLAY (animated fade) ── */}
       {drawerMounted && (
@@ -283,47 +285,63 @@ export default function RootLayout() {
               contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
             >
               {/* ── Profile block ── */}
-              <TouchableOpacity
-                onPress={() => {
-                  closeDrawer();
-                  router.push(`/profile` as any);
-                }}
-                activeOpacity={0.8}
-                style={{ paddingHorizontal: 20, paddingVertical: 12 }}
-              >
-                <UserAvatar uri={user?.avatarUrl} size={52} />
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: "800",
-                    color: "#0f1419",
-                    marginTop: 10,
-                    letterSpacing: -0.3,
+              {user ? (
+                <TouchableOpacity
+                  onPress={() => {
+                    closeDrawer();
+                    router.push(`/profile` as any);
                   }}
+                  activeOpacity={0.8}
+                  style={{ paddingHorizontal: 20, paddingVertical: 12 }}
                 >
-                  {user?.displayName ?? "You"}
-                </Text>
-                {user?.username ? (
+                  <UserAvatar uri={user.avatarUrl} size={52} />
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "800",
+                      color: "#0f1419",
+                      marginTop: 10,
+                      letterSpacing: -0.3,
+                    }}
+                  >
+                    {user.displayName}
+                  </Text>
                   <Text style={{ fontSize: 14, color: "#536471", marginTop: 2 }}>
                     @{user.username}
                   </Text>
-                ) : null}
 
-                <View style={{ flexDirection: "row", gap: 18, marginTop: 12 }}>
-                  <View style={{ flexDirection: "row", gap: 4, alignItems: "baseline" }}>
-                    <Text style={{ fontSize: 14, fontWeight: "700", color: "#0f1419" }}>
-                      {user?.followingCount ?? 0}
-                    </Text>
-                    <Text style={{ fontSize: 13, color: "#536471" }}>Following</Text>
+                  <View style={{ flexDirection: "row", gap: 18, marginTop: 12 }}>
+                    <View style={{ flexDirection: "row", gap: 4, alignItems: "baseline" }}>
+                      <Text style={{ fontSize: 14, fontWeight: "700", color: "#0f1419" }}>
+                        {user.followingCount}
+                      </Text>
+                      <Text style={{ fontSize: 13, color: "#536471" }}>Following</Text>
+                    </View>
+                    <View style={{ flexDirection: "row", gap: 4, alignItems: "baseline" }}>
+                      <Text style={{ fontSize: 14, fontWeight: "700", color: "#0f1419" }}>
+                        {user.followersCount}
+                      </Text>
+                      <Text style={{ fontSize: 13, color: "#536471" }}>Followers</Text>
+                    </View>
                   </View>
-                  <View style={{ flexDirection: "row", gap: 4, alignItems: "baseline" }}>
-                    <Text style={{ fontSize: 14, fontWeight: "700", color: "#0f1419" }}>
-                      {user?.followersCount ?? 0}
-                    </Text>
-                    <Text style={{ fontSize: 13, color: "#536471" }}>Followers</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => {
+                    closeDrawer();
+                    router.push("/(auth)/login" as any);
+                  }}
+                  activeOpacity={0.8}
+                  style={{ paddingHorizontal: 20, paddingVertical: 20 }}
+                >
+                  <Text style={{ fontSize: 18, fontWeight: "800", color: "#0f1419" }}>
+                    Welcome to Parallaxa
+                  </Text>
+                  <Text style={{ fontSize: 14, color: "#536471", marginTop: 4 }}>
+                    Log in to follow others and join the conversation.
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               {/* Divider */}
               <View
@@ -417,29 +435,31 @@ export default function RootLayout() {
               })}
 
               {/* ── New Post CTA ── */}
-              <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
-                <TouchableOpacity
-                  onPress={() => {
-                    closeDrawer();
-                    router.push("/create" as any);
-                  }}
-                  style={{
-                    backgroundColor: "#1d9bf0",
-                    borderRadius: 28,
-                    paddingVertical: 14,
-                    paddingHorizontal: 24,
-                    alignItems: "center",
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    gap: 10,
-                  }}
-                >
-                  <HugeiconsIcon icon={Add01Icon} size={18} color="#fff" strokeWidth={2.5} />
-                  <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
-                    New Post
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              {user && (
+                <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      closeDrawer();
+                      router.push("/create" as any);
+                    }}
+                    style={{
+                      backgroundColor: "#1d9bf0",
+                      borderRadius: 28,
+                      paddingVertical: 14,
+                      paddingHorizontal: 24,
+                      alignItems: "center",
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <HugeiconsIcon icon={Add01Icon} size={18} color="#fff" strokeWidth={2.5} />
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
+                      New Post
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
 
               {/* ── Log out ── */}
               {logout && (
