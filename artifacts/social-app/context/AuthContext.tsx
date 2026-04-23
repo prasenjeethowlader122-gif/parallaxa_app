@@ -14,6 +14,8 @@ export interface AuthUser {
   avatarUrl?: string | null;
   website?: string | null;
   isVerified: boolean;
+  role: 'user' | 'admin';
+  isFrozen: boolean;
   followersCount: number;
   followingCount: number;
   postsCount: number;

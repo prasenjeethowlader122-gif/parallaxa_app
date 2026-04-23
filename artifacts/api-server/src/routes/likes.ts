@@ -9,7 +9,7 @@ const router = Router();
 
 router.post("/posts/:postId/like", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { postId } = req.params;
+    const postId = req.params.postId as string;
     const myId = req.userId!;
     const [existing] = await db
       .select()
@@ -38,7 +38,7 @@ router.post("/posts/:postId/like", authenticate, async (req: AuthRequest, res) =
 
 router.delete("/posts/:postId/like", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { postId } = req.params;
+    const postId = req.params.postId as string;
     const myId = req.userId!;
     const [existing] = await db
       .select()

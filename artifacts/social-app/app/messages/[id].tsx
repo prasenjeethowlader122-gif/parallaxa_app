@@ -276,7 +276,7 @@ export default function ConversationScreen() {
             placeholderTextColor={colors.mutedForeground}
             value={message}
             onChangeText={handleTyping}
-            numberOfLine={1}
+            numberOfLines={1}
             maxLength={1000}
           />
 

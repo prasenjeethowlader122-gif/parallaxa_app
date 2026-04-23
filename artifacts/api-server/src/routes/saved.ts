@@ -39,7 +39,7 @@ router.get("/saved", authenticate, async (req: AuthRequest, res) => {
 
 router.post("/posts/:postId/save", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { postId } = req.params;
+    const postId = req.params.postId as string;
     const myId = req.userId!;
     const [existing] = await db.select().from(savedPostsTable).where(and(eq(savedPostsTable.userId, myId), eq(savedPostsTable.postId, postId))).limit(1);
     if (!existing) {
@@ -53,7 +53,7 @@ router.post("/posts/:postId/save", authenticate, async (req: AuthRequest, res) =
 
 router.delete("/posts/:postId/save", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { postId } = req.params;
+    const postId = req.params.postId as string;
     const myId = req.userId!;
     await db.delete(savedPostsTable).where(and(eq(savedPostsTable.userId, myId), eq(savedPostsTable.postId, postId)));
     res.json({ message: "Post unsaved" });

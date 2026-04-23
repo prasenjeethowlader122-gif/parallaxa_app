@@ -118,7 +118,7 @@ router.get("/conversations", authenticate, async (req: AuthRequest, res) => {
 router.get("/conversations/:conversationId", authenticate, async (req: AuthRequest, res) => {
   try {
     const myId = req.userId!;
-    const [convo] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, req.params.conversationId)).limit(1);
+    const [convo] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, req.params.conversationId as string)).limit(1);
     if (!convo) {
       res.status(404).json({ error: "Not Found", message: "Conversation not found" });
       return;
@@ -145,7 +145,7 @@ router.get("/conversations/:conversationId", authenticate, async (req: AuthReque
 router.get("/conversations/:conversationId/messages", authenticate, async (req: AuthRequest, res) => {
   try {
     const myId = req.userId!;
-    const [convo] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, req.params.conversationId)).limit(1);
+    const [convo] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, req.params.conversationId as string)).limit(1);
     if (!convo || (convo.participant1Id !== myId && convo.participant2Id !== myId)) {
       res.status(403).json({ error: "Forbidden", message: "Not a participant" });
       return;
@@ -154,7 +154,7 @@ router.get("/conversations/:conversationId/messages", authenticate, async (req: 
     const msgs = await db
       .select()
       .from(messagesTable)
-      .where(eq(messagesTable.conversationId, req.params.conversationId))
+      .where(eq(messagesTable.conversationId, req.params.conversationId as string))
       .orderBy(desc(messagesTable.createdAt))
       .limit(limit);
     res.json({
@@ -177,7 +177,7 @@ router.get("/conversations/:conversationId/messages", authenticate, async (req: 
 router.post("/conversations/:conversationId/messages", authenticate, async (req: AuthRequest, res) => {
   try {
     const myId = req.userId!;
-    const { conversationId } = req.params;
+    const conversationId = req.params.conversationId as string;
     const [convo] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, conversationId)).limit(1);
     if (!convo || (convo.participant1Id !== myId && convo.participant2Id !== myId)) {
       res.status(403).json({ error: "Forbidden", message: "Not a participant" });

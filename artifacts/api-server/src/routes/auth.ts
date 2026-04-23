@@ -105,6 +105,11 @@ router.post("/auth/login", async (req, res) => {
       res.status(401).json({ error: "Unauthorized", message: "Invalid credentials" });
       return;
     }
+
+    if (user.isFrozen) {
+      res.status(403).json({ error: "Forbidden", message: "Your account has been frozen" });
+      return;
+    }
     const valid = await comparePassword(password, user.passwordHash);
     if (!valid) {
       res.status(401).json({ error: "Unauthorized", message: "Invalid credentials" });

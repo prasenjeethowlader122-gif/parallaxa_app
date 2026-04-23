@@ -94,12 +94,12 @@ router.post("/stories", authenticate, async (req: AuthRequest, res) => {
 
 router.delete("/stories/:storyId", authenticate, async (req: AuthRequest, res) => {
   try {
-    const [story] = await db.select().from(storiesTable).where(eq(storiesTable.id, req.params.storyId)).limit(1);
-    if (!story || story.userId !== req.userId) {
+    const [story] = await db.select().from(storiesTable).where(eq(storiesTable.id, req.params.storyId as string)).limit(1);
+    if (!story || (story.userId !== req.userId && !req.isAdmin)) {
       res.status(404).json({ error: "Not Found", message: "Story not found" });
       return;
     }
-    await db.delete(storiesTable).where(eq(storiesTable.id, req.params.storyId));
+    await db.delete(storiesTable).where(eq(storiesTable.id, req.params.storyId as string));
     res.json({ message: "Story deleted" });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
@@ -108,7 +108,7 @@ router.delete("/stories/:storyId", authenticate, async (req: AuthRequest, res) =
 
 router.post("/stories/:storyId/view", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { storyId } = req.params;
+    const storyId = req.params.storyId as string;
     const myId = req.userId!;
     const [existing] = await db.select().from(storyViewsTable).where(and(eq(storyViewsTable.storyId, storyId), eq(storyViewsTable.userId, myId))).limit(1);
     if (!existing) {

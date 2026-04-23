@@ -337,6 +337,90 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /admin/users/{userId}/freeze:
+    post:
+      operationId: freezeUser
+      tags: [admin]
+      summary: Freeze a user account
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "200":
+          description: User frozen
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Forbidden - Admin only
+
+  /admin/users/{userId}/unfreeze:
+    post:
+      operationId: unfreezeUser
+      tags: [admin]
+      summary: Unfreeze a user account
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "200":
+          description: User unfrozen
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Forbidden - Admin only
+
+  /admin/users/{userId}/approve-verification:
+    post:
+      operationId: approveVerification
+      tags: [admin]
+      summary: Approve user verification request
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "200":
+          description: Verification approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Forbidden - Admin only
+
+  /admin/posts/{postId}:
+    delete:
+      operationId: adminDeletePost
+      tags: [admin]
+      summary: Delete any post as admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/postId"
+      responses:
+        "200":
+          description: Post deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Forbidden - Admin only
+
   /users/{userId}:
     get:
       operationId: getUser
@@ -1105,6 +1189,11 @@ components:
         verificationStatus:
           type: string
           enum: [none, pending, verified]
+        role:
+          type: string
+          enum: [user, admin]
+        isFrozen:
+          type: boolean
         twoFactorEnabled:
           type: boolean
         isPrivate:

@@ -18,7 +18,7 @@
   dist/pino-pretty.mjs.map           204.0kb
   dist/thread-stream-worker.mjs.map   12.0kb
 
-⚡ Done in 622ms
+⚡ Done in 1345ms
 
 > @workspace/api-server@0.0.0 start /app/artifacts/api-server
 > node --enable-source-maps ./dist/index.mjs

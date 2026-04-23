@@ -13,6 +13,8 @@ export const usersTable = pgTable("users", {
   website: text("website"),
   isVerified: boolean("is_verified").notNull().default(false),
   verificationStatus: text("verification_status").notNull().default("none"),
+  role: text("role").notNull().default("user"),
+  isFrozen: boolean("is_frozen").notNull().default(false),
   emailVerified: boolean("email_verified").notNull().default(false),
   phoneVerified: boolean("phone_verified").notNull().default(false),
   dateOfBirth: timestamp("date_of_birth"),

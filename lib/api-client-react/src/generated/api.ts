@@ -1112,6 +1112,286 @@ export const useRequestVerification = <TError = ErrorType<UnauthorizedResponse>,
     }
 
 /**
+ * @summary Freeze a user account
+ */
+export const getFreezeUserUrl = (userId: string,) => {
+
+
+
+
+  return `/api/admin/users/${userId}/freeze`
+}
+
+export const freezeUser = async (userId: string, options?: RequestInit): Promise<MessageResponse> => {
+
+  return customFetch<MessageResponse>(getFreezeUserUrl(userId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getFreezeUserMutationOptions = <TError = ErrorType<UnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof freezeUser>>, TError,{userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof freezeUser>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['freezeUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof freezeUser>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  freezeUser(userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FreezeUserMutationResult = NonNullable<Awaited<ReturnType<typeof freezeUser>>>
+
+    export type FreezeUserMutationError = ErrorType<UnauthorizedResponse | void>
+
+    /**
+ * @summary Freeze a user account
+ */
+export const useFreezeUser = <TError = ErrorType<UnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof freezeUser>>, TError,{userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof freezeUser>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+      return useMutation(getFreezeUserMutationOptions(options));
+    }
+
+/**
+ * @summary Unfreeze a user account
+ */
+export const getUnfreezeUserUrl = (userId: string,) => {
+
+
+
+
+  return `/api/admin/users/${userId}/unfreeze`
+}
+
+export const unfreezeUser = async (userId: string, options?: RequestInit): Promise<MessageResponse> => {
+
+  return customFetch<MessageResponse>(getUnfreezeUserUrl(userId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getUnfreezeUserMutationOptions = <TError = ErrorType<UnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unfreezeUser>>, TError,{userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unfreezeUser>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['unfreezeUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unfreezeUser>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  unfreezeUser(userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnfreezeUserMutationResult = NonNullable<Awaited<ReturnType<typeof unfreezeUser>>>
+
+    export type UnfreezeUserMutationError = ErrorType<UnauthorizedResponse | void>
+
+    /**
+ * @summary Unfreeze a user account
+ */
+export const useUnfreezeUser = <TError = ErrorType<UnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unfreezeUser>>, TError,{userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unfreezeUser>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+      return useMutation(getUnfreezeUserMutationOptions(options));
+    }
+
+/**
+ * @summary Approve user verification request
+ */
+export const getApproveVerificationUrl = (userId: string,) => {
+
+
+
+
+  return `/api/admin/users/${userId}/approve-verification`
+}
+
+export const approveVerification = async (userId: string, options?: RequestInit): Promise<MessageResponse> => {
+
+  return customFetch<MessageResponse>(getApproveVerificationUrl(userId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getApproveVerificationMutationOptions = <TError = ErrorType<UnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveVerification>>, TError,{userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveVerification>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['approveVerification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveVerification>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  approveVerification(userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof approveVerification>>>
+
+    export type ApproveVerificationMutationError = ErrorType<UnauthorizedResponse | void>
+
+    /**
+ * @summary Approve user verification request
+ */
+export const useApproveVerification = <TError = ErrorType<UnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveVerification>>, TError,{userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveVerification>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+      return useMutation(getApproveVerificationMutationOptions(options));
+    }
+
+/**
+ * @summary Delete any post as admin
+ */
+export const getAdminDeletePostUrl = (postId: string,) => {
+
+
+
+
+  return `/api/admin/posts/${postId}`
+}
+
+export const adminDeletePost = async (postId: string, options?: RequestInit): Promise<MessageResponse> => {
+
+  return customFetch<MessageResponse>(getAdminDeletePostUrl(postId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getAdminDeletePostMutationOptions = <TError = ErrorType<UnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeletePost>>, TError,{postId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminDeletePost>>, TError,{postId: string}, TContext> => {
+
+const mutationKey = ['adminDeletePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminDeletePost>>, {postId: string}> = (props) => {
+          const {postId} = props ?? {};
+
+          return  adminDeletePost(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminDeletePostMutationResult = NonNullable<Awaited<ReturnType<typeof adminDeletePost>>>
+
+    export type AdminDeletePostMutationError = ErrorType<UnauthorizedResponse | void>
+
+    /**
+ * @summary Delete any post as admin
+ */
+export const useAdminDeletePost = <TError = ErrorType<UnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeletePost>>, TError,{postId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminDeletePost>>,
+        TError,
+        {postId: string},
+        TContext
+      > => {
+      return useMutation(getAdminDeletePostMutationOptions(options));
+    }
+
+/**
  * @summary Get user by ID
  */
 export const getGetUserUrl = (userId: string,) => {

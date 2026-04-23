@@ -10,6 +10,7 @@ import notificationsRouter from "./notifications";
 import messagesRouter from "./messages";
 import searchRouter from "./search";
 import savedRouter from "./saved";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(notificationsRouter);
 router.use(messagesRouter);
 router.use(searchRouter);
 router.use(savedRouter);
+router.use(adminRouter);
 
 export default router;

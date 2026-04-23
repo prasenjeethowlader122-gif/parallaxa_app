@@ -61,6 +61,7 @@ export * from './updateUserInput';
 export * from './user';
 export * from './userPage';
 export * from './userProfile';
+export * from './userRole';
 export * from './userSummary';
 export * from './userVerificationStatus';
 export * from './verify2FABody';

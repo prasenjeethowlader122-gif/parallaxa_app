@@ -188,7 +188,7 @@ router.get("/posts/:postId", optionalAuthenticate, async (req: AuthRequest, res)
     const [post] = await db
       .select()
       .from(postsTable)
-      .where(eq(postsTable.id, req.params.postId))
+      .where(eq(postsTable.id, req.params.postId as string))
       .limit(1);
 
     if (!post) {
@@ -206,7 +206,7 @@ router.get("/posts/:postId", optionalAuthenticate, async (req: AuthRequest, res)
 // Get replies/comments of a post
 router.get("/posts/:postId/replies", optionalAuthenticate, async (req: AuthRequest, res) => {
   try {
-    const { postId } = req.params;
+    const postId = req.params.postId as string;
     const limit = Math.min(Number(req.query.limit) || 20, 100);
 
     const [parent] = await db
@@ -241,7 +241,7 @@ router.delete("/posts/:postId", authenticate, async (req: AuthRequest, res) => {
     const [post] = await db
       .select()
       .from(postsTable)
-      .where(eq(postsTable.id, req.params.postId))
+      .where(eq(postsTable.id, req.params.postId as string))
       .limit(1);
 
     if (!post) {
@@ -249,12 +249,12 @@ router.delete("/posts/:postId", authenticate, async (req: AuthRequest, res) => {
       return;
     }
 
-    if (post.userId !== req.userId) {
+    if (post.userId !== req.userId && !req.isAdmin) {
       res.status(403).json({ error: "Forbidden", message: "Cannot delete another user's post" });
       return;
     }
 
-    await db.delete(postsTable).where(eq(postsTable.id, req.params.postId));
+    await db.delete(postsTable).where(eq(postsTable.id, req.params.postId as string));
 
     if (post.parentPostId) {
       await db
