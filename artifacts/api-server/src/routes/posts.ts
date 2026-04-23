@@ -11,7 +11,7 @@ import {
   notificationsTable,
 } from "@workspace/db";
 import { eq, and, desc, inArray, sql, isNull } from "drizzle-orm";
-import { authenticate, type AuthRequest } from "../middleware/authenticate";
+import { authenticate, optionalAuthenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
 import { logger } from "../lib/logger";
 
@@ -19,7 +19,7 @@ const router = Router();
 
 async function formatPost(
   post: typeof postsTable.$inferSelect,
-  myId: string,
+  myId?: string,
 ) {
   const [author] = await db
     .select()
@@ -27,17 +27,21 @@ async function formatPost(
     .where(eq(usersTable.id, post.userId))
     .limit(1);
 
-  const [liked] = await db
-    .select()
-    .from(likesTable)
-    .where(and(eq(likesTable.userId, myId), eq(likesTable.postId, post.id)))
-    .limit(1);
+  const liked = myId
+    ? (await db
+        .select()
+        .from(likesTable)
+        .where(and(eq(likesTable.userId, myId), eq(likesTable.postId, post.id)))
+        .limit(1))[0]
+    : null;
 
-  const [saved] = await db
-    .select()
-    .from(savedPostsTable)
-    .where(and(eq(savedPostsTable.userId, myId), eq(savedPostsTable.postId, post.id)))
-    .limit(1);
+  const saved = myId
+    ? (await db
+        .select()
+        .from(savedPostsTable)
+        .where(and(eq(savedPostsTable.userId, myId), eq(savedPostsTable.postId, post.id)))
+        .limit(1))[0]
+    : null;
 
   const hashtagRows = await db
     .select({ name: hashtagsTable.name })
@@ -179,7 +183,7 @@ router.post("/posts", authenticate, async (req: AuthRequest, res) => {
 });
 
 // Get a single post by ID
-router.get("/posts/:postId", authenticate, async (req: AuthRequest, res) => {
+router.get("/posts/:postId", optionalAuthenticate, async (req: AuthRequest, res) => {
   try {
     const [post] = await db
       .select()
@@ -200,7 +204,7 @@ router.get("/posts/:postId", authenticate, async (req: AuthRequest, res) => {
 });
 
 // Get replies/comments of a post
-router.get("/posts/:postId/replies", authenticate, async (req: AuthRequest, res) => {
+router.get("/posts/:postId/replies", optionalAuthenticate, async (req: AuthRequest, res) => {
   try {
     const { postId } = req.params;
     const limit = Math.min(Number(req.query.limit) || 20, 100);
@@ -272,43 +276,59 @@ router.delete("/posts/:postId", authenticate, async (req: AuthRequest, res) => {
 });
 
 // Home feed — top-level posts only
-router.get("/feed", authenticate, async (req: AuthRequest, res) => {
+router.get("/feed", optionalAuthenticate, async (req: AuthRequest, res) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 20, 100);
-    const myId = req.userId!;
+    const myId = req.userId;
 
-    const following = await db
-      .select({ followingId: followsTable.followingId })
-      .from(followsTable)
-      .where(eq(followsTable.followerId, myId));
+    let posts;
 
-    const followingIds = [myId, ...following.map((f) => f.followingId)];
+    if (myId) {
+      const following = await db
+        .select({ followingId: followsTable.followingId })
+        .from(followsTable)
+        .where(eq(followsTable.followerId, myId));
 
-    /**
-     * Algorithm for feed:
-     * 1. Engagement: (likesCount * 2) + (repliesCount * 3)
-     * 2. Recency: Exponential decay based on time.
-     *
-     * Score = (Engagement + 1) / (TimeDeltaHours + 2)^1.5
-     */
-    const posts = await db
-      .select({
-        post: postsTable,
-        score: sql<number>`
-          ((${postsTable.likesCount} * 2) + (${postsTable.repliesCount} * 3) + 1) /
-          POWER(EXTRACT(EPOCH FROM (NOW() - ${postsTable.createdAt})) / 3600 + 2, 1.5)
-        `
-      })
-      .from(postsTable)
-      .where(
-        and(
-          inArray(postsTable.userId, followingIds),
-          eq(postsTable.isArchived, false),
-          isNull(postsTable.parentPostId),
-        ),
-      )
-      .orderBy(desc(sql`score`))
-      .limit(limit);
+      const followingIds = [myId, ...following.map((f) => f.followingId)];
+
+      posts = await db
+        .select({
+          post: postsTable,
+          score: sql<number>`
+            ((${postsTable.likesCount} * 2) + (${postsTable.repliesCount} * 3) + 1) /
+            POWER(EXTRACT(EPOCH FROM (NOW() - ${postsTable.createdAt})) / 3600 + 2, 1.5)
+          `
+        })
+        .from(postsTable)
+        .where(
+          and(
+            inArray(postsTable.userId, followingIds),
+            eq(postsTable.isArchived, false),
+            isNull(postsTable.parentPostId),
+          ),
+        )
+        .orderBy(desc(sql`score`))
+        .limit(limit);
+    } else {
+      // Guest feed: top trending posts
+      posts = await db
+        .select({
+          post: postsTable,
+          score: sql<number>`
+            ((${postsTable.likesCount} * 2) + (${postsTable.repliesCount} * 3) + 1) /
+            POWER(EXTRACT(EPOCH FROM (NOW() - ${postsTable.createdAt})) / 3600 + 2, 1.5)
+          `
+        })
+        .from(postsTable)
+        .where(
+          and(
+            eq(postsTable.isArchived, false),
+            isNull(postsTable.parentPostId),
+          ),
+        )
+        .orderBy(desc(sql`score`))
+        .limit(limit);
+    }
 
     const formatted = await Promise.all(posts.map((p) => formatPost(p.post, myId)));
     res.json({ posts: formatted, nextCursor: null });
@@ -319,7 +339,7 @@ router.get("/feed", authenticate, async (req: AuthRequest, res) => {
 });
 
 // Explore — top-level posts only
-router.get("/explore", authenticate, async (req: AuthRequest, res) => {
+router.get("/explore", optionalAuthenticate, async (req: AuthRequest, res) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 20, 100);
 

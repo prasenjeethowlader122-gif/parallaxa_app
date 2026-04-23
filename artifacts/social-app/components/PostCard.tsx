@@ -16,6 +16,7 @@ import { Image, Platform, StyleSheet, TouchableOpacity, View, Share } from "reac
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "./UserAvatar";
 import { useCreatePost } from "@workspace/api-client-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface Author {
   id: string;
@@ -59,12 +60,14 @@ export function PostCard({
   const colors = useColors();
   const router = useRouter();
   const { mutate: createPost } = useCreatePost();
+  const { user } = useAuth();
 
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
   const [isSaved, setIsSaved] = useState(initialIsSaved);
 
   const handleLike = useCallback(async () => {
+    if (!user) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const newLiked = !isLiked;
     setIsLiked(newLiked);
@@ -73,6 +76,7 @@ export function PostCard({
   }, [isLiked, id, onLike]);
 
   const handleSave = useCallback(async () => {
+    if (!user) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const newSaved = !isSaved;
     setIsSaved(newSaved);
@@ -91,6 +95,7 @@ export function PostCard({
   }, [content, imageUrl]);
 
   const handleRepost = useCallback(() => {
+    if (!user) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     createPost({
       data: {
@@ -98,7 +103,7 @@ export function PostCard({
         content: "Reposted",
       },
     });
-  }, [id, createPost]);
+  }, [id, createPost, user]);
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();

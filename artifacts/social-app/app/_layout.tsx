@@ -38,9 +38,9 @@ function RootLayoutNav() {
     return (
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" redirect />
-        <Stack.Screen name="post/[id]" redirect />
-        <Stack.Screen name="profile/[id]" redirect />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="post/[id]" />
+        <Stack.Screen name="profile/[id]" />
         <Stack.Screen name="messages/index" redirect />
         <Stack.Screen name="messages/[id]" redirect />
         <Stack.Screen name="settings" redirect />

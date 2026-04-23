@@ -20,3 +20,17 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
     res.status(401).json({ error: "Unauthorized", message: "Invalid or expired token" });
   }
 }
+
+export function optionalAuthenticate(req: AuthRequest, res: Response, next: NextFunction): void {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    try {
+      const payload = verifyToken(token);
+      req.userId = payload.userId;
+    } catch {
+      // Ignore invalid token for optional auth
+    }
+  }
+  next();
+}

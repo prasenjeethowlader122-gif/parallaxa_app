@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, postsTable, followsTable, storiesTable } from "@workspace/db";
 import { eq, and, desc, isNull, sql } from "drizzle-orm";
-import { authenticate, type AuthRequest } from "../middleware/authenticate";
+import { authenticate, optionalAuthenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
 import generateTextLogoSVGBase64 from './svg-logo'
 
@@ -75,25 +75,26 @@ router.post("/users/verify-request", authenticate, async (req: AuthRequest, res)
   }
 });
 
-router.get("/users/:userId", authenticate, async (req: AuthRequest, res): Promise<any> => {
+router.get("/users/:userId", optionalAuthenticate, async (req: AuthRequest, res): Promise<any> => {
   try {
     const { userId } = req.params;
-    const myId = req.userId!;
+    const myId = req.userId;
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!user) {
       res.status(404).json({ error: "Not Found", message: "User not found" });
       return;
     }
-    const [followingRow] = await db
+    const followingRow = myId ? (await db
       .select()
       .from(followsTable)
       .where(and(eq(followsTable.followerId, myId), eq(followsTable.followingId, userId)))
-      .limit(1);
-    const [followedByRow] = await db
+      .limit(1))[0] : null;
+
+    const followedByRow = myId ? (await db
       .select()
       .from(followsTable)
       .where(and(eq(followsTable.followerId, userId), eq(followsTable.followingId, myId)))
-      .limit(1);
+      .limit(1))[0] : null;
 
     const isSelf = myId === userId;
     const isFollowing = !!followingRow;
@@ -147,10 +148,10 @@ router.put("/users/:userId", authenticate, async (req: AuthRequest, res) => {
   }
 });
 
-router.get("/users/:userId/posts", authenticate, async (req: AuthRequest, res): Promise<any> => {
+router.get("/users/:userId/posts", optionalAuthenticate, async (req: AuthRequest, res): Promise<any> => {
   try {
     const { userId } = req.params;
-    const myId = req.userId!;
+    const myId = req.userId;
     const limit = Math.min(Number(req.query.limit) || 20, 100);
     
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
@@ -243,7 +244,7 @@ router.get("/users/:userId/stories", authenticate, async (req: AuthRequest, res)
   }
 });
 
-router.get("/users/:userId/followers", authenticate, async (req: AuthRequest, res) => {
+router.get("/users/:userId/followers", optionalAuthenticate, async (req: AuthRequest, res) => {
   try {
     const { userId } = req.params;
     const limit = Math.min(Number(req.query.limit) || 20, 100);
@@ -259,7 +260,7 @@ router.get("/users/:userId/followers", authenticate, async (req: AuthRequest, re
   }
 });
 
-router.get("/users/:userId/following", authenticate, async (req: AuthRequest, res) => {
+router.get("/users/:userId/following", optionalAuthenticate, async (req: AuthRequest, res) => {
   try {
     const { userId } = req.params;
     const limit = Math.min(Number(req.query.limit) || 20, 100);

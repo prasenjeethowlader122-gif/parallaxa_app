@@ -186,13 +186,16 @@ export default function PostDetailScreen() {
   const { data: post, isLoading: postLoading, refetch: refetchPost } = useGetPost(id ?? "");
   const { data: commentsData, isLoading: commentsLoading } = useGetReplies(id ?? "");
 
+  const comments = commentsData?.posts ?? [];
+  const rootComments = React.useMemo(() => buildCommentTree(comments), [comments]);
+
   const { mutate: likePost } = useLikePost();
   const { mutate: unlikePost } = useUnlikePost();
   const { mutate: savePost } = useSavePost();
   const { mutate: unsavePost } = useUnsavePost();
   const { mutate: createPost, isPending: isSubmittingComment } = useCreatePost({
     mutation: {
-      onMutate: async (variables) => {
+      onMutate: async (variables: any) => {
         const text = variables.data.content?.trim();
         const parentId = variables.data.parentPostId;
         if (!text || !id || !user) return;
@@ -250,6 +253,7 @@ export default function PostDetailScreen() {
   const isSaved = localSaved !== null ? localSaved : (post?.isSaved ?? false);
 
   const handleLike = useCallback(() => {
+    if (!user) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const next = !isLiked;
     setLocalLiked(next);
@@ -259,6 +263,7 @@ export default function PostDetailScreen() {
   }, [isLiked, likesCount, id, likePost, unlikePost]);
 
   const handleSave = useCallback(() => {
+    if (!user) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const next = !isSaved;
     setLocalSaved(next);
@@ -304,9 +309,6 @@ export default function PostDetailScreen() {
       </View>
     );
   }
-
-  const comments = commentsData?.posts ?? [];
-  const rootComments = React.useMemo(() => buildCommentTree(comments), [comments]);
 
   // ── List Header ─────────────────────────────────────────────────────────────
   const ListHeader = (
@@ -558,12 +560,16 @@ export default function PostDetailScreen() {
   const navigateToPost = (postId: string) =>
     router.push(`/post/${postId}` as any);
 
+  const navigateToProfile = (userId: string) =>
+    router.push(`/profile/${userId}` as any);
+
   const renderItem = ({ item }: { item: CommentWithReplies }) => (
     <CommentItem
       comment={item}
       isTargeted={replyTarget?.commentId === item.id}
       onReply={openReply}
       onNavigate={navigateToPost}
+      onProfileNavigate={navigateToProfile}
       depth={0}
     />
   );
@@ -607,51 +613,53 @@ export default function PostDetailScreen() {
       />
 
       {/* Composer */}
-      <View
-        className="flex-row items-center px-3.5 pt-2.5 gap-2.5 border-t"
-        style={{
-          paddingBottom: insets.bottom + (Platform.OS === "web" ? 16 : 8),
-          backgroundColor: colors.background,
-          borderTopColor: colors.border,
-        }}
-      >
-        <UserAvatar uri={user?.avatarUrl} size={36} />
-        <TextInput
-          ref={inputRef}
-          className="flex-1 text-[15px] min-h-[38px] max-h-[100px] outline-none"
+      {user && (
+        <View
+          className="flex-row items-center px-3.5 pt-2.5 gap-2.5 border-t"
           style={{
-            paddingTop: Platform.OS === "ios" ? 8 : 4,
-            color: colors.foreground,
-          }}
-          placeholder={
-            replyTarget ? `Reply to @${replyTarget.username}…` : "Post your reply"
-          }
-          placeholderTextColor={colors.mutedForeground}
-          value={replyText}
-          onChangeText={setReplyText}
-          numberOfLines={1}
-          maxLength={280}
-        />
-        <TouchableOpacity
-          onPress={handleSend}
-          disabled={!replyText.trim() || isSubmittingComment}
-          activeOpacity={0.85}
-          className="px-4 py-2 rounded-full items-center justify-center min-w-[68px]"
-          style={{
-            backgroundColor:
-              replyText.trim() && !isSubmittingComment
-                ? colors.primary
-                : colors.muted,
-            opacity: isSubmittingComment ? 0.7 : 1,
+            paddingBottom: insets.bottom + (Platform.OS === "web" ? 16 : 8),
+            backgroundColor: colors.background,
+            borderTopColor: colors.border,
           }}
         >
-          {isSubmittingComment ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text className="text-sm font-bold text-white">Reply</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+          <UserAvatar uri={user?.avatarUrl} size={36} />
+          <TextInput
+            ref={inputRef}
+            className="flex-1 text-[15px] min-h-[38px] max-h-[100px] outline-none"
+            style={{
+              paddingTop: Platform.OS === "ios" ? 8 : 4,
+              color: colors.foreground,
+            }}
+            placeholder={
+              replyTarget ? `Reply to @${replyTarget.username}…` : "Post your reply"
+            }
+            placeholderTextColor={colors.mutedForeground}
+            value={replyText}
+            onChangeText={setReplyText}
+            numberOfLines={1}
+            maxLength={280}
+          />
+          <TouchableOpacity
+            onPress={handleSend}
+            disabled={!replyText.trim() || isSubmittingComment}
+            activeOpacity={0.85}
+            className="px-4 py-2 rounded-full items-center justify-center min-w-[68px]"
+            style={{
+              backgroundColor:
+                replyText.trim() && !isSubmittingComment
+                  ? colors.primary
+                  : colors.muted,
+              opacity: isSubmittingComment ? 0.7 : 1,
+            }}
+          >
+            {isSubmittingComment ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text className="text-sm font-bold text-white">Reply</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -662,6 +670,7 @@ interface CommentItemProps {
   isTargeted: boolean;
   onReply: (id: string, username: string) => void;
   onNavigate: (id: string) => void;
+  onProfileNavigate: (id: string) => void;
   depth?: number;
 }
 
@@ -670,6 +679,7 @@ function CommentItem({
   isTargeted,
   onReply,
   onNavigate,
+  onProfileNavigate,
   depth = 0,
 }: CommentItemProps) {
   const colors = useColors();
@@ -703,7 +713,7 @@ function CommentItem({
           }}
         >
           <TouchableOpacity
-            onPress={() => onNavigate(comment.author.id)}
+            onPress={() => onProfileNavigate(comment.author.id)}
             activeOpacity={0.85}
           >
             <UserAvatar uri={comment.author.avatarUrl} size={avatarSize} />
@@ -720,7 +730,7 @@ function CommentItem({
           {/* Meta */}
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
             <TouchableOpacity
-              onPress={() => onNavigate(comment.author.id)}
+              onPress={() => onProfileNavigate(comment.author.id)}
               activeOpacity={0.85}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
@@ -765,16 +775,18 @@ function CommentItem({
           </View>
 
           {/* Comment text */}
-          <Text
-            style={{
-              fontSize: depth > 0 ? 13 : 14,
-              lineHeight: 20,
-              color: colors.foreground,
-              marginBottom: 8,
-            }}
-          >
-            {comment.content}
-          </Text>
+          <TouchableOpacity onPress={() => onNavigate(comment.id)} activeOpacity={0.9}>
+            <Text
+              style={{
+                fontSize: depth > 0 ? 13 : 14,
+                lineHeight: 20,
+                color: colors.foreground,
+                marginBottom: 8,
+              }}
+            >
+              {comment.content}
+            </Text>
+          </TouchableOpacity>
 
           {/* Actions */}
           <View style={{ flexDirection: "row", gap: 20, alignItems: "center" }}>
@@ -841,7 +853,7 @@ function CommentItem({
             borderBottomColor: colors.border,
           }}
         >
-          {comment.replies.map((reply, index) => (
+          {comment.replies.map((reply: CommentWithReplies, index: number) => (
             <View key={reply.id}>
               {/* Curved connector SVG sits in the gutter column */}
               <View
@@ -875,6 +887,7 @@ function CommentItem({
                     isTargeted={isTargeted}
                     onReply={onReply}
                     onNavigate={onNavigate}
+                    onProfileNavigate={onProfileNavigate}
                     depth={depth + 1}
                   />
                 </View>
