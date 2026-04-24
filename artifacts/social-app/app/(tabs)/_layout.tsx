@@ -140,7 +140,7 @@ export default function RootLayout() {
     <View style={{ width: 100, height: 35, justifyContent: "center", alignItems: "center" }}>
       <Image
         source={require("@/assets/images/text-logo.svg")}
-        style={{  height: 45 }}
+        style={{  height: 45 , width: 100 }}
       />
     </View>
   );
