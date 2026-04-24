@@ -52,6 +52,16 @@ export default function SettingsScreen() {
   };
 
   const sections = [
+    ...(me?.role === 'admin' ? [{
+      title: "Administrative Tools",
+      items: [
+        {
+          icon: Shield01Icon,
+          label: "User Management",
+          onPress: () => Alert.alert("Admin", "User Management coming soon"),
+        },
+      ],
+    }] : []),
     {
       title: "Account",
       items: [

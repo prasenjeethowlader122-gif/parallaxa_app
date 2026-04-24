@@ -8,6 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Image,
 } from "react-native";
 import { Text } from "@/components/Text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -27,6 +28,7 @@ import {
   ViewIcon,
   ViewOffIcon,
   Calendar01Icon,
+  Tick01Icon,
 } from '@hugeicons/core-free-icons';
 import { useCheckUsername, useSuggestUsernames } from "@workspace/api-client-react";
 
@@ -146,6 +148,7 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPass] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   
@@ -217,6 +220,8 @@ export default function RegisterScreen() {
       
       if (!confirmPassword) newErrors.confirmPassword = "Please confirm your password";
       else if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+
+      if (!acceptTerms) newErrors.general = "You must accept the terms to continue";
     }
     
     setErrors(newErrors);
@@ -444,10 +449,12 @@ export default function RegisterScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Logo ── */}
-        <View className="items-center mb-6">
-          <View className="w-12 h-12 bg-black rounded-xl items-center justify-center">
-            <HugeiconsIcon icon={AtIcon} size={28} color="#fff" />
-          </View>
+        <View className="items-center mb-8">
+          <Image
+            source={require('@/assets/images/text-logo.svg')}
+            style={{ width: 180, height: 40 }}
+            resizeMode="contain"
+          />
         </View>
 
         {/* ── Top bar ── */}
@@ -504,11 +511,29 @@ export default function RegisterScreen() {
         {/* ── Step Fields ── */}
         {renderStep()}
 
+        {/* ── Terms Acceptance (Last Step) ── */}
+        {isLastStep && (
+          <TouchableOpacity
+            onPress={() => setAcceptTerms(!acceptTerms)}
+            activeOpacity={0.7}
+            className="flex-row items-center gap-3 mb-6 px-1"
+          >
+            <View className={`w-5 h-5 rounded border items-center justify-center ${acceptTerms ? 'bg-black border-black' : 'border-slate-300'}`}>
+              {acceptTerms && <HugeiconsIcon icon={Tick01Icon} size={14} color="#fff" strokeWidth={3} />}
+            </View>
+            <Text className="flex-1 text-slate-600 text-sm">
+              I agree to the <Text className="text-blue-600 font-semibold">Terms of Service</Text> and <Text className="text-blue-600 font-semibold">Privacy Policy</Text>.
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* ── CTA Button ── */}
         <TouchableOpacity
-          className="h-14 rounded-full bg-black items-center justify-center mt-2 mb-4"
+          className={`h-14 rounded-full items-center justify-center mt-2 mb-4 ${
+            (isLastStep && !acceptTerms) || isLoading ? 'bg-slate-300' : 'bg-black'
+          }`}
           onPress={isLastStep ? handleRegister : goNext}
-          disabled={isLoading}
+          disabled={isLoading || (isLastStep && !acceptTerms)}
           activeOpacity={0.8}
         >
           {isLoading ? (

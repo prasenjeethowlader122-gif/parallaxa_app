@@ -140,7 +140,11 @@ export default function LoginScreen() {
       >
         {/* Logo */}
         <View className="items-center mb-12">
-          <Image source={require('@/assets/images/placeholder-logo.svg')} style={{ width: 50, height: 50 }} />
+          <Image
+            source={require('@/assets/images/text-logo.svg')}
+            style={{ width: 180, height: 40 }}
+            resizeMode="contain"
+          />
         </View>
 
         {/* Heading */}
