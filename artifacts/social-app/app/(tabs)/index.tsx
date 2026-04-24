@@ -15,6 +15,7 @@ import { Image01Icon, FlashIcon, UserGroup02Icon } from "@hugeicons/core-free-ic
 import { useColors } from "@/hooks/useColors";
 import { PostCard } from "@/components/PostCard";
 import { EmptyState } from "@/components/EmptyState";
+import { StoryCircle } from "@/components/StoryCircle";
 import { useAuth } from "@/context/AuthContext";
 import { FeedSkeleton } from "@/components/SkeletonLoader";
 import { useRouter } from "expo-router";
@@ -228,6 +229,30 @@ export default function FeedScreen() {
     activeTab === "trending" ?
     "Check back later for trending content" :
     "Explore posts will appear here";
+
+  const StoryBar = () => {
+    if (activeTab !== "foryou") return null;
+
+    return (
+      <View style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, paddingVertical: 12 }}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={[{ id: 'me', username: 'You', isOwn: true }, { id: '1', username: 'johndoe' }, { id: '2', username: 'janedoe' }]}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingHorizontal: 12 }}
+          renderItem={({ item }) => (
+            <StoryCircle
+              userId={item.id}
+              username={item.username}
+              isOwn={item.isOwn}
+              onPress={() => item.isOwn ? router.push('/create' as any) : router.push(`/story/${item.id}` as any)}
+            />
+          )}
+        />
+      </View>
+    );
+  };
   
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
@@ -279,8 +304,11 @@ export default function FeedScreen() {
           />
         )}
         ListHeaderComponent={
-          // Show skeleton cards while loading, inline above any real content
-          isLoading ? <FeedSkeleton count={5} /> : null
+          <>
+            <StoryBar />
+            {/* Show skeleton cards while loading, inline above any real content */}
+            {isLoading ? <FeedSkeleton count={5} /> : null}
+          </>
         }
         ListEmptyComponent={
           isLoading ? null : (
