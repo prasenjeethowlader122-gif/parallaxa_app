@@ -49,6 +49,14 @@ export const UserVerificationStatus = {
   verified: 'verified',
 } as const;
 
+export type UserRole = typeof UserRole[keyof typeof UserRole];
+
+
+export const UserRole = {
+  user: 'user',
+  admin: 'admin',
+} as const;
+
 export interface User {
   id: string;
   username: string;
@@ -59,6 +67,8 @@ export interface User {
   website?: string | null;
   isVerified: boolean;
   verificationStatus: UserVerificationStatus;
+  role?: UserRole;
+  isFrozen?: boolean;
   twoFactorEnabled: boolean;
   isPrivate: boolean;
   followersCount: number;

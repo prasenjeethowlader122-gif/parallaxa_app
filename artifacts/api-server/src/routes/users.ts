@@ -46,7 +46,7 @@ router.get("/users/suggested", authenticate, async (req: AuthRequest, res) => {
     const alreadyFollowing = db
       .select({ followingId: followsTable.followingId })
       .from(followsTable)
-      .where(eq(followsTable.followerId, myId));
+      .where(eq(followsTable.followerId, myId as string));
     
     const users = await db
       .select()
@@ -77,7 +77,7 @@ router.post("/users/verify-request", authenticate, async (req: AuthRequest, res)
 
 router.get("/users/:userId", optionalAuthenticate, async (req: AuthRequest, res): Promise<any> => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
     const myId = req.userId;
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!user) {
@@ -87,7 +87,7 @@ router.get("/users/:userId", optionalAuthenticate, async (req: AuthRequest, res)
     const followingRow = myId ? (await db
       .select()
       .from(followsTable)
-      .where(and(eq(followsTable.followerId, myId), eq(followsTable.followingId, userId)))
+      .where(and(eq(followsTable.followerId, myId as string), eq(followsTable.followingId, userId)))
       .limit(1))[0] : null;
 
     const followedByRow = myId ? (await db
@@ -102,7 +102,7 @@ router.get("/users/:userId", optionalAuthenticate, async (req: AuthRequest, res)
     const profile = formatUser(user, isFollowing, !!followedByRow);
 
     // Privacy check
-    if (user.isPrivate && !isSelf && !isFollowing) {
+    if (user.isPrivate && !isSelf && !isFollowing && !req.isAdmin) {
       res.json({
         ...profile,
         postsCount: user.postsCount,
@@ -122,8 +122,8 @@ router.get("/users/:userId", optionalAuthenticate, async (req: AuthRequest, res)
 
 router.put("/users/:userId", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { userId } = req.params;
-    if (userId !== req.userId) {
+    const userId = req.params.userId as string;
+    if (userId !== req.userId && !req.isAdmin) {
       res.status(403).json({ error: "Forbidden", message: "Cannot update another user" });
       return;
     }
@@ -150,7 +150,7 @@ router.put("/users/:userId", authenticate, async (req: AuthRequest, res) => {
 
 router.get("/users/:userId/posts", optionalAuthenticate, async (req: AuthRequest, res): Promise<any> => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
     const myId = req.userId;
     const limit = Math.min(Number(req.query.limit) || 20, 100);
     
@@ -160,11 +160,11 @@ router.get("/users/:userId/posts", optionalAuthenticate, async (req: AuthRequest
     }
 
     // Privacy check
-    if (user.isPrivate && myId !== userId) {
+    if (user.isPrivate && myId !== userId && !req.isAdmin) {
       const [following] = await db
         .select()
         .from(followsTable)
-        .where(and(eq(followsTable.followerId, myId), eq(followsTable.followingId, userId)))
+        .where(and(eq(followsTable.followerId, myId as string), eq(followsTable.followingId, userId)))
         .limit(1);
 
       if (!following) {
@@ -221,7 +221,7 @@ router.get("/users/:userId/posts", optionalAuthenticate, async (req: AuthRequest
 
 router.get("/users/:userId/stories", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
     const now = new Date();
     const stories = await db
       .select()
@@ -246,7 +246,7 @@ router.get("/users/:userId/stories", authenticate, async (req: AuthRequest, res)
 
 router.get("/users/:userId/followers", optionalAuthenticate, async (req: AuthRequest, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
     const limit = Math.min(Number(req.query.limit) || 20, 100);
     const rows = await db
       .select({ user: usersTable })
@@ -262,7 +262,7 @@ router.get("/users/:userId/followers", optionalAuthenticate, async (req: AuthReq
 
 router.get("/users/:userId/following", optionalAuthenticate, async (req: AuthRequest, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
     const limit = Math.min(Number(req.query.limit) || 20, 100);
     const rows = await db
       .select({ user: usersTable })
@@ -278,7 +278,7 @@ router.get("/users/:userId/following", optionalAuthenticate, async (req: AuthReq
 
 router.post("/users/:userId/follow", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
     const myId = req.userId!;
     if (userId === myId) {
       res.status(400).json({ error: "Bad Request", message: "Cannot follow yourself" });
@@ -287,7 +287,7 @@ router.post("/users/:userId/follow", authenticate, async (req: AuthRequest, res)
     const [existing] = await db
       .select()
       .from(followsTable)
-      .where(and(eq(followsTable.followerId, myId), eq(followsTable.followingId, userId)))
+      .where(and(eq(followsTable.followerId, myId as string), eq(followsTable.followingId, userId)))
       .limit(1);
     if (!existing) {
       await db.insert(followsTable).values({ id: generateId(), followerId: myId, followingId: userId });
@@ -304,15 +304,15 @@ router.post("/users/:userId/follow", authenticate, async (req: AuthRequest, res)
 
 router.delete("/users/:userId/follow", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
     const myId = req.userId!;
     const [existing] = await db
       .select()
       .from(followsTable)
-      .where(and(eq(followsTable.followerId, myId), eq(followsTable.followingId, userId)))
+      .where(and(eq(followsTable.followerId, myId as string), eq(followsTable.followingId, userId)))
       .limit(1);
     if (existing) {
-      await db.delete(followsTable).where(and(eq(followsTable.followerId, myId), eq(followsTable
+      await db.delete(followsTable).where(and(eq(followsTable.followerId, myId as string), eq(followsTable
         .followingId, userId)));
       await db.update(usersTable)
     .set({ followingCount: sql`GREATEST(${usersTable.followingCount} - 1, 0)` }).where(eq(usersTable

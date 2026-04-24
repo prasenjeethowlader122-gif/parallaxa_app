@@ -9,7 +9,7 @@ const router = Router();
 
 router.get("/posts/:postId/comments", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { postId } = req.params;
+    const postId = req.params.postId as string;
     const limit = Math.min(Number(req.query.limit) || 20, 100);
     const rows = await db
       .select({ comment: commentsTable, user: usersTable })
@@ -45,7 +45,7 @@ router.get("/posts/:postId/comments", authenticate, async (req: AuthRequest, res
 
 router.post("/posts/:postId/comments", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { postId } = req.params;
+    const postId = req.params.postId as string;
     const { content, parentId } = req.body;
     if (!content) {
       res.status(400).json({ error: "Bad Request", message: "Content is required" });
@@ -61,7 +61,7 @@ router.post("/posts/:postId/comments", authenticate, async (req: AuthRequest, re
       id, postId, userId: req.userId!, content, parentId,
     }).returning();
 
-    await db.update(postsTable).set({ commentsCount: sql`${postsTable.commentsCount} + 1` }).where(eq(postsTable.id, postId));
+    await db.update(postsTable).set({ repliesCount: sql`${postsTable.repliesCount} + 1` }).where(eq(postsTable.id, postId));
 
     if (parentId) {
       await db.update(commentsTable).set({ repliesCount: sql`${commentsTable.repliesCount} + 1` }).where(eq(commentsTable.id, parentId));
@@ -103,17 +103,17 @@ router.post("/posts/:postId/comments", authenticate, async (req: AuthRequest, re
 
 router.delete("/comments/:commentId", authenticate, async (req: AuthRequest, res) => {
   try {
-    const [comment] = await db.select().from(commentsTable).where(eq(commentsTable.id, req.params.commentId)).limit(1);
+    const [comment] = await db.select().from(commentsTable).where(eq(commentsTable.id, req.params.commentId as string)).limit(1);
     if (!comment) {
       res.status(404).json({ error: "Not Found", message: "Comment not found" });
       return;
     }
-    if (comment.userId !== req.userId) {
+    if (comment.userId !== req.userId && !req.isAdmin) {
       res.status(403).json({ error: "Forbidden", message: "Cannot delete another user's comment" });
       return;
     }
-    await db.delete(commentsTable).where(eq(commentsTable.id, req.params.commentId));
-    await db.update(postsTable).set({ commentsCount: sql`${postsTable.commentsCount} - 1` }).where(eq(postsTable.id, comment.postId));
+    await db.delete(commentsTable).where(eq(commentsTable.id, req.params.commentId as string));
+    await db.update(postsTable).set({ repliesCount: sql`${postsTable.repliesCount} - 1` }).where(eq(postsTable.id, comment.postId));
     res.json({ message: "Comment deleted" });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });

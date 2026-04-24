@@ -4,24 +4,24 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import { Search01Icon, Cancel01Icon, Tag01Icon, ImageIcon } from "@hugeicons/core-free-icons";
 import {
   ActivityIndicator,
-  Dimensions,
   FlatList,
   Image,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useGetExplorePosts, useSearch } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "@/components/UserAvatar";
 
-const { width } = Dimensions.get("window");
 const COLUMN = 3;
 const GAP = 1;
-const ITEM_SIZE = (width - GAP * (COLUMN - 1)) / COLUMN;
 
 export default function ExploreScreen() {
+  const { width } = useWindowDimensions();
+  const ITEM_SIZE = (width - GAP * (COLUMN - 1)) / COLUMN;
   const colors = useColors();
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -177,7 +177,7 @@ export default function ExploreScreen() {
               );
             }
 
-            if (item._type === "post" && item.imageUrl) {
+            if (item._type === "post") {
               return (
                 <TouchableOpacity
                   style={{
@@ -192,11 +192,17 @@ export default function ExploreScreen() {
                   onPress={() => router.push(`/post/${item.id}` as any)}
                   activeOpacity={0.7}
                 >
-                  <Image
-                    source={{ uri: item.imageUrl }}
-                    style={{ width: 44, height: 44, borderRadius: 6 }}
-                    resizeMode="cover"
-                  />
+                  {item.imageUrl ? (
+                    <Image
+                      source={{ uri: item.imageUrl }}
+                      style={{ width: 44, height: 44, borderRadius: 6 }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={{ width: 44, height: 44, borderRadius: 6, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center' }}>
+                       <HugeiconsIcon icon={ImageIcon} size={20} color={colors.mutedForeground} />
+                    </View>
+                  )}
                   <View style={{ flex: 1 }}>
                     <Text
                       style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}

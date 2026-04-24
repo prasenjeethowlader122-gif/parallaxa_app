@@ -55,6 +55,8 @@ export const LoginResponse = zod.object({
   "website": zod.string().nullish(),
   "isVerified": zod.boolean(),
   "verificationStatus": zod.enum(['none', 'pending', 'verified']),
+  "role": zod.enum(['user', 'admin']).optional(),
+  "isFrozen": zod.boolean().optional(),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
   "followersCount": zod.number(),
@@ -88,6 +90,8 @@ export const GetMeResponse = zod.object({
   "website": zod.string().nullish(),
   "isVerified": zod.boolean(),
   "verificationStatus": zod.enum(['none', 'pending', 'verified']),
+  "role": zod.enum(['user', 'admin']).optional(),
+  "isFrozen": zod.boolean().optional(),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
   "followersCount": zod.number(),
@@ -204,6 +208,8 @@ export const Verify2FAResponse = zod.object({
   "website": zod.string().nullish(),
   "isVerified": zod.boolean(),
   "verificationStatus": zod.enum(['none', 'pending', 'verified']),
+  "role": zod.enum(['user', 'admin']).optional(),
+  "isFrozen": zod.boolean().optional(),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
   "followersCount": zod.number(),
@@ -225,6 +231,54 @@ export const RequestVerificationResponse = zod.object({
 
 
 /**
+ * @summary Freeze a user account
+ */
+export const FreezeUserParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const FreezeUserResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Unfreeze a user account
+ */
+export const UnfreezeUserParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const UnfreezeUserResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Approve user verification request
+ */
+export const ApproveVerificationParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const ApproveVerificationResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Delete any post as admin
+ */
+export const AdminDeletePostParams = zod.object({
+  "postId": zod.coerce.string()
+})
+
+export const AdminDeletePostResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
  * @summary Get user by ID
  */
 export const GetUserParams = zod.object({
@@ -241,6 +295,8 @@ export const GetUserResponse = zod.object({
   "website": zod.string().nullish(),
   "isVerified": zod.boolean(),
   "verificationStatus": zod.enum(['none', 'pending', 'verified']),
+  "role": zod.enum(['user', 'admin']).optional(),
+  "isFrozen": zod.boolean().optional(),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
   "followersCount": zod.number(),
@@ -279,6 +335,8 @@ export const UpdateUserResponse = zod.object({
   "website": zod.string().nullish(),
   "isVerified": zod.boolean(),
   "verificationStatus": zod.enum(['none', 'pending', 'verified']),
+  "role": zod.enum(['user', 'admin']).optional(),
+  "isFrozen": zod.boolean().optional(),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
   "followersCount": zod.number(),

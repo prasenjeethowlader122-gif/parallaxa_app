@@ -5,6 +5,7 @@
  * SocialApp API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { UserRole } from './userRole';
 import type { UserVerificationStatus } from './userVerificationStatus';
 
 export interface User {
@@ -17,6 +18,8 @@ export interface User {
   website?: string | null;
   isVerified: boolean;
   verificationStatus: UserVerificationStatus;
+  role?: UserRole;
+  isFrozen?: boolean;
   twoFactorEnabled: boolean;
   isPrivate: boolean;
   followersCount: number;

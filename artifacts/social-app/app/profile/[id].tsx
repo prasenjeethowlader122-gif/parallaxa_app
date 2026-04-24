@@ -32,6 +32,9 @@ import {
   useFollowUser,
   useUnfollowUser,
   useStartConversation,
+  useFreezeUser,
+  useUnfreezeUser,
+  useApproveVerification,
 } from "@workspace/api-client-react";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -149,6 +152,10 @@ export default function UserProfileScreen() {
   const { data: profile, isLoading, refetch } = useGetUser(id!);
   const { data: postsData, refetch: refetchPosts } = useGetUserPosts(id!);
 
+  const { mutate: freezeUser } = useFreezeUser({ mutation: { onSuccess: () => refetch() } });
+  const { mutate: unfreezeUser } = useUnfreezeUser({ mutation: { onSuccess: () => refetch() } });
+  const { mutate: approveVerification } = useApproveVerification({ mutation: { onSuccess: () => refetch() } });
+
   const posts = React.useMemo(() => {
     const allPosts = postsData?.posts ?? [];
     if (activeTab === "posts") return allPosts;
@@ -237,11 +244,12 @@ export default function UserProfileScreen() {
 
         {!isLoading && profile && me && (
           <View style={styles.actionRow}>
-            {isOwnProfile ? (
+            {isOwnProfile || me.role === 'admin' ? (
               <TouchableOpacity style={styles.editBtn} activeOpacity={0.8} onPress = {()=> router.push('/edit-profile')}>
                 <Text style={styles.editBtnText}>Edit profile</Text>
               </TouchableOpacity>
-            ) : (
+            ) : null}
+            {!isOwnProfile && (
               <>
                 <IconBtn icon={Message01Icon} onPress={handleMessage} />
                 <IconBtn icon={UserAdd01Icon} onPress={() => {}} />
@@ -251,6 +259,26 @@ export default function UserProfileScreen() {
           </View>
         )}
       </View>
+
+      {/* ── Admin section ── */}
+      {me?.role === 'admin' && profile && !isOwnProfile && (
+        <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingBottom: 10 }}>
+           <TouchableOpacity
+             onPress={() => profile.isFrozen ? unfreezeUser({ userId: id! }) : freezeUser({ userId: id! })}
+             style={{ flex: 1, backgroundColor: profile.isFrozen ? '#58C322' : '#F4212E', paddingVertical: 8, borderRadius: 8, alignItems: 'center' }}
+           >
+             <Text style={{ color: '#fff', fontWeight: '700' }}>{profile.isFrozen ? 'Unfreeze' : 'Freeze'}</Text>
+           </TouchableOpacity>
+           {profile.verificationStatus === 'pending' && (
+             <TouchableOpacity
+               onPress={() => approveVerification({ userId: id! })}
+               style={{ flex: 1, backgroundColor: "#1d9bf0", paddingVertical: 8, borderRadius: 8, alignItems: 'center' }}
+             >
+               <Text style={{ color: '#fff', fontWeight: '700' }}>Approve</Text>
+             </TouchableOpacity>
+           )}
+        </View>
+      )}
 
       {/* ── Bio section ── */}
       {isLoading ? (
@@ -269,6 +297,11 @@ export default function UserProfileScreen() {
                 color="#1d9bf0"
                 strokeWidth={1.5}
               />
+            )}
+            {profile.role === 'admin' && (
+              <View style={{ backgroundColor: "#1d9bf020", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: "#1d9bf0" }}>ADMIN</Text>
+              </View>
             )}
           </View>
           <Text style={styles.username}>@{profile.username}</Text>

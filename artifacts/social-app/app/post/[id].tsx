@@ -32,6 +32,7 @@ import {
   useCreatePost,
   useSavePost,
   useUnsavePost,
+  useAdminDeletePost,
   Post,
   getGetRepliesQueryKey,
 } from "@workspace/api-client-react";
@@ -185,6 +186,14 @@ export default function PostDetailScreen() {
 
   const { data: post, isLoading: postLoading, refetch: refetchPost } = useGetPost(id ?? "");
   const { data: commentsData, isLoading: commentsLoading } = useGetReplies(id ?? "");
+
+  const { mutate: adminDeletePost } = useAdminDeletePost({
+    mutation: {
+       onSuccess: () => {
+         router.back();
+       }
+    }
+  });
 
   const comments = commentsData?.posts ?? [];
   const rootComments = React.useMemo(() => buildCommentTree(comments), [comments]);
@@ -379,6 +388,16 @@ export default function PostDetailScreen() {
               @{post.author.username}
             </Text>
           </TouchableOpacity>
+
+          {user?.role === 'admin' && (
+            <TouchableOpacity
+              onPress={() => adminDeletePost({ postId: id! })}
+              className="px-3 py-1.5 rounded-full bg-red-500/10"
+              activeOpacity={0.7}
+            >
+              <Text className="text-red-500 text-xs font-bold">Delete</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             className="w-8 h-8 rounded-full items-center justify-center"
@@ -853,47 +872,58 @@ function CommentItem({
             borderBottomColor: colors.border,
           }}
         >
-          {comment.replies.map((reply: CommentWithReplies, index: number) => (
-            <View key={reply.id}>
-              {/* Curved connector SVG sits in the gutter column */}
+          {/* Show only the FIRST reply initially as per requirement */}
+          <View key={comment.replies[0].id}>
+            {/* Curved connector SVG sits in the gutter column */}
+            <View
+              style={{
+                flexDirection: "row",
+                paddingLeft: 14,
+                alignItems: "flex-start",
+              }}
+            >
+              {/* Gutter: curved line only */}
               <View
                 style={{
-                  flexDirection: "row",
-                  paddingLeft: 14,
-                  alignItems: "flex-start",
+                  width: GUTTER_WIDTH,
+                  marginRight: GUTTER_GAP,
+                  alignItems: "center",
+                  flexShrink: 0,
                 }}
               >
-                {/* Gutter: curved line only */}
-                <View
-                  style={{
-                    width: GUTTER_WIDTH,
-                    marginRight: GUTTER_GAP,
-                    alignItems: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <CurvedConnector color={colors.border} />
-                </View>
+                <CurvedConnector color={colors.border} />
+              </View>
 
-                {/* Reply content — paddingTop aligns avatar center with curve endpoint */}
-                <View
-                  style={{
-                    flex: 1,
-                    paddingTop: 0, // already handled by REPLY_ROW_TOP_PAD inside CommentItem
-                  }}
-                >
-                  <CommentItem
-                    comment={reply}
-                    isTargeted={isTargeted}
-                    onReply={onReply}
-                    onNavigate={onNavigate}
-                    onProfileNavigate={onProfileNavigate}
-                    depth={depth + 1}
-                  />
-                </View>
+              {/* Reply content */}
+              <View style={{ flex: 1 }}>
+                <CommentItem
+                  comment={comment.replies[0]}
+                  isTargeted={isTargeted}
+                  onReply={onReply}
+                  onNavigate={onNavigate}
+                  onProfileNavigate={onProfileNavigate}
+                  depth={depth + 1}
+                />
               </View>
             </View>
-          ))}
+          </View>
+
+          {/* If more than 1 reply, show "See more" which redirects to this post (comment) */}
+          {comment.replies.length > 1 && (
+            <TouchableOpacity
+              onPress={() => onNavigate(comment.id)}
+              style={{
+                flexDirection: "row",
+                paddingLeft: 14 + GUTTER_WIDTH + GUTTER_GAP,
+                paddingBottom: 12,
+                marginTop: -4
+              }}
+            >
+              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.primary }}>
+                See more replies
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 
