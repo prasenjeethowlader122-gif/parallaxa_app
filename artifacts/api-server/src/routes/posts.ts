@@ -207,7 +207,7 @@ router.get("/posts/:postId", optionalAuthenticate, async (req: AuthRequest, res)
 router.get("/posts/:postId/replies", optionalAuthenticate, async (req: AuthRequest, res) => {
   try {
     const postId = req.params.postId as string;
-    const limit = Math.min(Number(req.query.limit) || 20, 100);
+    const limit = Math.min(Number(req.query.limit) || 50, 100);
 
     const [parent] = await db
       .select()
@@ -220,14 +220,35 @@ router.get("/posts/:postId/replies", optionalAuthenticate, async (req: AuthReque
       return;
     }
 
-    const replies = await db
+    // To support threading (one level deep in the UI), we fetch replies to this post
+    // and also replies to those replies.
+    const directReplies = await db
       .select()
       .from(postsTable)
       .where(and(eq(postsTable.parentPostId, postId), eq(postsTable.isArchived, false)))
       .orderBy(desc(postsTable.createdAt))
       .limit(limit);
 
-    const formatted = await Promise.all(replies.map((p) => formatPost(p, req.userId!)));
+    if (directReplies.length === 0) {
+      res.json({ posts: [], nextCursor: null });
+      return;
+    }
+
+    const directReplyIds = directReplies.map(r => r.id);
+    const nestedReplies = await db
+      .select()
+      .from(postsTable)
+      .where(
+        and(
+          inArray(postsTable.parentPostId, directReplyIds),
+          eq(postsTable.isArchived, false)
+        )
+      )
+      .orderBy(desc(postsTable.createdAt));
+
+    const allReplies = [...directReplies, ...nestedReplies];
+    const formatted = await Promise.all(allReplies.map((p) => formatPost(p, req.userId)));
+
     res.json({ posts: formatted, nextCursor: null });
   } catch (err) {
     logger.error({ err }, "GET /posts/:postId/replies error");

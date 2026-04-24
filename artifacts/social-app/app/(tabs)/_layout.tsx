@@ -137,14 +137,14 @@ export default function RootLayout() {
 
   // ── Logo ──────────────────────────────────────────────────────────────────
   const XLogo = () => (
-  <View style={{ width: 120, height: 21, justifyContent: "center", alignItems: "center" }}>
-    <Image
-      source={require("@/assets/images/text-logo.svg")}
-      style={{ width: 120, height: 21 }}
-      resizeMode="contain"
-    />
-  </View>
-);
+    <View style={{ height: 28, justifyContent: "center", alignItems: "flex-start" }}>
+      <Image
+        source={require("@/assets/images/text-logo.svg")}
+        style={{ height: 24, width: 130 }}
+        resizeMode="contain"
+      />
+    </View>
+  );
   const Sidebar = () => (
     <View style={{ width: 275, paddingHorizontal: 12, paddingTop: topPadding, borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: "#e1e8ed" }}>
       <View style={{ paddingLeft: 12, marginBottom: 20 }}>

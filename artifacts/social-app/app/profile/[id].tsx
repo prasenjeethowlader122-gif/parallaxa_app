@@ -299,8 +299,22 @@ export default function UserProfileScreen() {
               />
             )}
             {profile.role === 'admin' && (
-              <View style={{ backgroundColor: "#1d9bf020", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                <Text style={{ fontSize: 10, fontWeight: '700', color: "#1d9bf0" }}>ADMIN</Text>
+              <View style={{
+                backgroundColor: "#7c3aed",
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 999,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4
+              }}>
+                <HugeiconsIcon
+                  icon={CheckmarkBadge01Icon}
+                  size={12}
+                  color="#ffffff"
+                  strokeWidth={2}
+                />
+                <Text style={{ fontSize: 10, fontWeight: '800', color: "#ffffff", letterSpacing: 0.5 }}>ADMIN</Text>
               </View>
             )}
           </View>

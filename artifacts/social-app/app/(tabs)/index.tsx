@@ -17,6 +17,7 @@ import { PostCard } from "@/components/PostCard";
 import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/context/AuthContext";
 import { FeedSkeleton } from "@/components/SkeletonLoader";
+import { useRouter } from "expo-router";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -157,6 +158,7 @@ function AnimatedTabBar({ activeTab, onPress, colors, tabs }: AnimatedTabBarProp
 export default function FeedScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState < TabId > ("foryou");
   
@@ -229,6 +231,24 @@ export default function FeedScreen() {
   
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
+      {!user && (
+        <View
+          className="px-4 py-3 bg-blue-600 flex-row items-center justify-between"
+          style={{ position: 'absolute', bottom: insets.bottom + 16, left: 16, right: 16, borderRadius: 12, zIndex: 100, elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84 }}
+        >
+          <View className="flex-1 mr-4">
+            <Text className="text-white font-bold text-sm">Join Parallaxa today!</Text>
+            <Text className="text-blue-100 text-xs">Sign up now to get your own personalized feed!</Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => router.push('/(auth)/register')}
+            className="bg-white px-4 py-2 rounded-full"
+          >
+            <Text className="text-blue-600 font-bold text-xs">Sign up</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* ── Animated tab bar ── */}
       <Animated.View style={{ opacity: headerOpacity }}>
         <AnimatedTabBar
