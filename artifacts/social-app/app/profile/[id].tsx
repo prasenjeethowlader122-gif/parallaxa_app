@@ -228,7 +228,7 @@ export default function UserProfileScreen() {
           )}
         </View>
 
-        <TouchableOpacity style={styles.navBtn}>
+        <TouchableOpacity style={styles.navBtn} onPress={()=>router.push('/settings/'+id + '?_f=0')}>
           <HugeiconsIcon icon={MoreHorizontalIcon} size={22} color="#0f1419" strokeWidth={1.5} />
         </TouchableOpacity>
       </View>
@@ -261,7 +261,7 @@ export default function UserProfileScreen() {
       </View>
 
       {/* ── Admin section ── */}
-      {me?.role === 'admin' && profile && !isOwnProfile && (
+      {/**me?.role === 'admin' && profile && !isOwnProfile && (
         <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingBottom: 10 }}>
            <TouchableOpacity
              onPress={() => profile.isFrozen ? unfreezeUser({ userId: id! }) : freezeUser({ userId: id! })}
@@ -278,7 +278,7 @@ export default function UserProfileScreen() {
              </TouchableOpacity>
            )}
         </View>
-      )}
+      )**/}
 
       {/* ── Bio section ── */}
       {isLoading ? (
