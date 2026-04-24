@@ -546,7 +546,7 @@ export default function PostDetailScreen() {
       {/* Replies label */}
       <View className="px-4 py-2.5 border-b" style={{ borderColor: colors.border }}>
         <Text
-          className="text-[14px] font-bold tracking-widest uppercase"
+          className="text-[14px] font-bold tracking-widest"
           style={{ color: colors.mutedForeground }}
         >
           Replies
@@ -895,7 +895,7 @@ function CommentItem({
               </View>
 
               {/* Reply content */}
-              <View style={{ flex: 1 }}>
+              <View className='ml-[-5px] pb-4' style={{ flex: 1 }}>
                 <CommentItem
                   comment={comment.replies[0]}
                   isTargeted={isTargeted}

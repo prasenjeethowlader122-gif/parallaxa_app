@@ -24,7 +24,7 @@ const colors = {
     destructive: "#FF3B30",
     destructiveForeground: "#FFFFFF",
 
-    border: "#DBDBDB",
+    border: "#F2F2F2",
     input: "#EFEFEF",
 
     story: "#C13584",
