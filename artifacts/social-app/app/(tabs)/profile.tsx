@@ -211,8 +211,8 @@ export default function MyProfileScreen() {
               <HugeiconsIcon
                 icon={CheckmarkBadge01Icon}
                 size={20}
-                color="#1d9bf0"
-                strokeWidth={1.5}
+                color={profile.role ==='admin' ? 'black':"#1d9bf0"}
+                strokeWidth={2}
               />
             )}
           </View>

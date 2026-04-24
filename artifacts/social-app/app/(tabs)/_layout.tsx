@@ -137,10 +137,10 @@ export default function RootLayout() {
 
   // ── Logo ──────────────────────────────────────────────────────────────────
   const XLogo = () => (
-    <View style={{ width: 35, height: 35, justifyContent: "center", alignItems: "center" }}>
+    <View style={{ width: 100, height: 35, justifyContent: "center", alignItems: "center" }}>
       <Image
         source={require("@/assets/images/text-logo.svg")}
-        style={{ width: 45, height: 45 }}
+        style={{  height: 45 }}
       />
     </View>
   );

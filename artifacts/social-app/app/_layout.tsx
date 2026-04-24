@@ -84,7 +84,7 @@ export default function RootLayout() {
         <View style={{ flex: 1, backgroundColor: '#f1f1f1', justifyContent: 'center', alignItems: 'center' }}>
           
             <Image
-            source={require("@/assets/images/text-logo.svg")}
+            source={require("@/assets/images/parallaxa-logo.svg")}
             style={{ width: 80, height: 80 }}
       />
     
