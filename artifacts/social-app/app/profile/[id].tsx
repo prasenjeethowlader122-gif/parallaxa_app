@@ -228,7 +228,7 @@ export default function UserProfileScreen() {
           )}
         </View>
 
-        <TouchableOpacity style={styles.navBtn} onPress={()=>router.push('/profile/settings/'+id)}>
+        <TouchableOpacity style={styles.navBtn} onPress={()=>router.push('/settings' as any)}>
           <HugeiconsIcon icon={MoreHorizontalIcon} size={22} color="#0f1419" strokeWidth={1.5} />
         </TouchableOpacity>
       </View>
