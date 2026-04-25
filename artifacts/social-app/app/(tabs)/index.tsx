@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Text } from "@/components/Text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useGetFeed, useGetExplorePosts } from "@workspace/api-client-react";
+import { useGetFeed, useGetExplorePosts, useGetStories } from "@workspace/api-client-react";
 import { Image01Icon, FlashIcon, UserGroup02Icon } from "@hugeicons/core-free-icons";
 import { useColors } from "@/hooks/useColors";
 import { PostCard } from "@/components/PostCard";
@@ -42,12 +42,6 @@ const GUEST_TABS: Tab[] = [
 
 // ─── AnimatedTabIndicator ─────────────────────────────────────────────────────
 // Slides a bottom-border under the active tab label with a spring animation.
-
-interface AnimatedTabBarProps {
-  activeTab: TabId;
-  onPress: (id: TabId) => void;
-  colors: ReturnType < typeof useColors > ;
-}
 
 interface AnimatedTabBarProps {
   activeTab: TabId;
@@ -231,22 +225,37 @@ export default function FeedScreen() {
     "Explore posts will appear here";
 
   const StoryBar = () => {
-    if (activeTab !== "foryou") return null;
+    if (activeTab !== "foryou" || !user) return null;
+
+    const { data: storyGroups } = useGetStories();
+
+    const data = [
+      { id: user.id, username: "You", avatarUrl: user.avatarUrl, isOwn: true, hasUnviewed: false },
+      ...(storyGroups || []).map(group => ({
+        id: group.user.id,
+        username: group.user.username,
+        avatarUrl: group.user.avatarUrl,
+        isOwn: false,
+        hasUnviewed: group.hasUnviewed,
+      }))
+    ];
 
     return (
       <View style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, paddingVertical: 12 }}>
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={[{ id: 'me', username: 'You', isOwn: true }, { id: '1', username: 'johndoe' }, { id: '2', username: 'janedoe' }]}
+          data={data}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 12 }}
           renderItem={({ item }) => (
             <StoryCircle
               userId={item.id}
               username={item.username}
+              avatarUrl={item.avatarUrl}
+              hasUnviewed={item.hasUnviewed}
               isOwn={item.isOwn}
-              onPress={() => item.isOwn ? router.push('/create' as any) : router.push(`/story/${item.id}` as any)}
+              onPress={() => item.isOwn ? router.push('/story/create' as any) : router.push(`/story/${item.id}` as any)}
             />
           )}
         />

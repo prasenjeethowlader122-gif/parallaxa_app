@@ -41,22 +41,23 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="post/[id]" />
         <Stack.Screen name="profile/[id]" />
-        <Stack.Screen name="messages/index" redirect />
-        <Stack.Screen name="messages/[id]" redirect />
-        <Stack.Screen name="settings" redirect />
-        <Stack.Screen name="edit-profile" redirect />
+        <Stack.Screen name="messages/index" />
+        <Stack.Screen name="messages/[id]" />
+        <Stack.Screen name="settings" />
+        <Stack.Screen name="edit-profile" />
       </Stack>
     );
   }
   
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" redirect />
+      <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="post/[id]" />
       <Stack.Screen name="profile/[id]" />
       <Stack.Screen name="messages/index" />
       <Stack.Screen name="messages/[id]" />
+      <Stack.Screen name="story/create" />
       <Stack.Screen name="story/[userId]" />
       <Stack.Screen name="settings" />
       <Stack.Screen name="edit-profile" options={{ presentation: "modal" }} />

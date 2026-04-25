@@ -35,10 +35,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
 
       # ── Install dependencies ─────────────────────────────────────────────
-      # --no-frozen-lockfile because pnpm-lock.yaml may not be committed
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
@@ -56,21 +55,22 @@ jobs:
             echo "value=preview" >> $GITHUB_OUTPUT
           fi
 
-      # ──  b Build APK via EAS ────────────────────────────────────────────────
+      # ── Build APK via EAS ────────────────────────────────────────────────
       - name: Build APK with EAS
         id: eas_build
         working-directory: artifacts/social-app
         env:
-          EXPO_TOKEN: jC9iuFuKiE-3eUCiLqU6eR2Q5eXwF5Kq-FCRh68K
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          BUILD_ID=$(eas build \
+          echo "Starting EAS build..."
+          RESULT=$(eas build \
             --platform android \
             --profile ${{ steps.profile.outputs.value }} \
             --non-interactive \
             --json \
-            --no-wait \
-            | jq -r '.[0].id')
+            --no-wait)
 
+          BUILD_ID=$(echo "$RESULT" | jq -r '.[0].id')
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
           echo "EAS Build ID: $BUILD_ID"
 
@@ -78,7 +78,7 @@ jobs:
         id: eas_url
         working-directory: artifacts/social-app
         env:
-          EXPO_TOKEN: jC9iuFuKiE-3eUCiLqU6eR2Q5eXwF5Kq-FCRh68K
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           BUILD_ID="${{ steps.eas_build.outputs.build_id }}"
           echo "Waiting for build $BUILD_ID to complete..."
@@ -130,17 +130,25 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.value }}
-          name: "Release ${{ steps.tag.outputs.value }}"
+          name: "SocialApp Release ${{ steps.tag.outputs.value }}"
           body: |
-            ## Android APK — ${{ steps.tag.outputs.value }}
+            # 🚀 SocialApp Android Release — `${{ steps.tag.outputs.value }}`
 
-            Built with EAS profile: `${{ steps.profile.outputs.value }}`
-            Commit: ${{ github.sha }}
+            Welcome to the latest version of Parallaxa Social! This release was automatically generated via GitHub Actions using Expo Application Services (EAS).
 
-            ### Install
-            1. Download `social-app.apk` below.
-            2. Enable **Install from unknown sources** on your Android device.
-            3. Open the downloaded APK to install.
+            ## 🛠 Build Information
+            - **EAS Profile:** `${{ steps.profile.outputs.value }}`
+            - **Commit SHA:** `${{ github.sha }}`
+            - **Workflow Run:** [View on GitHub](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            ## 📦 Installation Instructions
+            1. **Download:** Click on `social-app.apk` in the Assets section below.
+            2. **Permit:** If prompted, allow your browser to download files from unknown sources.
+            3. **Install:** Open the `.apk` file and select **Install**. You may need to enable "Install unknown apps" for your file manager or browser in Android Settings.
+            4. **Enjoy:** Launch the app and start exploring!
+
+            ---
+            *Automated release managed by Parallaxa Engineering.*
           files: dist/social-app.apk
           draft: false
           prerelease: ${{ steps.profile.outputs.value != 'production' }}
