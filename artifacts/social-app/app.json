@@ -4,7 +4,7 @@
     "slug": "social-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/placeholder.svg",
+    "icon": "./assets/images/icon.png",
     "scheme": "social-app",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -22,7 +22,8 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0095F6"
       },
-      "package": "com.parallaxa.social"
+      "package": "com.parallaxa.social",
+      "minSdkVersion": 24
     },
     "web": {
       "favicon": "./assets/images/icon.png"
