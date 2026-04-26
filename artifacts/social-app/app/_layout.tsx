@@ -9,16 +9,67 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { setBaseUrl } from "@workspace/api-client-react";
-import { Platform, View,Image, ActivityIndicator } from "react-native";
+import { Platform, View, ActivityIndicator } from "react-native";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { SocketProvider } from "@/context/SocketContext";
 import { getApiBaseUrl } from "@/lib/apiUrl";
+import { Image } from "expo-image";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  runOnJS,
+  Easing
+} from "react-native-reanimated";
 
 SplashScreen.preventAutoHideAsync();
 
 setBaseUrl(getApiBaseUrl());
+
+function AnimatedSplashScreen({ onFinish }: { onFinish: () => void }) {
+  const scale = useSharedValue(0.3);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    opacity.value = withTiming(1, { duration: 800 });
+    scale.value = withTiming(1, {
+      duration: 1000,
+      easing: Easing.out(Easing.back(1.5))
+    }, () => {
+      // Hold for a bit then fade out
+      opacity.value = withDelay(500, withTiming(0, { duration: 500 }, (finished) => {
+        if (finished) {
+          runOnJS(onFinish)();
+        }
+      }));
+    });
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <View style={{
+      flex: 1,
+      backgroundColor: "#FFFFFF",
+      justifyContent: "center",
+      alignItems: "center"
+    }}>
+      <Animated.View style={animatedStyle}>
+        <Image
+          source={require("@/assets/images/parallaxa-logo.svg")}
+          style={{ width: 120, height: 120 }}
+          contentFit="contain"
+        />
+      </Animated.View>
+    </View>
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,6 +123,9 @@ export default function RootLayout() {
     "Sora-SemiBold": require("@/assets/fonts/mm/MirandaSans-Medium.ttf"),
     "Sora-Bold": require("@/assets/fonts/mm/MirandaSans-Bold.ttf"),
   });
+
+  const [splashFinished, setSplashFinished] = React.useState(false);
+
   useEffect(() => {
     if (fontError) console.error("Font load error:", fontError);
     if (fontsLoaded || fontError) {
@@ -80,19 +134,11 @@ export default function RootLayout() {
   }, [fontsLoaded, fontError]);
   
   if (!fontsLoaded && !fontError) {
-    if (Platform.OS === 'web') {
-      return (
-        <View style={{ flex: 1, backgroundColor: '#f1f1f1', justifyContent: 'center', alignItems: 'center' }}>
-          
-            <Image
-            source={require("@/assets/images/parallaxa-logo.svg")}
-            style={{ width: 80, height: 80 }}
-      />
-    
-        </View>
-      );
-    }
     return null;
+  }
+
+  if (!splashFinished && Platform.OS !== 'web') {
+    return <AnimatedSplashScreen onFinish={() => setSplashFinished(true)} />;
   }
   
   return (
