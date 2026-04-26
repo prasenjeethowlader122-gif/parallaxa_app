@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0095F6"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": false,
@@ -20,13 +20,15 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#0095F6"
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.parallaxa.social",
+      "versionCode": 1,
       "minSdkVersion": 24
     },
     "web": {
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/icon.png",
+      "backgroundColor": "#FFFFFF"
     },
     "plugins": [
       "expo-router",
@@ -35,6 +37,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "04e469c7-1259-486c-8570-45fd44910e56"
+      }
+    }
+  }
+}      "typedRoutes": true
     },
     "extra": {
       "eas": {
