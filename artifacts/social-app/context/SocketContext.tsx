@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState } from "r
 import { io, Socket } from "socket.io-client";
 import { useAuth } from "./AuthContext";
 import Constants from "expo-constants";
+import { getApiBaseUrl } from "@/lib/apiUrl";
 
 interface SocketContextType {
   socket: Socket | null;
@@ -31,7 +32,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     // Determine backend URL
-    const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+    const apiUrl = getApiBaseUrl();
     // Socket.io needs the base URL, not the /api suffix
     const socketUrl = apiUrl.replace(/\/api$/, "");
 
