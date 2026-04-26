@@ -314,7 +314,13 @@ export default function RootLayout() {
                     <HugeiconsIcon icon={Search01Icon} size={22} strokeWidth={2} color="#0f1419" />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    onPress={() => router.push("/messages" as any)}
+                    onPress={() => {
+                      if (!user) {
+                        router.push("/(auth)/login");
+                        return;
+                      }
+                      router.push("/messages" as any);
+                    }}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
                     <HugeiconsIcon icon={Message01Icon} size={22} strokeWidth={2} color="#0f1419" />

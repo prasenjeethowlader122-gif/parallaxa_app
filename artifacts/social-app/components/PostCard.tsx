@@ -67,21 +67,27 @@ export function PostCard({
   const [isSaved, setIsSaved] = useState(initialIsSaved);
 
   const handleLike = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      router.push("/(auth)/login");
+      return;
+    }
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const newLiked = !isLiked;
     setIsLiked(newLiked);
     setLikesCount((prev) => prev + (newLiked ? 1 : -1));
     onLike?.(id, newLiked);
-  }, [isLiked, id, onLike]);
+  }, [isLiked, id, onLike, user, router]);
 
   const handleSave = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      router.push("/(auth)/login");
+      return;
+    }
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const newSaved = !isSaved;
     setIsSaved(newSaved);
     onSave?.(id, newSaved);
-  }, [isSaved, id, onSave]);
+  }, [isSaved, id, onSave, user, router]);
 
   const handleShare = useCallback(async () => {
     try {
@@ -95,7 +101,10 @@ export function PostCard({
   }, [content, imageUrl]);
 
   const handleRepost = useCallback(() => {
-    if (!user) return;
+    if (!user) {
+      router.push("/(auth)/login");
+      return;
+    }
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     createPost({
       data: {
@@ -103,7 +112,7 @@ export function PostCard({
         content: "Reposted",
       },
     });
-  }, [id, createPost, user]);
+  }, [id, createPost, user, router]);
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -236,7 +245,13 @@ export function PostCard({
       <View style={styles.actionRow}>
         {/* Reply */}
         <TouchableOpacity
-          onPress={() => onComment?.(id)}
+          onPress={() => {
+            if (!user) {
+              router.push("/(auth)/login");
+              return;
+            }
+            onComment?.(id);
+          }}
           hitSlop={10}
           style={styles.actionItem}
         >
