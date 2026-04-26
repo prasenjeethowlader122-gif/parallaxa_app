@@ -12,12 +12,17 @@ import { Platform } from "react-native";
  *    must set EXPO_PUBLIC_DOMAIN for standalone native builds).
  */
 export function getApiBaseUrl(): string {
-  if (process.env.EXPO_PUBLIC_DOMAIN) {
-    return `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
+  const domain = process.env.EXPO_PUBLIC_DOMAIN;
+
+  if (domain) {
+    if (domain.startsWith("http://") || domain.startsWith("https://")) {
+      return domain;
+    }
+    return `https://${domain}`;
   }
   // On web in production the app is served from the same origin as /api
   if (Platform.OS === "web" && typeof window !== "undefined") {
     return window.location.origin;
   }
-  return "";
+  return "https://parallaxa-app-t5p2.onrender.com";
 }
