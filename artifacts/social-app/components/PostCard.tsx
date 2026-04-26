@@ -235,68 +235,76 @@ export function PostCard({
       {/* ── Action bar ── */}
       <View style={styles.actionRow}>
         {/* Reply */}
-        <TouchableOpacity
-          onPress={() => onComment?.(id)}
-          hitSlop={10}
-          style={styles.actionItem}
-        >
-          <HugeiconsIcon icon={AiChatIcon} strokeWidth={2} size={20} color={colors.mutedForeground} />
-          {commentsCount > 0 && (
-            <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>
-              {commentsCount}
-            </Text>
-          )}
-        </TouchableOpacity>
+        {user && (
+          <TouchableOpacity
+            onPress={() => onComment?.(id)}
+            hitSlop={10}
+            style={styles.actionItem}
+          >
+            <HugeiconsIcon icon={AiChatIcon} strokeWidth={2} size={20} color={colors.mutedForeground} />
+            {commentsCount > 0 && (
+              <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>
+                {commentsCount}
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
 
         {/* Repost */}
-        <TouchableOpacity
-          onPress={handleRepost}
-          hitSlop={10}
-          style={styles.actionItem}
-        >
-          <HugeiconsIcon icon={ArrowUp01Icon} size={20} strokeWidth={2} color={colors.mutedForeground} />
-          {repostCount > 0 && (
-            <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>
-              {repostCount}
-            </Text>
-          )}
-        </TouchableOpacity>
+        {user && (
+          <TouchableOpacity
+            onPress={handleRepost}
+            hitSlop={10}
+            style={styles.actionItem}
+          >
+            <HugeiconsIcon icon={ArrowUp01Icon} size={20} strokeWidth={2} color={colors.mutedForeground} />
+            {repostCount > 0 && (
+              <Text className="text-[13px]" style={{ color: colors.mutedForeground }}>
+                {repostCount}
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
 
         {/* Like */}
-        <TouchableOpacity
-          onPress={handleLike}
-          hitSlop={10}
-          style={styles.actionItem}
-        >
-          <HugeiconsIcon
-            icon={FavouriteIcon}
-            size={20}
-            strokeWidth={2}
-            color={isLiked ? "#f91880" : colors.mutedForeground}
-          />
-          {likesCount > 0 && (
-            <Text
-              className="text-[13px]"
-              style={{ color: isLiked ? "#f91880" : colors.mutedForeground }}
-            >
-              {likesCount}
-            </Text>
-          )}
-        </TouchableOpacity>
+        {user && (
+          <TouchableOpacity
+            onPress={handleLike}
+            hitSlop={10}
+            style={styles.actionItem}
+          >
+            <HugeiconsIcon
+              icon={FavouriteIcon}
+              size={20}
+              strokeWidth={2}
+              color={isLiked ? "#f91880" : colors.mutedForeground}
+            />
+            {likesCount > 0 && (
+              <Text
+                className="text-[13px]"
+                style={{ color: isLiked ? "#f91880" : colors.mutedForeground }}
+              >
+                {likesCount}
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
 
         {/* Bookmark */}
-        <TouchableOpacity
-          onPress={handleSave}
-          hitSlop={10}
-          style={styles.actionItem}
-        >
-          <HugeiconsIcon
-            icon={Bookmark02Icon}
-            strokeWidth={2}
-            size={20}
-            color={isSaved ? "#1d9bf0" : colors.mutedForeground}
-          />
-        </TouchableOpacity>
+        {user && (
+          <TouchableOpacity
+            onPress={handleSave}
+            hitSlop={10}
+            style={styles.actionItem}
+          >
+            <HugeiconsIcon
+              icon={Bookmark02Icon}
+              strokeWidth={2}
+              size={20}
+              color={isSaved ? "#1d9bf0" : colors.mutedForeground}
+            />
+          </TouchableOpacity>
+        )}
 
         {/* Share */}
         <TouchableOpacity onPress={handleShare} hitSlop={10} style={styles.actionItem}>

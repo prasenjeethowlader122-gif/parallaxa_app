@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0095F6"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": false,
@@ -20,9 +20,10 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#0095F6"
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.parallaxa.social",
+      "versionCode": 1,
       "minSdkVersion": 24
     },
     "web": {

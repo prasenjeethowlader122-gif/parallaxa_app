@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   TouchableOpacity,
-  Image,
   Platform,
   StyleSheet,
   ScrollView,
@@ -35,6 +34,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
+import { Image } from "expo-image";
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const MAIN_NAV = [
@@ -141,7 +141,7 @@ export default function RootLayout() {
       <Image
         source={require("@/assets/images/text-logo.svg")}
         style={{ height: 24, width: 130 }}
-        resizeMode="contain"
+        contentFit="contain"
       />
     </View>
   );
@@ -151,7 +151,7 @@ export default function RootLayout() {
         <XLogo />
       </View>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {MAIN_NAV.map((item) => {
+        {MAIN_NAV.filter(item => user || ["index", "explore"].includes(item.id)).map((item) => {
           const isActive = currentRoute === item.id;
           return (
             <TouchableOpacity
@@ -313,12 +313,14 @@ export default function RootLayout() {
                   >
                     <HugeiconsIcon icon={Search01Icon} size={22} strokeWidth={2} color="#0f1419" />
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => router.push("/messages" as any)}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <HugeiconsIcon icon={Message01Icon} size={22} strokeWidth={2} color="#0f1419" />
-                  </TouchableOpacity>
+                  {user && (
+                    <TouchableOpacity
+                      onPress={() => router.push("/create" as any)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <HugeiconsIcon icon={Add01Icon} size={22} strokeWidth={2} color="#0f1419" />
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             </View>
@@ -327,31 +329,6 @@ export default function RootLayout() {
           {/* ── SCREEN CONTENT ── */}
           <Stack screenOptions={{ headerShown: false }} />
 
-          {/* ── FAB: New Post (Only on Mobile) ── */}
-          {user && !isLargeScreen && (
-            <TouchableOpacity
-              onPress={() => router.push("/create" as any)}
-              style={{
-                position: "absolute",
-                bottom: insets.bottom + 20,
-                right: 20,
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: "#1d9bf0",
-                justifyContent: "center",
-                alignItems: "center",
-                elevation: 6,
-                shadowColor: "#1d9bf0",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.35,
-                shadowRadius: 8,
-                zIndex: 40,
-              }}
-            >
-              <HugeiconsIcon icon={Add01Icon} size={24} color="#fff" strokeWidth={2} />
-            </TouchableOpacity>
-          )}
         </View>
 
         {isLargeScreen && (
@@ -501,7 +478,7 @@ export default function RootLayout() {
               />
 
               {/* ── Main nav ── */}
-              {MAIN_NAV.map((item) => {
+              {MAIN_NAV.filter(item => user || ["index", "explore"].includes(item.id)).map((item) => {
                 const isActive = currentRoute === item.id;
                 return (
                   <TouchableOpacity
