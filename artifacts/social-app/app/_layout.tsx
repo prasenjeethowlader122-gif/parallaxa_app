@@ -9,7 +9,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { setBaseUrl } from "@workspace/api-client-react";
-import { Platform, View,Image, ActivityIndicator } from "react-native";
+import { Platform, View, ActivityIndicator } from "react-native";
+import { Image } from "expo-image";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
@@ -80,19 +81,15 @@ export default function RootLayout() {
   }, [fontsLoaded, fontError]);
   
   if (!fontsLoaded && !fontError) {
-    if (Platform.OS === 'web') {
-      return (
-        <View style={{ flex: 1, backgroundColor: '#f1f1f1', justifyContent: 'center', alignItems: 'center' }}>
-          
-            <Image
-            source={require("@/assets/images/parallaxa-logo.svg")}
-            style={{ width: 80, height: 80 }}
-      />
-    
-        </View>
-      );
-    }
-    return null;
+    return (
+      <View style={{ flex: 1, backgroundColor: '#ffffff', justifyContent: 'center', alignItems: 'center' }}>
+        <Image
+          source={require("@/assets/images/parallaxa-logo.svg")}
+          style={{ width: 100, height: 100 }}
+          contentFit="contain"
+        />
+      </View>
+    );
   }
   
   return (
