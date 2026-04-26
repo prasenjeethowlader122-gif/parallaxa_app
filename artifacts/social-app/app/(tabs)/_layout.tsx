@@ -2,12 +2,12 @@ import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   TouchableOpacity,
-  Image,
   Platform,
   StyleSheet,
   ScrollView,
   useWindowDimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import { Text } from "@/components/Text"
 import { Stack, useRouter, usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -141,7 +141,7 @@ export default function RootLayout() {
       <Image
         source={require("@/assets/images/text-logo.svg")}
         style={{ height: 24, width: 130 }}
-        resizeMode="contain"
+        contentFit="contain"
       />
     </View>
   );

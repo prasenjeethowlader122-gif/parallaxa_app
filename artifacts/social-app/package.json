@@ -31,7 +31,6 @@
     "expo-font": "~14.0.10",
     "expo-glass-effect": "~0.1.4",
     "expo-haptics": "~15.0.8",
-    "expo-image": "~3.0.11",
     "expo-image-picker": "~17.0.9",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.10",
@@ -60,6 +59,8 @@
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {
+    "expo-image": "~3.0.11",
+    "expo-modules-core": "^55.0.23",
     "nativewind": "^4.2.3",
     "react-native-css-interop": "^0.2.3",
     "socket.io-client": "^4.8.3",

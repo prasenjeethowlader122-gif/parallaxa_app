@@ -1,5 +1,6 @@
 import React from "react";
-import { Image, View } from "react-native";
+import { View } from "react-native";
+import { Image } from "expo-image";
 import { useColors } from "@/hooks/useColors";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { UserIcon } from "@hugeicons/core-free-icons";
@@ -45,7 +46,7 @@ export function UserAvatar({ uri, size = 40, hasStory, hasUnviewedStory }: UserA
           <Image
             source={{ uri }}
             style={{ width: size, height: size, borderRadius: size / 2 }}
-            resizeMode="cover"
+            contentFit="cover"
           />
         ) : (
           <HugeiconsIcon icon={UserIcon} size={size * 0.5} color={colors.mutedForeground} />

@@ -2,7 +2,6 @@ import React, { useState, useCallback, useRef } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   KeyboardAvoidingView,
   Platform,
   TextInput,
@@ -10,6 +9,7 @@ import {
   View,
   StyleSheet,
 } from "react-native";
+import { Image } from "expo-image";
 import { Text } from "@/components/Text";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
@@ -322,37 +322,6 @@ export default function PostDetailScreen() {
   // ── List Header ─────────────────────────────────────────────────────────────
   const ListHeader = (
     <View>
-      {/* Nav */}
-      <View
-        className="flex-row items-center justify-between px-4 pb-3 border-b"
-        style={{
-          paddingTop: topPad,
-          backgroundColor: colors.background,
-          borderBottomColor: colors.border,
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-          hitSlop={8}
-          className="w-9 h-9 rounded-full items-center justify-center"
-        >
-          <HugeiconsIcon
-            icon={ArrowLeft01Icon}
-            size={20}
-            strokeWidth={2.2}
-            color={colors.foreground}
-          />
-        </TouchableOpacity>
-        <Text
-          className="text-[17px] font-bold tracking-tight"
-          style={{ color: colors.foreground }}
-        >
-          Post
-        </Text>
-        <View className="w-9" />
-      </View>
-
       {/* Author row */}
       {post?.author && (
         <View className="flex-row items-center px-4 pt-4 pb-1 gap-2.5">
@@ -429,8 +398,8 @@ export default function PostDetailScreen() {
         <View className="px-4 pb-2">
           <Image
             source={{ uri: post.imageUrl }}
-            className="w-full rounded-2xl"
-            resizeMode="cover"
+            style={{ width: '100%', aspectRatio: 16 / 9, borderRadius: 16 }}
+            contentFit="cover"
           />
         </View>
       ) : null}
@@ -599,6 +568,38 @@ export default function PostDetailScreen() {
       style={{ backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      {/* Nav (Sticky) */}
+      <View
+        className="flex-row items-center justify-between px-4 pb-3 border-b"
+        style={{
+          paddingTop: topPad,
+          backgroundColor: colors.background,
+          borderBottomColor: colors.border,
+          zIndex: 10,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+          hitSlop={8}
+          className="w-9 h-9 rounded-full items-center justify-center"
+        >
+          <HugeiconsIcon
+            icon={ArrowLeft01Icon}
+            size={20}
+            strokeWidth={2.2}
+            color={colors.foreground}
+          />
+        </TouchableOpacity>
+        <Text
+          className="text-[17px] font-bold tracking-tight"
+          style={{ color: colors.foreground }}
+        >
+          Post
+        </Text>
+        <View className="w-9" />
+      </View>
+
       <FlatList
         data={rootComments}
         renderItem={renderItem}
