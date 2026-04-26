@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   RefreshControl,
   Text,
   View,
@@ -18,6 +19,8 @@ import { EmptyState } from "@/components/EmptyState";
 
 export default function NotificationsScreen() {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
   const [refreshing, setRefreshing] = React.useState(false);
 
   const { data, isLoading, refetch } = useGetNotifications();
@@ -41,8 +44,9 @@ export default function NotificationsScreen() {
       {/* Screen header */}
       <View
         style={{
+          paddingTop: topPadding,
           paddingHorizontal: 16,
-          paddingVertical: 14,
+          paddingBottom: 14,
           backgroundColor: colors.background,
           borderBottomWidth: 0.5,
           borderBottomColor: colors.border,

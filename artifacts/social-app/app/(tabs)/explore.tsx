@@ -5,16 +5,18 @@ import { Search01Icon, Cancel01Icon, Tag01Icon, ImageIcon } from "@hugeicons/cor
 import {
   ActivityIndicator,
   FlatList,
-  Image,
+  Platform,
   Text,
   TextInput,
   TouchableOpacity,
   View,
   useWindowDimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import { useGetExplorePosts, useSearch } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "@/components/UserAvatar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const COLUMN = 3;
 const GAP = 1;
@@ -24,6 +26,8 @@ export default function ExploreScreen() {
   const ITEM_SIZE = (width - GAP * (COLUMN - 1)) / COLUMN;
   const colors = useColors();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
@@ -49,8 +53,9 @@ export default function ExploreScreen() {
       {/* Search bar */}
       <View
         style={{
+          paddingTop: topPadding,
           paddingHorizontal: 16,
-          paddingVertical: 10,
+          paddingBottom: 10,
           backgroundColor: colors.background,
           borderBottomWidth: 0.5,
           borderBottomColor: colors.border,
@@ -196,7 +201,7 @@ export default function ExploreScreen() {
                     <Image
                       source={{ uri: item.imageUrl }}
                       style={{ width: 44, height: 44, borderRadius: 6 }}
-                      resizeMode="cover"
+                      contentFit="cover"
                     />
                   ) : (
                     <View style={{ width: 44, height: 44, borderRadius: 6, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center' }}>
@@ -240,7 +245,7 @@ export default function ExploreScreen() {
                 <Image
                   source={{ uri: item.imageUrl }}
                   style={{ width: "100%", height: "100%" }}
-                  resizeMode="cover"
+                  contentFit="cover"
                 />
               ) : (
                 <View

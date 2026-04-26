@@ -12,7 +12,8 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { Text } from "@/components/Text";
 import React, { useState, useCallback } from "react";
-import { Image, Platform, StyleSheet, TouchableOpacity, View, Share } from "react-native";
+import { Platform, StyleSheet, TouchableOpacity, View, Share } from "react-native";
+import { Image } from "expo-image";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "./UserAvatar";
 import { useCreatePost } from "@workspace/api-client-react";
@@ -233,7 +234,7 @@ export function PostCard({
           <Image
             source={{ uri: imageUrl }}
             style={{ width: '100%', aspectRatio: 16 / 9 }}
-            resizeMode="cover"
+            contentFit="cover"
           />
         </View>
       )}

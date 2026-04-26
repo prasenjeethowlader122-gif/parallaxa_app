@@ -20,6 +20,7 @@ import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { useUpdateUser, useGetMe } from "@workspace/api-client-react";
 import { Switch } from "react-native";
+import SocialNative from "@/modules/social-native";
 
 export default function SettingsScreen() {
   const colors = useColors();
@@ -105,7 +106,18 @@ export default function SettingsScreen() {
         {
           icon: InformationCircleIcon,
           label: "About",
-          onPress: () => {},
+          onPress: () => {
+             try {
+                if (SocialNative) {
+                  const greeting = SocialNative.getGreeting();
+                  Alert.alert("Native Module Info", greeting);
+                } else {
+                  Alert.alert("Error", "Native module not available (not on Android APK)");
+                }
+             } catch(e) {
+                Alert.alert("Error", "Native module error");
+             }
+          },
         },
       ],
     },

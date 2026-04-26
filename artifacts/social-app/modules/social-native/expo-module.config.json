@@ -1,0 +1,8 @@
+{
+  "name": "SocialNative",
+  "platforms": {
+    "android": {
+      "package": "com.parallaxa.social.native"
+    }
+  }
+}

@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
-  Image,
   Platform,
   RefreshControl,
   StyleSheet,
@@ -11,6 +10,7 @@ import {
   View,
   Animated,
 } from "react-native";
+import { Image } from "expo-image";
 import { Text } from "@/components/Text"
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,8 +46,6 @@ const { width } = Dimensions.get("window");
 const GRID_COL = 3;
 const GRID_GAP = 1;
 const GRID_ITEM = (width - GRID_GAP * (GRID_COL - 1)) / GRID_COL;
-const insets = useSafeAreaInsets();
-const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
 type Tab = "posts" | "replies" | "media" | "likes";
 const TABS: { id: Tab; label: string }[] = [
@@ -116,7 +114,7 @@ const GridItem = ({ item, onPress }: { item: any; onPress: () => void }) => (
       <Image
         source={{ uri: item.imageUrl }}
         style={styles.gridImage}
-        resizeMode="cover"
+        contentFit="cover"
       />
     ) : (
       <View style={styles.gridTextCell}>
@@ -132,7 +130,7 @@ const GridItem = ({ item, onPress }: { item: any; onPress: () => void }) => (
 const CoverBanner = ({ uri }: { uri?: string | null }) => (
   <View style={styles.cover} className = 'm-4 rounded-2xl'>
     {uri ? (
-      <Image source={{ uri }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+      <Image source={{ uri }} style={StyleSheet.absoluteFillObject} contentFit="cover" />
     ) : (
       <View style={styles.coverFallback} />
     )}
@@ -142,6 +140,7 @@ const CoverBanner = ({ uri }: { uri?: string | null }) => (
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function UserProfileScreen() {
   const insets = useSafeAreaInsets();
+  const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user: me } = useAuth();
@@ -207,32 +206,6 @@ export default function UserProfileScreen() {
 
   const Header = () => (
     <View style={styles.headerContainer}>
-      {/* ── Top nav ── */}
-      <View style={[styles.topNav, { paddingTop: topPadding }]}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.navBtn}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={22} color="#0f1419" strokeWidth={2} />
-        </TouchableOpacity>
-
-        <View style={styles.navCenter}>
-          {profile && (
-            <>
-              <Text style={styles.navName} numberOfLines={1}>
-                {profile.displayName}
-              </Text>
-              <Text style={styles.navPostCount}>{profile.postsCount} posts</Text>
-            </>
-          )}
-        </View>
-
-        <TouchableOpacity style={styles.navBtn} onPress={()=>router.push('/settings' as any)}>
-          <HugeiconsIcon icon={MoreHorizontalIcon} size={22} color="#0f1419" strokeWidth={1.5} />
-        </TouchableOpacity>
-      </View>
-
       {/* ── Cover ── */}
       <CoverBanner />
 
@@ -380,6 +353,32 @@ export default function UserProfileScreen() {
 
   return (
     <View style={styles.root}>
+      {/* ── Top nav (Sticky) ── */}
+      <View style={[styles.topNav, { paddingTop: topPadding, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#f2f2f2' }]}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.navBtn}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={22} color="#0f1419" strokeWidth={2} />
+        </TouchableOpacity>
+
+        <View style={styles.navCenter}>
+          {profile && (
+            <>
+              <Text style={styles.navName} numberOfLines={1}>
+                {profile.displayName}
+              </Text>
+              <Text style={styles.navPostCount}>{profile.postsCount} posts</Text>
+            </>
+          )}
+        </View>
+
+        <TouchableOpacity style={styles.navBtn} onPress={()=>router.push('/settings' as any)}>
+          <HugeiconsIcon icon={MoreHorizontalIcon} size={22} color="#0f1419" strokeWidth={1.5} />
+        </TouchableOpacity>
+      </View>
+
       <FlatList
         data={posts}
         keyExtractor={(item: any) => item.id}
