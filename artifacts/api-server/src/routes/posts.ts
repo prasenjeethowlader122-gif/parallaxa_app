@@ -14,6 +14,7 @@ import { eq, and, desc, inArray, sql, isNull } from "drizzle-orm";
 import { authenticate, optionalAuthenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
 import { logger } from "../lib/logger";
+import { sanitize } from "../lib/sanitize";
 
 const router = Router();
 
@@ -77,7 +78,9 @@ async function formatPost(
 // Create a post or a comment/reply (if parentPostId is provided)
 router.post("/posts", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { content, imageUrl, videoUrl, location, hashtags, parentPostId } = req.body;
+    const content = sanitize(req.body.content);
+    const location = sanitize(req.body.location);
+    const { imageUrl, videoUrl, hashtags, parentPostId } = req.body;
 
     if (!content && !imageUrl && !videoUrl) {
       res.status(400).json({ error: "Bad Request", message: "Post must have content, image, or video" });

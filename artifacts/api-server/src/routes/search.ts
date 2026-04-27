@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, postsTable, hashtagsTable, likesTable, savedPostsTable } from "@workspace/db";
-import { like, sql } from "drizzle-orm";
+import { like, sql, or, ilike, eq, and } from "drizzle-orm";
 import { authenticate, optionalAuthenticate, type AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
@@ -24,7 +24,7 @@ router.get("/search", optionalAuthenticate, async (req: AuthRequest, res) => {
       const rows = await db
         .select()
         .from(usersTable)
-        .where(sql`${usersTable.username} ILIKE ${pattern} OR ${usersTable.displayName} ILIKE ${pattern}`)
+        .where(or(ilike(usersTable.username, pattern), ilike(usersTable.displayName, pattern)))
         .limit(10);
       users = rows.map((u) => ({
         id: u.id,
@@ -40,12 +40,12 @@ router.get("/search", optionalAuthenticate, async (req: AuthRequest, res) => {
       const rows = await db
         .select()
         .from(postsTable)
-        .where(sql`${postsTable.content} ILIKE ${pattern}`)
+        .where(ilike(postsTable.content, pattern))
         .limit(10);
       posts = await Promise.all(rows.map(async (p) => {
-        const [author] = await db.select().from(usersTable).where(sql`${usersTable.id} = ${p.userId}`).limit(1);
-        const liked = req.userId ? (await db.select().from(likesTable).where(sql`${likesTable.userId} = ${req.userId} AND ${likesTable.postId} = ${p.id}`).limit(1))[0] : null;
-        const saved = req.userId ? (await db.select().from(savedPostsTable).where(sql`${savedPostsTable.userId} = ${req.userId} AND ${savedPostsTable.postId} = ${p.id}`).limit(1))[0] : null;
+        const [author] = await db.select().from(usersTable).where(eq(usersTable.id, p.userId)).limit(1);
+        const liked = req.userId ? (await db.select().from(likesTable).where(and(eq(likesTable.userId, req.userId), eq(likesTable.postId, p.id))).limit(1))[0] : null;
+        const saved = req.userId ? (await db.select().from(savedPostsTable).where(and(eq(savedPostsTable.userId, req.userId), eq(savedPostsTable.postId, p.id))).limit(1))[0] : null;
         return {
           id: p.id,
           author: author ? { id: author.id, username: author.username, displayName: author.displayName, avatarUrl: author.avatarUrl, isVerified: author.isVerified, isFollowing: false } : null,
