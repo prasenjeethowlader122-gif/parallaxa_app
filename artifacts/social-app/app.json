@@ -42,8 +42,6 @@
         }
       ],
       "@react-native-firebase/app",
-      "@react-native-firebase/auth",
-      "@react-native-firebase/remote-config",
       [
         "expo-build-properties",
         {
