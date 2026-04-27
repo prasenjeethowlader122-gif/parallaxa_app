@@ -1,6 +1,8 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { HugeiconsIcon } from '@hugeicons/react-native';
+import auth from '@react-native-firebase/auth';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import {
   Mail01Icon,
   LockPasswordIcon,
@@ -19,8 +21,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Image,
 } from "react-native";
+import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { getApiBaseUrl } from "@/lib/apiUrl";
@@ -120,6 +122,58 @@ export default function LoginScreen() {
       setIsLoading(false);
     }
   };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      setErrors({});
+
+      // Check if your device supports Google Play
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      // Get the users ID token
+      const signInResult = await GoogleSignin.signIn();
+      const idToken = signInResult.data?.idToken;
+
+      if (!idToken) {
+        throw new Error("No ID token found");
+      }
+
+      // Create a Google credential with the token
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+      // Sign-in the user with the credential
+      const userCredential = await auth().signInWithCredential(googleCredential);
+      const firebaseUser = userCredential.user;
+
+      // Now we need to sync this user with our backend
+      const baseUrl = getApiBaseUrl();
+      const idTokenFirebase = await firebaseUser.getIdToken();
+
+      const response = await fetch(`${baseUrl}/api/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: idTokenFirebase }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({
+          general: data.message || "Failed to sign in with Google. Please try again.",
+        });
+        return;
+      }
+
+      await login(data.token, data.user);
+    } catch (error: any) {
+      console.error(error);
+      setErrors({
+        general: "Google sign in failed. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const topPt = insets.top + (Platform.OS === "web" ? 24 : 0);
   const bottomPb = insets.bottom + 24;
@@ -143,7 +197,7 @@ export default function LoginScreen() {
           <Image
             source={require('@/assets/images/text-logo.svg')}
             style={{ width: 180, height: 40 }}
-            resizeMode="contain"
+            contentFit="contain"
           />
         </View>
 
@@ -325,6 +379,22 @@ export default function LoginScreen() {
             <Text className="text-white font-bold text-base">Sign in</Text>
           )}
         </TouchableOpacity>
+
+        {/* Google Sign In Button */}
+        {Platform.OS !== 'web' && !showTotpInput && (
+          <TouchableOpacity
+            className="h-14 rounded-full items-center justify-center mb-4 bg-white border border-slate-200 flex-row gap-3"
+            onPress={handleGoogleLogin}
+            disabled={isLoading}
+            activeOpacity={0.8}
+          >
+            <Image
+              source={{ uri: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg' }}
+              style={{ width: 20, height: 20 }}
+            />
+            <Text className="text-slate-900 font-bold text-base">Continue with Google</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Divider */}
         <View className="flex-row items-center gap-3 my-6">

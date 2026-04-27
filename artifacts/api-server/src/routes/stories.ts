@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { storiesTable, storyViewsTable, usersTable, followsTable } from "@workspace/db";
+import { storiesTable, storyViewsTable, usersTable, followsTable, storyReactionsTable } from "@workspace/db";
 import { eq, and, inArray, desc, sql } from "drizzle-orm";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
@@ -24,10 +24,29 @@ router.get("/stories", authenticate, async (req: AuthRequest, res) => {
     const views = await db.select({ storyId: storyViewsTable.storyId }).from(storyViewsTable).where(eq(storyViewsTable.userId, myId));
     const viewedIds = new Set(views.map((v) => v.storyId));
 
-    const groups: Record<string, { user: typeof usersTable.$inferSelect; stories: typeof storiesTable.$inferSelect[] }> = {};
+    const storyIds = stories.map(s => s.story.id);
+    const reactions = storyIds.length > 0
+      ? await db.select().from(storyReactionsTable).where(inArray(storyReactionsTable.storyId, storyIds))
+      : [];
+
+    const groups: Record<string, { user: typeof usersTable.$inferSelect; stories: any[] }> = {};
     for (const { story, user } of stories) {
       if (!groups[user.id]) groups[user.id] = { user, stories: [] };
-      groups[user.id].stories.push(story);
+
+      const storyReactions = reactions.filter(r => r.storyId === story.id);
+      const myReaction = storyReactions.find(r => r.userId === myId)?.emoji || null;
+
+      const reactionCounts = storyReactions.reduce((acc: any, r) => {
+        acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+        return acc;
+      }, {});
+
+      groups[user.id].stories.push({
+        ...story,
+        reactions: Object.entries(reactionCounts).map(([emoji, count]) => ({ emoji, count })),
+        myReaction,
+        isViewed: viewedIds.has(story.id)
+      });
     }
 
     const result = Object.values(groups).map(({ user, stories: ss }) => ({
@@ -46,7 +65,9 @@ router.get("/stories", authenticate, async (req: AuthRequest, res) => {
         mediaType: s.mediaType,
         duration: s.duration,
         viewsCount: s.viewsCount,
-        isViewed: viewedIds.has(s.id),
+        reactions: s.reactions,
+        myReaction: s.myReaction,
+        isViewed: s.isViewed,
         createdAt: s.createdAt,
         expiresAt: s.expiresAt,
       })),
@@ -101,6 +122,48 @@ router.delete("/stories/:storyId", authenticate, async (req: AuthRequest, res) =
     }
     await db.delete(storiesTable).where(eq(storiesTable.id, req.params.storyId as string));
     res.json({ message: "Story deleted" });
+  } catch (err) {
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
+router.post("/stories/:storyId/react", authenticate, async (req: AuthRequest, res) => {
+  try {
+    const storyId = req.params.storyId as string;
+    const { emoji } = req.body;
+    const myId = req.userId!;
+
+    if (!emoji) {
+      res.status(400).json({ error: "Bad Request", message: "emoji is required" });
+      return;
+    }
+
+    const [existing] = await db.select().from(storyReactionsTable).where(and(eq(storyReactionsTable.storyId, storyId), eq(storyReactionsTable.userId, myId))).limit(1);
+
+    if (existing) {
+      await db.update(storyReactionsTable).set({ emoji }).where(eq(storyReactionsTable.id, existing.id));
+    } else {
+      await db.insert(storyReactionsTable).values({
+        id: generateId(),
+        storyId,
+        userId: myId,
+        emoji
+      });
+    }
+
+    res.json({ message: "Story reacted" });
+  } catch (err) {
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
+router.delete("/stories/:storyId/react", authenticate, async (req: AuthRequest, res) => {
+  try {
+    const storyId = req.params.storyId as string;
+    const myId = req.userId!;
+
+    await db.delete(storyReactionsTable).where(and(eq(storyReactionsTable.storyId, storyId), eq(storyReactionsTable.userId, myId)));
+    res.json({ message: "Reaction removed" });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }

@@ -11,6 +11,8 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { setBaseUrl } from "@workspace/api-client-react";
 import { Platform, View, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import remoteConfig from "@react-native-firebase/remote-config";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
@@ -20,6 +22,21 @@ import { getApiBaseUrl } from "@/lib/apiUrl";
 SplashScreen.preventAutoHideAsync();
 
 setBaseUrl(getApiBaseUrl());
+
+if (Platform.OS !== "web") {
+  GoogleSignin.configure({
+    webClientId: "534372451622-6b9v969v6k8q9v9k6b9v9k6b9v9k6b9v.apps.googleusercontent.com", // This will need to be updated with real webClientId from Firebase Console
+    offlineAccess: true,
+  });
+
+  remoteConfig()
+    .setDefaults({
+      story_duration: 5,
+      enable_reactions: true,
+    })
+    .then(() => remoteConfig().fetchAndActivate())
+    .catch(error => console.error("Remote Config Error:", error));
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {

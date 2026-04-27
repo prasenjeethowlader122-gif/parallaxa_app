@@ -1,4 +1,5 @@
 import app from "./app";
+import admin from 'firebase-admin';
 import { createServer } from "http";
 import { setupSocket } from "./socket";
 import { logger } from "./lib/logger";
@@ -17,6 +18,21 @@ const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+// Initialize Firebase Admin
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    logger.info("Firebase Admin initialized");
+  } catch (err) {
+    logger.error({ err }, "Failed to initialize Firebase Admin");
+  }
+} else {
+  logger.warn("FIREBASE_SERVICE_ACCOUNT not provided, Google Auth might not work");
 }
 
 const httpServer = createServer(app);

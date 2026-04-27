@@ -154,6 +154,11 @@ export const StoryMediaType = {
   video: 'video',
 } as const;
 
+export type StoryReactionsItem = {
+  emoji: string;
+  count: number;
+};
+
 export interface Story {
   id: string;
   userId: string;
@@ -163,6 +168,8 @@ export interface Story {
   duration: number;
   viewsCount: number;
   isViewed: boolean;
+  reactions: StoryReactionsItem[];
+  myReaction?: string | null;
   createdAt: string;
   expiresAt: string;
 }
@@ -279,6 +286,10 @@ export type ConflictResponse = ErrorResponse;
 export type CursorParameter = string;
 
 export type LimitParameter = number;
+
+export type ReactStoryBody = {
+  emoji: string;
+};
 
 export type ForgotPasswordBody = {
   email: string;
