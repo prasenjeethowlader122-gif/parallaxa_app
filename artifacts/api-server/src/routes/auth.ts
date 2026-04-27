@@ -1,4 +1,5 @@
 import { Router } from "express";
+import admin from 'firebase-admin';
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
@@ -90,6 +91,81 @@ router.post("/auth/register", async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "register error");
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
+router.post("/auth/google", async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      res.status(400).json({ error: "Bad Request", message: "Token required" });
+      return;
+    }
+
+    // Verify Firebase token
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const { email, name, picture } = decodedToken;
+
+    if (!email) {
+      res.status(400).json({ error: "Bad Request", message: "Email not provided by Google" });
+      return;
+    }
+
+    let [user] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+
+    if (!user) {
+      // Create new user if doesn't exist
+      const id = generateId();
+      const username = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') + Math.floor(Math.random() * 1000);
+
+      const logoSVGBase64 = generateTextLogoSVGBase64(name || username, {
+        width: 1200,
+        height: 400,
+        fontSize: 140,
+        background: '#764abc'
+      });
+
+      [user] = await db.insert(usersTable).values({
+        id,
+        username,
+        email,
+        passwordHash: 'GOOGLE_AUTH', // Placeholder
+        displayName: name || username,
+        avatarUrl: picture || logoSVGBase64,
+        dateOfBirth: new Date('2000-01-01'), // Default DOB for Google users
+      }).returning();
+    }
+
+    if (user.isFrozen) {
+      res.status(403).json({ error: "Forbidden", message: "Your account has been frozen" });
+      return;
+    }
+
+    const authToken = generateToken(user.id);
+    res.json({
+      token: authToken,
+      twoFactorRequired: false,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        displayName: user.displayName,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        website: user.website,
+        isVerified: user.isVerified,
+        role: user.role,
+        twoFactorEnabled: user.twoFactorEnabled,
+        isPrivate: user.isPrivate,
+        followersCount: user.followersCount,
+        followingCount: user.followingCount,
+        postsCount: user.postsCount,
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (err) {
+    logger.error({ err }, "google auth error");
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
 });

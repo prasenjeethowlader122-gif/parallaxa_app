@@ -93,6 +93,48 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+  /stories/{storyId}/react:
+    post:
+      operationId: reactStory
+      tags: [stories]
+      summary: React to a story
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/storyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emoji:
+                  type: string
+              required: [emoji]
+      responses:
+        "200":
+          description: Story reacted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+    delete:
+      operationId: deleteStoryReaction
+      tags: [stories]
+      summary: Remove reaction from a story
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/storyId"
+      responses:
+        "200":
+          description: Reaction removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
   /auth/me:
     get:
       operationId: getMe
@@ -1363,13 +1405,26 @@ components:
           type: integer
         isViewed:
           type: boolean
+        reactions:
+          type: array
+          items:
+            type: object
+            properties:
+              emoji:
+                type: string
+              count:
+                type: integer
+            required: [emoji, count]
+        myReaction:
+          type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
         expiresAt:
           type: string
           format: date-time
-      required: [id, userId, mediaUrl, mediaType, duration, viewsCount, isViewed, createdAt, expiresAt]
+      required: [id, userId, mediaUrl, mediaType, duration, viewsCount, isViewed, reactions, createdAt, expiresAt]
 
     StoryGroup:
       type: object

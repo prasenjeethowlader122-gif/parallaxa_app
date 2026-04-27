@@ -11,7 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "@/components/Text";
-import { useGetStories, useViewStory } from "@workspace/api-client-react";
+import { useGetStories, useViewStory, useReactStory, useDeleteStoryReaction } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "@/components/UserAvatar";
 import { HugeiconsIcon } from "@hugeicons/react-native";
@@ -32,18 +32,26 @@ export default function StoryViewScreen() {
   const insets = useSafeAreaInsets();
   const colors = useColors();
 
-  const { data: storyGroups, isLoading } = useGetStories();
+  const { data: storyGroups, isLoading, refetch } = useGetStories();
   const { mutate: viewStory } = useViewStory();
+  const { mutate: reactStory } = useReactStory();
+  const { mutate: deleteReaction } = useDeleteStoryReaction();
 
   const group = storyGroups?.find((g) => g.user.id === userId);
   const stories = group?.stories || [];
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const progress = useSharedValue(0);
+  const contentOpacity = useSharedValue(1);
 
   const nextStory = () => {
     if (currentIndex < stories.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      contentOpacity.value = withTiming(0, { duration: 150 }, (finished) => {
+        if (finished) {
+          runOnJS(setCurrentIndex)(currentIndex + 1);
+          contentOpacity.value = withTiming(1, { duration: 150 });
+        }
+      });
     } else {
       router.back();
     }
@@ -51,7 +59,12 @@ export default function StoryViewScreen() {
 
   const prevStory = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+      contentOpacity.value = withTiming(0, { duration: 150 }, (finished) => {
+        if (finished) {
+          runOnJS(setCurrentIndex)(currentIndex - 1);
+          contentOpacity.value = withTiming(1, { duration: 150 });
+        }
+      });
     }
   };
 
@@ -74,9 +87,29 @@ export default function StoryViewScreen() {
     }
   }, [currentIndex, stories.length]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  const progressStyle = useAnimatedStyle(() => ({
     width: `${progress.value * 100}%`,
   }));
+
+  const contentAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+  }));
+
+  const handleReact = (emoji: string) => {
+    const currentStory = stories[currentIndex];
+    if (currentStory.myReaction === emoji) {
+      deleteReaction({ storyId: currentStory.id }, {
+        onSuccess: () => refetch()
+      });
+    } else {
+      reactStory({
+        storyId: currentStory.id,
+        data: { emoji }
+      }, {
+        onSuccess: () => refetch()
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -103,17 +136,19 @@ export default function StoryViewScreen() {
     <View style={styles.container}>
       <StatusBar hidden />
 
-      {currentStory.mediaType === "image" ? (
-        <Image
-          source={{ uri: currentStory.mediaUrl }}
-          style={styles.media}
-          resizeMode="cover"
-        />
-      ) : (
-        <View style={[styles.media, { backgroundColor: "#333", justifyContent: "center", alignItems: "center" }]}>
-          <Text style={{ color: "#fff" }}>Video Preview Not Supported</Text>
-        </View>
-      )}
+      <Animated.View style={[styles.media, contentAnimatedStyle]}>
+        {currentStory.mediaType === "image" ? (
+          <Image
+            source={{ uri: currentStory.mediaUrl }}
+            style={styles.media}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.media, { backgroundColor: "#333", justifyContent: "center", alignItems: "center" }]}>
+            <Text style={{ color: "#fff" }}>Video Preview Not Supported</Text>
+          </View>
+        )}
+      </Animated.View>
 
       {/* Touch regions for navigation */}
       <View style={styles.touchContainer}>
@@ -130,7 +165,7 @@ export default function StoryViewScreen() {
               {index < currentIndex ? (
                 <View style={[styles.progressBarFilled, { width: "100%" }]} />
               ) : index === currentIndex ? (
-                <Animated.View style={[styles.progressBarFilled, animatedStyle]} />
+                <Animated.View style={[styles.progressBarFilled, progressStyle]} />
               ) : null}
             </View>
           ))}
@@ -154,6 +189,37 @@ export default function StoryViewScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Reactions Overlay */}
+      <View style={[styles.reactionsContainer, { paddingBottom: insets.bottom + 20 }]}>
+        {/* Reaction Summary */}
+        {currentStory.reactions && currentStory.reactions.length > 0 && (
+          <View style={styles.reactionSummary}>
+            {currentStory.reactions.map((r: any) => (
+              <View key={r.emoji} style={styles.reactionCount}>
+                <Text style={{ fontSize: 12 }}>{r.emoji}</Text>
+                <Text style={{ color: "#fff", fontSize: 10, marginLeft: 2, fontWeight: "600" }}>{r.count}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Reaction Bar */}
+        <View style={styles.reactionPicker}>
+          {["❤️", "😂", "😮", "😢", "🔥"].map((emoji) => (
+            <TouchableOpacity
+              key={emoji}
+              onPress={() => handleReact(emoji)}
+              style={[
+                styles.reactionButton,
+                currentStory.myReaction === emoji && { backgroundColor: "rgba(255,255,255,0.4)" }
+              ]}
+            >
+              <Text style={{ fontSize: 24 }}>{emoji}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
     </View>
   );
 }
@@ -166,6 +232,7 @@ const styles = StyleSheet.create({
   media: {
     width: width,
     height: height,
+    position: 'absolute',
   },
   touchContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -202,5 +269,42 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  reactionsContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  reactionPicker: {
+    flexDirection: "row",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 30,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+  reactionButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  reactionSummary: {
+    flexDirection: "row",
+    gap: 6,
+    marginBottom: 12,
+  },
+  reactionCount: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
 });

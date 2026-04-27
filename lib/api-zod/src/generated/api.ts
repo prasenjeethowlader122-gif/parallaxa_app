@@ -78,6 +78,34 @@ export const LogoutResponse = zod.object({
 
 
 /**
+ * @summary React to a story
+ */
+export const ReactStoryParams = zod.object({
+  "storyId": zod.coerce.string()
+})
+
+export const ReactStoryBody = zod.object({
+  "emoji": zod.string()
+})
+
+export const ReactStoryResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Remove reaction from a story
+ */
+export const DeleteStoryReactionParams = zod.object({
+  "storyId": zod.coerce.string()
+})
+
+export const DeleteStoryReactionResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
  * @summary Get current user
  */
 export const GetMeResponse = zod.object({
@@ -407,6 +435,11 @@ export const GetUserStoriesResponseItem = zod.object({
   "duration": zod.number().describe('Duration in seconds'),
   "viewsCount": zod.number(),
   "isViewed": zod.boolean(),
+  "reactions": zod.array(zod.object({
+  "emoji": zod.string(),
+  "count": zod.number()
+})),
+  "myReaction": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "expiresAt": zod.coerce.date()
 })
@@ -763,6 +796,11 @@ export const GetStoriesResponseItem = zod.object({
   "duration": zod.number().describe('Duration in seconds'),
   "viewsCount": zod.number(),
   "isViewed": zod.boolean(),
+  "reactions": zod.array(zod.object({
+  "emoji": zod.string(),
+  "count": zod.number()
+})),
+  "myReaction": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "expiresAt": zod.coerce.date()
 })),

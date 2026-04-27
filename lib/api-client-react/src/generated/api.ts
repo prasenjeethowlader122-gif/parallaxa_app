@@ -49,6 +49,7 @@ import type {
   NotificationPage,
   Post,
   PostPage,
+  ReactStoryBody,
   RegisterInput,
   ResetPasswordBody,
   SearchParams,
@@ -369,6 +370,148 @@ export const useLogout = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getLogoutMutationOptions(options));
+    }
+
+/**
+ * @summary React to a story
+ */
+export const getReactStoryUrl = (storyId: string,) => {
+
+
+
+
+  return `/api/stories/${storyId}/react`
+}
+
+export const reactStory = async (storyId: string,
+    reactStoryBody: ReactStoryBody, options?: RequestInit): Promise<MessageResponse> => {
+
+  return customFetch<MessageResponse>(getReactStoryUrl(storyId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      reactStoryBody,)
+  }
+);}
+
+
+
+
+export const getReactStoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactStory>>, TError,{storyId: string;data: BodyType<ReactStoryBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reactStory>>, TError,{storyId: string;data: BodyType<ReactStoryBody>}, TContext> => {
+
+const mutationKey = ['reactStory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reactStory>>, {storyId: string;data: BodyType<ReactStoryBody>}> = (props) => {
+          const {storyId,data} = props ?? {};
+
+          return  reactStory(storyId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReactStoryMutationResult = NonNullable<Awaited<ReturnType<typeof reactStory>>>
+    export type ReactStoryMutationBody = BodyType<ReactStoryBody>
+    export type ReactStoryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary React to a story
+ */
+export const useReactStory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactStory>>, TError,{storyId: string;data: BodyType<ReactStoryBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reactStory>>,
+        TError,
+        {storyId: string;data: BodyType<ReactStoryBody>},
+        TContext
+      > => {
+      return useMutation(getReactStoryMutationOptions(options));
+    }
+
+/**
+ * @summary Remove reaction from a story
+ */
+export const getDeleteStoryReactionUrl = (storyId: string,) => {
+
+
+
+
+  return `/api/stories/${storyId}/react`
+}
+
+export const deleteStoryReaction = async (storyId: string, options?: RequestInit): Promise<MessageResponse> => {
+
+  return customFetch<MessageResponse>(getDeleteStoryReactionUrl(storyId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteStoryReactionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStoryReaction>>, TError,{storyId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteStoryReaction>>, TError,{storyId: string}, TContext> => {
+
+const mutationKey = ['deleteStoryReaction'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteStoryReaction>>, {storyId: string}> = (props) => {
+          const {storyId} = props ?? {};
+
+          return  deleteStoryReaction(storyId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteStoryReactionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteStoryReaction>>>
+
+    export type DeleteStoryReactionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove reaction from a story
+ */
+export const useDeleteStoryReaction = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStoryReaction>>, TError,{storyId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteStoryReaction>>,
+        TError,
+        {storyId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteStoryReactionMutationOptions(options));
     }
 
 /**

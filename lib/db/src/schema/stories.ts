@@ -21,6 +21,14 @@ export const storyViewsTable = pgTable("story_views", {
   viewedAt: timestamp("viewed_at").notNull().defaultNow(),
 });
 
+export const storyReactionsTable = pgTable("story_reactions", {
+  id: text("id").primaryKey(),
+  storyId: text("story_id").notNull().references(() => storiesTable.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  emoji: text("emoji").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertStorySchema = createInsertSchema(storiesTable).omit({
   viewsCount: true,
   createdAt: true,

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { StoryMediaType } from './storyMediaType';
+import type { StoryReactionsItem } from './storyReactionsItem';
 
 export interface Story {
   id: string;
@@ -16,6 +17,8 @@ export interface Story {
   duration: number;
   viewsCount: number;
   isViewed: boolean;
+  reactions: StoryReactionsItem[];
+  myReaction?: string | null;
   createdAt: Date;
   expiresAt: Date;
 }
