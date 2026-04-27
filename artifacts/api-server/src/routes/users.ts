@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, postsTable, followsTable, storiesTable } from "@workspace/db";
-import { eq, and, desc, isNull, sql } from "drizzle-orm";
+import { eq, and, desc, isNull, sql, notInArray, ne } from "drizzle-orm";
 import { authenticate, optionalAuthenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
+import { sanitize } from "../lib/sanitize";
 import generateTextLogoSVGBase64 from './svg-logo'
 
 const router = Router();
@@ -43,7 +44,7 @@ function formatUserSummary(user: typeof usersTable.$inferSelect, isFollowing = f
 router.get("/users/suggested", authenticate, async (req: AuthRequest, res) => {
   try {
     const myId = req.userId!;
-    const alreadyFollowing = db
+    const alreadyFollowing = await db
       .select({ followingId: followsTable.followingId })
       .from(followsTable)
       .where(eq(followsTable.followerId, myId as string));
@@ -52,7 +53,12 @@ router.get("/users/suggested", authenticate, async (req: AuthRequest, res) => {
       .select()
       .from(usersTable)
       .where(
-        sql`${usersTable.id} != ${myId} AND ${usersTable.id} NOT IN (${alreadyFollowing})`
+        and(
+          ne(usersTable.id, myId),
+          alreadyFollowing.length > 0
+            ? notInArray(usersTable.id, alreadyFollowing.map(f => f.followingId))
+            : undefined
+        )
       )
       .limit(10);
     
@@ -127,7 +133,10 @@ router.put("/users/:userId", authenticate, async (req: AuthRequest, res) => {
       res.status(403).json({ error: "Forbidden", message: "Cannot update another user" });
       return;
     }
-    const { displayName, bio, website, isPrivate } = req.body;
+    const displayName = sanitize(req.body.displayName);
+    const bio = sanitize(req.body.bio);
+    const website = sanitize(req.body.website);
+    const { isPrivate } = req.body;
     let { avatarUrl } = req.body;
     if (displayName && !avatarUrl) { avatarUrl = generateTextLogoSVGBase64(displayName) }
     const [updated] = await db

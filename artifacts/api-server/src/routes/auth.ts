@@ -2,10 +2,11 @@ import { Router } from "express";
 import admin from 'firebase-admin';
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, inArray } from "drizzle-orm";
 import { generateId, generateToken, hashPassword, comparePassword } from "../lib/auth";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 import { logger } from "../lib/logger";
+import { sanitize } from "../lib/sanitize";
 import generateTextLogoSVGBase64 from './svg-logo'
 import { generateSecret, verify, generateURI } from 'otplib';
 import QRCode from 'qrcode';
@@ -14,7 +15,9 @@ const router = Router();
 
 router.post("/auth/register", async (req, res) => {
   try {
-    const { username, email, password, displayName, dateOfBirth } = req.body;
+    const username = sanitize(req.body.username);
+    const displayName = sanitize(req.body.displayName);
+    const { email, password, dateOfBirth } = req.body;
     if (!username || !email || !password || !displayName || !dateOfBirth) {
       res.status(400).json({ error: "Bad Request", message: "Missing required fields" });
       return;
@@ -492,7 +495,7 @@ router.get("/auth/suggest-usernames", async (req, res) => {
     const existing = await db
       .select({ username: usersTable.username })
       .from(usersTable)
-      .where(sql`${usersTable.username} IN (${suggestions})`);
+      .where(inArray(usersTable.username, suggestions));
 
     const existingSet = new Set(existing.map((u: { username: string }) => u.username.toLowerCase()));
     const filtered = suggestions.filter((s: string) => !existingSet.has(s));

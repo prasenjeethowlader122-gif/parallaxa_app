@@ -4,6 +4,7 @@ import { commentsTable, usersTable, postsTable, notificationsTable } from "@work
 import { eq, and, desc, sql } from "drizzle-orm";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
+import { sanitize } from "../lib/sanitize";
 
 const router = Router();
 
@@ -46,7 +47,8 @@ router.get("/posts/:postId/comments", authenticate, async (req: AuthRequest, res
 router.post("/posts/:postId/comments", authenticate, async (req: AuthRequest, res) => {
   try {
     const postId = req.params.postId as string;
-    const { content, parentId } = req.body;
+    const content = sanitize(req.body.content);
+    const { parentId } = req.body;
     if (!content) {
       res.status(400).json({ error: "Bad Request", message: "Content is required" });
       return;

@@ -28,7 +28,8 @@
     "pino": "^9",
     "pino-http": "^10",
     "qrcode": "^1.5.4",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "xss": "^1.0.15"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
