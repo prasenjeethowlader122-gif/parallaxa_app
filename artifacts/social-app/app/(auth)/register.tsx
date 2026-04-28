@@ -266,6 +266,7 @@ export default function RegisterScreen() {
         return;
       }
       await login(data.token, data.user);
+      router.replace("/(tabs)");
     } catch {
       setErrors({ general: "Connection failed. Check your internet and try again." });
     } finally {
@@ -451,9 +452,9 @@ export default function RegisterScreen() {
         {/* ── Logo ── */}
         <View className="items-center mb-8">
           <Image
-            source={require('@/assets/images/text-logo.svg')}
+            source={require('@/assets/images/text-logo-dark.svg')}
             style={{ width: 180, height: 40 }}
-            resizeMode="contain"
+            contentFit="contain"
           />
         </View>
 

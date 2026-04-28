@@ -1,9 +1,14 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { ArrowLeft01Icon, PencilEdit01Icon, Message01Icon } from "@hugeicons/core-free-icons";
 import {
-  ActivityIndicator, FlatList, Platform, RefreshControl, Text, TouchableOpacity, View,
+  ArrowLeft01Icon,
+  PencilEdit01Icon,
+  Message01Icon,
+  Search01Icon
+} from "@hugeicons/core-free-icons";
+import {
+  ActivityIndicator, FlatList, Platform, RefreshControl, Text, TextInput, TouchableOpacity, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetConversations } from "@workspace/api-client-react";
@@ -18,6 +23,7 @@ export default function MessagesScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data, isLoading, refetch } = useGetConversations();
 
@@ -28,7 +34,10 @@ export default function MessagesScreen() {
   };
 
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
-  const conversations = Array.isArray(data) ? data : [];
+  const conversations = Array.isArray(data) ? data.filter((c: any) =>
+    c.participant.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.participant.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+  ) : [];
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
@@ -48,6 +57,24 @@ export default function MessagesScreen() {
         <TouchableOpacity className="p-1">
           <HugeiconsIcon icon={PencilEdit01Icon} size={22} color={colors.foreground} />
         </TouchableOpacity>
+      </View>
+
+      {/* Search Bar */}
+      <View className="px-4 py-2">
+        <View
+          className="flex-row items-center px-3 py-2 rounded-xl"
+          style={{ backgroundColor: colors.muted }}
+        >
+          <HugeiconsIcon icon={Search01Icon} size={18} color={colors.mutedForeground} />
+          <TextInput
+            placeholder="Search messages..."
+            placeholderTextColor={colors.mutedForeground}
+            className="flex-1 ml-2 text-sm"
+            style={{ color: colors.foreground }}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
       </View>
 
       {isLoading ? (

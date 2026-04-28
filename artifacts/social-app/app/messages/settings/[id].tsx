@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetConversation } from "@workspace/api-client-react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "@/components/UserAvatar";
 import { HugeiconsIcon } from "@hugeicons/react-native";
@@ -19,6 +20,8 @@ import {
   Delete02Icon,
   UnavailableIcon,
   Flag01Icon,
+  PaintBoardIcon,
+  UserEditIcon,
 } from "@hugeicons/core-free-icons";
 
 export default function ChatSettingsScreen() {
@@ -29,6 +32,25 @@ export default function ChatSettingsScreen() {
 
   const { data: convoData } = useGetConversation(id ?? "");
   const participant = (convoData as any)?.participant;
+  const [nickname, setNickname] = React.useState("");
+  const [bgColor, setBgColor] = React.useState("#ffffff");
+
+  React.useEffect(() => {
+    if (id) {
+      AsyncStorage.getItem(`@chat_nickname_${id}`).then(val => val && setNickname(val));
+      AsyncStorage.getItem(`@chat_bg_${id}`).then(val => val && setBgColor(val));
+    }
+  }, [id]);
+
+  const saveNickname = async (val: string) => {
+    setNickname(val);
+    if (id) await AsyncStorage.setItem(`@chat_nickname_${id}`, val);
+  };
+
+  const saveBgColor = async (val: string) => {
+    setBgColor(val);
+    if (id) await AsyncStorage.setItem(`@chat_bg_${id}`, val);
+  };
 
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
@@ -108,6 +130,37 @@ export default function ChatSettingsScreen() {
             </TouchableOpacity>
           </View>
         )}
+
+        <View className="mt-4">
+          <Text className="px-4 py-2 text-xs font-bold uppercase" style={{ color: colors.mutedForeground }}>
+            Customization
+          </Text>
+          <View className="px-4 py-2">
+            <View className="flex-row items-center gap-3 bg-gray-50 rounded-xl px-3 py-1">
+              <HugeiconsIcon icon={UserEditIcon} size={20} color={colors.foreground} />
+              <TextInput
+                placeholder="Set Nickname"
+                value={nickname}
+                onChangeText={saveNickname}
+                className="flex-1 h-10 text-sm"
+                style={{ color: colors.foreground }}
+              />
+            </View>
+          </View>
+          <View className="px-4 py-2">
+            <View className="flex-row items-center gap-3 bg-gray-50 rounded-xl px-3 py-1">
+              <HugeiconsIcon icon={PaintBoardIcon} size={20} color={colors.foreground} />
+              <TextInput
+                placeholder="Chat Wallpaper Color (Hex)"
+                value={bgColor}
+                onChangeText={saveBgColor}
+                className="flex-1 h-10 text-sm"
+                style={{ color: colors.foreground }}
+              />
+              <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: bgColor, borderWIdth: 1, borderColor: '#ccc' }} />
+            </View>
+          </View>
+        </View>
 
         <View className="mt-4">
           <Text className="px-4 py-2 text-xs font-bold uppercase" style={{ color: colors.mutedForeground }}>

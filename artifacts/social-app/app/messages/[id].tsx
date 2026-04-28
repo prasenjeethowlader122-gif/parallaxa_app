@@ -17,12 +17,14 @@ import {
   SentIcon,
   SmileIcon,
   Image02Icon,
+  LockPasswordIcon,
 } from "@hugeicons/core-free-icons";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { EmojiPicker } from "@/components/EmojiPicker";
 import { GifPicker } from "@/components/GifPicker";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
+import { encrypt, decrypt } from "@/lib/crypto";
 
 export default function ConversationScreen() {
   const colors = useColors();
@@ -101,7 +103,7 @@ export default function ConversationScreen() {
     sendMessage({
       conversationId: id,
       data: {
-        content: finalContent || undefined,
+        content: finalContent ? encrypt(finalContent) : undefined,
         mediaUrl: mediaUrl || undefined
       }
     });
@@ -143,9 +145,14 @@ export default function ConversationScreen() {
           >
             <UserAvatar uri={participant.avatarUrl} size={36} />
             <View>
-              <Text className="text-base font-semibold" style={{ color: colors.foreground }}>{participant.username}</Text>
-              {typingUser?.isTyping && (
+              <View className="flex-row items-center gap-1">
+                <Text className="text-base font-semibold" style={{ color: colors.foreground }}>{participant.username}</Text>
+                <HugeiconsIcon icon={LockPasswordIcon} size={12} color={colors.mutedForeground} />
+              </View>
+              {typingUser?.isTyping ? (
                 <Text className="text-[11px]" style={{ color: colors.primary }}>typing...</Text>
+              ) : (
+                <Text className="text-[10px]" style={{ color: colors.mutedForeground }}>End-to-end encrypted</Text>
               )}
             </View>
           </TouchableOpacity>
@@ -195,7 +202,7 @@ export default function ConversationScreen() {
                     )}
                     {item.content && (
                       <Text className="text-[15px] leading-5" style={{ color: "#FFFFFF" }}>
-                        {item.content}
+                        {decrypt(item.content)}
                       </Text>
                     )}
                   </LinearGradient>
@@ -218,7 +225,7 @@ export default function ConversationScreen() {
                     )}
                     {item.content && (
                       <Text className="text-[15px] leading-5" style={{ color: colors.foreground }}>
-                        {item.content}
+                        {decrypt(item.content)}
                       </Text>
                     )}
                   </View>

@@ -1,7 +1,8 @@
 import { requireNativeModule } from 'expo-modules-core';
 
 interface SocialNativeModule {
-  getGreeting(): string;
+  pickImage(): Promise<string>;
+  watermarkImage(uri: string, logoBase64: string): Promise<string>;
 }
 
 let SocialNative: SocialNativeModule | null = null;
