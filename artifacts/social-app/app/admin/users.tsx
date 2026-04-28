@@ -6,7 +6,7 @@ import {
   ActivityIndicator, FlatList, Platform, RefreshControl, Text, TouchableOpacity, View, Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useSearch, useAuthTokenGetter } from "@workspace/api-client-react";
+import { useSearch } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -16,8 +16,7 @@ export default function AdminUsersScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user: currentUser } = useAuth();
-  const getToken = useAuthTokenGetter();
+  const { user: currentUser, token: authToken } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
 
   // Use search API to list users (as we don't have a specific /admin/users GET)
@@ -26,12 +25,11 @@ export default function AdminUsersScreen() {
   const handleAction = async (userId: string, action: 'freeze' | 'unfreeze' | 'approve-verification') => {
     try {
       const baseUrl = getApiBaseUrl();
-      const token = getToken();
       const response = await fetch(`${baseUrl}/api/admin/users/${userId}/${action}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${authToken}`
         },
       });
       if (response.ok) {

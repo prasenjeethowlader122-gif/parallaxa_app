@@ -270,7 +270,7 @@ export function PostCard({
             style={{ position: 'absolute', top: 50, right: 20, zIndex: 10 }}
             onPress={() => setIsPreviewVisible(false)}
           >
-            <MoreHorizontalIcon size={30} color="#fff" />
+            <HugeiconsIcon icon={MoreHorizontalIcon} size={30} color="#fff" />
           </TouchableOpacity>
 
           {imageUrl && (
