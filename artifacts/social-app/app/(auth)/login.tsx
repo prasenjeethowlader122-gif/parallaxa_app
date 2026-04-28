@@ -89,6 +89,7 @@ export default function LoginScreen() {
           return;
         }
         await login(data.token, data.user);
+        router.replace("/(tabs)");
         return;
       }
 
@@ -114,6 +115,7 @@ export default function LoginScreen() {
       }
       
       await login(data.token, data.user);
+      router.replace("/(tabs)");
     } catch (error) {
       setErrors({
         general: "Connection failed. Please check your internet and try again.",
@@ -165,6 +167,7 @@ export default function LoginScreen() {
       }
 
       await login(data.token, data.user);
+      router.replace("/(tabs)");
     } catch (error: any) {
       console.error(error);
       setErrors({
@@ -195,7 +198,7 @@ export default function LoginScreen() {
         {/* Logo */}
         <View className="items-center mb-12">
           <Image
-            source={require('@/assets/images/text-logo.svg')}
+            source={require('@/assets/images/text-logo-dark.svg')}
             style={{ width: 180, height: 40 }}
             contentFit="contain"
           />

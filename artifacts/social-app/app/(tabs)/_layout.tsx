@@ -31,6 +31,7 @@ import {
   Message01Icon,
   BookmarkIcon,
   ArrowLeft01Icon,
+  Shield02Icon,
 } from "@hugeicons/core-free-icons";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
@@ -139,7 +140,7 @@ export default function RootLayout() {
   const XLogo = () => (
     <View style={{ height: 28, justifyContent: "center", alignItems: "flex-start" }}>
       <Image
-        source={require("@/assets/images/text-logo.svg")}
+        source={require("@/assets/images/text-logo-dark.svg")}
         style={{ height: 24, width: 130 }}
         contentFit="contain"
       />
@@ -184,6 +185,24 @@ export default function RootLayout() {
             </TouchableOpacity>
           );
         })}
+        {user && user.role === 'admin' && (
+          <TouchableOpacity
+            onPress={() => navigateTo("admin/users")}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 20,
+              paddingVertical: 12,
+              paddingHorizontal: 12,
+              borderRadius: 999,
+            }}
+          >
+            <HugeiconsIcon icon={Shield02Icon} size={26} color="#0f1419" strokeWidth={1.8} />
+            <Text style={{ fontSize: 20, fontWeight: "500", color: "#0f1419" }}>
+              Admin Panel
+            </Text>
+          </TouchableOpacity>
+        )}
         {user && (
           <TouchableOpacity
             onPress={() => router.push("/profile" as any)}
@@ -551,6 +570,41 @@ export default function RootLayout() {
                   marginHorizontal: 20,
                 }}
               />
+
+              {/* Admin Panel (Mobile) */}
+              {user && user.role === 'admin' && (
+                <TouchableOpacity
+                  onPress={() => {
+                    closeDrawer();
+                    router.push("/admin/users" as any);
+                  }}
+                  activeOpacity={0.7}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 16,
+                    paddingHorizontal: 20,
+                    paddingVertical: 14,
+                  }}
+                >
+                  <HugeiconsIcon
+                    icon={Shield02Icon}
+                    size={24}
+                    color="#0f1419"
+                    strokeWidth={1.8}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 19,
+                      fontWeight: "500",
+                      color: "#0f1419",
+                      letterSpacing: -0.2,
+                    }}
+                  >
+                    Admin Panel
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               {/* ── Secondary nav ── */}
               {SECONDARY_NAV.map((item) => {

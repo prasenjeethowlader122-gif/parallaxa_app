@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Dimensions,
   Platform,
+  TextInput,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,6 +27,8 @@ export default function CreateStoryScreen() {
   const router = useRouter();
   const [selectedMedia, setSelectedMedia] = useState<{ uri: string, type: 'image' | 'video' } | null>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
+  const [overlayText, setOverlayText] = useState("");
+  const [filter, setFilter] = useState<'none' | 'grayscale' | 'sepia'>('none');
 
   const { mutate: createStory, isPending } = useCreateStory({
     mutation: {
@@ -77,9 +80,21 @@ export default function CreateStoryScreen() {
         <View style={styles.previewContainer}>
           <Image
             source={{ uri: selectedMedia.uri }}
-            style={styles.fullPreview}
+            style={[
+              styles.fullPreview,
+              filter === 'grayscale' && { tintColor: 'gray' },
+              filter === 'sepia' && { tintColor: '#704214' }
+            ]}
             contentFit="cover"
           />
+
+          {overlayText !== "" && (
+            <View style={{ position: 'absolute', top: '40%', left: 0, right: 0, alignItems: 'center' }}>
+              <Text style={{ color: '#fff', fontSize: 32, fontWeight: 'bold', textAlign: 'center', backgroundColor: 'rgba(0,0,0,0.3)', paddingHorizontal: 20 }}>
+                {overlayText}
+              </Text>
+            </View>
+          )}
 
           <View style={[styles.overlayHeader, { paddingTop: insets.top + 10 }]}>
             <TouchableOpacity onPress={() => setSelectedMedia(null)} style={styles.iconButton}>
@@ -88,6 +103,28 @@ export default function CreateStoryScreen() {
           </View>
 
           <View style={[styles.overlayFooter, { paddingBottom: insets.bottom + 20 }]}>
+            <View style={{ width: '100%', paddingHorizontal: 20, marginBottom: 20 }}>
+              <TextInput
+                placeholder="Type something..."
+                placeholderTextColor="rgba(255,255,255,0.7)"
+                style={{ backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', borderRadius: 25, paddingHorizontal: 20, paddingVertical: 12, fontSize: 16 }}
+                value={overlayText}
+                onChangeText={setOverlayText}
+              />
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
+              <TouchableOpacity onPress={() => setFilter('none')} style={[styles.filterBtn, filter === 'none' && styles.filterBtnActive]}>
+                <Text style={styles.filterBtnText}>None</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setFilter('grayscale')} style={[styles.filterBtn, filter === 'grayscale' && styles.filterBtnActive]}>
+                <Text style={styles.filterBtnText}>Gray</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setFilter('sepia')} style={[styles.filterBtn, filter === 'sepia' && styles.filterBtnActive]}>
+                <Text style={styles.filterBtnText}>Sepia</Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
               onPress={handleCreate}
               disabled={isPending}
@@ -244,5 +281,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+  },
+  filterBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  filterBtnActive: {
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+  filterBtnText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 12,
   },
 });

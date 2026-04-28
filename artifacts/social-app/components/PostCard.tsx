@@ -12,9 +12,10 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { Text } from "@/components/Text";
 import React, { useState, useCallback } from "react";
-import { Platform, StyleSheet, TouchableOpacity, View, Share } from "react-native";
+import { Platform, StyleSheet, TouchableOpacity, View, Share, Modal, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import { useColors } from "@/hooks/useColors";
+import SocialNative from '@/modules/social-native';
 import { UserAvatar } from "./UserAvatar";
 import { useCreatePost } from "@workspace/api-client-react";
 import { useAuth } from "@/context/AuthContext";
@@ -66,6 +67,8 @@ export function PostCard({
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
   const [isSaved, setIsSaved] = useState(initialIsSaved);
+  const [isPreviewVisible, setIsPreviewVisible] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleLike = useCallback(async () => {
     if (!user) {
@@ -129,6 +132,25 @@ export function PostCard({
   const navigateToProfile = () => router.push({ pathname: "/profile/[id]", params: { id: author.id } });
 
   const repostCount = Math.floor(likesCount / 2.5);
+
+  const handleDownload = async () => {
+    if (!imageUrl) return;
+    setIsDownloading(true);
+    try {
+      // Mock logo base64 for watermark
+      const logoBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+      if (SocialNative) {
+        const watermarkedUri = await SocialNative.watermarkImage(imageUrl, logoBase64);
+        await Share.share({ url: watermarkedUri });
+      } else {
+        await Share.share({ url: imageUrl });
+      }
+    } catch (error) {
+      console.error("Download error:", error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <TouchableOpacity
@@ -228,7 +250,9 @@ export function PostCard({
 
       {/* ── Image ── */}
       {imageUrl && (
-        <View
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => setIsPreviewVisible(true)}
           style={[styles.imageContainer]}
         >
           <Image
@@ -236,8 +260,48 @@ export function PostCard({
             style={{ width: '100%', aspectRatio: 16 / 9 }}
             contentFit="cover"
           />
-        </View>
+        </TouchableOpacity>
       )}
+
+      {/* ── Image Preview Modal ── */}
+      <Modal visible={isPreviewVisible} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' }}>
+          <TouchableOpacity
+            style={{ position: 'absolute', top: 50, right: 20, zIndex: 10 }}
+            onPress={() => setIsPreviewVisible(false)}
+          >
+            <MoreHorizontalIcon size={30} color="#fff" />
+          </TouchableOpacity>
+
+          {imageUrl && (
+            <Image
+              source={{ uri: imageUrl }}
+              style={{ width: '100%', height: '70%' }}
+              contentFit="contain"
+            />
+          )}
+
+          <View style={{ flexDirection: 'row', gap: 20, marginTop: 40 }}>
+            <TouchableOpacity
+              onPress={() => {
+                setIsPreviewVisible(false);
+                router.push({ pathname: "/create", params: { imageUrl } });
+              }}
+              style={{ backgroundColor: '#fff', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 25 }}
+            >
+              <Text style={{ fontWeight: 'bold' }}>Reuse</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleDownload}
+              disabled={isDownloading}
+              style={{ backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 25, flexDirection: 'row', alignItems: 'center', gap: 8 }}
+            >
+              {isDownloading ? <ActivityIndicator size="small" color="#fff" /> : <Text style={{ color: '#fff', fontWeight: 'bold' }}>Download</Text>}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* ── Hashtag Pills (Matching Skeleton Pill Design) ── */}
 

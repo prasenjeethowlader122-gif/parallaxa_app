@@ -274,11 +274,12 @@ export default function CreateScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
+  const { imageUrl: initialImageUrl } = useLocalSearchParams<{ imageUrl?: string }>();
 
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
   const [content, setContent] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState(initialImageUrl || "");
   const [imageDraft, setImageDraft] = useState("");
   const [location, setLocation] = useState("");
   const [locationDraft, setLocationDraft] = useState("");

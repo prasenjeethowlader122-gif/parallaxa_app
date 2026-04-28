@@ -99,7 +99,7 @@ export default function RootLayout() {
   
   if (!fontsLoaded && !fontError) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#ffffff', justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, backgroundColor: '#F9FAFB', justifyContent: 'center', alignItems: 'center' }}>
         <Image
           source={require("@/assets/images/parallaxa-logo.svg")}
           style={{ width: 100, height: 100 }}
