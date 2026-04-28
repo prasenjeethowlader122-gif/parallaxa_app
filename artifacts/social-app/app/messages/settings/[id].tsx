@@ -7,6 +7,7 @@ import {
   View,
   Platform,
   Switch,
+  TextInput,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetConversation } from "@workspace/api-client-react";
@@ -157,7 +158,7 @@ export default function ChatSettingsScreen() {
                 className="flex-1 h-10 text-sm"
                 style={{ color: colors.foreground }}
               />
-              <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: bgColor, borderWIdth: 1, borderColor: '#ccc' }} />
+              <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: bgColor, borderWidth: 1, borderColor: '#ccc' }} />
             </View>
           </View>
         </View>

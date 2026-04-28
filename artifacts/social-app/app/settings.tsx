@@ -107,16 +107,7 @@ export default function SettingsScreen() {
           icon: InformationCircleIcon,
           label: "About",
           onPress: () => {
-             try {
-                if (SocialNative) {
-                  const greeting = SocialNative.getGreeting();
-                  Alert.alert("Native Module Info", greeting);
-                } else {
-                  Alert.alert("Error", "Native module not available (not on Android APK)");
-                }
-             } catch(e) {
-                Alert.alert("Error", "Native module error");
-             }
+             Alert.alert("About", "Social App v1.0.0\nBuilt with Expo & React Native");
           },
         },
       ],
