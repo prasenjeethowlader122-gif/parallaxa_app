@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Response, type NextFunction } from "express";
 import { db, usersTable, postsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
@@ -6,9 +6,10 @@ import { authenticate, type AuthRequest } from "../middleware/authenticate";
 const router = Router();
 
 // Middleware to check if user is admin
-const isAdmin = (req: AuthRequest, res: any, next: any) => {
+const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!req.isAdmin) {
-    return res.status(403).json({ error: "Forbidden", message: "Admin access required" });
+    res.status(403).json({ error: "Forbidden", message: "Admin access required" });
+    return;
   }
   next();
 };

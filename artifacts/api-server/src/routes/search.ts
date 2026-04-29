@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { usersTable, postsTable, hashtagsTable, likesTable, savedPostsTable } from "@workspace/db";
 import { like, sql } from "drizzle-orm";
 import { authenticate, optionalAuthenticate, type AuthRequest } from "../middleware/authenticate";
+import type { UserSummary, Post, Hashtag } from "@workspace/api-zod";
 
 const router = Router();
 
@@ -16,9 +17,9 @@ router.get("/search", optionalAuthenticate, async (req: AuthRequest, res) => {
     }
     const pattern = `%${q}%`;
 
-    let users: any[] = [];
-    let posts: any[] = [];
-    let hashtags: any[] = [];
+    let users: UserSummary[] = [];
+    let posts: Post[] = [];
+    let hashtags: Hashtag[] = [];
 
     if (type === "all" || type === "users") {
       const rows = await db
@@ -46,11 +47,27 @@ router.get("/search", optionalAuthenticate, async (req: AuthRequest, res) => {
         const [author] = await db.select().from(usersTable).where(sql`${usersTable.id} = ${p.userId}`).limit(1);
         const liked = req.userId ? (await db.select().from(likesTable).where(sql`${likesTable.userId} = ${req.userId} AND ${likesTable.postId} = ${p.id}`).limit(1))[0] : null;
         const saved = req.userId ? (await db.select().from(savedPostsTable).where(sql`${savedPostsTable.userId} = ${req.userId} AND ${savedPostsTable.postId} = ${p.id}`).limit(1))[0] : null;
+
+        const formattedAuthor: UserSummary = author ? {
+          id: author.id,
+          username: author.username,
+          displayName: author.displayName ?? author.username,
+          avatarUrl: author.avatarUrl,
+          isVerified: author.isVerified,
+          isFollowing: false
+        } : {
+          id: p.userId,
+          username: "deleted_user",
+          displayName: "Deleted User",
+          isVerified: false,
+          isFollowing: false
+        };
+
         return {
           id: p.id,
-          author: author ? { id: author.id, username: author.username, displayName: author.displayName, avatarUrl: author.avatarUrl, isVerified: author.isVerified, isFollowing: false } : null,
+          author: formattedAuthor,
           content: p.content, imageUrl: p.imageUrl, videoUrl: p.videoUrl, location: p.location,
-          hashtags: [], likesCount: p.likesCount, commentsCount: p.repliesCount,
+          hashtags: [], likesCount: p.likesCount, commentsCount: p.repliesCount, repliesCount: p.repliesCount,
           isLiked: !!liked, isSaved: !!saved, createdAt: p.createdAt,
         };
       }));

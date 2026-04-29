@@ -29,14 +29,19 @@ router.get("/stories", authenticate, async (req: AuthRequest, res) => {
       ? await db.select().from(storyReactionsTable).where(inArray(storyReactionsTable.storyId, storyIds))
       : [];
 
-    const groups: Record<string, { user: typeof usersTable.$inferSelect; stories: any[] }> = {};
+    type StoryWithContext = typeof storiesTable.$inferSelect & {
+      reactions: { emoji: string; count: number }[];
+      myReaction: string | null;
+      isViewed: boolean;
+    }
+    const groups: Record<string, { user: typeof usersTable.$inferSelect; stories: StoryWithContext[] }> = {};
     for (const { story, user } of stories) {
       if (!groups[user.id]) groups[user.id] = { user, stories: [] };
 
       const storyReactions = reactions.filter(r => r.storyId === story.id);
       const myReaction = storyReactions.find(r => r.userId === myId)?.emoji || null;
 
-      const reactionCounts = storyReactions.reduce((acc: any, r) => {
+      const reactionCounts = storyReactions.reduce((acc: Record<string, number>, r) => {
         acc[r.emoji] = (acc[r.emoji] || 0) + 1;
         return acc;
       }, {});
