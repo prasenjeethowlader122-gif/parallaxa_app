@@ -24,6 +24,7 @@ import {
   InformationCircleIcon,
   LockPasswordIcon,
   Mail01Icon,
+  SmartPhone01Icon,
   UserIcon,
   ViewIcon,
   ViewOffIcon,
@@ -36,19 +37,21 @@ type FormErrors = {
   displayName?: string;
   username?: string;
   email?: string;
+  phoneNumber?: string;
   dateOfBirth?: string;
   password?: string;
   confirmPassword?: string;
   general?: string;
 };
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 const STEPS = [
-  { title: "Who are you?", subtitle: "Let's start with your name and username" },
+  { title: "Who are you?", subtitle: "Let's start with your full name" },
   { title: "Your birthday", subtitle: "You must be at least 18 years old" },
-  { title: "Your email", subtitle: "We'll use this to sign you in" },
+  { title: "Contact info", subtitle: "Enter your email or phone number" },
   { title: "Secure it", subtitle: "Create a strong password" },
+  { title: "Username", subtitle: "Pick a unique username for your profile" },
 ];
 
 /* ─── reusable input ─── */
@@ -143,6 +146,8 @@ export default function RegisterScreen() {
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [usePhone, setUsePhone] = useState(false);
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPass] = useState("");
@@ -157,18 +162,19 @@ export default function RegisterScreen() {
   const [usernameFocused, setUNF] = useState(false);
   const [dobFocused, setDOBF] = useState(false);
   const [emailFocused, setEF] = useState(false);
+  const [phoneFocused, setPhoneF] = useState(false);
   const [passwordFocused, setPF] = useState(false);
   const [confirmFocused, setCF] = useState(false);
 
   /* ─── Live Username Check ─── */
   const { data: availability, isLoading: isCheckingUsername } = useCheckUsername(
     { username: username.trim().toLowerCase() },
-    { query: { enabled: step === 0 && username.trim().length >= 3 } as any }
+    { query: { enabled: step === 4 && username.trim().length >= 3 } as any }
   );
 
   const { data: suggestionData } = useSuggestUsernames(
     { username: username.trim().toLowerCase() },
-    { query: { enabled: step === 0 && availability?.available === false } as any }
+    { query: { enabled: (step === 4 && availability?.available === false) || (step === 4 && username.trim().length === 0) } as any }
   );
   
   const topPt = insets.top + (Platform.OS === "web" ? 24 : 0);
@@ -183,14 +189,6 @@ export default function RegisterScreen() {
       else if (displayName.trim().length < 2) newErrors.displayName = "Name must be at least 2 characters";
       else if (displayName.trim().length > 50) newErrors.displayName =
         "Name must be less than 50 characters";
-      
-      if (!username.trim()) newErrors.username = "Username is required";
-      else if (username.trim().length < 3) newErrors.username = "Username must be at least 3 characters";
-      else if (username.trim().length > 30) newErrors.username = "Username must be less than 30 characters";
-      else if (!/^[a-zA-Z0-9_-]+$/.test(username.trim()))
-        newErrors.username = "Letters, numbers, _ and - only";
-      else if (availability?.available === false)
-        newErrors.username = "Username is already taken";
     }
 
     if (step === 1) {
@@ -208,9 +206,14 @@ export default function RegisterScreen() {
     }
 
     if (step === 2) {
-      if (!email.trim()) newErrors.email = "Email address is required";
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
-        newErrors.email = "Please enter a valid email address";
+      if (usePhone) {
+        if (!phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required";
+        else if (phoneNumber.trim().length < 8) newErrors.phoneNumber = "Please enter a valid phone number";
+      } else {
+        if (!email.trim()) newErrors.email = "Email address is required";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+          newErrors.email = "Please enter a valid email address";
+      }
     }
     
     if (step === 3) {
@@ -220,6 +223,16 @@ export default function RegisterScreen() {
       
       if (!confirmPassword) newErrors.confirmPassword = "Please confirm your password";
       else if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (step === 4) {
+      if (!username.trim()) newErrors.username = "Username is required";
+      else if (username.trim().length < 3) newErrors.username = "Username must be at least 3 characters";
+      else if (username.trim().length > 30) newErrors.username = "Username must be less than 30 characters";
+      else if (!/^[a-zA-Z0-9_-]+$/.test(username.trim()))
+        newErrors.username = "Letters, numbers, _ and - only";
+      else if (availability?.available === false)
+        newErrors.username = "Username is already taken";
 
       if (!acceptTerms) newErrors.general = "You must accept the terms to continue";
     }
@@ -252,7 +265,8 @@ export default function RegisterScreen() {
         body: JSON.stringify({
           displayName: displayName.trim(),
           username: username.trim().toLowerCase(),
-          email: email.trim().toLowerCase(),
+          email: usePhone ? undefined : email.trim().toLowerCase(),
+          phoneNumber: usePhone ? phoneNumber.trim() : undefined,
           password,
           dateOfBirth,
         }),
@@ -296,41 +310,6 @@ export default function RegisterScreen() {
             clearError={() => setErrors(p => ({ ...p, displayName: undefined }))}
           />
         </View>
-
-        {/* Username */}
-        <View className="mb-2">
-          <Text className="text-slate-700 font-semibold mb-2 text-sm">Username</Text>
-          <InputRow
-            icon={AtIcon}
-            placeholder="john_doe"
-            value={username}
-            onChange={setUsername}
-            focused={usernameFocused}
-            onFocus={() => setUNF(true)}
-            onBlur={() => setUNF(false)}
-            error={errors.username}
-            isLoading={isLoading || isCheckingUsername}
-            clearError={() => setErrors(p => ({ ...p, username: undefined }))}
-          />
-        </View>
-
-        {/* Username Suggestions */}
-        {availability?.available === false && suggestionData?.suggestions && (
-          <View className="mb-4 -mt-2">
-            <Text className="text-xs text-slate-500 mb-2 ml-1">Suggested usernames:</Text>
-            <View className="flex-row flex-wrap gap-2">
-              {suggestionData.suggestions.map((s: string) => (
-                <TouchableOpacity
-                  key={s}
-                  onPress={() => setUsername(s)}
-                  className="bg-slate-100 px-3 py-1.5 rounded-full"
-                >
-                  <Text className="text-blue-600 text-xs font-bold">@{s}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
       </>
     );
 
@@ -358,20 +337,46 @@ export default function RegisterScreen() {
 
     if (step === 2) return (
       <View className="mb-2">
-        <Text className="text-slate-700 font-semibold mb-2 text-sm">Email Address</Text>
-        <InputRow
-          icon={Mail01Icon}
-          placeholder="your.email@example.com"
-          value={email}
-          onChange={setEmail}
-          focused={emailFocused}
-          onFocus={() => setEF(true)}
-          onBlur={() => setEF(false)}
-          error={errors.email}
-          keyboardType="email-address"
-          isLoading={isLoading}
-          clearError={() => setErrors(p => ({ ...p, email: undefined }))}
-        />
+        <Text className="text-slate-700 font-semibold mb-2 text-sm">
+          {usePhone ? "Phone Number" : "Email Address"}
+        </Text>
+        {usePhone ? (
+          <InputRow
+            icon={SmartPhone01Icon}
+            placeholder="+1 234 567 8900"
+            value={phoneNumber}
+            onChange={setPhoneNumber}
+            focused={phoneFocused}
+            onFocus={() => setPhoneF(true)}
+            onBlur={() => setPhoneF(false)}
+            error={errors.phoneNumber}
+            keyboardType="phone-pad"
+            isLoading={isLoading}
+            clearError={() => setErrors(p => ({ ...p, phoneNumber: undefined }))}
+          />
+        ) : (
+          <InputRow
+            icon={Mail01Icon}
+            placeholder="your.email@example.com"
+            value={email}
+            onChange={setEmail}
+            focused={emailFocused}
+            onFocus={() => setEF(true)}
+            onBlur={() => setEF(false)}
+            error={errors.email}
+            keyboardType="email-address"
+            isLoading={isLoading}
+            clearError={() => setErrors(p => ({ ...p, email: undefined }))}
+          />
+        )}
+        <TouchableOpacity
+          onPress={() => setUsePhone(!usePhone)}
+          className="mt-2"
+        >
+          <Text className="text-blue-600 font-semibold text-sm">
+            Use {usePhone ? "email" : "phone number"} instead
+          </Text>
+        </TouchableOpacity>
       </View>
     );
     
@@ -428,6 +433,47 @@ export default function RegisterScreen() {
             }
           />
         </View>
+      </>
+    );
+
+    if (step === 4) return (
+      <>
+        {/* Username */}
+        <View className="mb-2">
+          <Text className="text-slate-700 font-semibold mb-2 text-sm">Username</Text>
+          <InputRow
+            icon={AtIcon}
+            placeholder="john_doe"
+            value={username}
+            onChange={setUsername}
+            focused={usernameFocused}
+            onFocus={() => setUNF(true)}
+            onBlur={() => setUNF(false)}
+            error={errors.username}
+            isLoading={isLoading || isCheckingUsername}
+            clearError={() => setErrors(p => ({ ...p, username: undefined }))}
+          />
+        </View>
+
+        {/* Username Suggestions */}
+        {suggestionData?.suggestions && (
+          <View className="mb-4 -mt-2">
+            <Text className="text-xs text-slate-500 mb-2 ml-1">
+              {availability?.available === false ? "Username taken. Try these:" : "Suggested for you:"}
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {suggestionData.suggestions.map((s: string) => (
+                <TouchableOpacity
+                  key={s}
+                  onPress={() => setUsername(s)}
+                  className="bg-slate-100 px-3 py-1.5 rounded-full"
+                >
+                  <Text className="text-blue-600 text-xs font-bold">@{s}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
       </>
     );
   };
