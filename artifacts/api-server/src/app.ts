@@ -7,11 +7,13 @@ import path from "path";
 import fs from "fs";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { waf } from "./middleware/waf";
 
 const app: Express = express();
 
 // ── Security ──────────────────────────────────────────────────────────────────
 app.use(helmet());
+app.use(waf);
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
