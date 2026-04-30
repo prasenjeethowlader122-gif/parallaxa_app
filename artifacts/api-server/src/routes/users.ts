@@ -56,7 +56,7 @@ router.get("/users/suggested", authenticate, async (req: AuthRequest, res) => {
       )
       .limit(10);
     
-    res.json(users.map((u: any) => formatUserSummary(u, false)));
+    res.json(users.map((u) => formatUserSummary(u, false)));
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
@@ -190,7 +190,7 @@ router.get("/users/:userId/posts", optionalAuthenticate, async (req: AuthRequest
     const [author] = [user];
     
     res.json({
-      posts: posts.map((p: any) => ({
+      posts: posts.map((p) => ({
         id: p.id,
         author: {
           id: userId,
@@ -228,7 +228,7 @@ router.get("/users/:userId/stories", authenticate, async (req: AuthRequest, res)
       .from(storiesTable)
       .where(and(eq(storiesTable.userId, userId), sql`${storiesTable.expiresAt} > ${now}`))
       .orderBy(desc(storiesTable.createdAt));
-    res.json(stories.map((s: any) => ({
+    res.json(stories.map((s) => ({
       id: s.id,
       userId: s.userId,
       mediaUrl: s.mediaUrl,
@@ -254,7 +254,7 @@ router.get("/users/:userId/followers", optionalAuthenticate, async (req: AuthReq
       .innerJoin(usersTable, eq(followsTable.followerId, usersTable.id))
       .where(eq(followsTable.followingId, userId))
       .limit(limit);
-    res.json({ users: rows.map((r: any) => formatUserSummary(r.user)), nextCursor: null });
+    res.json({ users: rows.map((r) => formatUserSummary(r.user)), nextCursor: null });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
@@ -270,7 +270,7 @@ router.get("/users/:userId/following", optionalAuthenticate, async (req: AuthReq
       .innerJoin(usersTable, eq(followsTable.followingId, usersTable.id))
       .where(eq(followsTable.followerId, userId))
       .limit(limit);
-    res.json({ users: rows.map((r: any) => formatUserSummary(r.user)), nextCursor: null });
+    res.json({ users: rows.map((r) => formatUserSummary(r.user)), nextCursor: null });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
