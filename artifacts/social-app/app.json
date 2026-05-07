@@ -24,7 +24,6 @@
       },
       "package": "com.parallaxa.social",
       "versionCode": 2,
-      "minSdkVersion": 24,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -49,7 +48,8 @@
             "useFrameworks": "static"
           },
           "android": {
-            "googleServicesFile": "./google-services.json"
+            "googleServicesFile": "./google-services.json",
+            "minSdkVersion": 24
           }
         }
       ]
