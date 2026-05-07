@@ -18,6 +18,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { SocketProvider } from "@/context/SocketContext";
 import { getApiBaseUrl } from "@/lib/apiUrl";
+import { useUpdates } from "@/hooks/useUpdates";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -49,6 +50,7 @@ const queryClient = new QueryClient({
 
 function RootLayoutNav() {
   const { user, isLoading } = useAuth();
+  useUpdates();
   
   if (isLoading) return null;
   
