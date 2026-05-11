@@ -139,7 +139,7 @@ const InputRow = ({
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { login, setIsProcessing, setProcessingMessage } = useAuth();
+  const { login } = useAuth();
   
   /* ─── form state ─── */
   const [step, setStep] = useState(0);
@@ -150,7 +150,9 @@ export default function RegisterScreen() {
   const [usePhone, setUsePhone] = useState(false);
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPass] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -162,6 +164,7 @@ export default function RegisterScreen() {
   const [emailFocused, setEF] = useState(false);
   const [phoneFocused, setPhoneF] = useState(false);
   const [passwordFocused, setPF] = useState(false);
+  const [confirmFocused, setCF] = useState(false);
 
   /* ─── Live Username Check ─── */
   const { data: availability, isLoading: isCheckingUsername } = useCheckUsername(
@@ -217,6 +220,9 @@ export default function RegisterScreen() {
       if (!password) newErrors.password = "Password is required";
       else if (password.length < 6) newErrors.password = "Password must be at least 6 characters";
       else if (password.length > 128) newErrors.password = "Password must be less than 128 characters";
+      
+      if (!confirmPassword) newErrors.confirmPassword = "Please confirm your password";
+      else if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
     }
 
     if (step === 4) {
@@ -251,8 +257,6 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!validateStep()) return;
     setIsLoading(true);
-    setIsProcessing(true);
-    setProcessingMessage("Creating account...");
     try {
       const baseUrl = getApiBaseUrl();
       const response = await fetch(`${baseUrl}/api/auth/register`, {
@@ -281,7 +285,6 @@ export default function RegisterScreen() {
       setErrors({ general: "Connection failed. Check your internet and try again." });
     } finally {
       setIsLoading(false);
-      setIsProcessing(false);
     }
   };
   
@@ -405,6 +408,31 @@ export default function RegisterScreen() {
           />
         </View>
 
+        <View className="mb-2">
+          <Text className="text-slate-700 font-semibold mb-2 text-sm">Confirm Password</Text>
+          <InputRow
+            icon={LockPasswordIcon}
+            placeholder="Repeat your password"
+            value={confirmPassword}
+            onChange={setConfirmPass}
+            focused={confirmFocused}
+            onFocus={() => setCF(true)}
+            onBlur={() => setCF(false)}
+            error={errors.confirmPassword}
+            secure={!showConfirm}
+            isLoading={isLoading}
+            clearError={() => setErrors(p => ({ ...p, confirmPassword: undefined }))}
+            right={
+              <TouchableOpacity onPress={() => setShowConfirm(v => !v)} disabled={isLoading} className="p-1">
+                <HugeiconsIcon 
+                  icon={showConfirm ? ViewOffIcon : ViewIcon} 
+                  size={18} 
+                  color={errors.confirmPassword ? "#dc2626" : "#6b7280"} 
+                />
+              </TouchableOpacity>
+            }
+          />
+        </View>
       </>
     );
 
@@ -471,7 +499,7 @@ export default function RegisterScreen() {
         <View className="items-center mb-8">
           <Image
             source={require('@/assets/images/text-logo-dark.svg')}
-            style={{ width: 240, height: 54 }}
+            style={{ width: 180, height: 40 }}
             contentFit="contain"
           />
         </View>

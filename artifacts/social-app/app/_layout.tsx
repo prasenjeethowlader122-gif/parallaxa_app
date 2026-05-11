@@ -9,7 +9,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { setBaseUrl } from "@workspace/api-client-react";
-import { Platform, View, ActivityIndicator, Text } from "react-native";
+import { Platform, View, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import remoteConfig from "@react-native-firebase/remote-config";
@@ -49,23 +49,10 @@ const queryClient = new QueryClient({
 });
 
 function RootLayoutNav() {
-  const { user, isLoading, isProcessing, processingMessage } = useAuth();
+  const { user, isLoading } = useAuth();
   useUpdates();
   
   if (isLoading) return null;
-
-  if (isProcessing) {
-    return (
-      <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="black" />
-        {processingMessage ? (
-          <Text style={{ marginTop: 20, fontSize: 16, color: '#333', fontWeight: '600' }}>
-            {processingMessage}
-          </Text>
-        ) : null}
-      </View>
-    );
-  }
   
   if (!user) {
     return (
