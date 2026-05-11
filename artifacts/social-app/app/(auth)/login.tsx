@@ -30,7 +30,7 @@ import { getApiBaseUrl } from "@/lib/apiUrl";
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { login, setIsProcessing, setProcessingMessage } = useAuth();
+  const { login } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,16 +44,11 @@ export default function LoginScreen() {
   
   const validateForm = () => {
     const newErrors: typeof errors = {};
-    const input = email.trim();
     
-    if (!input) {
-      newErrors.email = "Email or phone number is required";
-    } else {
-      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
-      const isPhone = /^\+?[\d\s-]{8,}$/.test(input);
-      if (!isEmail && !isPhone) {
-        newErrors.email = "Please enter a valid email or phone number";
-      }
+    if (!email.trim()) {
+      newErrors.email = "Email address is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      newErrors.email = "Please enter a valid email address";
     }
     
     if (!password.trim()) {
@@ -78,27 +73,19 @@ export default function LoginScreen() {
     }
     
     setIsLoading(true);
-    setIsProcessing(true);
-    setProcessingMessage("Logging in...");
     try {
       const baseUrl = getApiBaseUrl();
-      const input = email.trim();
-      const isEmail = input.includes('@');
 
       if (showTotpInput) {
         const response = await fetch(`${baseUrl}/api/auth/2fa/verify`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            [isEmail ? 'email' : 'phoneNumber']: input,
-            code: totpCode
-          }),
+          body: JSON.stringify({ email: email.trim(), code: totpCode }),
         });
         const data = await response.json();
         if (!response.ok) {
           setErrors({ general: data.message || "Invalid 2FA code" });
           setIsLoading(false);
-          setIsProcessing(false);
           return;
         }
         await login(data.token, data.user);
@@ -109,10 +96,7 @@ export default function LoginScreen() {
       const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          [isEmail ? 'email' : 'phoneNumber']: input,
-          password
-        }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
       
       const data = await response.json();
@@ -138,7 +122,6 @@ export default function LoginScreen() {
       });
     } finally {
       setIsLoading(false);
-      setIsProcessing(false);
     }
   };
 
@@ -216,7 +199,7 @@ export default function LoginScreen() {
         <View className="items-center mb-12">
           <Image
             source={require('@/assets/images/text-logo-dark.svg')}
-            style={{ width: 240, height: 54 }}
+            style={{ width: 180, height: 40 }}
             contentFit="contain"
           />
         </View>
@@ -244,7 +227,7 @@ export default function LoginScreen() {
         {/* Email Input */}
         <View className={`mb-5 ${showTotpInput ? 'opacity-50' : ''}`}>
           <Text className="text-slate-700 font-semibold mb-2 text-sm">
-            Email or Phone Number
+            Email Address
           </Text>
           <View
             className={`border rounded-full border-gray-100 px-4 py-3 flex-row items-center transition-colors ${
@@ -263,7 +246,7 @@ export default function LoginScreen() {
             />
             <TextInput
               className="flex-1 ml-3 outline-none text-black-900 text-base font-medium"
-              placeholder="Email or phone number"
+              placeholder="your.email@example.com"
               placeholderTextColor="#d1d5db"
               value={email}
               onChangeText={(text) => {
