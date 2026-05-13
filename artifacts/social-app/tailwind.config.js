@@ -13,11 +13,11 @@ module.exports = {
     extend: {
       // tailwind.config.js
       fontFamily: {
-        sans: ["Inter-Regular"], // makes it the default body font
-        inter: ["Inter-Regular"],
-        "inter-medium": ["Inter-Medium"],
-        "inter-semibold": ["Inter-SemiBold"],
-        "inter-bold": ["Inter-Bold"],
+        sans: ["Sora-Regular"], // makes it the default body font
+        sora: ["Sora-Regular"],
+        "sora-medium": ["Sora-Medium"],
+        "sora-semibold": ["Sora-SemiBold"],
+        "sora-bold": ["Sora-Bold"],
       },
       colors: {
         primary: "#0095F6",

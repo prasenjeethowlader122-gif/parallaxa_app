@@ -17,6 +17,15 @@ const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
 router.use(authenticate);
 router.use(isAdmin);
 
+router.get("/admin/users", async (req, res) => {
+  try {
+    const users = await db.select().from(usersTable);
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
 router.post("/admin/users/:userId/freeze", async (req, res) => {
   try {
     const userId = req.params.userId as string;
