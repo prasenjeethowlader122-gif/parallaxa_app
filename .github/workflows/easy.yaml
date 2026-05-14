@@ -28,7 +28,6 @@ concurrency:
 
 env:
   NODE_VERSION: "20"
-  EXPO_TOKEN: jC9iuFuKiE-3eUCiLqU6eR2Q5eXwF5Kq-FCRh68K
 
 jobs:
   # ─────────────────────────────────────────────
@@ -82,6 +81,8 @@ jobs:
 
       - name: Verify Expo token
         run: eas whoami
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Publish OTA update
         id: eas-update
