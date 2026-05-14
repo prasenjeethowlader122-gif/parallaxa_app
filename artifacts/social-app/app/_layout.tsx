@@ -9,7 +9,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { setBaseUrl } from "@workspace/api-client-react";
-import { Platform, View, ActivityIndicator } from "react-native";
+import { Platform, View, ActivityIndicator, StyleSheet, Text } from "react-native";
 import { Image } from "expo-image";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import remoteConfig from "@react-native-firebase/remote-config";
@@ -49,13 +49,13 @@ const queryClient = new QueryClient({
 });
 
 function RootLayoutNav() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isProcessing, processingMessage } = useAuth();
   useUpdates();
   
   if (isLoading) return null;
   
-  if (!user) {
-    return (
+  return (
+    <>
       <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
@@ -63,25 +63,48 @@ function RootLayoutNav() {
         <Stack.Screen name="profile/[id]" />
         <Stack.Screen name="messages/index" />
         <Stack.Screen name="messages/[id]" />
+        {!user ? (
+          <Stack.Screen name="edit-profile" />
+        ) : (
+          <>
+            <Stack.Screen name="story/create" />
+            <Stack.Screen name="story/[userId]" />
+            <Stack.Screen name="edit-profile" options={{ presentation: "modal" }} />
+          </>
+        )}
         <Stack.Screen name="settings" />
-        <Stack.Screen name="edit-profile" />
       </Stack>
-    );
-  }
-  
-  return (
-    <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="post/[id]" />
-      <Stack.Screen name="profile/[id]" />
-      <Stack.Screen name="messages/index" />
-      <Stack.Screen name="messages/[id]" />
-      <Stack.Screen name="story/create" />
-      <Stack.Screen name="story/[userId]" />
-      <Stack.Screen name="settings" />
-      <Stack.Screen name="edit-profile" options={{ presentation: "modal" }} />
-    </Stack>
+
+      {isProcessing && (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: '#ffffff',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 9999,
+            }
+          ]}
+        >
+          <Image
+            source={require("@/assets/images/parallaxa-logo.svg")}
+            style={{ width: 120, height: 120, marginBottom: 24 }}
+            contentFit="contain"
+          />
+          <Text
+            style={{
+              fontSize: 16,
+              color: '#64748b',
+              fontWeight: '600',
+              fontFamily: 'Sora-Medium'
+            }}
+          >
+            {processingMessage}
+          </Text>
+        </View>
+      )}
+    </>
   );
 }
 

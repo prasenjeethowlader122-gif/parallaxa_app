@@ -1,12 +1,11 @@
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { ArrowLeft01Icon, UserIcon, Shield02Icon, Cancel01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import {
   ActivityIndicator, FlatList, Platform, RefreshControl, Text, TouchableOpacity, View, Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useSearch } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -18,9 +17,33 @@ export default function AdminUsersScreen() {
   const router = useRouter();
   const { user: currentUser, token: authToken } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Use search API to list users (as we don't have a specific /admin/users GET)
-  const { data, isLoading, refetch } = useSearch({ q: "", type: "users" });
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/admin/users`, {
+        headers: {
+          "Authorization": `Bearer ${authToken}`
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleAction = async (userId: string, action: 'freeze' | 'unfreeze' | 'approve-verification') => {
     try {
@@ -34,7 +57,7 @@ export default function AdminUsersScreen() {
       });
       if (response.ok) {
         Alert.alert("Success", `Action ${action} completed`);
-        refetch();
+        fetchUsers();
       } else {
         const errorData = await response.json();
         Alert.alert("Error", errorData.message || "Failed to perform action");
@@ -45,7 +68,6 @@ export default function AdminUsersScreen() {
   };
 
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
-  const users = data?.users || [];
 
   if (currentUser?.role !== 'admin') {
     return (
@@ -113,7 +135,7 @@ export default function AdminUsersScreen() {
           </View>
         )}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={refetch} tintColor={colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchUsers(); }} tintColor={colors.primary} />
         }
       />
     </View>

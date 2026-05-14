@@ -26,6 +26,7 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { getApiBaseUrl } from "@/lib/apiUrl";
+import { FloatingLabelInput } from "@/components/FloatingLabelInput";
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
@@ -225,109 +226,53 @@ export default function LoginScreen() {
         )}
 
         {/* Email Input */}
-        <View className={`mb-5 ${showTotpInput ? 'opacity-50' : ''}`}>
-          <Text className="text-slate-700 font-semibold mb-2 text-sm">
-            Email Address
-          </Text>
-          <View
-            className={`border rounded-full border-gray-100 px-4 py-3 flex-row items-center transition-colors ${
-              emailFocused
-                ? "border-black"
-                : errors.email
-                  ? "border-red-300"
-                  : "border-slate-300"
-            }`}
-          >
-            <HugeiconsIcon
-              icon={Mail01Icon}
-              size={18}
-              color={emailFocused ? "#000" : "#64748b"}
-              strokeWidth={1}
-            />
-            <TextInput
-              className="flex-1 ml-3 outline-none text-black-900 text-base font-medium"
-              placeholder="your.email@example.com"
-              placeholderTextColor="#d1d5db"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (errors.email) setErrors({ ...errors, email: undefined });
-              }}
-              onFocus={() => setEmailFocused(true)}
-              onBlur={() => setEmailFocused(false)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isLoading}
-            />
-            {email && !errors.email && (
+        <View className={`mb-3 ${showTotpInput ? 'opacity-50' : ''}`}>
+          <FloatingLabelInput
+            label="Email Address"
+            icon={Mail01Icon}
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (errors.email) setErrors({ ...errors, email: undefined });
+            }}
+            error={errors.email}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!isLoading}
+            right={email && !errors.email && (
               <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} color="#10b981" />
             )}
-          </View>
-          {errors.email && (
-            <View className="mt-2 flex-row items-center gap-1.5">
-              <HugeiconsIcon icon={InformationCircleIcon} size={14} color="#dc2626" />
-              <Text className="text-red-600 text-xs font-medium">
-                {errors.email}
-              </Text>
-            </View>
-          )}
+          />
         </View>
 
         {/* Password Input */}
-        <View className={`mb-4 ${showTotpInput ? 'opacity-50' : ''}`}>
-          <Text className="text-slate-700 font-semibold mb-2 text-sm">
-            Password
-          </Text>
-          <View
-            className={`border rounded-full border-gray-100 px-4 py-3 flex-row items-center transition-colors ${
-              passwordFocused
-                ? "border-black"
-                : errors.password
-                  ? "border-red-300"
-                  : "border-slate-300"
-            }`}
-          >
-            <HugeiconsIcon
-              icon={LockPasswordIcon}
-              size={18}
-              color={passwordFocused ? "#000" : "#64748b"}
-              strokeWidth={1}
-            />
-            <TextInput
-              className="flex-1 ml-3 outline-none text-gray-900 text-base font-medium"
-              placeholder="Enter your password"
-              placeholderTextColor="#9ca3af"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (errors.password) setErrors({ ...errors, password: undefined });
-              }}
-              onFocus={() => setPasswordFocused(true)}
-              onBlur={() => setPasswordFocused(false)}
-              secureTextEntry={!showPassword}
-              editable={!isLoading}
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              disabled={isLoading}
-              className="p-1"
-            >
-              <HugeiconsIcon
-                icon={showPassword ? ViewOffIcon : ViewIcon}
-                size={18}
-                color={errors.password ? "#dc2626" : "#6b7280"}
-              />
-            </TouchableOpacity>
-          </View>
-          {errors.password && (
-            <View className="mt-2 flex-row items-center gap-1.5">
-              <HugeiconsIcon icon={InformationCircleIcon} size={14} color="#dc2626" />
-              <Text className="text-red-600 text-xs font-medium">
-                {errors.password}
-              </Text>
-            </View>
-          )}
+        <View className={`mb-2 ${showTotpInput ? 'opacity-50' : ''}`}>
+          <FloatingLabelInput
+            label="Password"
+            icon={LockPasswordIcon}
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (errors.password) setErrors({ ...errors, password: undefined });
+            }}
+            error={errors.password}
+            secureTextEntry={!showPassword}
+            editable={!isLoading}
+            right={
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
+                className="p-1"
+              >
+                <HugeiconsIcon
+                  icon={showPassword ? ViewOffIcon : ViewIcon}
+                  size={18}
+                  color={errors.password ? "#dc2626" : "#6b7280"}
+                />
+              </TouchableOpacity>
+            }
+          />
         </View>
 
         {/* Forgot Password Link */}
@@ -345,22 +290,16 @@ export default function LoginScreen() {
         {/* 2FA Input */}
         {showTotpInput && (
           <View className="mb-6 mt-4">
-            <Text className="text-slate-700 font-semibold mb-2 text-sm">
-              2FA Code
-            </Text>
-            <View className="border rounded-full border-black px-4 py-3 flex-row items-center">
-              <HugeiconsIcon icon={LockPasswordIcon} size={18} color="#000" strokeWidth={1} />
-              <TextInput
-                className="flex-1 ml-3 outline-none text-gray-900 text-base font-medium"
-                placeholder="000000"
-                placeholderTextColor="#9ca3af"
-                value={totpCode}
-                onChangeText={setTotpCode}
-                keyboardType="number-pad"
-                maxLength={6}
-                autoFocus
-              />
-            </View>
+            <FloatingLabelInput
+              label="2FA Code"
+              icon={LockPasswordIcon}
+              value={totpCode}
+              onChangeText={setTotpCode}
+              keyboardType="number-pad"
+              maxLength={6}
+              autoFocus
+              editable={!isLoading}
+            />
             <TouchableOpacity onPress={() => setShowTotpInput(false)} className="mt-4">
               <Text className="text-blue-600 font-semibold text-sm text-center">
                 Back to password

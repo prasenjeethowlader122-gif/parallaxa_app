@@ -26,6 +26,8 @@ interface AuthContextType {
   user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
+  isProcessing: boolean;
+  processingMessage: string;
   login: (token: string, user: AuthUser) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: AuthUser) => Promise<void>;
@@ -41,6 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingMessage, setProcessingMessage] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -62,23 +66,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (newToken: string, newUser: AuthUser) => {
-    _tokenRef = newToken;
-    setToken(newToken);
-    setUser(newUser);
-    await Promise.all([
-      AsyncStorage.setItem(AUTH_TOKEN_KEY, newToken),
-      AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser)),
-    ]);
+    setIsProcessing(true);
+    setProcessingMessage("Logging in...");
+    try {
+      _tokenRef = newToken;
+      setToken(newToken);
+      setUser(newUser);
+      await Promise.all([
+        AsyncStorage.setItem(AUTH_TOKEN_KEY, newToken),
+        AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser)),
+      ]);
+    } finally {
+      // Small delay to ensure smooth transition
+      setTimeout(() => setIsProcessing(false), 500);
+    }
   };
 
   const logout = async () => {
-    _tokenRef = null;
-    setToken(null);
-    setUser(null);
-    await Promise.all([
-      AsyncStorage.removeItem(AUTH_TOKEN_KEY),
-      AsyncStorage.removeItem(AUTH_USER_KEY),
-    ]);
+    setIsProcessing(true);
+    setProcessingMessage("Logging out...");
+    try {
+      _tokenRef = null;
+      setToken(null);
+      setUser(null);
+      await Promise.all([
+        AsyncStorage.removeItem(AUTH_TOKEN_KEY),
+        AsyncStorage.removeItem(AUTH_USER_KEY),
+      ]);
+    } finally {
+      setTimeout(() => setIsProcessing(false), 500);
+    }
   };
 
   const updateUser = async (updatedUser: AuthUser) => {
@@ -87,7 +104,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{
+      user,
+      token,
+      isLoading,
+      isProcessing,
+      processingMessage,
+      login,
+      logout,
+      updateUser
+    }}>
       {children}
     </AuthContext.Provider>
   );

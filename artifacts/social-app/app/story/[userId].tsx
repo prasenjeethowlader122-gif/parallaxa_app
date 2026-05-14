@@ -14,6 +14,7 @@ import { Text } from "@/components/Text";
 import { useGetStories, useViewStory, useReactStory, useDeleteStoryReaction } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "@/components/UserAvatar";
+import remoteConfig from "@react-native-firebase/remote-config";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import Animated, {
@@ -75,9 +76,11 @@ export default function StoryViewScreen() {
         viewStory({ storyId: currentStory.id });
       }
 
+      const storyDuration = remoteConfig().getValue('story_duration').asNumber() || currentStory.duration || 5;
+
       progress.value = 0;
       progress.value = withTiming(1, {
-        duration: (currentStory.duration || 5) * 1000,
+        duration: storyDuration * 1000,
         easing: Easing.linear,
       }, (finished) => {
         if (finished) {
@@ -191,35 +194,37 @@ export default function StoryViewScreen() {
       </View>
 
       {/* Reactions Overlay */}
-      <View style={[styles.reactionsContainer, { paddingBottom: insets.bottom + 20 }]}>
-        {/* Reaction Summary */}
-        {currentStory.reactions && currentStory.reactions.length > 0 && (
-          <View style={styles.reactionSummary}>
-            {currentStory.reactions.map((r: any) => (
-              <View key={r.emoji} style={styles.reactionCount}>
-                <Text style={{ fontSize: 12 }}>{r.emoji}</Text>
-                <Text style={{ color: "#fff", fontSize: 10, marginLeft: 2, fontWeight: "600" }}>{r.count}</Text>
-              </View>
+      {remoteConfig().getValue('enable_reactions').asBoolean() && (
+        <View style={[styles.reactionsContainer, { paddingBottom: insets.bottom + 20 }]}>
+          {/* Reaction Summary */}
+          {currentStory.reactions && currentStory.reactions.length > 0 && (
+            <View style={styles.reactionSummary}>
+              {currentStory.reactions.map((r: any) => (
+                <View key={r.emoji} style={styles.reactionCount}>
+                  <Text style={{ fontSize: 12 }}>{r.emoji}</Text>
+                  <Text style={{ color: "#fff", fontSize: 10, marginLeft: 2, fontWeight: "600" }}>{r.count}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Reaction Bar */}
+          <View style={styles.reactionPicker}>
+            {["❤️", "😂", "😮", "😢", "🔥"].map((emoji) => (
+              <TouchableOpacity
+                key={emoji}
+                onPress={() => handleReact(emoji)}
+                style={[
+                  styles.reactionButton,
+                  currentStory.myReaction === emoji && { backgroundColor: "rgba(255,255,255,0.4)" }
+                ]}
+              >
+                <Text style={{ fontSize: 24 }}>{emoji}</Text>
+              </TouchableOpacity>
             ))}
           </View>
-        )}
-
-        {/* Reaction Bar */}
-        <View style={styles.reactionPicker}>
-          {["❤️", "😂", "😮", "😢", "🔥"].map((emoji) => (
-            <TouchableOpacity
-              key={emoji}
-              onPress={() => handleReact(emoji)}
-              style={[
-                styles.reactionButton,
-                currentStory.myReaction === emoji && { backgroundColor: "rgba(255,255,255,0.4)" }
-              ]}
-            >
-              <Text style={{ fontSize: 24 }}>{emoji}</Text>
-            </TouchableOpacity>
-          ))}
         </View>
-      </View>
+      )}
     </View>
   );
 }
