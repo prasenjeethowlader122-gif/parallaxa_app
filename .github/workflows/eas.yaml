@@ -30,7 +30,7 @@ env:
   NODE_VERSION: "20"
 
 jobs:
-  # ─────────────────────────────��───────────────
+  # ─────────────────────────────────────────────
   # 1. Determine which EAS channel to target
   # ─────────────────────────────────────────────
   resolve-channel:
@@ -39,6 +39,7 @@ jobs:
     outputs:
       channel: ${{ steps.set-channel.outputs.channel }}
       message: ${{ steps.set-channel.outputs.message }}
+      slack_enabled: ${{ steps.set-channel.outputs.slack_enabled }}
 
     steps:
       - name: Set channel and message
@@ -57,6 +58,16 @@ jobs:
             echo "channel=development" >> "$GITHUB_OUTPUT"
             echo "message=Dev update from commit ${{ github.sha }}" >> "$GITHUB_OUTPUT"
           fi
+
+          # Resolve Slack availability here — secrets cannot be referenced in `if:` expressions;
+          # they always evaluate to empty string in that context.
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            echo "slack_enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "slack_enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # ─────────────────────────────────────────────
   # 2. Publish the OTA update via EAS Update
@@ -103,26 +114,26 @@ jobs:
         id: eas-update
         run: |
           set +e  # Don't exit on error, we'll handle it
-          
+
+          # --json is omitted: not reliably supported across eas-cli versions
           OUTPUT=$(eas update \
             --channel "${{ needs.resolve-channel.outputs.channel }}" \
             --message "${{ needs.resolve-channel.outputs.message }}" \
-            --non-interactive \
-            --json 2>&1)
-          
+            --non-interactive 2>&1)
+
           EXIT_CODE=$?
-          
+
           echo "$OUTPUT"
-          
+
           if [ $EXIT_CODE -eq 0 ]; then
-            # Extract update group ID from successful output
-            UPDATE_ID=$(echo "$OUTPUT" | jq -r '.[] | .id' 2>/dev/null | head -n 1 || echo "unknown")
+            UPDATE_ID=$(echo "$OUTPUT" | grep -oP '(?<=Update group ID: )\S+' || echo "unknown")
             echo "update_id=$UPDATE_ID" >> "$GITHUB_OUTPUT"
             echo "success=true" >> "$GITHUB_OUTPUT"
           else
             echo "update_id=N/A" >> "$GITHUB_OUTPUT"
             echo "success=false" >> "$GITHUB_OUTPUT"
-            echo "error_output=$OUTPUT" >> "$GITHUB_OUTPUT"
+            SAFE_OUTPUT=$(echo "$OUTPUT" | tail -c 2000)
+            echo "error_output=$SAFE_OUTPUT" >> "$GITHUB_OUTPUT"
             exit 1
           fi
         env:
@@ -132,7 +143,7 @@ jobs:
         if: success()
         run: |
           echo "✅ OTA update published!"
-          echo "   Channel : ${{ needs.resolve-channel.outputs.channel }}"
+          echo "   Channel  : ${{ needs.resolve-channel.outputs.channel }}"
           echo "   Update ID: ${{ steps.eas-update.outputs.update_id }}"
           echo "   Commit   : ${{ github.sha }}"
 
@@ -141,7 +152,7 @@ jobs:
         run: |
           echo "❌ OTA update failed!"
           echo "   Channel: ${{ needs.resolve-channel.outputs.channel }}"
-          echo "   Error details: ${{ steps.eas-update.outputs.error_output }}"
+          echo "   Error  : ${{ steps.eas-update.outputs.error_output }}"
 
   # ─────────────────────────────────────────────
   # 3. (Optional) Notify Slack on success/failure
@@ -150,7 +161,7 @@ jobs:
     name: Notify Team
     runs-on: ubuntu-latest
     needs: [resolve-channel, publish-update]
-    if: always() && secrets.SLACK_WEBHOOK_URL != ''
+    if: always() && needs.resolve-channel.outputs.slack_enabled == 'true'
     continue-on-error: true
 
     steps:
