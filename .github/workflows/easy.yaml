@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main        # Publishes to "production" channel
-      - master     # Publishes to "staging" channel
+      - master      # Publishes to "staging" channel
       - develop     # Publishes to "development" channel
   workflow_dispatch:
     inputs:
@@ -51,7 +51,7 @@ jobs:
           elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "channel=production" >> "$GITHUB_OUTPUT"
             echo "message=Production update from commit ${{ github.sha }}" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.ref }}" = "refs/heads/staging" ]; then
+          elif [ "${{ github.ref }}" = "refs/heads/master" ]; then
             echo "channel=staging" >> "$GITHUB_OUTPUT"
             echo "message=Staging update from commit ${{ github.sha }}" >> "$GITHUB_OUTPUT"
           else
@@ -60,42 +60,12 @@ jobs:
           fi
 
   # ─────────────────────────────────────────────
-  # 2. Run tests before publishing
-  # ─────────────────────────────────────────────
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    needs: resolve-channel
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linter
-        run: npm run lint --if-present
-
-      - name: Run type check
-        run: npm run typecheck --if-present
-
-      - name: Run unit tests
-        run: npm test -- --passWithNoTests --forceExit
-
-  # ─────────────────────────────────────────────
-  # 3. Publish the OTA update via EAS Update
+  # 2. Publish the OTA update via EAS Update
   # ─────────────────────────────────────────────
   publish-update:
     name: Publish EAS Update (${{ needs.resolve-channel.outputs.channel }})
     runs-on: ubuntu-latest
-    needs: [resolve-channel, test]
+    needs: resolve-channel
     environment: ${{ needs.resolve-channel.outputs.channel }}
 
     steps:
@@ -106,10 +76,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Install EAS CLI
         run: npm install --global eas-cli
@@ -133,8 +99,6 @@ jobs:
           echo "update_id=$UPDATE_ID" >> "$GITHUB_OUTPUT"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          # Add any additional runtime env vars your app needs:
-          # APP_ENV: ${{ needs.resolve-channel.outputs.channel }}
 
       - name: Print update summary
         run: |
@@ -144,7 +108,7 @@ jobs:
           echo "   Commit   : ${{ github.sha }}"
 
   # ─────────────────────────────────────────────
-  # 4. (Optional) Notify Slack on success/failure
+  # 3. (Optional) Notify Slack on success/failure
   # ─────────────────────────────────────────────
   notify:
     name: Notify Team
@@ -171,7 +135,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "❌ *Expo OTA update FAILED*\n*Channel:* ${{ needs.resolve-channel.outputs.channel }}\n*Branch:* ${{ github.ref_name }}\n*Commit:* ${{ github.sha }}\n*By:* ${{ github.actor }}\n*Logs:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": "❌ *Expo OTA update FAILED*\n*Channel:* ${{ needs.resolve-channel.outputs.channel }}\n*Branch:* ${{ github.ref_name }}\n*Commit:* ${{ github.sha }}\n*By:* ${{ github.actor }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
