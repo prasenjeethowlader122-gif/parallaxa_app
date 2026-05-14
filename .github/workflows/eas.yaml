@@ -11,11 +11,11 @@ on:
       channel:
         description: "EAS Update channel to publish to"
         required: true
-        default: "production"
+        default: "master"
         type: choice
         options:
-          - production
-          - staging
+          - master
+          - preview
           - development
       message:
         description: "Update message / release notes"
@@ -27,7 +27,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
 
 jobs:
   # ─────────────────────────────────────────────
@@ -49,11 +49,11 @@ jobs:
             echo "channel=${{ github.event.inputs.channel }}" >> "$GITHUB_OUTPUT"
             echo "message=${{ github.event.inputs.message }}" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "channel=production" >> "$GITHUB_OUTPUT"
+            echo "channel=master" >> "$GITHUB_OUTPUT"
             echo "message=Production update from commit ${{ github.sha }}" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.ref }}" = "refs/heads/master" ]; then
-            echo "channel=staging" >> "$GITHUB_OUTPUT"
-            echo "message=Staging update from commit ${{ github.sha }}" >> "$GITHUB_OUTPUT"
+            echo "channel=preview" >> "$GITHUB_OUTPUT"
+            echo "message=Preview update from commit ${{ github.sha }}" >> "$GITHUB_OUTPUT"
           else
             echo "channel=development" >> "$GITHUB_OUTPUT"
             echo "message=Dev update from commit ${{ github.sha }}" >> "$GITHUB_OUTPUT"
@@ -85,7 +85,7 @@ jobs:
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -111,12 +111,14 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Authenticate with Expo
+        working-directory: artifacts/social-app
         run: eas whoami
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Publish OTA update
         id: eas-update
+        working-directory: artifacts/social-app
         run: |
           set +e  # Don't exit on error, we'll handle it
 
