@@ -28,7 +28,7 @@ concurrency:
 
 env:
   NODE_VERSION: "20"
-  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+  EXPO_TOKEN: jC9iuFuKiE-3eUCiLqU6eR2Q5eXwF5Kq-FCRh68K
 
 jobs:
   # ─────────────────────────────────────────────
