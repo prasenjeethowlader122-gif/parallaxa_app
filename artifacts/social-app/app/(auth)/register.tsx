@@ -32,6 +32,7 @@ import {
   Tick01Icon,
 } from '@hugeicons/core-free-icons';
 import { useCheckUsername, useSuggestUsernames } from "@workspace/api-client-react";
+import { FloatingLabelInput } from "@/components/FloatingLabelInput";
 
 type FormErrors = {
   displayName?: string;
@@ -57,12 +58,9 @@ const STEPS = [
 /* ─── reusable input ─── */
 const InputRow = ({
   icon,
-  placeholder,
+  label,
   value,
   onChange,
-  focused,
-  onFocus,
-  onBlur,
   error,
   secure = false,
   right,
@@ -72,12 +70,9 @@ const InputRow = ({
   clearError,
 }: {
   icon: any; // Accepts the icon object from @hugeicons/core-free-icons
-  placeholder: string;
+  label: string;
   value: string;
   onChange: (t: string) => void;
-  focused: boolean;
-  onFocus: () => void;
-  onBlur: () => void;
   error?: string;
   secure?: boolean;
   right?: React.ReactNode;
@@ -86,54 +81,33 @@ const InputRow = ({
   isLoading?: boolean;
   clearError: () => void;
 }) => (
-  <View className="mb-5">
-    <View
-      className={`border rounded-full px-4 py-3 flex-row items-center ${
-        focused
-          ? "border-black"
-          : error
-          ? "border-red-300"
-          : "border-gray-100"
-      }`}
-    >
-      <HugeiconsIcon
-        icon={icon}
-        size={18}
-        color={focused ? "#000" : error ? "#dc2626" : "#9ca3af"}
-      />
-      <TextInput
-        className="flex-1 ml-3 text-gray-900 text-base font-medium outline-none"
-        placeholder={placeholder}
-        placeholderTextColor="#9ca3af"
-        value={value}
-        onChangeText={(t) => {
-          onChange(t);
-          if (error) clearError();
-        }}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        secureTextEntry={secure}
-        keyboardType={keyboardType}
-        autoCapitalize={autoCapitalize}
-        autoCorrect={false}
-        editable={!isLoading}
-      />
-      {isLoading ? (
-        <ActivityIndicator size="small" color="#9ca3af" />
+  <FloatingLabelInput
+    label={label}
+    icon={icon}
+    value={value}
+    onChangeText={(t) => {
+      onChange(t);
+      if (error) clearError();
+    }}
+    error={error}
+    secureTextEntry={secure}
+    keyboardType={keyboardType}
+    autoCapitalize={autoCapitalize}
+    autoCorrect={false}
+    editable={!isLoading}
+    right={
+      isLoading ? (
+        <ActivityIndicator size="small" color="#0095f6" />
       ) : (
-        value && !error && !secure && (
-          <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} color="#10b981" />
-        )
-      )}
-      {right}
-    </View>
-    {error && (
-      <View className="mt-2 flex-row items-center gap-1.5">
-        <HugeiconsIcon icon={InformationCircleIcon} size={14} color="#dc2626" />
-        <Text className="text-red-600 text-xs font-medium">{error}</Text>
-      </View>
-    )}
-  </View>
+        <>
+          {value && !error && !secure && (
+            <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} color="#10b981" />
+          )}
+          {right}
+        </>
+      )
+    }
+  />
 );
 
 export default function RegisterScreen() {
@@ -169,12 +143,12 @@ export default function RegisterScreen() {
   /* ─── Live Username Check ─── */
   const { data: availability, isLoading: isCheckingUsername } = useCheckUsername(
     { username: username.trim().toLowerCase() },
-    { query: { enabled: step === 4 && username.trim().length >= 3 } as any }
+    { query: { enabled: step === 4 && username.trim().length >= 3, retry: false } as any }
   );
 
   const { data: suggestionData } = useSuggestUsernames(
     { username: username.trim().toLowerCase() },
-    { query: { enabled: (step === 4 && availability?.available === false) || (step === 4 && username.trim().length === 0) } as any }
+    { query: { enabled: (step === 4 && availability?.available === false) || (step === 4 && username.trim().length === 0), retry: false } as any }
   );
   
   const topPt = insets.top + (Platform.OS === "web" ? 24 : 0);
@@ -295,15 +269,11 @@ export default function RegisterScreen() {
       <>
         {/* Full Name */}
         <View className="mb-2">
-          <Text className="text-slate-700 font-semibold mb-2 text-sm">Full Name</Text>
           <InputRow
             icon={UserIcon}
-            placeholder="John Doe"
+            label="Full Name"
             value={displayName}
             onChange={setDisplayName}
-            focused={displayNameFocused}
-            onFocus={() => setDNF(true)}
-            onBlur={() => setDNF(false)}
             error={errors.displayName}
             autoCapitalize="words"
             isLoading={isLoading}
@@ -315,21 +285,17 @@ export default function RegisterScreen() {
 
     if (step === 1) return (
       <View className="mb-2">
-        <Text className="text-slate-700 font-semibold mb-2 text-sm">Birthday</Text>
         <InputRow
           icon={Calendar01Icon}
-          placeholder="YYYY-MM-DD"
+          label="Birthday (YYYY-MM-DD)"
           value={dateOfBirth}
           onChange={setDateOfBirth}
-          focused={dobFocused}
-          onFocus={() => setDOBF(true)}
-          onBlur={() => setDOBF(false)}
           error={errors.dateOfBirth}
           keyboardType="numbers-and-punctuation"
           isLoading={isLoading}
           clearError={() => setErrors(p => ({ ...p, dateOfBirth: undefined }))}
         />
-        <Text className="text-xs text-slate-400 mt-1 ml-1">
+        <Text className="text-xs text-slate-400 mt-[-10] ml-1 mb-4">
           This will not be shown publicly. You must be at least 18.
         </Text>
       </View>
@@ -337,18 +303,12 @@ export default function RegisterScreen() {
 
     if (step === 2) return (
       <View className="mb-2">
-        <Text className="text-slate-700 font-semibold mb-2 text-sm">
-          {usePhone ? "Phone Number" : "Email Address"}
-        </Text>
         {usePhone ? (
           <InputRow
             icon={SmartPhone01Icon}
-            placeholder="+1 234 567 8900"
+            label="Phone Number"
             value={phoneNumber}
             onChange={setPhoneNumber}
-            focused={phoneFocused}
-            onFocus={() => setPhoneF(true)}
-            onBlur={() => setPhoneF(false)}
             error={errors.phoneNumber}
             keyboardType="phone-pad"
             isLoading={isLoading}
@@ -357,12 +317,9 @@ export default function RegisterScreen() {
         ) : (
           <InputRow
             icon={Mail01Icon}
-            placeholder="your.email@example.com"
+            label="Email Address"
             value={email}
             onChange={setEmail}
-            focused={emailFocused}
-            onFocus={() => setEF(true)}
-            onBlur={() => setEF(false)}
             error={errors.email}
             keyboardType="email-address"
             isLoading={isLoading}
@@ -371,7 +328,7 @@ export default function RegisterScreen() {
         )}
         <TouchableOpacity
           onPress={() => setUsePhone(!usePhone)}
-          className="mt-2"
+          className="mt-[-10] mb-4"
         >
           <Text className="text-blue-600 font-semibold text-sm">
             Use {usePhone ? "email" : "phone number"} instead
@@ -383,15 +340,11 @@ export default function RegisterScreen() {
     if (step === 3) return (
       <>
         <View className="mb-2">
-          <Text className="text-slate-700 font-semibold mb-2 text-sm">Password</Text>
           <InputRow
             icon={LockPasswordIcon}
-            placeholder="At least 6 characters"
+            label="Password"
             value={password}
             onChange={setPassword}
-            focused={passwordFocused}
-            onFocus={() => setPF(true)}
-            onBlur={() => setPF(false)}
             error={errors.password}
             secure={!showPassword}
             isLoading={isLoading}
@@ -409,15 +362,11 @@ export default function RegisterScreen() {
         </View>
 
         <View className="mb-2">
-          <Text className="text-slate-700 font-semibold mb-2 text-sm">Confirm Password</Text>
           <InputRow
             icon={LockPasswordIcon}
-            placeholder="Repeat your password"
+            label="Confirm Password"
             value={confirmPassword}
             onChange={setConfirmPass}
-            focused={confirmFocused}
-            onFocus={() => setCF(true)}
-            onBlur={() => setCF(false)}
             error={errors.confirmPassword}
             secure={!showConfirm}
             isLoading={isLoading}
@@ -440,15 +389,11 @@ export default function RegisterScreen() {
       <>
         {/* Username */}
         <View className="mb-2">
-          <Text className="text-slate-700 font-semibold mb-2 text-sm">Username</Text>
           <InputRow
             icon={AtIcon}
-            placeholder="john_doe"
+            label="Username"
             value={username}
             onChange={setUsername}
-            focused={usernameFocused}
-            onFocus={() => setUNF(true)}
-            onBlur={() => setUNF(false)}
             error={errors.username}
             isLoading={isLoading || isCheckingUsername}
             clearError={() => setErrors(p => ({ ...p, username: undefined }))}
