@@ -200,7 +200,7 @@ export default function LoginScreen() {
         <View className="items-center mb-12">
           <Image
             source={require('@/assets/images/text-logo-dark.svg')}
-            style={{ width: 180, height: 40 }}
+            style={{ width: 120, height: 26 }}
             contentFit="contain"
           />
         </View>

@@ -19,12 +19,10 @@ import {
   ArrowLeft01Icon,
   MoreHorizontalIcon,
   GridIcon,
-  ApiIcon,
   Message01Icon,
   CheckmarkBadge01Icon,
   Calendar03Icon,
   Link01Icon,
-  UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import {
   useGetUser,
@@ -224,9 +222,16 @@ export default function UserProfileScreen() {
             ) : null}
             {!isOwnProfile && (
               <>
-                <IconBtn icon={Message01Icon} onPress={handleMessage} />
-                <IconBtn icon={UserAdd01Icon} onPress={() => {}} />
-                <FollowButton isFollowing={!!profile.isFollowing} onPress={handleFollow} />
+                {me ? (
+                  <IconBtn icon={Message01Icon} onPress={handleMessage} />
+                ) : null}
+                <FollowButton
+                  isFollowing={!!profile.isFollowing}
+                  onPress={() => {
+                    if (!me) { router.push("/(auth)/login" as any); return; }
+                    handleFollow();
+                  }}
+                />
               </>
             )}
           </View>
@@ -234,24 +239,38 @@ export default function UserProfileScreen() {
       </View>
 
       {/* ── Admin section ── */}
-      {/**me?.role === 'admin' && profile && !isOwnProfile && (
+      {me?.role === 'admin' && profile && !isOwnProfile && (
         <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingBottom: 10 }}>
-           <TouchableOpacity
-             onPress={() => profile.isFrozen ? unfreezeUser({ userId: id! }) : freezeUser({ userId: id! })}
-             style={{ flex: 1, backgroundColor: profile.isFrozen ? '#58C322' : '#F4212E', paddingVertical: 8, borderRadius: 8, alignItems: 'center' }}
-           >
-             <Text style={{ color: '#fff', fontWeight: '700' }}>{profile.isFrozen ? 'Unfreeze' : 'Freeze'}</Text>
-           </TouchableOpacity>
-           {profile.verificationStatus === 'pending' && (
-             <TouchableOpacity
-               onPress={() => approveVerification({ userId: id! })}
-               style={{ flex: 1, backgroundColor: "#1d9bf0", paddingVertical: 8, borderRadius: 8, alignItems: 'center' }}
-             >
-               <Text style={{ color: '#fff', fontWeight: '700' }}>Approve</Text>
-             </TouchableOpacity>
-           )}
+          <TouchableOpacity
+            onPress={() => profile.isFrozen ? unfreezeUser({ userId: id! }) : freezeUser({ userId: id! })}
+            style={{
+              flex: 1,
+              backgroundColor: profile.isFrozen ? '#58C322' : '#F4212E',
+              paddingVertical: 8,
+              borderRadius: 8,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '700' }}>
+              {profile.isFrozen ? 'Unfreeze' : 'Freeze'}
+            </Text>
+          </TouchableOpacity>
+          {profile.verificationStatus === 'pending' && (
+            <TouchableOpacity
+              onPress={() => approveVerification({ userId: id! })}
+              style={{
+                flex: 1,
+                backgroundColor: "#1d9bf0",
+                paddingVertical: 8,
+                borderRadius: 8,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700' }}>Approve Verification</Text>
+            </TouchableOpacity>
+          )}
         </View>
-      )**/}
+      )}
 
       {/* ── Bio section ── */}
       {isLoading ? (

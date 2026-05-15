@@ -39,10 +39,10 @@ import { UserAvatar } from "@/components/UserAvatar";
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const MAIN_NAV = [
-  { id: "index",         label: "Home",         icon: Home01Icon },
-  { id: "explore",       label: "Explore",       icon: Search01Icon },
-  { id: "notifications", label: "Notifications", icon: Notification01Icon },
-  { id: "messages",      label: "Messages",      icon: Message01Icon },
+  { id: "index",         label: "Home",         icon: Home01Icon,         requiresAuth: false },
+  { id: "explore",       label: "Explore",       icon: Search01Icon,       requiresAuth: false },
+  { id: "notifications", label: "Notifications", icon: Notification01Icon, requiresAuth: true  },
+  { id: "messages",      label: "Messages",      icon: Message01Icon,      requiresAuth: true  },
 ];
 
 const SECONDARY_NAV = [
@@ -127,21 +127,26 @@ export default function RootLayout() {
   const isHome = pathname === "/" || pathname === "/(tabs)";
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
-  const navigateTo = (id: string) => {
+  const navigateTo = (id: string, requiresAuth = false) => {
+    if (requiresAuth && !user) {
+      closeDrawer();
+      setTimeout(() => router.push("/(auth)/login" as any), 50);
+      return;
+    }
     closeDrawer();
     setTimeout(() => {
       if (id === "index")    { router.push("/"); return; }
       if (id === "messages") { router.push("/messages" as any); return; }
       router.push(`/${id}` as any);
-    }, 50); // let close animation start first
+    }, 50);
   };
 
   // ── Logo ──────────────────────────────────────────────────────────────────
   const XLogo = () => (
-    <View style={{ height: 28, justifyContent: "center", alignItems: "flex-start" }}>
+    <View style={{ height: 24, justifyContent: "center", alignItems: "flex-start" }}>
       <Image
         source={require("@/assets/images/text-logo-dark.svg")}
-        style={{ height: 24, width: 130 }}
+        style={{ height: 20, width: 100 }}
         contentFit="contain"
       />
     </View>
@@ -154,10 +159,11 @@ export default function RootLayout() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {MAIN_NAV.map((item) => {
           const isActive = currentRoute === item.id;
+          const isLocked = item.requiresAuth && !user;
           return (
             <TouchableOpacity
               key={item.id}
-              onPress={() => navigateTo(item.id)}
+              onPress={() => navigateTo(item.id, item.requiresAuth)}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -165,6 +171,7 @@ export default function RootLayout() {
                 paddingVertical: 12,
                 paddingHorizontal: 12,
                 borderRadius: 999,
+                opacity: isLocked ? 0.5 : 1,
               }}
             >
               <HugeiconsIcon
@@ -528,10 +535,11 @@ export default function RootLayout() {
               {/* ── Main nav ── */}
               {MAIN_NAV.map((item) => {
                 const isActive = currentRoute === item.id;
+                const isLocked = item.requiresAuth && !user;
                 return (
                   <TouchableOpacity
                     key={item.id}
-                    onPress={() => navigateTo(item.id)}
+                    onPress={() => navigateTo(item.id, item.requiresAuth)}
                     activeOpacity={0.7}
                     style={{
                       flexDirection: "row",
@@ -539,6 +547,7 @@ export default function RootLayout() {
                       gap: 16,
                       paddingHorizontal: 20,
                       paddingVertical: 14,
+                      opacity: isLocked ? 0.45 : 1,
                     }}
                   >
                     <HugeiconsIcon
