@@ -50,7 +50,7 @@ export default function MessagesScreen() {
 
   const { data: searchResults, isFetching: isSearching } = useSearch(
     { q: newMsgSearch, type: "users" },
-    { query: { enabled: newMsgSearch.trim().length > 1 } }
+    { query: { enabled: newMsgSearch.trim().length > 1, queryKey: ['search', newMsgSearch, 'users'] } }
   );
 
   const handleRefresh = async () => {
