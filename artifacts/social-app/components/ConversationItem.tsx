@@ -4,6 +4,8 @@ import { Text } from "@/components/Text";
 import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "./UserAvatar";
+import { HugeiconsIcon } from "@hugeicons/react-native";
+import { CheckmarkCircle01Icon } from "@hugeicons/core-free-icons";
 
 interface ConversationItemProps {
   id: string;
@@ -23,7 +25,13 @@ interface ConversationItemProps {
   myId: string;
 }
 
-export function ConversationItem({ id, participant, lastMessage, unreadCount, myId }: ConversationItemProps) {
+export function ConversationItem({
+  id,
+  participant,
+  lastMessage,
+  unreadCount,
+  myId,
+}: ConversationItemProps) {
   const colors = useColors();
   const router = useRouter();
 
@@ -49,29 +57,44 @@ export function ConversationItem({ id, participant, lastMessage, unreadCount, my
 
   return (
     <TouchableOpacity
-      className="flex-row items-center px-4 py-2.5"
+      className="flex-row items-center px-4 py-3"
       onPress={() => router.push(`/messages/${id}` as any)}
       activeOpacity={0.7}
     >
       <UserAvatar uri={participant.avatarUrl} size={52} />
       <View className="flex-1 ml-3">
         <View className="flex-row justify-between items-center mb-0.5">
-          <Text
-            className={`text-[15px] ${hasUnread ? "font-bold" : "font-medium"}`}
-            style={{ color: colors.foreground }}
-          >
-            {participant.username}
-          </Text>
+          <View className="flex-row items-center gap-1 flex-1 mr-2">
+            <Text
+              className={`text-[15px] ${hasUnread ? "font-bold" : "font-medium"}`}
+              style={{ color: colors.foreground }}
+              numberOfLines={1}
+            >
+              {participant.displayName || participant.username}
+            </Text>
+            {participant.isVerified && (
+              <HugeiconsIcon
+                icon={CheckmarkCircle01Icon}
+                size={13}
+                color={colors.verified}
+              />
+            )}
+          </View>
           {lastMessage && (
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+            <Text
+              className={`text-xs flex-shrink-0 ${hasUnread ? "font-semibold" : ""}`}
+              style={{ color: hasUnread ? colors.primary : colors.mutedForeground }}
+            >
               {timeAgo(lastMessage.createdAt)}
             </Text>
           )}
         </View>
         <View className="flex-row justify-between items-center">
           <Text
-            className={`text-sm flex-1 mr-2 ${hasUnread ? "font-bold" : ""}`}
-            style={{ color: hasUnread ? colors.foreground : colors.mutedForeground }}
+            className={`text-sm flex-1 mr-2 ${hasUnread ? "font-semibold" : ""}`}
+            style={{
+              color: hasUnread ? colors.foreground : colors.mutedForeground,
+            }}
             numberOfLines={1}
           >
             {lastMsgText}
@@ -81,7 +104,9 @@ export function ConversationItem({ id, participant, lastMessage, unreadCount, my
               className="min-w-[20px] h-5 rounded-full px-1.5 items-center justify-center"
               style={{ backgroundColor: colors.primary }}
             >
-              <Text className="text-white text-[11px] font-bold">{unreadCount}</Text>
+              <Text className="text-white text-[11px] font-bold">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </Text>
             </View>
           )}
         </View>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert, Platform, TouchableOpacity, View, ScrollView } from "react-native";
+import { Alert, Linking, Platform, TouchableOpacity, View, ScrollView, Switch } from "react-native";
 import { Text } from "@/components/Text";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,12 +15,13 @@ import {
   Logout01Icon,
   ArrowRight01Icon,
   ArrowLeft01Icon,
+  UserBlock01Icon,
+  Settings02Icon,
 } from "@hugeicons/core-free-icons";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { useUpdateUser, useGetMe } from "@workspace/api-client-react";
-import { Switch } from "react-native";
-import SocialNative from "@/modules/social-native";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export default function SettingsScreen() {
   const colors = useColors();
@@ -40,7 +41,7 @@ export default function SettingsScreen() {
         data: { isPrivate: value },
       });
       refetch();
-    } catch (err) {
+    } catch {
       Alert.alert("Error", "Failed to update privacy settings");
     }
   };
@@ -48,21 +49,31 @@ export default function SettingsScreen() {
   const handleLogout = () => {
     Alert.alert("Log out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Log out", style: "destructive", onPress: async () => { await logout(); } },
+      {
+        text: "Log out",
+        style: "destructive",
+        onPress: async () => {
+          await logout();
+        },
+      },
     ]);
   };
 
   const sections = [
-    ...(me?.role === 'admin' ? [{
-      title: "Administrative Tools",
-      items: [
-        {
-          icon: Shield01Icon,
-          label: "User Management",
-          onPress: () => Alert.alert("Admin", "User Management coming soon"),
-        },
-      ],
-    }] : []),
+    ...(me?.role === "admin"
+      ? [
+          {
+            title: "Administrative Tools",
+            items: [
+              {
+                icon: Settings02Icon,
+                label: "User Management",
+                onPress: () => router.push("/admin/users" as any),
+              },
+            ],
+          },
+        ]
+      : []),
     {
       title: "Account",
       items: [
@@ -75,6 +86,18 @@ export default function SettingsScreen() {
           icon: CheckmarkCircle01Icon,
           label: "Account Verification",
           onPress: () => router.push("/account-verification" as any),
+        },
+      ],
+    },
+    {
+      title: "Notifications",
+      items: [
+        {
+          icon: Notification01Icon,
+          label: "Push Notifications",
+          onPress: () => {
+            Linking.openSettings();
+          },
         },
       ],
     },
@@ -93,6 +116,11 @@ export default function SettingsScreen() {
           value: me?.isPrivate ?? false,
           onValueChange: togglePrivate,
         },
+        {
+          icon: UserBlock01Icon,
+          label: "Blocked Users",
+          onPress: () => router.push("/blocked-users" as any),
+        },
       ],
     },
     {
@@ -100,14 +128,20 @@ export default function SettingsScreen() {
       items: [
         {
           icon: HelpCircleIcon,
-          label: "Help",
-          onPress: () => {},
+          label: "Help & Support",
+          onPress: () =>
+            Linking.openURL("mailto:support@parallaxa.com").catch(() =>
+              Alert.alert("Help", "Reach us at support@parallaxa.com")
+            ),
         },
         {
           icon: InformationCircleIcon,
           label: "About",
           onPress: () => {
-             Alert.alert("About", "Social App v1.0.0\nBuilt with Expo & React Native");
+            Alert.alert(
+              "About Parallaxa",
+              "Version 1.0.0\nBuilt with Expo & React Native\n\n© 2026 Parallaxa"
+            );
           },
         },
       ],
@@ -133,14 +167,63 @@ export default function SettingsScreen() {
             color={colors.foreground}
           />
         </TouchableOpacity>
-        <Text className="text-[17px] font-bold" style={{ color: colors.foreground }}>
+        <Text
+          className="text-[17px] font-bold"
+          style={{ color: colors.foreground }}
+        >
           Settings
         </Text>
         <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView className="flex-1">
-        {sections.map((section, sectionIdx) => (
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Profile Card */}
+        {me && (
+          <TouchableOpacity
+            onPress={() => router.push("/edit-profile" as any)}
+            activeOpacity={0.7}
+          >
+            <View
+              className="flex-row items-center px-5 py-4 mt-4 mx-4 rounded-2xl gap-4"
+              style={{ backgroundColor: colors.card, borderWidth: 0.5, borderColor: colors.border }}
+            >
+              <UserAvatar uri={me.avatarUrl} size={58} />
+              <View className="flex-1">
+                <View className="flex-row items-center gap-1.5">
+                  <Text
+                    className="text-[17px] font-bold"
+                    style={{ color: colors.foreground }}
+                    numberOfLines={1}
+                  >
+                    {me.displayName || me.username}
+                  </Text>
+                  {me.isVerified && (
+                    <HugeiconsIcon
+                      icon={CheckmarkCircle01Icon}
+                      size={16}
+                      color={colors.verified}
+                    />
+                  )}
+                </View>
+                <Text
+                  className="text-sm mt-0.5"
+                  style={{ color: colors.mutedForeground }}
+                >
+                  @{me.username}
+                </Text>
+              </View>
+              <HugeiconsIcon
+                icon={ArrowRight01Icon}
+                size={18}
+                color={colors.mutedForeground}
+                strokeWidth={1.5}
+              />
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {/* Sections */}
+        {sections.map((section) => (
           <View key={section.title} className="mt-6">
             <Text
               className="px-5 mb-2 text-[13px] font-bold uppercase tracking-wider"
@@ -148,30 +231,46 @@ export default function SettingsScreen() {
             >
               {section.title}
             </Text>
-            <View style={{ backgroundColor: colors.card, borderTopWidth: 0.5, borderBottomWidth: 0.5, borderColor: colors.border }}>
+            <View
+              style={{
+                backgroundColor: colors.card,
+                borderTopWidth: 0.5,
+                borderBottomWidth: 0.5,
+                borderColor: colors.border,
+              }}
+            >
               {section.items.map((item, index) => (
                 <View key={item.label}>
                   <TouchableOpacity
                     className="flex-row items-center px-5 py-4 gap-3.5"
                     onPress={item.onPress}
-                    disabled={item.isSwitch}
+                    disabled={(item as any).isSwitch}
                     activeOpacity={0.7}
                   >
                     <HugeiconsIcon
                       icon={item.icon}
                       size={20}
-                      color={item.isSwitch && item.value ? colors.primary : colors.foreground}
+                      color={
+                        (item as any).isSwitch && (item as any).value
+                          ? colors.primary
+                          : colors.foreground
+                      }
                       strokeWidth={1.5}
                     />
-                    <Text className="flex-1 text-base" style={{ color: colors.foreground }}>
+                    <Text
+                      className="flex-1 text-base"
+                      style={{ color: colors.foreground }}
+                    >
                       {item.label}
                     </Text>
-                    {item.isSwitch ? (
+                    {(item as any).isSwitch ? (
                       <Switch
-                        value={item.value}
-                        onValueChange={item.onValueChange}
+                        value={(item as any).value}
+                        onValueChange={(item as any).onValueChange}
                         trackColor={{ false: colors.border, true: colors.primary }}
-                        thumbColor={Platform.OS === "ios" ? undefined : colors.background}
+                        thumbColor={
+                          Platform.OS === "ios" ? undefined : colors.background
+                        }
                       />
                     ) : (
                       <HugeiconsIcon
@@ -183,7 +282,10 @@ export default function SettingsScreen() {
                     )}
                   </TouchableOpacity>
                   {index < section.items.length - 1 && (
-                    <View className="ml-14" style={{ height: 0.5, backgroundColor: colors.border }} />
+                    <View
+                      className="ml-14"
+                      style={{ height: 0.5, backgroundColor: colors.border }}
+                    />
                   )}
                 </View>
               ))}
@@ -191,10 +293,16 @@ export default function SettingsScreen() {
           </View>
         ))}
 
+        {/* Log out */}
         <View className="mt-8 mb-10">
           <TouchableOpacity
             className="flex-row items-center px-5 py-4 gap-3.5"
-            style={{ backgroundColor: colors.card, borderTopWidth: 0.5, borderBottomWidth: 0.5, borderColor: colors.border }}
+            style={{
+              backgroundColor: colors.card,
+              borderTopWidth: 0.5,
+              borderBottomWidth: 0.5,
+              borderColor: colors.border,
+            }}
             onPress={handleLogout}
             activeOpacity={0.7}
           >
@@ -204,12 +312,18 @@ export default function SettingsScreen() {
               color={colors.destructive}
               strokeWidth={1.5}
             />
-            <Text className="flex-1 text-base font-semibold" style={{ color: colors.destructive }}>
+            <Text
+              className="flex-1 text-base font-semibold"
+              style={{ color: colors.destructive }}
+            >
               Log out
             </Text>
           </TouchableOpacity>
-          <Text className="text-center mt-4 text-[13px]" style={{ color: colors.mutedForeground }}>
-            Version 1.0.0
+          <Text
+            className="text-center mt-4 text-[13px]"
+            style={{ color: colors.mutedForeground }}
+          >
+            Parallaxa v1.0.0
           </Text>
         </View>
       </ScrollView>
