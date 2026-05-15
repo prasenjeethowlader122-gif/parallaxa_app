@@ -1,5 +1,5 @@
 FROM node:24-slim AS deps
-RUN npm install -g pnpm@9
+RUN npm install -g pnpm@10
 WORKDIR /app
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
@@ -32,7 +32,7 @@ RUN pnpm --filter @workspace/api-server run build
 
 # ── Production image ────────────────────────────────────────────────────────
 FROM node:24-slim AS runner
-RUN npm install -g pnpm@9
+RUN npm install -g pnpm@10
 WORKDIR /app
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
