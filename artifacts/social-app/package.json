@@ -65,11 +65,12 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@babel/plugin-transform-react-jsx": "^7.28.6",
     "@expo/cli": "54.0.23",
     "@types/react": "~19.1.10",
     "@types/react-dom": "~19.1.7",
     "babel-plugin-react-compiler": "^19.0.0-beta-e993439-20250117",
-    "typescript": "~5.9.2",
-    "babel-preset-expo": "~13.0.0"
+    "babel-preset-expo": "~13.0.0",
+    "typescript": "~5.9.2"
   }
 }
