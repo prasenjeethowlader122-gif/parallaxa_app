@@ -1,8 +1,8 @@
-FROM node:24 AS deps
-RUN npm install -g pnpm
+FROM node:24-slim AS deps
+RUN npm install -g pnpm@9
 WORKDIR /app
 
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY lib/db/package.json ./lib/db/
 COPY lib/api-spec/package.json ./lib/api-spec/
 COPY lib/api-zod/package.json ./lib/api-zod/
@@ -10,7 +10,7 @@ COPY lib/api-client-react/package.json ./lib/api-client-react/
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY artifacts/social-app/package.json ./artifacts/social-app/
 
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # ── Build Expo web ─────────────────────────────────────────────────────────
 FROM deps AS expo-builder
@@ -29,11 +29,11 @@ COPY artifacts/api-server/ ./artifacts/api-server/
 RUN pnpm --filter @workspace/api-server run build
 
 # ── Production image ────────────────────────────────────────────────────────
-FROM node:24 AS runner
-RUN npm install -g pnpm
+FROM node:24-slim AS runner
+RUN npm install -g pnpm@9
 WORKDIR /app
 
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY lib/db/package.json ./lib/db/
 COPY lib/db/drizzle.config.ts ./lib/db/
 COPY lib/db/src ./lib/db/src
@@ -42,26 +42,16 @@ COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/api-client-react/package.json ./lib/api-client-react/
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 
-# Install all dependencies including dev dependencies needed for drizzle-kit
-RUN pnpm install
+# Install production dependencies (using lockfile for reproducibility)
+RUN pnpm install --frozen-lockfile
 
 COPY --from=api-builder /app/artifacts/api-server/dist ./artifacts/api-server/dist
 
 # Expo web built in CI → served as static files by Express
 COPY --from=expo-builder /app/artifacts/social-app/web-export ./artifacts/api-server/public
 
-# Create migration entrypoint script
-RUN echo '#!/bin/sh\n\
-set -e\n\
-echo "Running database migrations..."\n\
- pnpm --filter @workspace/db run push-force\n\
-\n\
-# Clear expo cache and start in background if needed, or just start API\n\
-echo "Starting API server..."\n\
-# If you need to clear expo cache specifically before the node process starts:\n\
-# npx expo start -c --non-interactive &\n\
-\n\
-node --enable-source-maps ./artifacts/api-server/dist/index.mjs' > /app/start.sh && chmod +x /app/start.sh
+# Create migration + start script
+RUN printf '#!/bin/sh\nset -e\necho "Running database migrations..."\npnpm --filter @workspace/db run push-force\necho "Starting API server..."\nexec node --enable-source-maps ./artifacts/api-server/dist/index.mjs\n' > /app/start.sh && chmod +x /app/start.sh
 
 ENV NODE_ENV=production
 ENV PORT=8080
