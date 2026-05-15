@@ -13,12 +13,7 @@
       "os": ["current", "linux"],
       "cpu": ["current", "x64"],
       "libc": ["current", "musl"]
-    },
-    "onlyBuiltDependencies": [
-      "@firebase/util",
-      "esbuild",
-      "protobufjs"
-    ]
+    }
   },
   "private": true,
   "devDependencies": {
