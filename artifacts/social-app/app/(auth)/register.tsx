@@ -241,8 +241,7 @@ export default function RegisterScreen() {
           phoneNumber: usePhone ? phoneNumber.trim() : undefined,
           password,
           dateOfBirth,
-        }
-        as any
+        } as any
       });
       if (data.token && data.user) {
         await authLogin(data.token, data.user as any);
