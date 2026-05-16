@@ -546,7 +546,7 @@ export default function CreateScreen() {
                   style={{
                     fontSize: 18,
                     lineHeight: 26,
-                    color: content ? "transparent" : "#14171a",
+                    color: "transparent",
                     textAlignVertical: "top",
                     maxHeight: 400,
                     padding: 0,

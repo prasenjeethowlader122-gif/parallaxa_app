@@ -217,9 +217,9 @@ export default function LoginScreen() {
 
         {/* General Error Alert */}
         {errors.general && (
-          <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex-row items-center gap-3">
-            <HugeiconsIcon icon={Alert01Icon} size={20} color="#dc2626" />
-            <Text className="flex-1 text-red-700 font-semibold text-sm">
+          <View className="mb-6 p-4 bg-gray-50  rounded-xl flex-row items-center gap-3">
+            <HugeiconsIcon icon={Alert01Icon} size={20} color="#111111" />
+            <Text className="flex-1 text-gray-800 font-semibold text-sm">
               {errors.general}
             </Text>
           </View>

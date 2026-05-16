@@ -35,14 +35,14 @@ import { useCheckUsername, useSuggestUsernames, useRegister } from "@workspace/a
 import { FloatingLabelInput } from "@/components/FloatingLabelInput";
 
 type FormErrors = {
-  displayName?: string;
-  username?: string;
-  email?: string;
-  phoneNumber?: string;
-  dateOfBirth?: string;
-  password?: string;
-  confirmPassword?: string;
-  general?: string;
+  displayName ? : string;
+  username ? : string;
+  email ? : string;
+  phoneNumber ? : string;
+  dateOfBirth ? : string;
+  password ? : string;
+  confirmPassword ? : string;
+  general ? : string;
 };
 
 const TOTAL_STEPS = 5;
@@ -57,31 +57,31 @@ const STEPS = [
 
 /* ─── reusable input ─── */
 const InputRow = ({
-  icon,
-  label,
-  value,
-  onChange,
-  error,
-  secure = false,
-  right,
-  keyboardType,
-  autoCapitalize = "none",
-  isLoading,
-  clearError,
+icon,
+label,
+value,
+onChange,
+error,
+secure = false,
+right,
+keyboardType,
+autoCapitalize = "none",
+isLoading,
+clearError,
 }: {
-  icon: any; // Accepts the icon object from @hugeicons/core-free-icons
-  label: string;
-  value: string;
-  onChange: (t: string) => void;
-  error?: string;
-  secure?: boolean;
-  right?: React.ReactNode;
-  keyboardType?: any;
-  autoCapitalize?: any;
-  isLoading?: boolean;
-  clearError: () => void;
+icon: any; // Accepts the icon object from @hugeicons/core-free-icons
+label: string;
+value: string;
+onChange: (t: string) => void;
+error ? : string;
+secure ? : boolean;
+right ? : React.ReactNode;
+keyboardType ? : any;
+autoCapitalize ? : any;
+isLoading ? : boolean;
+clearError: () => void;
 }) => (
-  <FloatingLabelInput
+<FloatingLabelInput
     label={label}
     icon={icon}
     value={value}
@@ -98,16 +98,16 @@ const InputRow = ({
     right={
       isLoading ? (
         <ActivityIndicator size="small" color="#0095f6" />
-      ) : (
-        <>
+): (
+<>
           {value && !error && !secure && (
             <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} color="#10b981" />
           )}
           {right}
         </>
-      )
-    }
-  />
+)
+}
+/>
 );
 
 export default function RegisterScreen() {
@@ -130,7 +130,7 @@ export default function RegisterScreen() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState < FormErrors > ({});
   
   /* ─── focus state ─── */
   const [displayNameFocused, setDNF] = useState(false);
@@ -140,17 +140,17 @@ export default function RegisterScreen() {
   const [phoneFocused, setPhoneF] = useState(false);
   const [passwordFocused, setPF] = useState(false);
   const [confirmFocused, setCF] = useState(false);
-
+  
   /* ─── Live Username Check ─── */
-  const { data: availability, isLoading: isCheckingUsername, isError: checkUsernameError } = useCheckUsername(
-    { username: username.trim().toLowerCase() },
-    { query: { enabled: step === 4 && username.trim().length >= 3, retry: false, queryKey: ['checkUsername', username.trim().toLowerCase()] } as any }
-  );
-
-  const { data: suggestionData, isError: suggestUsernamesError } = useSuggestUsernames(
-    { username: username.trim().toLowerCase() },
-    { query: { enabled: (step === 4 && availability?.available === false) || (step === 4 && username.trim().length === 0), retry: false, queryKey: ['suggestUsernames', username.trim().toLowerCase()] } as any }
-  );
+  const { data: availability, isLoading: isCheckingUsername, isError: checkUsernameError } = useCheckUsername
+({ username: username.trim().toLowerCase() }, { query: { enabled: step === 4 && username.trim().length >=
+        3, retry: false, queryKey: ['checkUsername', username.trim().toLowerCase()] } as any });
+  
+  const { data: suggestionData, isError: suggestUsernamesError } = useSuggestUsernames({ username: username
+      .trim().toLowerCase() }, { query: { enabled: (step === 4 && availability?.available === false) || (
+        step === 4 && username.trim().length === 0), retry: false, queryKey: ['suggestUsernames', username
+        .trim().toLowerCase()
+      ] } as any });
   
   const topPt = insets.top + (Platform.OS === "web" ? 24 : 0);
   const bottomPb = insets.bottom + 24;
@@ -165,7 +165,7 @@ export default function RegisterScreen() {
       else if (displayName.trim().length > 50) newErrors.displayName =
         "Name must be less than 50 characters";
     }
-
+    
     if (step === 1) {
       if (!dateOfBirth.trim()) {
         newErrors.dateOfBirth = "Date of birth is required";
@@ -179,7 +179,7 @@ export default function RegisterScreen() {
         }
       }
     }
-
+    
     if (step === 2) {
       if (usePhone) {
         if (!phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required";
@@ -199,7 +199,7 @@ export default function RegisterScreen() {
       if (!confirmPassword) newErrors.confirmPassword = "Please confirm your password";
       else if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
     }
-
+    
     if (step === 4) {
       if (!username.trim()) newErrors.username = "Username is required";
       else if (username.trim().length < 3) newErrors.username = "Username must be at least 3 characters";
@@ -208,7 +208,7 @@ export default function RegisterScreen() {
         newErrors.username = "Letters, numbers, _ and - only";
       else if (availability?.available === false && !checkUsernameError)
         newErrors.username = "Username is already taken";
-
+      
       if (!acceptTerms) newErrors.general = "You must accept the terms to continue";
     }
     
@@ -222,9 +222,9 @@ export default function RegisterScreen() {
   };
   
   const goBack = () => {
-    if (step > 0) { 
+    if (step > 0) {
       setStep(s => s - 1);
-      setErrors({}); 
+      setErrors({});
     }
     else router.back();
   };
@@ -241,7 +241,8 @@ export default function RegisterScreen() {
           phoneNumber: usePhone ? phoneNumber.trim() : undefined,
           password,
           dateOfBirth,
-        } as any
+        }
+        as any
       });
       if (data.token && data.user) {
         await authLogin(data.token, data.user as any);
@@ -276,7 +277,7 @@ export default function RegisterScreen() {
         </View>
       </>
     );
-
+    
     if (step === 1) return (
       <View className="mb-2">
         <InputRow
@@ -294,7 +295,7 @@ export default function RegisterScreen() {
         </Text>
       </View>
     );
-
+    
     if (step === 2) return (
       <View className="mb-2">
         {usePhone ? (
@@ -378,7 +379,7 @@ export default function RegisterScreen() {
         </View>
       </>
     );
-
+    
     if (step === 4) return (
       <>
         {/* Username */}
@@ -488,11 +489,13 @@ export default function RegisterScreen() {
 
         {/* ── General Error ── */}
         {errors.general && (
-          <View className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex-row items-center gap-3">
-            <HugeiconsIcon icon={Alert01Icon} size={20} color="#dc2626" />
-            <Text className="flex-1 text-red-700 font-semibold text-sm">{errors.general}</Text>
+  <View className="mb-6 p-4 bg-gray-50  rounded-xl flex-row items-center gap-3">
+            <HugeiconsIcon icon={Alert01Icon} size={20} color="#111111" />
+            <Text className="flex-1 text-gray-800 font-semibold text-sm">
+              {errors.general}
+            </Text>
           </View>
-        )}
+)}
 
         {/* ── Step Fields ── */}
         {renderStep()}
