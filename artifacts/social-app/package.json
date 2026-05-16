@@ -27,6 +27,7 @@
     "expo": "~54.0.34",
     "expo-blur": "~15.0.8",
     "expo-build-properties": "~1.0.10",
+    "expo-media-library": "latest",
     "expo-constants": "~18.0.11",
     "expo-font": "~14.0.10",
     "expo-glass-effect": "~0.1.10",
