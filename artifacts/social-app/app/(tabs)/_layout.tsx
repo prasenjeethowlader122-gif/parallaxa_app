@@ -296,7 +296,7 @@ export default function RootLayout() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
-      <StatusBar style="auto" translucent={false} />
+      <StatusBar style="light" translucent={false} />
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
         <View
           style={{

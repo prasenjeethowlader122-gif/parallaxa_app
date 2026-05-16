@@ -58,7 +58,7 @@ function RootLayoutNav() {
 
   return (
     <>
-      <StatusBar style="auto" translucent={false} />
+      <StatusBar style="light" translucent={false} />
       <Stack
         screenOptions={{
           headerShown: false,

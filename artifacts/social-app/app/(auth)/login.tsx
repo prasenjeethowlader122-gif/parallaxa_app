@@ -197,10 +197,10 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Logo */}
-        <View className="items-center mb-12">
+        <View className="items-center mb-12 mt-10">
           <Image
-            source={require('@/assets/images/text-logo-dark.svg')}
-            style={{ width: 180, height: 44 }}
+            source={require('@/assets/images/parallaxa-logo.svg')}
+            style={{ width: 180, height: 54 }}
             contentFit="contain"
           />
         </View>
