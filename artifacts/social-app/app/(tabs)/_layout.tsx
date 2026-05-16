@@ -143,10 +143,10 @@ export default function RootLayout() {
 
   // ── Logo ──────────────────────────────────────────────────────────────────
   const XLogo = () => (
-    <View style={{ height: 40, justifyContent: "center", alignItems: "flex-start" }}>
+    <View style={{ height: 35, justifyContent: "center", alignItems: "flex-start" }}>
       <Image
         source={require("@/assets/images/text-logo-dark.svg")}
-        style={{ height: 36, width: 158 }}
+        style={{ height: 26, width: 148 }}
         contentFit="contain"
       />
     </View>
@@ -260,31 +260,6 @@ export default function RootLayout() {
           </TouchableOpacity>
         )}
       </ScrollView>
-
-      {user && (
-        <TouchableOpacity
-          onPress={logout}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-            paddingVertical: 12,
-            paddingHorizontal: 12,
-            marginBottom: 20,
-            borderRadius: 999,
-          }}
-        >
-          <UserAvatar uri={user.avatarUrl} size={40} />
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontWeight: "700", color: "#0f1419" }} numberOfLines={1}>
-              {user.displayName}
-            </Text>
-            <Text style={{ color: "#536471" }} numberOfLines={1}>
-              @{user.username}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      )}
     </View>
   );
 

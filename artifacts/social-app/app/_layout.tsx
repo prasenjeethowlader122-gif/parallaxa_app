@@ -57,7 +57,7 @@ function RootLayoutNav() {
   
   return (
     <>
-      <StatusBar style="light" backgroundColor="#000000" translucent={false} />
+      <StatusBar style="light" translucent={false} />
       <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />

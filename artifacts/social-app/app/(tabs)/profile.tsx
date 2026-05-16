@@ -17,7 +17,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import {
   MoreHorizontalIcon,
   GridIcon,
-  CheckmarkBadge01Icon,
+  CheckmarkBadge02Icon,
   Calendar03Icon,
   Link01Icon,
   Logout01Icon,
