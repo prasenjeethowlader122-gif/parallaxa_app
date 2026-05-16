@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
+import { StatusBar } from "expo-status-bar";
 import {
   View,
   TouchableOpacity,
@@ -265,6 +266,8 @@ export default function RootLayout() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
+    <>
+    <StatusBar style="light" translucent={false} />
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#fff" }}>
       <View style={{ flex: 1, flexDirection: isLargeScreen ? "row" : "column", justifyContent: isLargeScreen ? "center" : "flex-start" }}>
 
@@ -685,6 +688,6 @@ export default function RootLayout() {
           </Animated.View>
         </GestureDetector>
       )}
-    </GestureHandlerRootView>
+    </GestureHandlerRootView></>
   );
 }

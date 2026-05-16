@@ -116,7 +116,7 @@ export default function LoginScreen() {
       }
       
       await login(data.token, data.user);
-      router.replace("/(tabs)");
+      router.push("/");
     } catch (error) {
       setErrors({
         general: "Connection failed. Please check your internet and try again.",
