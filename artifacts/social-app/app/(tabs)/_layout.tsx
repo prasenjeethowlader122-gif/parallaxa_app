@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { StatusBar } from "expo-status-bar";
 import {
   View,
@@ -9,7 +9,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Image } from "expo-image";
-import { Text } from "@/components/Text"
+import { Text } from "@/components/Text";
 import { Stack, useRouter, usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
@@ -37,42 +37,45 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/UserAvatar";
+import { useGetNotifications } from "@workspace/api-client-react";
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const MAIN_NAV = [
-  { id: "index",         label: "Home",         icon: Home01Icon,         requiresAuth: false },
-  { id: "explore",       label: "Explore",       icon: Search01Icon,       requiresAuth: false },
-  { id: "notifications", label: "Notifications", icon: Notification01Icon, requiresAuth: true  },
-  { id: "messages",      label: "Messages",      icon: Message01Icon,      requiresAuth: true  },
+  { id: "index",         label: "Home",          icon: Home01Icon,         requiresAuth: false },
+  { id: "explore",       label: "Explore",        icon: Search01Icon,       requiresAuth: false },
+  { id: "notifications", label: "Notifications",  icon: Notification01Icon, requiresAuth: true  },
+  { id: "messages",      label: "Messages",       icon: Message01Icon,      requiresAuth: true  },
 ];
 
 const SECONDARY_NAV = [
-  { id: "bookmarks", label: "Bookmarks", icon: BookmarkIcon, requiresAuth: true },
+  { id: "bookmarks", label: "Bookmarks", icon: BookmarkIcon,  requiresAuth: true  },
   { id: "settings",  label: "Settings",  icon: Settings01Icon, requiresAuth: false },
 ];
 
 const DRAWER_WIDTH = 300;
-
-// Animation constants
 const SPRING_CONFIG = { damping: 22, stiffness: 220, mass: 0.8 };
 const CLOSE_TIMING  = { duration: 220, easing: Easing.out(Easing.cubic) };
-
 const LARGE_SCREEN_BREAKPOINT = 1024;
 
 export default function RootLayout() {
-  const { width }   = useWindowDimensions();
-  const isLargeScreen = width >= LARGE_SCREEN_BREAKPOINT;
+  const { width }      = useWindowDimensions();
+  const isLargeScreen  = width >= LARGE_SCREEN_BREAKPOINT;
+  const colors         = useColors();
+  const insets         = useSafeAreaInsets();
+  const router         = useRouter();
+  const pathname       = usePathname();
+  const { user, logout } = useAuth();
 
-  const colors      = useColors();
-  const insets      = useSafeAreaInsets();
-  const router      = useRouter();
-  const pathname    = usePathname();
-  const { user, logout, isLoading: authLoading } = useAuth();
+  // ── Unread notification count ────────────────────────────────────────────
+  const { data: notifData } = useGetNotifications();
+  const unreadCount = useMemo(() => {
+    if (!user || !notifData?.notifications) return 0;
+    return (notifData.notifications as any[]).filter((n) => !n.isRead).length;
+  }, [user, notifData]);
 
   // ── Drawer state ──────────────────────────────────────────────────────────
   const [drawerMounted, setDrawerMounted] = useState(false);
-
-  const translateX  = useSharedValue(-DRAWER_WIDTH);
+  const translateX   = useSharedValue(-DRAWER_WIDTH);
   const overlayAlpha = useSharedValue(0);
 
   const openDrawer = useCallback(() => {
@@ -82,49 +85,37 @@ export default function RootLayout() {
   }, []);
 
   const closeDrawer = useCallback(() => {
-    translateX.value   = withTiming(-DRAWER_WIDTH, CLOSE_TIMING, (done) => {
+    translateX.value = withTiming(-DRAWER_WIDTH, CLOSE_TIMING, (done) => {
       if (done) runOnJS(setDrawerMounted)(false);
     });
     overlayAlpha.value = withTiming(0, { duration: 200 });
   }, []);
 
-  // Swipe-to-close gesture on the drawer panel
   const panGesture = Gesture.Pan()
-    .activeOffsetX([-8, 999])           // only trigger on leftward drag
+    .activeOffsetX([-8, 999])
     .onUpdate((e) => {
       const next = Math.min(0, e.translationX);
-      translateX.value = next;
-      overlayAlpha.value = 1 + next / DRAWER_WIDTH; // fade as it slides away
+      translateX.value   = next;
+      overlayAlpha.value = 1 + next / DRAWER_WIDTH;
     })
     .onEnd((e) => {
       if (e.translationX < -DRAWER_WIDTH * 0.35 || e.velocityX < -400) {
-        // dismiss
-        translateX.value   = withTiming(-DRAWER_WIDTH, CLOSE_TIMING, (done) => {
+        translateX.value = withTiming(-DRAWER_WIDTH, CLOSE_TIMING, (done) => {
           if (done) runOnJS(setDrawerMounted)(false);
         });
         overlayAlpha.value = withTiming(0, { duration: 200 });
       } else {
-        // snap back
         translateX.value   = withSpring(0, SPRING_CONFIG);
         overlayAlpha.value = withTiming(1, { duration: 180 });
       }
     });
 
-  // Animated styles
-  const drawerStyle  = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
+  const drawerStyle  = useAnimatedStyle(() => ({ transform: [{ translateX: translateX.value }] }));
+  const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayAlpha.value }));
 
-  const overlayStyle = useAnimatedStyle(() => ({
-    opacity: overlayAlpha.value,
-  }));
-
-  // ── Routing helpers ────────────────────────────────────────────────────────
+  // ── Routing ──────────────────────────────────────────────────────────────
   const currentRoute =
-    pathname === "/" || pathname === "/(tabs)"
-      ? "index"
-      : pathname.split("/").pop();
-
+    pathname === "/" || pathname === "/(tabs)" ? "index" : pathname.split("/").pop();
   const isHome = pathname === "/" || pathname === "/(tabs)";
   const topPadding = insets.top + (Platform.OS === "web" ? 20 : 8);
 
@@ -142,7 +133,7 @@ export default function RootLayout() {
     }, 50);
   };
 
-  // ── Logo ──────────────────────────────────────────────────────────────────
+  // ── Logo ─────────────────────────────────────────────────────────────────
   const XLogo = () => (
     <View style={{ height: 35, justifyContent: "center", alignItems: "flex-start" }}>
       <Image
@@ -152,8 +143,19 @@ export default function RootLayout() {
       />
     </View>
   );
+
+  // ── Large-screen sidebar ─────────────────────────────────────────────────
   const Sidebar = () => (
-    <View style={{ width: 275, paddingHorizontal: 12, paddingTop: topPadding, borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: "#e1e8ed" }}>
+    <View
+      style={{
+        width: 275,
+        paddingHorizontal: 12,
+        paddingTop: topPadding,
+        borderRightWidth: StyleSheet.hairlineWidth,
+        borderRightColor: colors.border,
+        backgroundColor: colors.background,
+      }}
+    >
       <View style={{ paddingLeft: 12, marginBottom: 20 }}>
         <XLogo />
       </View>
@@ -175,17 +177,39 @@ export default function RootLayout() {
                 opacity: isLocked ? 0.5 : 1,
               }}
             >
-              <HugeiconsIcon
-                icon={item.icon}
-                size={26}
-                color="#0f1419"
-                strokeWidth={isActive ? 2.5 : 1.8}
-              />
+              <View>
+                <HugeiconsIcon
+                  icon={item.icon}
+                  size={26}
+                  color={colors.foreground}
+                  strokeWidth={isActive ? 2.5 : 1.8}
+                />
+                {item.id === "notifications" && unreadCount > 0 && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: -4,
+                      right: -4,
+                      backgroundColor: colors.primary,
+                      borderRadius: 8,
+                      minWidth: 16,
+                      height: 16,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingHorizontal: 3,
+                    }}
+                  >
+                    <Text style={{ fontSize: 10, fontWeight: "700", color: "#fff" }}>
+                      {unreadCount > 99 ? "99+" : String(unreadCount)}
+                    </Text>
+                  </View>
+                )}
+              </View>
               <Text
                 style={{
                   fontSize: 20,
                   fontWeight: isActive ? "800" : "500",
-                  color: "#0f1419",
+                  color: colors.foreground,
                 }}
               >
                 {item.label}
@@ -193,7 +217,7 @@ export default function RootLayout() {
             </TouchableOpacity>
           );
         })}
-        {user && user.role === 'admin' && (
+        {user?.role === "admin" && (
           <TouchableOpacity
             onPress={() => navigateTo("admin")}
             style={{
@@ -205,8 +229,8 @@ export default function RootLayout() {
               borderRadius: 999,
             }}
           >
-            <HugeiconsIcon icon={Shield02Icon} size={26} color="#0f1419" strokeWidth={1.8} />
-            <Text style={{ fontSize: 20, fontWeight: "500", color: "#0f1419" }}>
+            <HugeiconsIcon icon={Shield02Icon} size={26} color={colors.foreground} strokeWidth={1.8} />
+            <Text style={{ fontSize: 20, fontWeight: "500", color: colors.foreground }}>
               Admin Panel
             </Text>
           </TouchableOpacity>
@@ -224,7 +248,13 @@ export default function RootLayout() {
             }}
           >
             <UserAvatar uri={user.avatarUrl} size={26} />
-            <Text style={{ fontSize: 20, fontWeight: currentRoute === "profile" ? "800" : "500", color: "#0f1419" }}>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: currentRoute === "profile" ? "800" : "500",
+                color: colors.foreground,
+              }}
+            >
               Profile
             </Text>
           </TouchableOpacity>
@@ -240,17 +270,16 @@ export default function RootLayout() {
             borderRadius: 999,
           }}
         >
-          <HugeiconsIcon icon={Settings01Icon} size={26} color="#0f1419" strokeWidth={1.8} />
-          <Text style={{ fontSize: 20, fontWeight: "500", color: "#0f1419" }}>
+          <HugeiconsIcon icon={Settings01Icon} size={26} color={colors.foreground} strokeWidth={1.8} />
+          <Text style={{ fontSize: 20, fontWeight: "500", color: colors.foreground }}>
             Settings
           </Text>
         </TouchableOpacity>
-
         {user && (
           <TouchableOpacity
             onPress={() => router.push("/create" as any)}
             style={{
-              backgroundColor: "#1d9bf0",
+              backgroundColor: colors.primary,
               borderRadius: 999,
               paddingVertical: 14,
               marginTop: 20,
@@ -267,257 +296,407 @@ export default function RootLayout() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
-    <StatusBar style="auto" translucent={false} />
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <View style={{ flex: 1, flexDirection: isLargeScreen ? "row" : "column", justifyContent: isLargeScreen ? "center" : "flex-start" }}>
+      <StatusBar style="auto" translucent={false} />
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View
+          style={{
+            flex: 1,
+            flexDirection: isLargeScreen ? "row" : "column",
+            justifyContent: isLargeScreen ? "center" : "flex-start",
+          }}
+        >
+          {isLargeScreen && <Sidebar />}
 
-        {isLargeScreen && <Sidebar />}
+          <View
+            style={{
+              flex: 1,
+              maxWidth: isLargeScreen ? 600 : undefined,
+              borderRightWidth: isLargeScreen ? StyleSheet.hairlineWidth : 0,
+              borderRightColor: colors.border,
+              backgroundColor: colors.background,
+            }}
+          >
+            {/* ── GLOBAL HEADER (Mobile only) ── */}
+            {!isLargeScreen && (
+              <View
+                style={{
+                  paddingTop: topPadding,
+                  backgroundColor: colors.background,
+                  zIndex: 50,
+                  borderBottomWidth: !isHome ? StyleSheet.hairlineWidth : 0,
+                  borderBottomColor: colors.border,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingHorizontal: 16,
+                    paddingBottom: 12,
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
+                    <TouchableOpacity
+                      onPress={openDrawer}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <HugeiconsIcon
+                        icon={Menu01Icon}
+                        size={22}
+                        strokeWidth={2}
+                        color={colors.foreground}
+                      />
+                    </TouchableOpacity>
+                    <XLogo />
+                  </View>
 
-        <View style={{
-          flex: 1,
-          maxWidth: isLargeScreen ? 600 : undefined,
-          borderRightWidth: isLargeScreen ? StyleSheet.hairlineWidth : 0,
-          borderRightColor: "#e1e8ed",
-          backgroundColor: "#fff"
-        }}>
-          {/* ── GLOBAL HEADER (Only on Mobile) ── */}
-          {!isLargeScreen && (
+                  <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
+                    <TouchableOpacity
+                      onPress={() => router.push("/(tabs)/explore" as any)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <HugeiconsIcon
+                        icon={Search01Icon}
+                        size={22}
+                        strokeWidth={2}
+                        color={colors.foreground}
+                      />
+                    </TouchableOpacity>
+
+                    {/* Notification icon with badge */}
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (!user) { router.push("/(auth)/login"); return; }
+                        router.push("/(tabs)/notifications" as any);
+                      }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <View>
+                        <HugeiconsIcon
+                          icon={Notification01Icon}
+                          size={22}
+                          strokeWidth={2}
+                          color={colors.foreground}
+                        />
+                        {unreadCount > 0 && (
+                          <View
+                            style={{
+                              position: "absolute",
+                              top: -4,
+                              right: -4,
+                              backgroundColor: colors.primary,
+                              borderRadius: 8,
+                              minWidth: 16,
+                              height: 16,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              paddingHorizontal: 3,
+                            }}
+                          >
+                            <Text style={{ fontSize: 9, fontWeight: "800", color: "#fff" }}>
+                              {unreadCount > 99 ? "99+" : String(unreadCount)}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (!user) { router.push("/(auth)/login"); return; }
+                        router.push("/messages" as any);
+                      }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <HugeiconsIcon
+                        icon={Message01Icon}
+                        size={22}
+                        strokeWidth={2}
+                        color={colors.foreground}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* ── SCREEN CONTENT ── */}
+            <Stack screenOptions={{ headerShown: false }} />
+
+            {/* ── FAB: New Post (Mobile) ── */}
+            {user && !isLargeScreen && (
+              <TouchableOpacity
+                onPress={() => router.push("/create" as any)}
+                style={{
+                  position: "absolute",
+                  bottom: insets.bottom + 20,
+                  right: 20,
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  backgroundColor: colors.primary,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  elevation: 6,
+                  shadowColor: colors.primary,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.35,
+                  shadowRadius: 8,
+                  zIndex: 40,
+                }}
+              >
+                <HugeiconsIcon icon={Add01Icon} size={24} color="#fff" strokeWidth={2} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* ── Right sidebar (large screen) ── */}
+          {isLargeScreen && (
             <View
               style={{
+                width: 350,
+                paddingHorizontal: 20,
                 paddingTop: topPadding,
-                backgroundColor: "#fff",
-                zIndex: 50,
-                borderBottomWidth: !isHome ? StyleSheet.hairlineWidth : 0,
-                borderBottomColor: "#f2f2f2",
+                backgroundColor: colors.background,
               }}
             >
               <View
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  paddingHorizontal: 16,
-                  paddingBottom: 12,
+                  backgroundColor: colors.muted,
+                  borderRadius: 16,
+                  padding: 16,
+                  borderWidth: 0.5,
+                  borderColor: colors.border,
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
-                  <TouchableOpacity
-                    onPress={openDrawer}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <HugeiconsIcon icon={Menu01Icon} size={22} strokeWidth={2} color="#0f1419" />
-                  </TouchableOpacity>
-                  <XLogo />
-                </View>
-
-                <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
-                  <TouchableOpacity
-                    onPress={() => router.push("/(tabs)/explore" as any)}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <HugeiconsIcon icon={Search01Icon} size={22} strokeWidth={2} color="#0f1419" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (!user) {
-                        router.push("/(auth)/login");
-                        return;
-                      }
-                      router.push("/messages" as any);
-                    }}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <HugeiconsIcon icon={Message01Icon} size={22} strokeWidth={2} color="#0f1419" />
-                  </TouchableOpacity>
-                </View>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: "800",
+                    color: colors.foreground,
+                    marginBottom: 12,
+                  }}
+                >
+                  What's happening
+                </Text>
+                <Text style={{ color: colors.mutedForeground }}>
+                  Explore trends and more.
+                </Text>
               </View>
             </View>
           )}
-
-          {/* ── SCREEN CONTENT ── */}
-          <Stack screenOptions={{ headerShown: false }} />
-
-          {/* ── FAB: New Post (Only on Mobile) ── */}
-          {user && !isLargeScreen && (
-            <TouchableOpacity
-              onPress={() => router.push("/create" as any)}
-              style={{
-                position: "absolute",
-                bottom: insets.bottom + 20,
-                right: 20,
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: "#1d9bf0",
-                justifyContent: "center",
-                alignItems: "center",
-                elevation: 6,
-                shadowColor: "#1d9bf0",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.35,
-                shadowRadius: 8,
-                zIndex: 40,
-              }}
-            >
-              <HugeiconsIcon icon={Add01Icon} size={24} color="#fff" strokeWidth={2} />
-            </TouchableOpacity>
-          )}
         </View>
 
-        {isLargeScreen && (
-          <View style={{ width: 350, paddingHorizontal: 20, paddingTop: topPadding }}>
-             {/* Right Sidebar - can be used for search/trends later */}
-             <View style={{ backgroundColor: "#f7f9f9", borderRadius: 16, padding: 16 }}>
-               <Text style={{ fontSize: 20, fontWeight: "800", color: "#0f1419", marginBottom: 12 }}>What's happening</Text>
-               <Text style={{ color: "#536471" }}>Explore trends and more.</Text>
-             </View>
-          </View>
-        )}
-      </View>
-
-      {/* ── DRAWER OVERLAY (animated fade) ── */}
-      {drawerMounted && (
-        <Animated.View
-          style={[
-            {
-              position: "absolute",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              zIndex: 99,
-            },
-            overlayStyle,
-          ]}
-          pointerEvents={drawerMounted ? "auto" : "none"}
-          onTouchEnd={closeDrawer}
-        />
-      )}
-
-      {/* ── DRAWER PANEL (animated slide) ── */}
-      {drawerMounted && (
-        <GestureDetector gesture={panGesture}>
+        {/* ── DRAWER OVERLAY ── */}
+        {drawerMounted && (
           <Animated.View
             style={[
               {
                 position: "absolute",
-                top: 0,
-                left: 0,
-                bottom: 0,
-                width: DRAWER_WIDTH,
-                backgroundColor: "#fff",
-                zIndex: 100,
-                borderRightWidth: StyleSheet.hairlineWidth,
-                borderRightColor: "#e1e8ed",
+                inset: 0,
+                backgroundColor: "rgba(0,0,0,0.4)",
+                zIndex: 99,
               },
-              drawerStyle,
+              overlayStyle,
             ]}
-          >
-            {/* ── Drawer top bar ── */}
-            <View
-              style={{
-                paddingTop: insets.top + 12,
-                paddingHorizontal: 16,
-                paddingBottom: 14,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 15,
-              }}
+            pointerEvents={drawerMounted ? "auto" : "none"}
+            onTouchEnd={closeDrawer}
+          />
+        )}
+
+        {/* ── DRAWER PANEL ── */}
+        {drawerMounted && (
+          <GestureDetector gesture={panGesture}>
+            <Animated.View
+              style={[
+                {
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  width: DRAWER_WIDTH,
+                  backgroundColor: colors.background,
+                  zIndex: 100,
+                  borderRightWidth: StyleSheet.hairlineWidth,
+                  borderRightColor: colors.border,
+                },
+                drawerStyle,
+              ]}
             >
-              <TouchableOpacity
-                onPress={closeDrawer}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <HugeiconsIcon
-                  icon={ArrowLeft01Icon}
-                  size={22}
-                  strokeWidth={2}
-                  color="#0f1419"
-                />
-              </TouchableOpacity>
-              <XLogo />
-              <View style={{ width: 22 }} />
-            </View>
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
-            >
-              {/* ── Profile block ── */}
-              {user ? (
-                <TouchableOpacity
-                  onPress={() => {
-                    closeDrawer();
-                    router.push(`/profile` as any);
-                  }}
-                  activeOpacity={0.8}
-                  style={{ paddingHorizontal: 20, paddingVertical: 12 }}
-                >
-                  <UserAvatar uri={user.avatarUrl} size={52} />
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: "800",
-                      color: "#0f1419",
-                      marginTop: 10,
-                      letterSpacing: -0.3,
-                    }}
-                  >
-                    {user.displayName}
-                  </Text>
-                  <Text style={{ fontSize: 14, color: "#536471", marginTop: 2 }}>
-                    @{user.username}
-                  </Text>
-
-                  <View style={{ flexDirection: "row", gap: 18, marginTop: 12 }}>
-                    <View style={{ flexDirection: "row", gap: 4, alignItems: "baseline" }}>
-                      <Text style={{ fontSize: 14, fontWeight: "700", color: "#0f1419" }}>
-                        {user.followingCount}
-                      </Text>
-                      <Text style={{ fontSize: 13, color: "#536471" }}>Following</Text>
-                    </View>
-                    <View style={{ flexDirection: "row", gap: 4, alignItems: "baseline" }}>
-                      <Text style={{ fontSize: 14, fontWeight: "700", color: "#0f1419" }}>
-                        {user.followersCount}
-                      </Text>
-                      <Text style={{ fontSize: 13, color: "#536471" }}>Followers</Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => {
-                    closeDrawer();
-                    router.push("/(auth)/login" as any);
-                  }}
-                  activeOpacity={0.8}
-                  style={{ paddingHorizontal: 20, paddingVertical: 20 }}
-                >
-                  <Text style={{ fontSize: 18, fontWeight: "800", color: "#0f1419" }}>
-                    Welcome to Parallaxa
-                  </Text>
-                  <Text style={{ fontSize: 14, color: "#536471", marginTop: 4 }}>
-                    Log in to follow others and join the conversation.
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              {/* Divider */}
+              {/* Drawer top bar */}
               <View
                 style={{
-                  height: StyleSheet.hairlineWidth,
-                  backgroundColor: "#e1e8ed",
-                  marginVertical: 6,
-                  marginHorizontal: 20,
+                  paddingTop: insets.top + 12,
+                  paddingHorizontal: 16,
+                  paddingBottom: 14,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 15,
                 }}
-              />
+              >
+                <TouchableOpacity
+                  onPress={closeDrawer}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <HugeiconsIcon
+                    icon={ArrowLeft01Icon}
+                    size={22}
+                    strokeWidth={2}
+                    color={colors.foreground}
+                  />
+                </TouchableOpacity>
+                <XLogo />
+                <View style={{ width: 22 }} />
+              </View>
 
-              {/* ── Main nav ── */}
-              {MAIN_NAV.map((item) => {
-                const isActive = currentRoute === item.id;
-                const isLocked = item.requiresAuth && !user;
-                return (
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+              >
+                {/* Profile block */}
+                {user ? (
                   <TouchableOpacity
-                    key={item.id}
-                    onPress={() => navigateTo(item.id, item.requiresAuth)}
+                    onPress={() => {
+                      closeDrawer();
+                      router.push("/profile" as any);
+                    }}
+                    activeOpacity={0.8}
+                    style={{ paddingHorizontal: 20, paddingVertical: 12 }}
+                  >
+                    <UserAvatar uri={user.avatarUrl} size={52} />
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "800",
+                        color: colors.foreground,
+                        marginTop: 10,
+                        letterSpacing: -0.3,
+                      }}
+                    >
+                      {user.displayName}
+                    </Text>
+                    <Text style={{ fontSize: 14, color: colors.mutedForeground, marginTop: 2 }}>
+                      @{user.username}
+                    </Text>
+                    <View style={{ flexDirection: "row", gap: 18, marginTop: 12 }}>
+                      <View style={{ flexDirection: "row", gap: 4, alignItems: "baseline" }}>
+                        <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
+                          {user.followingCount}
+                        </Text>
+                        <Text style={{ fontSize: 13, color: colors.mutedForeground }}>Following</Text>
+                      </View>
+                      <View style={{ flexDirection: "row", gap: 4, alignItems: "baseline" }}>
+                        <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
+                          {user.followersCount}
+                        </Text>
+                        <Text style={{ fontSize: 13, color: colors.mutedForeground }}>Followers</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => {
+                      closeDrawer();
+                      router.push("/(auth)/login" as any);
+                    }}
+                    activeOpacity={0.8}
+                    style={{ paddingHorizontal: 20, paddingVertical: 20 }}
+                  >
+                    <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>
+                      Welcome to Parallaxa
+                    </Text>
+                    <Text style={{ fontSize: 14, color: colors.mutedForeground, marginTop: 4 }}>
+                      Log in to follow others and join the conversation.
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {/* Divider */}
+                <View
+                  style={{
+                    height: StyleSheet.hairlineWidth,
+                    backgroundColor: colors.border,
+                    marginVertical: 6,
+                    marginHorizontal: 20,
+                  }}
+                />
+
+                {/* Main nav */}
+                {MAIN_NAV.map((item) => {
+                  const isActive = currentRoute === item.id;
+                  const isLocked = item.requiresAuth && !user;
+                  return (
+                    <TouchableOpacity
+                      key={item.id}
+                      onPress={() => navigateTo(item.id, item.requiresAuth)}
+                      activeOpacity={0.7}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 16,
+                        paddingHorizontal: 20,
+                        paddingVertical: 14,
+                        opacity: isLocked ? 0.45 : 1,
+                      }}
+                    >
+                      <View>
+                        <HugeiconsIcon
+                          icon={item.icon}
+                          size={24}
+                          color={isActive ? colors.primary : colors.foreground}
+                          strokeWidth={isActive ? 2.5 : 1.8}
+                        />
+                        {item.id === "notifications" && unreadCount > 0 && (
+                          <View
+                            style={{
+                              position: "absolute",
+                              top: -4,
+                              right: -4,
+                              backgroundColor: colors.primary,
+                              borderRadius: 8,
+                              minWidth: 16,
+                              height: 16,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              paddingHorizontal: 3,
+                            }}
+                          >
+                            <Text style={{ fontSize: 9, fontWeight: "800", color: "#fff" }}>
+                              {unreadCount > 99 ? "99+" : String(unreadCount)}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text
+                        style={{
+                          fontSize: 19,
+                          fontWeight: isActive ? "800" : "500",
+                          color: isActive ? colors.primary : colors.foreground,
+                          letterSpacing: -0.2,
+                          flex: 1,
+                        }}
+                      >
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+
+                {/* Divider */}
+                <View
+                  style={{
+                    height: StyleSheet.hairlineWidth,
+                    backgroundColor: colors.border,
+                    marginVertical: 10,
+                    marginHorizontal: 20,
+                  }}
+                />
+
+                {/* Admin Panel */}
+                {user?.role === "admin" && (
+                  <TouchableOpacity
+                    onPress={() => { closeDrawer(); router.push("/admin" as any); }}
                     activeOpacity={0.7}
                     style={{
                       flexDirection: "row",
@@ -525,169 +704,117 @@ export default function RootLayout() {
                       gap: 16,
                       paddingHorizontal: 20,
                       paddingVertical: 14,
-                      opacity: isLocked ? 0.45 : 1,
                     }}
                   >
                     <HugeiconsIcon
-                      icon={item.icon}
+                      icon={Shield02Icon}
                       size={24}
-                      color="#0f1419"
-                      strokeWidth={isActive ? 2.5 : 1.8}
+                      color={colors.mutedForeground}
+                      strokeWidth={1.8}
                     />
                     <Text
                       style={{
                         fontSize: 19,
-                        fontWeight: isActive ? "800" : "500",
-                        color: "#0f1419",
+                        fontWeight: "500",
+                        color: colors.mutedForeground,
                         letterSpacing: -0.2,
                       }}
                     >
-                      {item.label}
+                      Admin Panel
                     </Text>
                   </TouchableOpacity>
-                );
-              })}
+                )}
 
-              {/* Divider */}
-              <View
-                style={{
-                  height: StyleSheet.hairlineWidth,
-                  backgroundColor: "#e1e8ed",
-                  marginVertical: 10,
-                  marginHorizontal: 20,
-                }}
-              />
-
-              {/* Admin Panel (Mobile) */}
-              {user && user.role === 'admin' && (
-                <TouchableOpacity
-                  onPress={() => {
-                    closeDrawer();
-                    router.push("/admin" as any);
-                  }}
-                  activeOpacity={0.7}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 16,
-                    paddingHorizontal: 20,
-                    paddingVertical: 14,
-                  }}
-                >
-                  <HugeiconsIcon
-                    icon={Shield02Icon}
-                    size={24}
-                    color="#0f1419"
-                    strokeWidth={1.8}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 19,
-                      fontWeight: "500",
-                      color: "#0f1419",
-                      letterSpacing: -0.2,
-                    }}
-                  >
-                    Admin Panel
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              {/* ── Secondary nav ── */}
-              {SECONDARY_NAV.map((item) => {
-                const isActive = currentRoute === item.id;
-                return (
-                  <TouchableOpacity
-                    key={item.id}
-                    onPress={() => navigateTo(item.id, item.requiresAuth)}
-                    activeOpacity={0.7}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 16,
-                      paddingHorizontal: 20,
-                      paddingVertical: 12,
-                    }}
-                  >
-                    <HugeiconsIcon
-                      icon={item.icon}
-                      size={22}
-                      color="#536471"
-                      strokeWidth={isActive ? 2.5 : 1.8}
-                    />
-                    <Text
+                {/* Secondary nav */}
+                {SECONDARY_NAV.map((item) => {
+                  const isActive = currentRoute === item.id;
+                  return (
+                    <TouchableOpacity
+                      key={item.id}
+                      onPress={() => navigateTo(item.id, item.requiresAuth)}
+                      activeOpacity={0.7}
                       style={{
-                        fontSize: 16,
-                        fontWeight: isActive ? "700" : "400",
-                        color: "#536471",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 16,
+                        paddingHorizontal: 20,
+                        paddingVertical: 12,
                       }}
                     >
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-
-              {/* ── New Post CTA ── */}
-              {user && (
-                <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      closeDrawer();
-                      router.push("/create" as any);
-                    }}
-                    style={{
-                      backgroundColor: "#1d9bf0",
-                      borderRadius: 28,
-                      paddingVertical: 14,
-                      paddingHorizontal: 24,
-                      alignItems: "center",
-                      flexDirection: "row",
-                      justifyContent: "center",
-                      gap: 10,
-                    }}
-                  >
-                    <HugeiconsIcon icon={Add01Icon} size={18} color="#fff" strokeWidth={2.5} />
-                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
-                      New Post
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* ── Log out ── */}
-              {logout && (
-                <>
-                  <View
-                    style={{
-                      height: StyleSheet.hairlineWidth,
-                      backgroundColor: "#e1e8ed",
-                      marginTop: 20,
-                      marginHorizontal: 20,
-                    }}
-                  />
-                  <TouchableOpacity
-                    onPress={() => {
-                      closeDrawer();
-                      logout();
-                    }}
-                    style={{ paddingHorizontal: 20, paddingVertical: 16 }}
-                  >
-                    <Text style={{ fontSize: 15, color: "#e0245e", fontWeight: "500" }}>
-                      Log out
-                    </Text>
-                    {user?.username ? (
-                      <Text style={{ fontSize: 13, color: "#aab8c2", marginTop: 2 }}>
-                        @{user.username}
+                      <HugeiconsIcon
+                        icon={item.icon}
+                        size={22}
+                        color={isActive ? colors.primary : colors.mutedForeground}
+                        strokeWidth={isActive ? 2.5 : 1.8}
+                      />
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: isActive ? "700" : "400",
+                          color: isActive ? colors.primary : colors.mutedForeground,
+                        }}
+                      >
+                        {item.label}
                       </Text>
-                    ) : null}
-                  </TouchableOpacity>
-                </>
-              )}
-            </ScrollView>
-          </Animated.View>
-        </GestureDetector>
-      )}
-    </GestureHandlerRootView></>
+                    </TouchableOpacity>
+                  );
+                })}
+
+                {/* New Post CTA */}
+                {user && (
+                  <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
+                    <TouchableOpacity
+                      onPress={() => { closeDrawer(); router.push("/create" as any); }}
+                      style={{
+                        backgroundColor: colors.primary,
+                        borderRadius: 28,
+                        paddingVertical: 14,
+                        paddingHorizontal: 24,
+                        alignItems: "center",
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        gap: 10,
+                      }}
+                    >
+                      <HugeiconsIcon icon={Add01Icon} size={18} color="#fff" strokeWidth={2.5} />
+                      <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
+                        New Post
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Log out */}
+                {user && (
+                  <>
+                    <View
+                      style={{
+                        height: StyleSheet.hairlineWidth,
+                        backgroundColor: colors.border,
+                        marginTop: 20,
+                        marginHorizontal: 20,
+                      }}
+                    />
+                    <TouchableOpacity
+                      onPress={() => { closeDrawer(); logout(); }}
+                      style={{ paddingHorizontal: 20, paddingVertical: 16 }}
+                    >
+                      <Text style={{ fontSize: 15, color: colors.destructive, fontWeight: "500" }}>
+                        Log out
+                      </Text>
+                      {user.username ? (
+                        <Text style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 2 }}>
+                          @{user.username}
+                        </Text>
+                      ) : null}
+                    </TouchableOpacity>
+                  </>
+                )}
+              </ScrollView>
+            </Animated.View>
+          </GestureDetector>
+        )}
+      </GestureHandlerRootView>
+    </>
   );
 }

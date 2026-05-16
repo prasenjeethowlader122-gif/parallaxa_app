@@ -18,6 +18,7 @@ import remoteConfig from "@react-native-firebase/remote-config";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { SocketProvider } from "@/context/SocketContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { getApiBaseUrl } from "@/lib/apiUrl";
 import { useUpdates } from "@/hooks/useUpdates";
 
@@ -27,7 +28,7 @@ setBaseUrl(getApiBaseUrl());
 
 if (Platform.OS !== "web") {
   GoogleSignin.configure({
-    webClientId: "534372451622-6b9v969v6k8q9v9k6b9v9k6b9v9k6b9v.apps.googleusercontent.com", // This will need to be updated with real webClientId from Firebase Console
+    webClientId: "534372451622-6b9v969v6k8q9v9k6b9v9k6b9v9k6b9v.apps.googleusercontent.com",
     offlineAccess: true,
   });
 
@@ -37,7 +38,7 @@ if (Platform.OS !== "web") {
       enable_reactions: true,
     })
     .then(() => remoteConfig().fetchAndActivate())
-    .catch(error => console.error("Remote Config Error:", error));
+    .catch((error: any) => console.error("Remote Config Error:", error));
 }
 
 const queryClient = new QueryClient({
@@ -52,15 +53,21 @@ const queryClient = new QueryClient({
 function RootLayoutNav() {
   const { user, isLoading, isProcessing, processingMessage } = useAuth();
   useUpdates();
-  
+
   if (isLoading) return null;
-  
+
   return (
     <>
       <StatusBar style="auto" translucent={false} />
-      <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: Platform.OS === "web" ? "none" : "slide_from_right",
+          animationDuration: 260,
+        }}
+      >
+        <Stack.Screen name="(auth)" options={{ animation: "none" }} />
+        <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
         <Stack.Screen name="post/[id]" />
         <Stack.Screen name="profile/[id]" />
         <Stack.Screen name="messages/index" />
@@ -72,10 +79,16 @@ function RootLayoutNav() {
           <>
             <Stack.Screen name="story/create" />
             <Stack.Screen name="story/[userId]" />
-            <Stack.Screen name="edit-profile" options={{ presentation: "modal" }} />
+            <Stack.Screen
+              name="edit-profile"
+              options={{ presentation: "modal" }}
+            />
           </>
         )}
-        <Stack.Screen name="settings" />
+        <Stack.Screen
+          name="settings"
+          options={{ animation: "slide_from_bottom" }}
+        />
       </Stack>
 
       {isProcessing && (
@@ -83,11 +96,11 @@ function RootLayoutNav() {
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: '#ffffff',
-              justifyContent: 'center',
-              alignItems: 'center',
+              backgroundColor: "#ffffff",
+              justifyContent: "center",
+              alignItems: "center",
               zIndex: 9999,
-            }
+            },
           ]}
         >
           <Image
@@ -103,9 +116,9 @@ function RootLayoutNav() {
           <Text
             style={{
               fontSize: 15,
-              color: '#64748b',
-              fontWeight: '500',
-              fontFamily: 'Sora-Medium',
+              color: "#64748b",
+              fontWeight: "500",
+              fontFamily: "Sora-Medium",
               letterSpacing: 0.1,
             }}
           >
@@ -114,9 +127,9 @@ function RootLayoutNav() {
           <Text
             style={{
               fontSize: 12,
-              color: '#94a3b8',
+              color: "#94a3b8",
               marginTop: 6,
-              fontFamily: 'Sora-Regular',
+              fontFamily: "Sora-Regular",
             }}
           >
             Please wait a moment...
@@ -134,16 +147,24 @@ export default function RootLayout() {
     "Sora-SemiBold": require("@/assets/fonts/mm/MirandaSans-Medium.ttf"),
     "Sora-Bold": require("@/assets/fonts/mm/MirandaSans-Bold.ttf"),
   });
+
   useEffect(() => {
     if (fontError) console.error("Font load error:", fontError);
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
-  
+
   if (!fontsLoaded && !fontError) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB', justifyContent: 'center', alignItems: 'center' }}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#F9FAFB",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <Image
           source={require("@/assets/images/parallaxa-logo.svg")}
           style={{ width: 100, height: 100 }}
@@ -152,21 +173,23 @@ export default function RootLayout() {
       </View>
     );
   }
-  
+
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <KeyboardProvider>
-              <AuthProvider>
-                <SocketProvider>
-                  <RootLayoutNav />
-                </SocketProvider>
-              </AuthProvider>
-            </KeyboardProvider>
-          </GestureHandlerRootView>
-        </QueryClientProvider>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <KeyboardProvider>
+                <AuthProvider>
+                  <SocketProvider>
+                    <RootLayoutNav />
+                  </SocketProvider>
+                </AuthProvider>
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </QueryClientProvider>
+        </ThemeProvider>
       </ErrorBoundary>
     </SafeAreaProvider>
   );

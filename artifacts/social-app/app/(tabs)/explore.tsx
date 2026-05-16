@@ -1,11 +1,12 @@
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { Search01Icon, Cancel01Icon, Tag01Icon, ImageIcon } from "@hugeicons/core-free-icons";
+import { Search01Icon, Cancel01Icon, Tag01Icon, ImageIcon, Fire01Icon } from "@hugeicons/core-free-icons";
 import {
   ActivityIndicator,
   FlatList,
   Platform,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -48,6 +49,20 @@ export default function ExploreScreen() {
   const isSearching = debouncedQuery.length > 1;
   const posts = exploreData?.posts ?? [];
 
+  const trendingHashtags = useMemo(() => {
+    const counts = new Map<string, number>();
+    posts.forEach((post: any) => {
+      (post.hashtags ?? []).forEach((tag: string) => {
+        const clean = tag.replace(/^#/, "");
+        if (clean) counts.set(clean, (counts.get(clean) ?? 0) + 1);
+      });
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([tag, count]) => ({ tag, count }));
+  }, [posts]);
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Search bar */}
@@ -82,12 +97,7 @@ export default function ExploreScreen() {
             autoCorrect={false}
           />
           {query.length > 0 && (
-            <TouchableOpacity
-              onPress={() => {
-                setQuery("");
-                setDebouncedQuery("");
-              }}
-            >
+            <TouchableOpacity onPress={() => { setQuery(""); setDebouncedQuery(""); }}>
               <HugeiconsIcon icon={Cancel01Icon} size={16} color={colors.mutedForeground} />
             </TouchableOpacity>
           )}
@@ -121,14 +131,10 @@ export default function ExploreScreen() {
                 >
                   <UserAvatar uri={item.avatarUrl} size={44} />
                   <View style={{ flex: 1 }}>
-                    <Text
-                      style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}
-                    >
+                    <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
                       {item.username}
                     </Text>
-                    <Text
-                      style={{ fontSize: 13, marginTop: 2, color: colors.mutedForeground }}
-                    >
+                    <Text style={{ fontSize: 13, marginTop: 2, color: colors.mutedForeground }}>
                       {item.displayName}
                     </Text>
                   </View>
@@ -148,10 +154,7 @@ export default function ExploreScreen() {
                     borderBottomWidth: 0.5,
                     borderBottomColor: colors.border,
                   }}
-                  onPress={() => {
-                    setQuery(`#${item.name}`);
-                    setDebouncedQuery(`#${item.name}`);
-                  }}
+                  onPress={() => { setQuery(`#${item.name}`); setDebouncedQuery(`#${item.name}`); }}
                   activeOpacity={0.7}
                 >
                   <View
@@ -167,14 +170,10 @@ export default function ExploreScreen() {
                     <HugeiconsIcon icon={Tag01Icon} size={22} color={colors.foreground} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text
-                      style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}
-                    >
+                    <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
                       #{item.name}
                     </Text>
-                    <Text
-                      style={{ fontSize: 13, marginTop: 2, color: colors.mutedForeground }}
-                    >
+                    <Text style={{ fontSize: 13, marginTop: 2, color: colors.mutedForeground }}>
                       {item.postCount} posts
                     </Text>
                   </View>
@@ -204,8 +203,17 @@ export default function ExploreScreen() {
                       contentFit="cover"
                     />
                   ) : (
-                    <View style={{ width: 44, height: 44, borderRadius: 6, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center' }}>
-                       <HugeiconsIcon icon={ImageIcon} size={20} color={colors.mutedForeground} />
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 6,
+                        backgroundColor: colors.muted,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <HugeiconsIcon icon={ImageIcon} size={20} color={colors.mutedForeground} />
                     </View>
                   )}
                   <View style={{ flex: 1 }}>
@@ -219,17 +227,94 @@ export default function ExploreScreen() {
                 </TouchableOpacity>
               );
             }
-
             return null;
           }}
           showsVerticalScrollIndicator={false}
         />
       ) : (
-        /* ── EXPLORE GRID ── */
+        /* ── EXPLORE GRID with Trending section ── */
         <FlatList
           data={posts}
           keyExtractor={(item: any) => item.id}
           numColumns={COLUMN}
+          ListHeaderComponent={
+            trendingHashtags.length > 0 ? (
+              <View
+                style={{
+                  borderBottomWidth: 0.5,
+                  borderBottomColor: colors.border,
+                  paddingVertical: 14,
+                  backgroundColor: colors.background,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    paddingHorizontal: 16,
+                    marginBottom: 12,
+                  }}
+                >
+                  <HugeiconsIcon icon={Fire01Icon} size={18} color={colors.primary} />
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "800",
+                      color: colors.foreground,
+                      letterSpacing: -0.3,
+                    }}
+                  >
+                    Trending
+                  </Text>
+                </View>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
+                >
+                  {trendingHashtags.map(({ tag, count }) => (
+                    <TouchableOpacity
+                      key={tag}
+                      onPress={() => {
+                        setQuery(`#${tag}`);
+                        setDebouncedQuery(`#${tag}`);
+                      }}
+                      activeOpacity={0.75}
+                      style={{
+                        backgroundColor: colors.muted,
+                        borderRadius: 20,
+                        paddingHorizontal: 14,
+                        paddingVertical: 9,
+                        borderWidth: 0.5,
+                        borderColor: colors.border,
+                        minWidth: 80,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "700",
+                          color: colors.primary,
+                        }}
+                      >
+                        #{tag}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          color: colors.mutedForeground,
+                          marginTop: 2,
+                        }}
+                      >
+                        {count} {count === 1 ? "post" : "posts"}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null
+          }
           renderItem={({ item }: { item: any }) => (
             <TouchableOpacity
               onPress={() => router.push(`/post/${item.id}` as any)}
@@ -248,19 +333,9 @@ export default function ExploreScreen() {
                   contentFit="cover"
                 />
               ) : (
-                <View
-                  style={{
-                    flex: 1,
-                    padding: 8,
-                    backgroundColor: colors.muted,
-                  }}
-                >
+                <View style={{ flex: 1, padding: 8, backgroundColor: colors.muted }}>
                   <Text
-                    style={{
-                      fontSize: 12,
-                      color: colors.foreground,
-                      fontWeight: '500'
-                    }}
+                    style={{ fontSize: 12, color: colors.foreground, fontWeight: "500" }}
                     numberOfLines={6}
                   >
                     {item.content}

@@ -183,6 +183,7 @@ export default function PostDetailScreen() {
     commentId: string | null;
     username: string;
   } | null>(null);
+  const [sortOrder, setSortOrder] = useState<"newest" | "top">("newest");
 
   const { data: post, isLoading: postLoading, refetch: refetchPost } = useGetPost(id ?? "");
   const { data: commentsData, isLoading: commentsLoading } = useGetReplies(id ?? "");
@@ -196,7 +197,13 @@ export default function PostDetailScreen() {
   });
 
   const comments = commentsData?.posts ?? [];
-  const rootComments = React.useMemo(() => buildCommentTree(comments), [comments]);
+  const rootComments = React.useMemo(() => {
+    const tree = buildCommentTree(comments);
+    if (sortOrder === "top") {
+      return [...tree].sort((a, b) => (b.likesCount ?? 0) - (a.likesCount ?? 0));
+    }
+    return tree;
+  }, [comments, sortOrder]);
 
   const { mutate: likePost } = useLikePost();
   const { mutate: unlikePost } = useUnlikePost();
@@ -512,14 +519,36 @@ export default function PostDetailScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Replies label */}
-      <View className="px-4 py-2.5 border-b" style={{ borderColor: colors.border }}>
+      {/* Replies label + sort tabs */}
+      <View
+        className="flex-row items-center justify-between px-4 border-b"
+        style={{ borderColor: colors.border, paddingVertical: 8 }}
+      >
         <Text
           className="text-[14px] font-bold tracking-widest"
           style={{ color: colors.mutedForeground }}
         >
-          Replies
+          REPLIES
         </Text>
+        <View className="flex-row gap-1">
+          {(["newest", "top"] as const).map((order) => (
+            <TouchableOpacity
+              key={order}
+              onPress={() => setSortOrder(order)}
+              className="px-3 py-1 rounded-full"
+              style={{
+                backgroundColor: sortOrder === order ? colors.primary : colors.muted,
+              }}
+            >
+              <Text
+                className="text-xs font-semibold capitalize"
+                style={{ color: sortOrder === order ? "#fff" : colors.mutedForeground }}
+              >
+                {order === "newest" ? "Newest" : "Top"}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       {/* Replying-to banner */}
@@ -705,7 +734,26 @@ function CommentItem({
   depth = 0,
 }: CommentItemProps) {
   const colors = useColors();
+  const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [localLiked, setLocalLiked] = useState<boolean | null>(null);
+  const [localLikeCount, setLocalLikeCount] = useState<number | null>(null);
+
+  const { mutate: likeComment } = useLikePost();
+  const { mutate: unlikeComment } = useUnlikePost();
+
+  const isLiked = localLiked !== null ? localLiked : (comment.isLiked ?? false);
+  const likeCount = localLikeCount !== null ? localLikeCount : (comment.likesCount ?? 0);
+
+  const handleLike = () => {
+    if (!user) return;
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const next = !isLiked;
+    setLocalLiked(next);
+    setLocalLikeCount(likeCount + (next ? 1 : -1));
+    if (next) likeComment({ postId: comment.id });
+    else unlikeComment({ postId: comment.id });
+  };
 
   const hasReplies = comment.replies.length > 0;
   const avatarSize = depth > 0 ? REPLY_AVATAR_SIZE : PARENT_AVATAR_SIZE;
@@ -811,7 +859,7 @@ function CommentItem({
           </TouchableOpacity>
 
           {/* Actions */}
-          <View style={{ flexDirection: "row", gap: 20, alignItems: "center" }}>
+          <View style={{ flexDirection: "row", gap: 18, alignItems: "center" }}>
             <TouchableOpacity
               onPress={() => onReply(comment.id, comment.author.username)}
               activeOpacity={0.7}
@@ -832,6 +880,31 @@ function CommentItem({
                   }}
                 >
                   {fmtCount(comment.repliesCount)}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Like button */}
+            <TouchableOpacity
+              onPress={handleLike}
+              activeOpacity={0.7}
+              hitSlop={8}
+              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+            >
+              <HugeiconsIcon
+                icon={FavouriteIcon}
+                size={depth > 0 ? 14 : 16}
+                strokeWidth={2}
+                color={isLiked ? "#F4212E" : colors.mutedForeground}
+              />
+              {likeCount > 0 && (
+                <Text
+                  style={{
+                    fontSize: depth > 0 ? 11 : 12,
+                    color: isLiked ? "#F4212E" : colors.mutedForeground,
+                  }}
+                >
+                  {fmtCount(likeCount)}
                 </Text>
               )}
             </TouchableOpacity>
