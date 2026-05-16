@@ -282,6 +282,7 @@ export function PostCard({
           )}
 
           <View style={{ flexDirection: 'row', gap: 20, marginTop: 40 }}>
+            {user && (
             <TouchableOpacity
               onPress={() => {
                 setIsPreviewVisible(false);
@@ -290,7 +291,7 @@ export function PostCard({
               style={{ backgroundColor: '#fff', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 25 }}
             >
               <Text style={{ fontWeight: 'bold' }}>Reuse</Text>
-            </TouchableOpacity>
+            </TouchableOpacity>)}
 
             <TouchableOpacity
               onPress={handleDownload}

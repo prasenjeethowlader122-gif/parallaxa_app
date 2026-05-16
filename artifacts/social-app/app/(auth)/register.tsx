@@ -143,14 +143,28 @@ export default function RegisterScreen() {
   
   /* ─── Live Username Check ─── */
   const { data: availability, isLoading: isCheckingUsername, isError: checkUsernameError } = useCheckUsername
-({ username: username.trim().toLowerCase() }, { query: { enabled: step === 4 && username.trim().length >=
-        3, retry: false, queryKey: ['checkUsername', username.trim().toLowerCase()] } as any });
+    ({ username: username.trim().toLowerCase() }, {
+      query: {
+        enabled: step === 4 && username.trim().length >=
+          3,
+        retry: false,
+        queryKey: ['checkUsername', username.trim().toLowerCase()]
+      } as any
+    });
   
-  const { data: suggestionData, isError: suggestUsernamesError } = useSuggestUsernames({ username: username
-      .trim().toLowerCase() }, { query: { enabled: (step === 4 && availability?.available === false) || (
-        step === 4 && username.trim().length === 0), retry: false, queryKey: ['suggestUsernames', username
+  const { data: suggestionData, isError: suggestUsernamesError } = useSuggestUsernames({
+    username: username
+      .trim().toLowerCase()
+  }, {
+    query: {
+      enabled: (step === 4 && availability?.available === false) || (
+        step === 4 && username.trim().length === 0),
+      retry: false,
+      queryKey: ['suggestUsernames', username
         .trim().toLowerCase()
-      ] } as any });
+      ]
+    } as any
+  });
   
   const topPt = insets.top + (Platform.OS === "web" ? 24 : 0);
   const bottomPb = insets.bottom + 24;
@@ -487,7 +501,7 @@ export default function RegisterScreen() {
         </View>
 
         {/* ── General Error ── */}
-        {errors.general && (
+{errors.general && (
   <View className="mb-6 p-4 bg-gray-50  rounded-xl flex-row items-center gap-3">
             <HugeiconsIcon icon={Alert01Icon} size={20} color="#111111" />
             <Text className="flex-1 text-gray-800 font-semibold text-sm">
