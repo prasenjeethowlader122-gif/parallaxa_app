@@ -614,7 +614,9 @@ export default function PostDetailScreen() {
             </View>
           ) : (
             <View className="items-center pt-12 px-8">
-              <Text className="text-4xl mb-3">💬</Text>
+              <View className="mb-3">
+                <HugeiconsIcon icon={AiChatIcon} size={48} color={colors.mutedForeground} />
+              </View>
               <Text
                 className="text-[18px] font-bold mb-1.5"
                 style={{ color: colors.foreground }}

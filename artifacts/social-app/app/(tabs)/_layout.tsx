@@ -143,10 +143,10 @@ export default function RootLayout() {
 
   // ── Logo ──────────────────────────────────────────────────────────────────
   const XLogo = () => (
-    <View style={{ height: 36, justifyContent: "center", alignItems: "flex-start" }}>
+    <View style={{ height: 40, justifyContent: "center", alignItems: "flex-start" }}>
       <Image
         source={require("@/assets/images/text-logo-dark.svg")}
-        style={{ height: 32, width: 140 }}
+        style={{ height: 36, width: 158 }}
         contentFit="contain"
       />
     </View>
@@ -194,7 +194,7 @@ export default function RootLayout() {
         })}
         {user && user.role === 'admin' && (
           <TouchableOpacity
-            onPress={() => navigateTo("admin/users")}
+            onPress={() => navigateTo("admin")}
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -319,7 +319,7 @@ export default function RootLayout() {
                   alignItems: "center",
                   justifyContent: "space-between",
                   paddingHorizontal: 16,
-                  paddingBottom: 10,
+                  paddingBottom: 12,
                 }}
               >
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
@@ -585,7 +585,7 @@ export default function RootLayout() {
                 <TouchableOpacity
                   onPress={() => {
                     closeDrawer();
-                    router.push("/admin/users" as any);
+                    router.push("/admin" as any);
                   }}
                   activeOpacity={0.7}
                   style={{

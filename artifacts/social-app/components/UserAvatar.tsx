@@ -14,9 +14,10 @@ interface UserAvatarProps {
 
 export function UserAvatar({ uri, size = 40, hasStory, hasUnviewedStory }: UserAvatarProps) {
   const colors = useColors();
-  const borderWidth = hasStory ? 2 : 0;
-  const outerSize = size + borderWidth * 2 + (hasStory ? 4 : 0);
-  const borderColor = hasUnviewedStory ? colors.story : colors.border;
+  const borderWidth = hasStory ? 2.5 : 0;
+  const padding = hasStory ? 2.5 : 0;
+  const outerSize = size + (borderWidth + padding) * 2;
+  const borderColor = hasUnviewedStory ? colors.story : (hasStory ? colors.border : 'transparent');
 
   return (
     <View
@@ -24,9 +25,9 @@ export function UserAvatar({ uri, size = 40, hasStory, hasUnviewedStory }: UserA
         width: outerSize,
         height: outerSize,
         borderRadius: outerSize / 2,
-        borderWidth: hasStory ? 2 : 0,
+        borderWidth,
         borderColor,
-        padding: hasStory ? 2 : 0,
+        padding,
         justifyContent: "center",
         alignItems: "center",
       }}

@@ -1,6 +1,6 @@
 import { Router, type Response, type NextFunction } from "express";
-import { db, usersTable, postsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, usersTable, postsTable, storiesTable } from "@workspace/db";
+import { eq, sql } from "drizzle-orm";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
@@ -16,6 +16,22 @@ const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
 
 router.use(authenticate);
 router.use(isAdmin);
+
+router.get("/admin/stats", async (req, res) => {
+  try {
+    const [userCount] = await db.select({ count: sql<number>`count(*)` }).from(usersTable);
+    const [postCount] = await db.select({ count: sql<number>`count(*)` }).from(postsTable);
+    const [storyCount] = await db.select({ count: sql<number>`count(*)` }).from(storiesTable);
+
+    res.json({
+      users: userCount.count,
+      posts: postCount.count,
+      stories: storyCount.count,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
 
 router.get("/admin/users", async (req, res) => {
   try {
