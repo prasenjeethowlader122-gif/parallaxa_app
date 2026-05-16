@@ -14,8 +14,8 @@ const router = Router();
 
 router.post("/auth/register", async (req, res) => {
   try {
-    const { username, email, phoneNumber, password, displayName, dateOfBirth } = req.body;
-    if (!username || (!email && !phoneNumber) || !password || !displayName || !dateOfBirth) {
+    const { username, email, password, displayName, dateOfBirth } = req.body;
+    if (!username || !email || !password || !displayName || !dateOfBirth) {
       res.status(400).json({ error: "Bad Request", message: "Missing required fields" });
       return;
     }
@@ -41,18 +41,6 @@ router.post("/auth/register", async (req, res) => {
         return;
       }
     }
-
-    if (phoneNumber) {
-      const existingPhone = await db
-        .select()
-        .from(usersTable)
-        .where(eq(usersTable.phoneNumber, phoneNumber))
-        .limit(1);
-      if (existingPhone.length > 0) {
-        res.status(409).json({ error: "Conflict", message: "Phone number already in use" });
-        return;
-      }
-    }
     const existingUsername = await db
       .select()
       .from(usersTable)
@@ -74,7 +62,6 @@ router.post("/auth/register", async (req, res) => {
       id,
       username,
       email: email || null,
-      phoneNumber: phoneNumber || null,
       passwordHash,
       displayName,
       avatarUrl: logoSVGBase64,
@@ -187,17 +174,15 @@ router.post("/auth/google", async (req, res) => {
 
 router.post("/auth/login", async (req, res) => {
   try {
-    const { email, phoneNumber, password } = req.body;
-    if ((!email && !phoneNumber) || !password) {
-      res.status(400).json({ error: "Bad Request", message: "Contact (email or phone) and password required" });
+    const { email, password } = req.body;
+    if (!email || !password) {
+      res.status(400).json({ error: "Bad Request", message: "Email and password required" });
       return;
     }
 
     let user;
     if (email) {
       [user] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
-    } else if (phoneNumber) {
-      [user] = await db.select().from(usersTable).where(eq(usersTable.phoneNumber, phoneNumber)).limit(1);
     }
     if (!user) {
       res.status(401).json({ error: "Unauthorized", message: "Invalid credentials" });
