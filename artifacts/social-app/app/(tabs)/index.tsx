@@ -157,6 +157,18 @@ export default function FeedScreen() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState < TabId > ("foryou");
   
+  // Fetch stories at screen level so we can enrich post authors with story rings
+  const { data: storyGroups } = useGetStories();
+
+  // Build a map: userId -> hasUnviewed, for quick lookup in PostCard
+  const storyMap = useMemo(() => {
+    const map = new Map<string, boolean>();
+    (storyGroups || []).forEach((group: any) => {
+      map.set(group.user.id, group.hasUnviewed ?? false);
+    });
+    return map;
+  }, [storyGroups]);
+
   // "For You" & "Trending" — explore endpoint
   const {
     data: exploreData,
@@ -195,7 +207,6 @@ export default function FeedScreen() {
   
   // ── Animated header (collapse on scroll) ──────────────────────────────────
   const scrollY = useRef(new Animated.Value(0)).current;
-  const TAB_BAR_HEIGHT = 44;
   const headerOpacity = scrollY.interpolate({
     inputRange: [0, 30],
     outputRange: [1, 0.96],
@@ -227,11 +238,9 @@ export default function FeedScreen() {
   const StoryBar = () => {
     if (activeTab !== "foryou" || !user) return null;
 
-    const { data: storyGroups } = useGetStories();
-
     const data = [
       { id: user.id, username: "You", avatarUrl: user.avatarUrl, isOwn: true, hasUnviewed: false },
-      ...(storyGroups || []).map(group => ({
+      ...(storyGroups || []).map((group: any) => ({
         id: group.user.id,
         username: group.user.username,
         avatarUrl: group.user.avatarUrl,
@@ -264,7 +273,7 @@ export default function FeedScreen() {
   };
   
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       {!user && (
         <View
           className="px-4 py-3 bg-blue-600 flex-row items-center justify-between"
@@ -298,20 +307,29 @@ export default function FeedScreen() {
         key={activeTab}
         data={isLoading ? [] : displayPosts}
         keyExtractor={(item: any) => item.id}
-        renderItem={({ item }: { item: any }) => (
-          <PostCard
-            id={item.id}
-            author={item.author}
-            content={item.content}
-            imageUrl={item.imageUrl}
-            hashtags={item.hashtags}
-            likesCount={item.likesCount ?? 0}
-            commentsCount={item.commentsCount ?? 0}
-            isLiked={item.isLiked ?? false}
-            isSaved={item.isSaved ?? false}
-            createdAt={item.createdAt}
-          />
-        )}
+        renderItem={({ item }: { item: any }) => {
+          const authorId = item.author?.id;
+          const hasStory = authorId ? storyMap.has(authorId) : false;
+          const hasUnviewedStory = authorId ? storyMap.get(authorId) === true : false;
+          return (
+            <PostCard
+              id={item.id}
+              author={{
+                ...item.author,
+                hasStory,
+                hasUnviewedStory,
+              }}
+              content={item.content}
+              imageUrl={item.imageUrl}
+              hashtags={item.hashtags}
+              likesCount={item.likesCount ?? 0}
+              commentsCount={item.commentsCount ?? 0}
+              isLiked={item.isLiked ?? false}
+              isSaved={item.isSaved ?? false}
+              createdAt={item.createdAt}
+            />
+          );
+        }}
         ListHeaderComponent={
           <>
             <StoryBar />

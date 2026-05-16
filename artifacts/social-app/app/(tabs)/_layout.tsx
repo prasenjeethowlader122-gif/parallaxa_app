@@ -47,8 +47,8 @@ const MAIN_NAV = [
 ];
 
 const SECONDARY_NAV = [
-  { id: "bookmarks", label: "Bookmarks", icon: BookmarkIcon },
-  { id: "settings",  label: "Settings",  icon: Settings01Icon },
+  { id: "bookmarks", label: "Bookmarks", icon: BookmarkIcon, requiresAuth: true },
+  { id: "settings",  label: "Settings",  icon: Settings01Icon, requiresAuth: false },
 ];
 
 const DRAWER_WIDTH = 300;
@@ -267,7 +267,7 @@ export default function RootLayout() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
-    <StatusBar style="light" translucent={false} />
+    <StatusBar style="auto" translucent={false} />
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#fff" }}>
       <View style={{ flex: 1, flexDirection: isLargeScreen ? "row" : "column", justifyContent: isLargeScreen ? "center" : "flex-start" }}>
 
@@ -599,7 +599,7 @@ export default function RootLayout() {
                 return (
                   <TouchableOpacity
                     key={item.id}
-                    onPress={() => navigateTo(item.id)}
+                    onPress={() => navigateTo(item.id, item.requiresAuth)}
                     activeOpacity={0.7}
                     style={{
                       flexDirection: "row",

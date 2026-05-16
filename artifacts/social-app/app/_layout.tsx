@@ -57,7 +57,7 @@ function RootLayoutNav() {
   
   return (
     <>
-      <StatusBar style="light" translucent={false} />
+      <StatusBar style="auto" translucent={false} />
       <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
@@ -65,6 +65,7 @@ function RootLayoutNav() {
         <Stack.Screen name="profile/[id]" />
         <Stack.Screen name="messages/index" />
         <Stack.Screen name="messages/[id]" />
+        <Stack.Screen name="bookmarks" />
         {!user ? (
           <Stack.Screen name="edit-profile" />
         ) : (
@@ -91,18 +92,34 @@ function RootLayoutNav() {
         >
           <Image
             source={require("@/assets/images/parallaxa-logo.svg")}
-            style={{ width: 120, height: 120, marginBottom: 24 }}
+            style={{ width: 100, height: 100, marginBottom: 32 }}
             contentFit="contain"
+          />
+          <ActivityIndicator
+            size="large"
+            color="#1d9bf0"
+            style={{ marginBottom: 20 }}
           />
           <Text
             style={{
-              fontSize: 16,
+              fontSize: 15,
               color: '#64748b',
-              fontWeight: '600',
-              fontFamily: 'Sora-Medium'
+              fontWeight: '500',
+              fontFamily: 'Sora-Medium',
+              letterSpacing: 0.1,
             }}
           >
             {processingMessage}
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              color: '#94a3b8',
+              marginTop: 6,
+              fontFamily: 'Sora-Regular',
+            }}
+          >
+            Please wait a moment...
           </Text>
         </View>
       )}
