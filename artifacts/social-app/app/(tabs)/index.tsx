@@ -114,7 +114,7 @@ function AnimatedTabBar({ activeTab, onPress, colors, tabs }: AnimatedTabBarProp
               const { x, width } = e.nativeEvent.layout;
               handleLayout(index, x, width);
             }}
-            style={{ paddingVertical: 13, paddingHorizontal: 16 }}
+            style={{ paddingVertical: 10, paddingHorizontal: 16 }}
             activeOpacity={0.8}
           >
             <Animated.Text
@@ -139,8 +139,8 @@ function AnimatedTabBar({ activeTab, onPress, colors, tabs }: AnimatedTabBarProp
           bottom: 0,
           left: indicatorX,
           width: indicatorW,
-          height: 1,
-          borderRadius: 1,
+          height: 3,
+          borderRadius: 1.5,
           backgroundColor: colors.foreground,
         }}
       />
@@ -241,7 +241,7 @@ export default function FeedScreen() {
     ];
 
     return (
-      <View style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, paddingVertical: 12 }}>
+      <View style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, paddingVertical: 8 }}>
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}

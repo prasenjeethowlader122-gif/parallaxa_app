@@ -31,7 +31,7 @@ import {
   Calendar01Icon,
   Tick01Icon,
 } from '@hugeicons/core-free-icons';
-import { useCheckUsername, useSuggestUsernames } from "@workspace/api-client-react";
+import { useCheckUsername, useSuggestUsernames, useRegister } from "@workspace/api-client-react";
 import { FloatingLabelInput } from "@/components/FloatingLabelInput";
 
 type FormErrors = {
@@ -113,7 +113,8 @@ const InputRow = ({
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { login } = useAuth();
+  const { login: authLogin } = useAuth();
+  const { mutateAsync: performRegister } = useRegister();
   
   /* ─── form state ─── */
   const [step, setStep] = useState(0);
@@ -141,14 +142,14 @@ export default function RegisterScreen() {
   const [confirmFocused, setCF] = useState(false);
 
   /* ─── Live Username Check ─── */
-  const { data: availability, isLoading: isCheckingUsername } = useCheckUsername(
+  const { data: availability, isLoading: isCheckingUsername, isError: checkUsernameError } = useCheckUsername(
     { username: username.trim().toLowerCase() },
-    { query: { enabled: step === 4 && username.trim().length >= 3, retry: false } as any }
+    { query: { enabled: step === 4 && username.trim().length >= 3, retry: false, queryKey: ['checkUsername', username.trim().toLowerCase()] } as any }
   );
 
-  const { data: suggestionData } = useSuggestUsernames(
+  const { data: suggestionData, isError: suggestUsernamesError } = useSuggestUsernames(
     { username: username.trim().toLowerCase() },
-    { query: { enabled: (step === 4 && availability?.available === false) || (step === 4 && username.trim().length === 0), retry: false } as any }
+    { query: { enabled: (step === 4 && availability?.available === false) || (step === 4 && username.trim().length === 0), retry: false, queryKey: ['suggestUsernames', username.trim().toLowerCase()] } as any }
   );
   
   const topPt = insets.top + (Platform.OS === "web" ? 24 : 0);
@@ -205,7 +206,7 @@ export default function RegisterScreen() {
       else if (username.trim().length > 30) newErrors.username = "Username must be less than 30 characters";
       else if (!/^[a-zA-Z0-9_-]+$/.test(username.trim()))
         newErrors.username = "Letters, numbers, _ and - only";
-      else if (availability?.available === false)
+      else if (availability?.available === false && !checkUsernameError)
         newErrors.username = "Username is already taken";
 
       if (!acceptTerms) newErrors.general = "You must accept the terms to continue";
@@ -232,31 +233,24 @@ export default function RegisterScreen() {
     if (!validateStep()) return;
     setIsLoading(true);
     try {
-      const baseUrl = getApiBaseUrl();
-      const response = await fetch(`${baseUrl}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const data = await performRegister({
+        data: {
           displayName: displayName.trim(),
           username: username.trim().toLowerCase(),
           email: usePhone ? undefined : email.trim().toLowerCase(),
           phoneNumber: usePhone ? phoneNumber.trim() : undefined,
           password,
           dateOfBirth,
-        }),
+        } as any
       });
-      const data = await response.json();
-      if (!response.ok) {
-        const msg = data.message || "Registration failed. Please try again.";
-        if (data.field) setErrors({
-          [data.field]: msg } as FormErrors);
-        else setErrors({ general: msg });
-        return;
+      if (data.token && data.user) {
+        await authLogin(data.token, data.user as any);
+        router.replace("/(tabs)");
+      } else {
+        throw new Error("Registration succeeded but no token received");
       }
-      await login(data.token, data.user);
-      router.replace("/(tabs)");
-    } catch {
-      setErrors({ general: "Connection failed. Check your internet and try again." });
+    } catch (error: any) {
+      setErrors({ general: error.message || "Registration failed. Please try again." });
     } finally {
       setIsLoading(false);
     }
@@ -444,7 +438,7 @@ export default function RegisterScreen() {
         <View className="items-center mb-8">
           <Image
             source={require('@/assets/images/text-logo-dark.svg')}
-            style={{ width: 180, height: 40 }}
+            style={{ width: 220, height: 52 }}
             contentFit="contain"
           />
         </View>

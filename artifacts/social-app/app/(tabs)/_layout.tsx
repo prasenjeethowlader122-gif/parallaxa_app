@@ -143,10 +143,10 @@ export default function RootLayout() {
 
   // ── Logo ──────────────────────────────────────────────────────────────────
   const XLogo = () => (
-    <View style={{ height: 24, justifyContent: "center", alignItems: "flex-start" }}>
+    <View style={{ height: 36, justifyContent: "center", alignItems: "flex-start" }}>
       <Image
         source={require("@/assets/images/text-logo-dark.svg")}
-        style={{ height: 20, width: 100 }}
+        style={{ height: 32, width: 140 }}
         contentFit="contain"
       />
     </View>
