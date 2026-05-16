@@ -58,6 +58,8 @@ export const UserRole = {
 } as const;
 
 export interface User {
+  hasStory?: boolean;
+  hasUnviewedStory?: boolean;
   id: string;
   username: string;
   email: string;
@@ -85,6 +87,8 @@ export interface AuthResponse {
 }
 
 export interface UserSummary {
+  hasStory?: boolean;
+  hasUnviewedStory?: boolean;
   id: string;
   username: string;
   displayName: string;

@@ -15,11 +15,25 @@ import { Text } from "@/components/Text";
 import { useCreateStory } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { Cancel01Icon, Image01Icon, Video01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Image01Icon, Video01Icon, Tick01Icon, SquareIcon } from "@hugeicons/core-free-icons";
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
+import { ScrollView as RNScrollView } from "react-native";
 
 const { width, height } = Dimensions.get("window");
+
+const COLORS = [
+  "#FFFFFF",
+  "#000000",
+  "#FF3B30",
+  "#FF9500",
+  "#FFCC00",
+  "#4CD964",
+  "#5AC8FA",
+  "#007AFF",
+  "#5856D6",
+  "#FF2D55",
+];
 
 export default function CreateStoryScreen() {
   const colors = useColors();
@@ -29,6 +43,8 @@ export default function CreateStoryScreen() {
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [overlayText, setOverlayText] = useState("");
   const [filter, setFilter] = useState<'none' | 'grayscale' | 'sepia'>('none');
+  const [textColor, setTextColor] = useState("#FFFFFF");
+  const [textHasBackground, setTextHasBackground] = useState(false);
 
   const { mutate: createStory, isPending } = useCreateStory({
     mutation: {
@@ -90,7 +106,15 @@ export default function CreateStoryScreen() {
 
           {overlayText !== "" && (
             <View style={{ position: 'absolute', top: '40%', left: 0, right: 0, alignItems: 'center' }}>
-              <Text style={{ color: '#fff', fontSize: 32, fontWeight: 'bold', textAlign: 'center', backgroundColor: 'rgba(0,0,0,0.3)', paddingHorizontal: 20 }}>
+              <Text style={{
+                color: textColor,
+                fontSize: 32,
+                fontWeight: 'bold',
+                textAlign: 'center',
+                backgroundColor: textHasBackground ? 'rgba(0,0,0,0.6)' : 'transparent',
+                paddingHorizontal: 20,
+                borderRadius: 8,
+              }}>
                 {overlayText}
               </Text>
             </View>
@@ -103,25 +127,55 @@ export default function CreateStoryScreen() {
           </View>
 
           <View style={[styles.overlayFooter, { paddingBottom: insets.bottom + 20 }]}>
-            <View style={{ width: '100%', paddingHorizontal: 20, marginBottom: 20 }}>
+            <View style={{ width: '100%', paddingHorizontal: 20, marginBottom: 15, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <TextInput
                 placeholder="Type something..."
                 placeholderTextColor="rgba(255,255,255,0.7)"
-                style={{ backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', borderRadius: 25, paddingHorizontal: 20, paddingVertical: 12, fontSize: 16 }}
+                style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', borderRadius: 25, paddingHorizontal: 20, paddingVertical: 12, fontSize: 16 }}
                 value={overlayText}
                 onChangeText={setOverlayText}
               />
+              <TouchableOpacity
+                onPress={() => setTextHasBackground(!textHasBackground)}
+                style={[styles.iconButton, { backgroundColor: textHasBackground ? colors.primary : 'rgba(0,0,0,0.5)' }]}
+              >
+                <HugeiconsIcon icon={SquareIcon} size={20} color="#fff" />
+              </TouchableOpacity>
             </View>
 
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
-              <TouchableOpacity onPress={() => setFilter('none')} style={[styles.filterBtn, filter === 'none' && styles.filterBtnActive]}>
-                <Text style={styles.filterBtnText}>None</Text>
+            <RNScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20, gap: 12, marginBottom: 20 }}
+            >
+              {COLORS.map((c) => (
+                <TouchableOpacity
+                  key={c}
+                  onPress={() => setTextColor(c)}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: c,
+                    borderWidth: 2,
+                    borderColor: textColor === c ? '#fff' : 'transparent',
+                  }}
+                />
+              ))}
+            </RNScrollView>
+
+            <View style={{ flexDirection: 'row', gap: 15, marginBottom: 25 }}>
+              <TouchableOpacity onPress={() => setFilter('none')} style={[styles.filterCircle, filter === 'none' && styles.filterCircleActive]}>
+                <View style={[styles.filterPreview, { backgroundColor: '#ccc' }]} />
+                <Text style={styles.filterLabel}>None</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setFilter('grayscale')} style={[styles.filterBtn, filter === 'grayscale' && styles.filterBtnActive]}>
-                <Text style={styles.filterBtnText}>Gray</Text>
+              <TouchableOpacity onPress={() => setFilter('grayscale')} style={[styles.filterCircle, filter === 'grayscale' && styles.filterCircleActive]}>
+                <View style={[styles.filterPreview, { backgroundColor: 'gray' }]} />
+                <Text style={styles.filterLabel}>Gray</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setFilter('sepia')} style={[styles.filterBtn, filter === 'sepia' && styles.filterBtnActive]}>
-                <Text style={styles.filterBtnText}>Sepia</Text>
+              <TouchableOpacity onPress={() => setFilter('sepia')} style={[styles.filterCircle, filter === 'sepia' && styles.filterCircleActive]}>
+                <View style={[styles.filterPreview, { backgroundColor: '#704214' }]} />
+                <Text style={styles.filterLabel}>Sepia</Text>
               </TouchableOpacity>
             </View>
 
@@ -282,20 +336,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  filterBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  filterCircle: {
+    alignItems: 'center',
+    gap: 4,
+    opacity: 0.6,
   },
-  filterBtnActive: {
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    borderWidth: 1,
+  filterCircleActive: {
+    opacity: 1,
+  },
+  filterPreview: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
     borderColor: '#fff',
   },
-  filterBtnText: {
+  filterLabel: {
     color: '#fff',
-    fontWeight: '600',
-    fontSize: 12,
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });

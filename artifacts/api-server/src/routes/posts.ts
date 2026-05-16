@@ -9,23 +9,66 @@ import {
   hashtagsTable,
   postHashtagsTable,
   notificationsTable,
+  storiesTable,
+  storyViewsTable,
 } from "@workspace/db";
-import { eq, and, desc, inArray, sql, isNull } from "drizzle-orm";
+import { eq, and, desc, inArray, sql, isNull, gt } from "drizzle-orm";
 import { authenticate, optionalAuthenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
 import { logger } from "../lib/logger";
 
 const router = Router();
 
+async function getUsersStoryStatus(userIds: string[], myId?: string) {
+  const now = new Date();
+  const activeStories = userIds.length > 0
+    ? await db
+        .select()
+        .from(storiesTable)
+        .where(and(inArray(storiesTable.userId, userIds), gt(storiesTable.expiresAt, now)))
+    : [];
+
+  const storyMap: Record<string, { hasStory: boolean; hasUnviewedStory: boolean; storyIds: string[] }> = {};
+  userIds.forEach(id => storyMap[id] = { hasStory: false, hasUnviewedStory: false, storyIds: [] });
+
+  activeStories.forEach(s => {
+    storyMap[s.userId].hasStory = true;
+    storyMap[s.userId].storyIds.push(s.id);
+  });
+
+  if (myId && activeStories.length > 0) {
+    const allActiveStoryIds = activeStories.map(s => s.id);
+    const views = await db
+      .select()
+      .from(storyViewsTable)
+      .where(and(eq(storyViewsTable.userId, myId), inArray(storyViewsTable.storyId, allActiveStoryIds)));
+
+    const viewedSet = new Set(views.map(v => v.storyId));
+
+    userIds.forEach(id => {
+      const userStoryIds = storyMap[id].storyIds;
+      if (userStoryIds.length > 0) {
+        storyMap[id].hasUnviewedStory = userStoryIds.some(sid => !viewedSet.has(sid));
+      }
+    });
+  }
+
+  return storyMap;
+}
+
 async function formatPost(
   post: typeof postsTable.$inferSelect,
   myId?: string,
+  authorData?: typeof usersTable.$inferSelect,
+  storyStatus?: { hasStory: boolean; hasUnviewedStory: boolean }
 ) {
-  const [author] = await db
+  const author = authorData || (await db
     .select()
     .from(usersTable)
     .where(eq(usersTable.id, post.userId))
-    .limit(1);
+    .limit(1))[0];
+
+  const status = storyStatus || (await getUsersStoryStatus([post.userId], myId))[post.userId];
 
   const liked = myId
     ? (await db
@@ -58,6 +101,7 @@ async function formatPost(
       avatarUrl: author?.avatarUrl ?? null,
       isVerified: author?.isVerified ?? false,
       isFollowing: false,
+      ...status,
     },
     parentPostId: post.parentPostId ?? null,
     content: post.content,
@@ -247,7 +291,16 @@ router.get("/posts/:postId/replies", optionalAuthenticate, async (req: AuthReque
       .orderBy(desc(postsTable.createdAt));
 
     const allReplies = [...directReplies, ...nestedReplies];
-    const formatted = await Promise.all(allReplies.map((p) => formatPost(p, req.userId)));
+    const userIds = [...new Set(allReplies.map(r => r.userId))];
+
+    const [authors, storyStatuses] = await Promise.all([
+      db.select().from(usersTable).where(inArray(usersTable.id, userIds)),
+      getUsersStoryStatus(userIds, req.userId)
+    ]);
+
+    const authorMap = Object.fromEntries(authors.map(a => [a.id, a]));
+
+    const formatted = await Promise.all(allReplies.map((p) => formatPost(p, req.userId, authorMap[p.userId], storyStatuses[p.userId])));
 
     res.json({ posts: formatted, nextCursor: null });
   } catch (err) {
@@ -351,7 +404,14 @@ router.get("/feed", optionalAuthenticate, async (req: AuthRequest, res) => {
         .limit(limit);
     }
 
-    const formatted = await Promise.all(posts.map((p) => formatPost(p.post, myId)));
+    const userIds = [...new Set(posts.map(p => p.post.userId))];
+    const [authors, storyStatuses] = await Promise.all([
+      db.select().from(usersTable).where(inArray(usersTable.id, userIds)),
+      getUsersStoryStatus(userIds, myId)
+    ]);
+    const authorMap = Object.fromEntries(authors.map(a => [a.id, a]));
+
+    const formatted = await Promise.all(posts.map((p) => formatPost(p.post, myId, authorMap[p.post.userId], storyStatuses[p.post.userId])));
     res.json({ posts: formatted, nextCursor: null });
   } catch (err) {
     logger.error({ err }, "GET /feed error");
@@ -371,7 +431,14 @@ router.get("/explore", optionalAuthenticate, async (req: AuthRequest, res) => {
       .orderBy(desc(postsTable.likesCount), desc(postsTable.createdAt))
       .limit(limit);
 
-    const formatted = await Promise.all(posts.map((p) => formatPost(p, req.userId!)));
+    const userIds = [...new Set(posts.map(p => p.userId))];
+    const [authors, storyStatuses] = await Promise.all([
+      db.select().from(usersTable).where(inArray(usersTable.id, userIds)),
+      getUsersStoryStatus(userIds, req.userId)
+    ]);
+    const authorMap = Object.fromEntries(authors.map(a => [a.id, a]));
+
+    const formatted = await Promise.all(posts.map((p) => formatPost(p, req.userId!, authorMap[p.userId], storyStatuses[p.userId])));
     res.json({ posts: formatted, nextCursor: null });
   } catch (err) {
     logger.error({ err }, "GET /explore error");

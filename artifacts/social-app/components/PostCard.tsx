@@ -6,7 +6,8 @@ import {
   CheckmarkBadge01Icon,
   FavouriteIcon,
   MoreHorizontalIcon,
-  Share01Icon
+  Share01Icon,
+  Cancel01Icon
 } from '@hugeicons/core-free-icons';
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
@@ -26,6 +27,8 @@ interface Author {
   displayName: string;
   avatarUrl?: string | null;
   isVerified: boolean;
+  hasStory?: boolean;
+  hasUnviewedStory?: boolean;
 }
 
 interface PostCardProps {
@@ -164,7 +167,12 @@ export function PostCard({
       {/* ── Author row (Matching Skeleton) ── */}
       <View style={styles.authorRow}>
         <TouchableOpacity onPress={navigateToProfile} activeOpacity={0.8} style={{ marginRight: 10 }}>
-          <UserAvatar uri={author.avatarUrl} size={40} />
+          <UserAvatar
+            uri={author.avatarUrl}
+            size={40}
+            hasStory={author.hasStory}
+            hasUnviewedStory={author.hasUnviewedStory}
+          />
         </TouchableOpacity>
         
         <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -270,7 +278,7 @@ export function PostCard({
             style={{ position: 'absolute', top: 50, right: 20, zIndex: 10 }}
             onPress={() => setIsPreviewVisible(false)}
           >
-            <HugeiconsIcon icon={MoreHorizontalIcon} size={30} color="#fff" />
+            <HugeiconsIcon icon={Cancel01Icon} size={30} color="#fff" />
           </TouchableOpacity>
 
           {imageUrl && (

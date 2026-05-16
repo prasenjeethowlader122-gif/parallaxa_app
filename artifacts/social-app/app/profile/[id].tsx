@@ -209,9 +209,19 @@ export default function UserProfileScreen() {
 
       {/* ── Avatar row ── */}
       <View style={styles.avatarRow}>
-        <View style={styles.avatarRing}>
-          <UserAvatar uri={profile?.avatarUrl ?? undefined} size={76} />
-        </View>
+        <TouchableOpacity
+          style={styles.avatarRing}
+          onPress={() => profile?.hasStory && router.push(`/story/${profile.id}` as any)}
+          disabled={!profile?.hasStory}
+          activeOpacity={0.9}
+        >
+          <UserAvatar
+            uri={profile?.avatarUrl ?? undefined}
+            size={76}
+            hasStory={profile?.hasStory}
+            hasUnviewedStory={profile?.hasUnviewedStory}
+          />
+        </TouchableOpacity>
 
         {!isLoading && profile && me && (
           <View style={styles.actionRow}>

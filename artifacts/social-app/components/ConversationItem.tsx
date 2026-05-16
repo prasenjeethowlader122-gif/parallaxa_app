@@ -15,6 +15,8 @@ interface ConversationItemProps {
     displayName: string;
     avatarUrl?: string | null;
     isVerified: boolean;
+    hasStory?: boolean;
+    hasUnviewedStory?: boolean;
   };
   lastMessage?: {
     content?: string | null;
@@ -61,7 +63,12 @@ export function ConversationItem({
       onPress={() => router.push(`/messages/${id}` as any)}
       activeOpacity={0.7}
     >
-      <UserAvatar uri={participant.avatarUrl} size={52} />
+      <UserAvatar
+        uri={participant.avatarUrl}
+        size={52}
+        hasStory={participant.hasStory}
+        hasUnviewedStory={participant.hasUnviewedStory}
+      />
       <View className="flex-1 ml-3">
         <View className="flex-row justify-between items-center mb-0.5">
           <View className="flex-row items-center gap-1 flex-1 mr-2">

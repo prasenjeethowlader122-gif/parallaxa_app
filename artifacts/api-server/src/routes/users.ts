@@ -1,14 +1,52 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, postsTable, followsTable, storiesTable } from "@workspace/db";
-import { eq, and, desc, isNull, sql } from "drizzle-orm";
+import { usersTable, postsTable, followsTable, storiesTable, storyViewsTable } from "@workspace/db";
+import { eq, and, desc, isNull, sql, gt, inArray } from "drizzle-orm";
 import { authenticate, optionalAuthenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
 import generateTextLogoSVGBase64 from './svg-logo'
 
 const router = Router();
 
-function formatUser(user: typeof usersTable.$inferSelect, isFollowing = false, isFollowedBy = false) {
+async function getUsersStoryStatus(userIds: string[], myId?: string) {
+  const now = new Date();
+  const activeStories = userIds.length > 0
+    ? await db
+        .select()
+        .from(storiesTable)
+        .where(and(inArray(storiesTable.userId, userIds), gt(storiesTable.expiresAt, now)))
+    : [];
+
+  const storyMap: Record<string, { hasStory: boolean; hasUnviewedStory: boolean; storyIds: string[] }> = {};
+  userIds.forEach(id => storyMap[id] = { hasStory: false, hasUnviewedStory: false, storyIds: [] });
+
+  activeStories.forEach(s => {
+    storyMap[s.userId].hasStory = true;
+    storyMap[s.userId].storyIds.push(s.id);
+  });
+
+  if (myId && activeStories.length > 0) {
+    const allActiveStoryIds = activeStories.map(s => s.id);
+    const views = await db
+      .select()
+      .from(storyViewsTable)
+      .where(and(eq(storyViewsTable.userId, myId), inArray(storyViewsTable.storyId, allActiveStoryIds)));
+
+    const viewedSet = new Set(views.map(v => v.storyId));
+
+    userIds.forEach(id => {
+      const userStoryIds = storyMap[id].storyIds;
+      if (userStoryIds.length > 0) {
+        storyMap[id].hasUnviewedStory = userStoryIds.some(sid => !viewedSet.has(sid));
+      }
+    });
+  }
+
+  return storyMap;
+}
+
+async function formatUser(user: typeof usersTable.$inferSelect, isFollowing = false, isFollowedBy = false, myId?: string, storyStatus?: { hasStory: boolean; hasUnviewedStory: boolean }) {
+  const status = storyStatus || (await getUsersStoryStatus([user.id], myId))[user.id];
   return {
     id: user.id,
     username: user.username,
@@ -26,10 +64,12 @@ function formatUser(user: typeof usersTable.$inferSelect, isFollowing = false, i
     createdAt: user.createdAt,
     isFollowing,
     isFollowedBy,
+    ...storyStatus,
   };
 }
 
-function formatUserSummary(user: typeof usersTable.$inferSelect, isFollowing = false) {
+async function formatUserSummary(user: typeof usersTable.$inferSelect, isFollowing = false, myId?: string, storyStatus?: { hasStory: boolean; hasUnviewedStory: boolean }) {
+  const status = storyStatus || (await getUsersStoryStatus([user.id], myId))[user.id];
   return {
     id: user.id,
     username: user.username,
@@ -37,6 +77,7 @@ function formatUserSummary(user: typeof usersTable.$inferSelect, isFollowing = f
     avatarUrl: user.avatarUrl,
     isVerified: user.isVerified,
     isFollowing,
+    ...status,
   };
 }
 
@@ -56,7 +97,7 @@ router.get("/users/suggested", authenticate, async (req: AuthRequest, res) => {
       )
       .limit(10);
     
-    res.json(users.map((u) => formatUserSummary(u, false)));
+    res.json(await Promise.all(users.map((u) => formatUserSummary(u, false, myId))));
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
@@ -99,7 +140,7 @@ router.get("/users/:userId", optionalAuthenticate, async (req: AuthRequest, res)
     const isSelf = myId === userId;
     const isFollowing = !!followingRow;
 
-    const profile = formatUser(user, isFollowing, !!followedByRow);
+    const profile = await formatUser(user, isFollowing, !!followedByRow, myId);
 
     // Privacy check
     if (user.isPrivate && !isSelf && !isFollowing && !req.isAdmin) {
@@ -142,7 +183,7 @@ router.put("/users/:userId", authenticate, async (req: AuthRequest, res) => {
       })
       .where(eq(usersTable.id, userId))
       .returning();
-    res.json(formatUser(updated));
+    res.json(await formatUser(updated, false, false, userId));
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
@@ -188,6 +229,7 @@ router.get("/users/:userId/posts", optionalAuthenticate, async (req: AuthRequest
     
     // Fetch author info once
     const [author] = [user];
+    const storyStatus = (await getUsersStoryStatus([userId], myId))[userId];
     
     res.json({
       posts: posts.map((p) => ({
@@ -199,6 +241,7 @@ router.get("/users/:userId/posts", optionalAuthenticate, async (req: AuthRequest
           avatarUrl: author?.avatarUrl ?? null,
           isVerified: author?.isVerified ?? false,
           isFollowing: false,
+          ...storyStatus,
         },
         content: p.content,
         imageUrl: p.imageUrl,
@@ -254,7 +297,7 @@ router.get("/users/:userId/followers", optionalAuthenticate, async (req: AuthReq
       .innerJoin(usersTable, eq(followsTable.followerId, usersTable.id))
       .where(eq(followsTable.followingId, userId))
       .limit(limit);
-    res.json({ users: rows.map((r) => formatUserSummary(r.user)), nextCursor: null });
+    res.json({ users: await Promise.all(rows.map((r) => formatUserSummary(r.user, false, req.userId))), nextCursor: null });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
@@ -270,7 +313,7 @@ router.get("/users/:userId/following", optionalAuthenticate, async (req: AuthReq
       .innerJoin(usersTable, eq(followsTable.followingId, usersTable.id))
       .where(eq(followsTable.followerId, userId))
       .limit(limit);
-    res.json({ users: rows.map((r) => formatUserSummary(r.user)), nextCursor: null });
+    res.json({ users: await Promise.all(rows.map((r) => formatUserSummary(r.user, false, req.userId))), nextCursor: null });
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }

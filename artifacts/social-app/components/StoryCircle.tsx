@@ -3,6 +3,8 @@ import { TouchableOpacity, View } from "react-native";
 import { Text } from "@/components/Text";
 import { useColors } from "@/hooks/useColors";
 import { UserAvatar } from "./UserAvatar";
+import { HugeiconsIcon } from "@hugeicons/react-native";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 
 interface StoryCircleProps {
   userId: string;
@@ -46,7 +48,7 @@ export function StoryCircle({ userId, username, avatarUrl, hasUnviewed = true, i
             borderColor: colors.background,
           }}
         >
-          <Text className="text-white text-sm font-bold leading-4">+</Text>
+          <HugeiconsIcon icon={Add01Icon} size={12} color="#fff" />
         </View>
       )}
       <Text
