@@ -1,0 +1,30 @@
+import 'package:dio/dio.dart';
+import '../../auth/domain/user.dart';
+import '../../feed/domain/post.dart';
+
+class ProfileRepository {
+  final Dio _dio;
+
+  ProfileRepository(this._dio);
+
+  Future<User> getUserProfile(String userId) async {
+    final response = await _dio.get('/users/$userId');
+    return User.fromJson(response.data);
+  }
+
+  Future<PostPage> getUserPosts(String userId, {String? cursor, int limit = 20}) async {
+    final response = await _dio.get('/users/$userId/posts', queryParameters: {
+      if (cursor != null) 'cursor': cursor,
+      'limit': limit,
+    });
+    return PostPage.fromJson(response.data);
+  }
+
+  Future<void> followUser(String userId) async {
+    await _dio.post('/users/$userId/follow');
+  }
+
+  Future<void> unfollowUser(String userId) async {
+    await _dio.delete('/users/$userId/follow');
+  }
+}
