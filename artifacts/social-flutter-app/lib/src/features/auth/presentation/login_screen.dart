@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../data/auth_repository.dart';
 import '../../../core/api_client.dart';
-import '../../../core/storage_service.dart';
 import '../../../core/app_colors.dart';
+import 'widgets/floating_label_input.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -14,338 +15,425 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _totpController = TextEditingController();
+
   bool _isLoading = false;
-  bool _obscurePassword = true;
+  bool _showPassword = false;
+  bool _showTotpInput = false;
+
+  Map<String, String> _errors = {};
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _totpController.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+  bool _validateForm() {
+    final Map<String, String> newErrors = {};
+
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      newErrors['email'] = "Email address is required";
+    } else if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
+      newErrors['email'] = "Please enter a valid email address";
+    }
+
+    final password = _passwordController.text.trim();
+    if (password.isEmpty) {
+      newErrors['password'] = "Password is required";
+    } else if (password.length < 6) {
+      newErrors['password'] = "Password must be at least 6 characters";
+    }
+
+    if (_showTotpInput && (_totpController.text.trim().length != 6)) {
+      newErrors['general'] = "Please enter a valid 6-digit 2FA code";
+    }
+
+    setState(() => _errors = newErrors);
+    return newErrors.isEmpty;
+  }
+
+  Future<void> _handleLogin() async {
+    setState(() => _errors = {});
+
+    if (!_validateForm()) return;
+
     setState(() => _isLoading = true);
     try {
       final authRepo = ref.read(authRepositoryProvider);
+
+      if (_showTotpInput) {
+        final response = await authRepo.verify2FA(
+          _emailController.text.trim(),
+          _totpController.text.trim(),
+        );
+        if (response.token != null) {
+          await _onLoginSuccess(response.token!, response.user?.id);
+          return;
+        }
+      }
+
       final response = await authRepo.login(
         _emailController.text.trim(),
         _passwordController.text,
       );
-      if (response.token != null && mounted) {
-        final storage = ref.read(storageServiceProvider);
-        await storage.setAuthToken(response.token!);
-        if (response.user != null) {
-          await storage.setCurrentUserId(response.user!.id);
-        }
-        if (mounted) context.go('/feed');
-      } else if (response.twoFactorRequired && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  '2FA required. Check your authenticator app.')),
-        );
+
+      if (response.twoFactorRequired) {
+        setState(() {
+          _showTotpInput = true;
+          _isLoading = false;
+        });
+        return;
+      }
+
+      if (response.token != null) {
+        await _onLoginSuccess(response.token!, response.user?.id);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_friendlyError(e.toString())),
-            backgroundColor: AppColors.destructive,
-          ),
-        );
-      }
+      setState(() {
+        _errors = {
+          'general': "Invalid email or password. Please try again.",
+        };
+      });
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  String _friendlyError(String error) {
-    if (error.contains('401') || error.contains('Invalid')) {
-      return 'Incorrect email or password';
+  Future<void> _onLoginSuccess(String token, String? userId) async {
+    final storage = ref.read(storageServiceProvider);
+    await storage.setAuthToken(token);
+    if (userId != null) {
+      await storage.setCurrentUserId(userId);
     }
-    if (error.contains('Network') || error.contains('SocketException')) {
-      return 'No connection. Check your internet.';
-    }
-    return 'Login failed. Please try again.';
+    if (mounted) context.go('/feed');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 60),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 32 + 32),
 
-                // ── Logo / Brand ──────────────────────────────────
-                Center(
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Text(
-                      'P',
-                      style: TextStyle(
-                        fontFamily: 'Sora',
-                        fontWeight: FontWeight.w800,
-                        fontSize: 36,
-                        color: Colors.white,
+              // Logo
+              Center(
+                child: SvgPicture.asset(
+                  'assets/images/parallaxa-logo.svg',
+                  width: 180,
+                  height: 64,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Heading
+              const Text(
+                'Welcome back',
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.slate900,
+                  fontFamily: 'Sora',
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Sign in to continue to your account',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.slate500,
+                  fontFamily: 'Sora',
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // General Error Alert
+              if (_errors['general'] != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.slate50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        color: Color(0xFF111111),
+                        size: 20,
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _errors['general']!,
+                          style: const TextStyle(
+                            color: Color(0xFF111111),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            fontFamily: 'Sora',
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+              ],
 
-                // ── Heading ────────────────────────────────────────
-                const Text(
-                  'Welcome back',
-                  style: TextStyle(
-                    fontFamily: 'Sora',
-                    fontWeight: FontWeight.w800,
-                    fontSize: 30,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Sign in to continue',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: AppColors.textMuted,
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-
-                // ── Email input ───────────────────────────────────
-                _AuthInput(
+              // Email Input
+              Opacity(
+                opacity: _showTotpInput ? 0.5 : 1.0,
+                child: FloatingLabelInput(
+                  label: "Email Address",
+                  icon: Icons.mail_outline_rounded,
                   controller: _emailController,
-                  label: 'Email',
-                  icon: Icons.email_outlined,
+                  error: _errors['email'],
                   keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Enter your email';
-                    }
-                    return null;
-                  },
+                  editable: !_isLoading && !_showTotpInput,
+                  right: _emailController.text.isNotEmpty && _errors['email'] == null
+                      ? const Icon(
+                          Icons.check_circle_outline_rounded,
+                          color: Color(0xFF10B981),
+                          size: 18,
+                        )
+                      : null,
                 ),
-                const SizedBox(height: 14),
+              ),
 
-                // ── Password input ────────────────────────────────
-                _AuthInput(
-                  controller: _passwordController,
-                  label: 'Password',
+              // Password Input
+              Opacity(
+                opacity: _showTotpInput ? 0.5 : 1.0,
+                child: FloatingLabelInput(
+                  label: "Password",
                   icon: Icons.lock_outline_rounded,
-                  obscureText: _obscurePassword,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _login(),
-                  suffixIcon: IconButton(
+                  controller: _passwordController,
+                  error: _errors['password'],
+                  secureTextEntry: !_showPassword,
+                  editable: !_isLoading && !_showTotpInput,
+                  right: IconButton(
+                    onPressed: () => setState(() => _showPassword = !_showPassword),
                     icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: AppColors.mutedForeground,
-                      size: 20,
+                      _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      color: _errors['password'] != null
+                          ? const Color(0xFFDC2626)
+                          : AppColors.slate500,
+                      size: 18,
                     ),
-                    onPressed: () => setState(
-                        () => _obscurePassword = !_obscurePassword),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) {
-                      return 'Enter your password';
-                    }
-                    return null;
-                  },
                 ),
-                const SizedBox(height: 8),
+              ),
 
-                // ── Forgot password ────────────────────────────────
+              // Forgot Password Link
+              if (!_showTotpInput)
                 Align(
                   alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {},
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text(
-                      'Forgot password?',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 28),
-
-                // ── Sign in button (black pill) ────────────────────
-                SizedBox(
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textPrimary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: const StadiumBorder(),
-                      disabledBackgroundColor:
-                          AppColors.textPrimary.withOpacity(0.4),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text(
-                            'Sign in',
-                            style: TextStyle(
-                              fontFamily: 'Sora',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // ── Sign up link ───────────────────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "Don't have an account? ",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.push('/register'),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 32),
+                    child: GestureDetector(
+                      onTap: () => context.push('/forgot-password'),
                       child: const Text(
-                        'Sign up',
+                        'Forgot password?',
                         style: TextStyle(
+                          color: Color(0xFF2563EB), // blue-600
+                          fontWeight: FontWeight.w600,
                           fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
+                          fontFamily: 'Sora',
                         ),
                       ),
                     ),
+                  ),
+                ),
+
+              // 2FA Input
+              if (_showTotpInput) ...[
+                const SizedBox(height: 16),
+                FloatingLabelInput(
+                  label: "2FA Code",
+                  icon: Icons.lock_outline_rounded,
+                  controller: _totpController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  autoFocus: true,
+                  editable: !_isLoading,
+                ),
+                GestureDetector(
+                  onTap: () => setState(() => _showTotpInput = false),
+                  child: const Text(
+                    'Back to password',
+                    style: TextStyle(
+                      color: Color(0xFF2563EB),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      fontFamily: 'Sora',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+
+              // Sign In Button
+              SizedBox(
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _isLoading || _emailController.text.isEmpty || _passwordController.text.isEmpty || (_showTotpInput && _totpController.text.length != 6)
+                      ? null
+                      : _handleLogin,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    elevation: 0,
+                    disabledBackgroundColor: AppColors.slate300,
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Sign in',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Sora',
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Google Sign In Button
+              SizedBox(
+                height: 56,
+                child: OutlinedButton(
+                  onPressed: _isLoading ? null : () {},
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.slate200),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.network(
+                        'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                        width: 20,
+                        height: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Continue with Google',
+                        style: TextStyle(
+                          color: AppColors.slate900,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Sora',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Divider
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Row(
+                  children: [
+                    Expanded(child: Container(height: 1, color: AppColors.slate200)),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'OR',
+                        style: TextStyle(
+                          color: AppColors.slate500,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Sora',
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Container(height: 1, color: AppColors.slate200)),
                   ],
                 ),
-                const SizedBox(height: 32),
-              ],
-            ),
+              ),
+
+              // Sign Up CTA
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Don't have an account? ",
+                    style: TextStyle(
+                      color: AppColors.slate600,
+                      fontSize: 14,
+                      fontFamily: 'Sora',
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.push('/register'),
+                    child: const Text(
+                      'Sign up',
+                      style: TextStyle(
+                        color: Color(0xFF2563EB),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        fontFamily: 'Sora',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Footer
+              const SizedBox(height: 48),
+              const Text.rich(
+                TextSpan(
+                  text: 'By signing in, you agree to our ',
+                  children: [
+                    TextSpan(
+                      text: 'Terms of Service',
+                      style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                    ),
+                    TextSpan(text: ' and '),
+                    TextSpan(
+                      text: 'Privacy Policy',
+                      style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                    ),
+                    TextSpan(text: ', including '),
+                    TextSpan(
+                      text: 'Cookie Use',
+                      style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                    ),
+                    TextSpan(text: '.'),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.slate500,
+                  fontSize: 12,
+                  height: 1.4,
+                  fontFamily: 'Sora',
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _AuthInput extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final IconData icon;
-  final TextInputType keyboardType;
-  final TextInputAction textInputAction;
-  final bool obscureText;
-  final Widget? suffixIcon;
-  final String? Function(String?)? validator;
-  final void Function(String)? onFieldSubmitted;
-
-  const _AuthInput({
-    required this.controller,
-    required this.label,
-    required this.icon,
-    this.keyboardType = TextInputType.text,
-    this.textInputAction = TextInputAction.next,
-    this.obscureText = false,
-    this.suffixIcon,
-    this.validator,
-    this.onFieldSubmitted,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      obscureText: obscureText,
-      onFieldSubmitted: onFieldSubmitted,
-      validator: validator,
-      style: const TextStyle(
-        fontFamily: 'Sora',
-        fontSize: 15,
-        color: AppColors.textPrimary,
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(
-          color: AppColors.textMuted,
-          fontSize: 14,
-        ),
-        prefixIcon:
-            Icon(icon, color: AppColors.mutedForeground, size: 20),
-        suffixIcon: suffixIcon,
-        filled: true,
-        fillColor: AppColors.muted,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-              color: AppColors.primary, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-              color: AppColors.destructive, width: 1.5),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-              color: AppColors.destructive, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: 16),
       ),
     );
   }
