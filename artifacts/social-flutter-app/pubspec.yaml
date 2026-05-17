@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_native_splash: ^2.4.4
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -68,6 +69,12 @@ dev_dependencies:
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/images/icon.png
+  android: true
+  ios: true
+
 # The following section is specific to Flutter packages.
 flutter:
 
@@ -95,10 +102,15 @@ flutter:
     - family: Sora
       fonts:
         - asset: assets/fonts/MirandaSans-Regular.ttf
+          weight: 400
         - asset: assets/fonts/MirandaSans-Medium.ttf
           weight: 500
+        - asset: assets/fonts/MirandaSans-Medium.ttf
+          weight: 600
         - asset: assets/fonts/MirandaSans-Bold.ttf
           weight: 700
+        - asset: assets/fonts/MirandaSans-Bold.ttf
+          weight: 800
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
