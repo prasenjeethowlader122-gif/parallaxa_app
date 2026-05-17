@@ -19,8 +19,8 @@ final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
       baseUrl: AppConfig.baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
     ),
   );
 
@@ -33,9 +33,9 @@ final dioProvider = Provider<Dio>((ref) {
         }
         return handler.next(options);
       },
-      onError: (e, handler) {
+      onError: (e, handler) async {
         if (e.response?.statusCode == 401) {
-          // Handle unauthorized error (e.g., logout user)
+          await storageService.clearAll();
         }
         return handler.next(e);
       },

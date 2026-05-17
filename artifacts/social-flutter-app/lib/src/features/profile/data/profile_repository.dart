@@ -1,6 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api_client.dart';
 import '../../auth/domain/user.dart';
 import '../../feed/domain/post.dart';
+
+final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
+  return ProfileRepository(ref.watch(dioProvider));
+});
 
 class ProfileRepository {
   final Dio _dio;
@@ -12,8 +18,10 @@ class ProfileRepository {
     return User.fromJson(response.data);
   }
 
-  Future<PostPage> getUserPosts(String userId, {String? cursor, int limit = 20}) async {
-    final response = await _dio.get('/users/$userId/posts', queryParameters: {
+  Future<PostPage> getUserPosts(String userId,
+      {String? cursor, int limit = 20}) async {
+    final response =
+        await _dio.get('/users/$userId/posts', queryParameters: {
       if (cursor != null) 'cursor': cursor,
       'limit': limit,
     });

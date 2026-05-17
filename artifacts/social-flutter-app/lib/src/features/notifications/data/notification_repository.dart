@@ -1,12 +1,19 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api_client.dart';
 import '../domain/notification.dart';
+
+final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
+  return NotificationRepository(ref.watch(dioProvider));
+});
 
 class NotificationRepository {
   final Dio _dio;
 
   NotificationRepository(this._dio);
 
-  Future<NotificationPage> getNotifications({String? cursor, int limit = 20}) async {
+  Future<NotificationPage> getNotifications(
+      {String? cursor, int limit = 20}) async {
     final response = await _dio.get('/notifications', queryParameters: {
       if (cursor != null) 'cursor': cursor,
       'limit': limit,

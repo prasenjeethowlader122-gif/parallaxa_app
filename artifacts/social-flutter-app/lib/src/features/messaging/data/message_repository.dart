@@ -1,5 +1,11 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api_client.dart';
 import '../domain/message.dart';
+
+final messageRepositoryProvider = Provider<MessageRepository>((ref) {
+  return MessageRepository(ref.watch(dioProvider));
+});
 
 class MessageRepository {
   final Dio _dio;
@@ -13,16 +19,20 @@ class MessageRepository {
         .toList();
   }
 
-  Future<MessagePage> getMessages(String conversationId, {String? cursor, int limit = 20}) async {
-    final response = await _dio.get('/conversations/$conversationId/messages', queryParameters: {
+  Future<MessagePage> getMessages(String conversationId,
+      {String? cursor, int limit = 30}) async {
+    final response =
+        await _dio.get('/conversations/$conversationId/messages', queryParameters: {
       if (cursor != null) 'cursor': cursor,
       'limit': limit,
     });
     return MessagePage.fromJson(response.data);
   }
 
-  Future<Message> sendMessage(String conversationId, {String? content, String? mediaUrl}) async {
-    final response = await _dio.post('/conversations/$conversationId/messages', data: {
+  Future<Message> sendMessage(String conversationId,
+      {String? content, String? mediaUrl}) async {
+    final response =
+        await _dio.post('/conversations/$conversationId/messages', data: {
       if (content != null) 'content': content,
       if (mediaUrl != null) 'mediaUrl': mediaUrl,
     });
@@ -30,7 +40,8 @@ class MessageRepository {
   }
 
   Future<Conversation> startConversation(String userId) async {
-    final response = await _dio.post('/conversations/start', data: {'userId': userId});
+    final response =
+        await _dio.post('/conversations/start', data: {'userId': userId});
     return Conversation.fromJson(response.data);
   }
 }

@@ -1,6 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api_client.dart';
 import '../domain/search.dart';
 import '../../feed/domain/post.dart';
+
+final searchRepositoryProvider = Provider<SearchRepository>((ref) {
+  return SearchRepository(ref.watch(dioProvider));
+});
 
 class SearchRepository {
   final Dio _dio;
