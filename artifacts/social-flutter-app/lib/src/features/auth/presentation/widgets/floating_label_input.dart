@@ -114,7 +114,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
           clipBehavior: Clip.none,
           children: [
             Container(
-              height: 52,
+              height: 56,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -139,34 +139,41 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                       ),
                     ),
                   Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      focusNode: _focusNode,
-                      obscureText: widget.secureTextEntry,
-                      keyboardType: widget.keyboardType,
-                      textInputAction: widget.textInputAction,
-                      onChanged: widget.onChanged,
-                      onEditingComplete: widget.onEditingComplete,
-                      onSubmitted: widget.onFieldSubmitted,
-                      enabled: widget.editable,
-                      autofocus: widget.autoFocus,
-                      maxLength: widget.maxLength,
-                      textCapitalization: widget.textCapitalization,
-                      autocorrect: widget.autoCorrect,
-                      cursorColor: AppColors.primary,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: AppColors.slate900,
-                        fontFamily: 'Sora',
-                      ),
-                      decoration: InputDecoration(
-                        isDense: true,
-                        contentPadding: EdgeInsets.only(
-                          left: widget.icon != null ? 12 : 16,
-                          right: 16,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: TextField(
+                        controller: _textController,
+                        focusNode: _focusNode,
+                        obscureText: widget.secureTextEntry,
+                        keyboardType: widget.keyboardType,
+                        textInputAction: widget.textInputAction,
+                        onChanged: widget.onChanged,
+                        onEditingComplete: widget.onEditingComplete,
+                        onSubmitted: widget.onFieldSubmitted,
+                        enabled: widget.editable,
+                        autofocus: widget.autoFocus,
+                        maxLength: widget.maxLength,
+                        textCapitalization: widget.textCapitalization,
+                        autocorrect: widget.autoCorrect,
+                        cursorColor: AppColors.primary,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: AppColors.slate900,
+                          fontFamily: 'Sora',
+                          fontWeight: FontWeight.w500,
                         ),
-                        border: InputBorder.none,
-                        counterText: '',
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.only(
+                            left: widget.icon != null ? 12 : 16,
+                            right: 16,
+                            bottom: 10,
+                          ),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          counterText: '',
+                        ),
                       ),
                     ),
                   ),
@@ -183,12 +190,10 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
               builder: (context, child) {
                 return Positioned(
                   left: widget.icon != null ? 44 : 16,
-                  top: 14 - (_animation.value * 24),
+                  top: 16 - (_animation.value * 26),
                   child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: _animation.value * 4,
-                    ),
-                    color: _animation.value > 0 ? Colors.white : Colors.transparent,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    color: Colors.white,
                     child: Text(
                       widget.label,
                       style: TextStyle(
@@ -200,8 +205,8 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                                 : AppColors.slate400,
                         fontFamily: 'Sora',
                         fontWeight: _animation.value > 0
-                            ? FontWeight.w500
-                            : FontWeight.normal,
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                       ),
                     ),
                   ),

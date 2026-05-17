@@ -19,17 +19,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _displayNameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneNumberController = TextEditingController();
   final _dateOfBirthController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
 
   int _step = 0;
   final int _totalSteps = 5;
-  bool _usePhone = false;
   bool _isLoading = false;
   bool _showPassword = false;
-  bool _showConfirmPassword = false;
   bool _acceptTerms = false;
 
   Map<String, String> _errors = {};
@@ -37,7 +33,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final List<Map<String, String>> _stepInfo = [
     { "title": "Who are you?", "subtitle": "Let's start with your full name" },
     { "title": "Your birthday", "subtitle": "You must be at least 18 years old" },
-    { "title": "Contact info", "subtitle": "Enter your email or phone number" },
+    { "title": "Contact info", "subtitle": "Enter your email address" },
     { "title": "Secure it", "subtitle": "Create a strong password" },
     { "title": "Username", "subtitle": "Pick a unique username for your profile" },
   ];
@@ -47,10 +43,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _displayNameController.dispose();
     _usernameController.dispose();
     _emailController.dispose();
-    _phoneNumberController.dispose();
     _dateOfBirthController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -69,7 +63,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       } else {
         try {
           final dob = DateFormat('yyyy-MM-dd').parse(_dateOfBirthController.text.trim());
-          final age = DateTime.now().year - dob.year;
+          final now = DateTime.now();
+          int age = now.year - dob.year;
+          if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+            age--;
+          }
           if (age < 18) {
             newErrors['dateOfBirth'] = "You must be at least 18 years old";
           }
@@ -78,28 +76,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         }
       }
     } else if (_step == 2) {
-      if (_usePhone) {
-        if (_phoneNumberController.text.trim().isEmpty) {
-          newErrors['phoneNumber'] = "Phone number is required";
-        }
-      } else {
-        if (_emailController.text.trim().isEmpty) {
-          newErrors['email'] = "Email address is required";
-        } else if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(_emailController.text.trim())) {
-          newErrors['email'] = "Please enter a valid email address";
-        }
+      if (_emailController.text.trim().isEmpty) {
+        newErrors['email'] = "Email address is required";
+      } else if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(_emailController.text.trim())) {
+        newErrors['email'] = "Please enter a valid email address";
       }
     } else if (_step == 3) {
       if (_passwordController.text.isEmpty) {
         newErrors['password'] = "Password is required";
       } else if (_passwordController.text.length < 6) {
         newErrors['password'] = "Password must be at least 6 characters";
-      }
-
-      if (_confirmPasswordController.text.isEmpty) {
-        newErrors['confirmPassword'] = "Please confirm your password";
-      } else if (_passwordController.text != _confirmPasswordController.text) {
-        newErrors['confirmPassword'] = "Passwords do not match";
       }
     } else if (_step == 4) {
       if (_usernameController.text.trim().isEmpty) {
@@ -144,7 +130,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       final response = await authRepo.register(
         username: _usernameController.text.trim().toLowerCase(),
         displayName: _displayNameController.text.trim(),
-        email: _usePhone ? "" : _emailController.text.trim().toLowerCase(),
+        email: _emailController.text.trim().toLowerCase(),
         password: _passwordController.text,
         dateOfBirth: DateFormat('yyyy-MM-dd').parse(_dateOfBirthController.text.trim()),
       );
@@ -202,94 +188,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 fontSize: 12,
                 color: AppColors.slate400,
                 fontFamily: 'Sora',
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
         ],
       );
     } else if (_step == 2) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_usePhone)
-            FloatingLabelInput(
-              label: "Phone Number",
-              icon: Icons.phone_android_outlined,
-              controller: _phoneNumberController,
-              error: _errors['phoneNumber'],
-              keyboardType: TextInputType.phone,
-              editable: !_isLoading,
-              onChanged: (_) => setState(() => _errors.remove('phoneNumber')),
-            )
-          else
-            FloatingLabelInput(
-              label: "Email Address",
-              icon: Icons.mail_outline_rounded,
-              controller: _emailController,
-              error: _errors['email'],
-              keyboardType: TextInputType.emailAddress,
-              editable: !_isLoading,
-              onChanged: (_) => setState(() => _errors.remove('email')),
-            ),
-          GestureDetector(
-            onTap: () => setState(() => _usePhone = !_usePhone),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 16),
-              child: Text(
-                "Use ${_usePhone ? 'email' : 'phone number'} instead",
-                style: const TextStyle(
-                  color: Color(0xFF2563EB),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  fontFamily: 'Sora',
-                ),
-              ),
-            ),
-          ),
-        ],
+      return FloatingLabelInput(
+        label: "Email Address",
+        icon: Icons.mail_outline_rounded,
+        controller: _emailController,
+        error: _errors['email'],
+        keyboardType: TextInputType.emailAddress,
+        editable: !_isLoading,
+        onChanged: (_) => setState(() => _errors.remove('email')),
       );
     } else if (_step == 3) {
-      return Column(
-        children: [
-          FloatingLabelInput(
-            label: "Password",
-            icon: Icons.lock_outline_rounded,
-            controller: _passwordController,
-            error: _errors['password'],
-            secureTextEntry: !_showPassword,
-            editable: !_isLoading,
-            onChanged: (_) => setState(() => _errors.remove('password')),
-            right: IconButton(
-              onPressed: () => setState(() => _showPassword = !_showPassword),
-              icon: Icon(
-                _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                color: _errors['password'] != null ? const Color(0xFFDC2626) : AppColors.slate500,
-                size: 18,
-              ),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-            ),
+      return FloatingLabelInput(
+        label: "Password",
+        icon: Icons.lock_outline_rounded,
+        controller: _passwordController,
+        error: _errors['password'],
+        secureTextEntry: !_showPassword,
+        editable: !_isLoading,
+        onChanged: (_) => setState(() => _errors.remove('password')),
+        right: IconButton(
+          onPressed: () => setState(() => _showPassword = !_showPassword),
+          icon: Icon(
+            _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            color: _errors['password'] != null ? const Color(0xFFDC2626) : AppColors.slate500,
+            size: 18,
           ),
-          FloatingLabelInput(
-            label: "Confirm Password",
-            icon: Icons.lock_outline_rounded,
-            controller: _confirmPasswordController,
-            error: _errors['confirmPassword'],
-            secureTextEntry: !_showConfirmPassword,
-            editable: !_isLoading,
-            onChanged: (_) => setState(() => _errors.remove('confirmPassword')),
-            right: IconButton(
-              onPressed: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
-              icon: Icon(
-                _showConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                color: _errors['confirmPassword'] != null ? const Color(0xFFDC2626) : AppColors.slate500,
-                size: 18,
-              ),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-            ),
-          ),
-        ],
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
       );
     } else {
       return FloatingLabelInput(
@@ -320,8 +253,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               // Logo
               Center(
                 child: SvgPicture.asset(
-                  'assets/images/text-logo-dark.svg',
-                  width: 220,
+                  'assets/images/parallaxa-logo.svg',
+                  width: 180,
                   height: 52,
                   fit: BoxFit.contain,
                 ),
@@ -375,7 +308,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 'Step ${_step + 1} of $_totalSteps',
                 style: const TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.slate400,
                   letterSpacing: 1.2,
                   fontFamily: 'Sora',
@@ -386,9 +319,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 _stepInfo[_step]['title']!,
                 style: const TextStyle(
                   fontSize: 30,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.slate900,
                   fontFamily: 'Sora',
+                  letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 8),
@@ -398,6 +332,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   fontSize: 16,
                   color: AppColors.slate500,
                   fontFamily: 'Sora',
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 32),
@@ -453,8 +388,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             color: _acceptTerms ? Colors.black : Colors.transparent,
                             border: Border.all(
                               color: _acceptTerms ? Colors.black : AppColors.slate300,
+                              width: 1.5,
                             ),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                           child: _acceptTerms
                               ? const Center(
@@ -462,7 +398,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     Icons.check_rounded,
                                     color: Colors.white,
                                     size: 14,
-                                  ),
+                                  )
                                 )
                               : null,
                         ),
@@ -474,12 +410,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               children: [
                                 TextSpan(
                                   text: 'Terms of Service',
-                                  style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                                  style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
                                 ),
                                 TextSpan(text: ' and '),
                                 TextSpan(
                                   text: 'Privacy Policy',
-                                  style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                                  style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
                                 ),
                                 TextSpan(text: '.'),
                               ],
@@ -488,6 +424,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               color: AppColors.slate600,
                               fontSize: 14,
                               fontFamily: 'Sora',
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -514,7 +451,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     disabledBackgroundColor: AppColors.slate300,
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -522,7 +466,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               isLastStep ? "Create account" : "Continue",
                               style: const TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w800,
                                 fontFamily: 'Sora',
                               ),
                             ),
@@ -553,7 +497,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           style: TextStyle(
                             color: AppColors.slate500,
                             fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w700,
                             fontFamily: 'Sora',
                           ),
                         ),
@@ -571,6 +515,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         color: AppColors.slate600,
                         fontSize: 14,
                         fontFamily: 'Sora',
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     GestureDetector(
@@ -578,8 +523,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       child: const Text(
                         'Sign in',
                         style: TextStyle(
-                          color: Color(0xFF2563EB),
-                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0095F6),
+                          fontWeight: FontWeight.w800,
                           fontSize: 14,
                           fontFamily: 'Sora',
                         ),
@@ -598,17 +543,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     children: [
                       TextSpan(
                         text: 'Terms of Service',
-                        style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                        style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
                       ),
                       TextSpan(text: ' and '),
                       TextSpan(
                         text: 'Privacy Policy',
-                        style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                        style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
                       ),
                       TextSpan(text: ', including '),
                       TextSpan(
                         text: 'Cookie Use',
-                        style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                        style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
                       ),
                       TextSpan(text: '.'),
                     ],
@@ -619,6 +564,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     fontSize: 12,
                     height: 1.4,
                     fontFamily: 'Sora',
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],

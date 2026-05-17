@@ -130,7 +130,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Center(
                 child: SvgPicture.asset(
                   'assets/images/parallaxa-logo.svg',
-                  width: 180,
+                  width: 220,
                   height: 64,
                   fit: BoxFit.contain,
                 ),
@@ -142,9 +142,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'Welcome back',
                 style: TextStyle(
                   fontSize: 30,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.slate900,
                   fontFamily: 'Sora',
+                  letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 12),
@@ -154,6 +155,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   fontSize: 16,
                   color: AppColors.slate500,
                   fontFamily: 'Sora',
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 32),
@@ -201,13 +203,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   error: _errors['email'],
                   keyboardType: TextInputType.emailAddress,
                   editable: !_isLoading && !_showTotpInput,
-                  right: _emailController.text.isNotEmpty && _errors['email'] == null
-                      ? const Icon(
-                          Icons.check_circle_outline_rounded,
-                          color: Color(0xFF10B981),
-                          size: 18,
-                        )
-                      : null,
                 ),
               ),
 
@@ -247,8 +242,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: const Text(
                         'Forgot password?',
                         style: TextStyle(
-                          color: Color(0xFF2563EB), // blue-600
-                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF0095F6),
+                          fontWeight: FontWeight.w700,
                           fontSize: 14,
                           fontFamily: 'Sora',
                         ),
@@ -274,8 +269,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: const Text(
                     'Back to password',
                     style: TextStyle(
-                      color: Color(0xFF2563EB),
-                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF0095F6),
+                      fontWeight: FontWeight.w700,
                       fontSize: 14,
                       fontFamily: 'Sora',
                     ),
@@ -302,12 +297,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     disabledBackgroundColor: AppColors.slate300,
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
                       : const Text(
                           'Sign in',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
                             fontFamily: 'Sora',
                           ),
                         ),
@@ -321,7 +323,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: OutlinedButton(
                   onPressed: _isLoading ? null : () {},
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.slate200),
+                    side: const BorderSide(color: AppColors.slate200, width: 1.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
@@ -340,7 +342,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         style: TextStyle(
                           color: AppColors.slate900,
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           fontFamily: 'Sora',
                         ),
                       ),
@@ -362,7 +364,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         style: TextStyle(
                           color: AppColors.slate500,
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w700,
                           fontFamily: 'Sora',
                         ),
                       ),
@@ -382,6 +384,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       color: AppColors.slate600,
                       fontSize: 14,
                       fontFamily: 'Sora',
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   GestureDetector(
@@ -389,8 +392,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: const Text(
                       'Sign up',
                       style: TextStyle(
-                        color: Color(0xFF2563EB),
-                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0095F6),
+                        fontWeight: FontWeight.w800,
                         fontSize: 14,
                         fontFamily: 'Sora',
                       ),
@@ -407,17 +410,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     TextSpan(
                       text: 'Terms of Service',
-                      style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                      style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
                     ),
                     TextSpan(text: ' and '),
                     TextSpan(
                       text: 'Privacy Policy',
-                      style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                      style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
                     ),
                     TextSpan(text: ', including '),
                     TextSpan(
                       text: 'Cookie Use',
-                      style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                      style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
                     ),
                     TextSpan(text: '.'),
                   ],
@@ -428,6 +431,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   fontSize: 12,
                   height: 1.4,
                   fontFamily: 'Sora',
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 24),
