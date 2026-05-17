@@ -28,14 +28,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _showPassword = false;
   bool _acceptTerms = false;
 
+  // Username availability state
+  bool? _usernameAvailable;
+  bool _checkingUsername = false;
+  List<String> _usernameSuggestions = [];
+
   Map<String, String> _errors = {};
 
   final List<Map<String, String>> _stepInfo = [
-    { "title": "Who are you?", "subtitle": "Let's start with your full name" },
-    { "title": "Your birthday", "subtitle": "You must be at least 18 years old" },
-    { "title": "Contact info", "subtitle": "Enter your email address" },
-    { "title": "Secure it", "subtitle": "Create a strong password" },
-    { "title": "Username", "subtitle": "Pick a unique username for your profile" },
+    {"title": "Who are you?", "subtitle": "Let's start with your full name"},
+    {"title": "Your birthday", "subtitle": "You must be at least 18 years old"},
+    {"title": "Contact info", "subtitle": "Enter your email address"},
+    {"title": "Secure it", "subtitle": "Create a strong password"},
+    {"title": "Username", "subtitle": "Pick a unique username for your profile"},
   ];
 
   @override
@@ -62,23 +67,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         newErrors['dateOfBirth'] = "Date of birth is required";
       } else {
         try {
-          final dob = DateFormat('yyyy-MM-dd').parse(_dateOfBirthController.text.trim());
+          final dob =
+              DateFormat('yyyy-MM-dd').parse(_dateOfBirthController.text.trim());
           final now = DateTime.now();
           int age = now.year - dob.year;
-          if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+          if (now.month < dob.month ||
+              (now.month == dob.month && now.day < dob.day)) {
             age--;
           }
           if (age < 18) {
             newErrors['dateOfBirth'] = "You must be at least 18 years old";
           }
-        } catch (e) {
+        } catch (_) {
           newErrors['dateOfBirth'] = "Invalid date format (YYYY-MM-DD)";
         }
       }
     } else if (_step == 2) {
       if (_emailController.text.trim().isEmpty) {
         newErrors['email'] = "Email address is required";
-      } else if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(_emailController.text.trim())) {
+      } else if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+          .hasMatch(_emailController.text.trim())) {
         newErrors['email'] = "Please enter a valid email address";
       }
     } else if (_step == 3) {
@@ -92,6 +100,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         newErrors['username'] = "Username is required";
       } else if (_usernameController.text.trim().length < 3) {
         newErrors['username'] = "Username must be at least 3 characters";
+      } else if (_usernameAvailable == false) {
+        // FIX: block submission if we know the username is taken
+        newErrors['username'] = "This username is not available";
       }
 
       if (!_acceptTerms) {
@@ -106,7 +117,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   void _goNext() {
     if (!_validateStep()) return;
     if (_step < _totalSteps - 1) {
-      setState(() => _step++);
+      // FIX: clear errors when advancing so stale messages don't bleed
+      // back into a previous step if the user navigates back and forward.
+      setState(() {
+        _step++;
+        _errors = {};
+      });
     }
   }
 
@@ -114,10 +130,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (_step > 0) {
       setState(() {
         _step--;
-        _errors = {};
+        _errors = {}; // always wipe stale errors on direction change
       });
     } else {
       context.pop();
+    }
+  }
+
+  // FIX: wire up checkUsername / suggestUsernames from the repository
+  Future<void> _checkUsernameAvailability(String username) async {
+    if (username.trim().length < 3) return;
+
+    setState(() {
+      _checkingUsername = true;
+      _usernameAvailable = null;
+      _usernameSuggestions = [];
+    });
+
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      final available =
+          await authRepo.checkUsername(username.trim().toLowerCase());
+      if (!mounted) return;
+
+      setState(() => _usernameAvailable = available);
+
+      if (!available) {
+        final suggestions = await authRepo
+            .suggestUsernames(username.trim().toLowerCase());
+        if (mounted) setState(() => _usernameSuggestions = suggestions);
+      }
+    } catch (_) {
+      // Non-fatal: just hide the indicator; server-side validation still runs
+      if (mounted) setState(() => _usernameAvailable = null);
+    } finally {
+      if (mounted) setState(() => _checkingUsername = false);
     }
   }
 
@@ -132,7 +179,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         displayName: _displayNameController.text.trim(),
         email: _emailController.text.trim().toLowerCase(),
         password: _passwordController.text,
-        dateOfBirth: DateFormat('yyyy-MM-dd').parse(_dateOfBirthController.text.trim()),
+        dateOfBirth: DateFormat('yyyy-MM-dd')
+            .parse(_dateOfBirthController.text.trim()),
       );
 
       if (response.token != null) {
@@ -144,15 +192,44 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (mounted) context.go('/feed');
       }
     } catch (e) {
-      setState(() {
-        _errors = {
-          'general': e.toString().contains('409')
-              ? "Username or email already taken"
-              : "Registration failed. Please try again.",
-        };
-      });
+      if (mounted) {
+        setState(() {
+          _errors = {
+            'general': e.toString().contains('409')
+                ? "Username or email already taken"
+                : "Registration failed. Please try again.",
+          };
+        });
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // FIX: use showDatePicker instead of a raw text field for date of birth
+  Future<void> _pickDateOfBirth() async {
+    final now = DateTime.now();
+    final eighteenYearsAgo =
+        DateTime(now.year - 18, now.month, now.day);
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: eighteenYearsAgo,
+      firstDate: DateTime(1900),
+      lastDate: eighteenYearsAgo, // cannot pick a date that makes user < 18
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(primary: Colors.black),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      _dateOfBirthController.text = DateFormat('yyyy-MM-dd').format(picked);
+      setState(() => _errors.remove('dateOfBirth'));
     }
   }
 
@@ -168,20 +245,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         onChanged: (_) => setState(() => _errors.remove('displayName')),
       );
     } else if (_step == 1) {
+      // FIX: replaced raw text input with a tappable date picker field
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          FloatingLabelInput(
-            label: "Birthday (YYYY-MM-DD)",
-            icon: Icons.calendar_today_outlined,
-            controller: _dateOfBirthController,
-            error: _errors['dateOfBirth'],
-            keyboardType: TextInputType.datetime,
-            editable: !_isLoading,
-            onChanged: (_) => setState(() => _errors.remove('dateOfBirth')),
+          GestureDetector(
+            onTap: _isLoading ? null : _pickDateOfBirth,
+            child: AbsorbPointer(
+              child: FloatingLabelInput(
+                label: "Birthday",
+                icon: Icons.calendar_today_outlined,
+                controller: _dateOfBirthController,
+                error: _errors['dateOfBirth'],
+                keyboardType: TextInputType.none,
+                editable: false,
+              ),
+            ),
           ),
-          const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 16),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 16, top: 4),
             child: Text(
               "This will not be shown publicly. You must be at least 18.",
               style: TextStyle(
@@ -216,8 +298,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         right: IconButton(
           onPressed: () => setState(() => _showPassword = !_showPassword),
           icon: Icon(
-            _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            color: _errors['password'] != null ? const Color(0xFFDC2626) : AppColors.slate500,
+            _showPassword
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+            color: _errors['password'] != null
+                ? const Color(0xFFDC2626)
+                : AppColors.slate500,
             size: 18,
           ),
           padding: EdgeInsets.zero,
@@ -225,13 +311,118 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
       );
     } else {
-      return FloatingLabelInput(
-        label: "Username",
-        icon: Icons.alternate_email_rounded,
-        controller: _usernameController,
-        error: _errors['username'],
-        editable: !_isLoading,
-        onChanged: (_) => setState(() => _errors.remove('username')),
+      // Step 4 – Username with live availability check
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FloatingLabelInput(
+            label: "Username",
+            icon: Icons.alternate_email_rounded,
+            controller: _usernameController,
+            error: _errors['username'],
+            editable: !_isLoading,
+            // FIX: trigger availability check as the user types
+            onChanged: (value) {
+              setState(() {
+                _errors.remove('username');
+                _usernameAvailable = null;
+                _usernameSuggestions = [];
+              });
+              if (value.trim().length >= 3) {
+                _checkUsernameAvailability(value);
+              }
+            },
+            right: _checkingUsername
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppColors.slate400),
+                  )
+                : _usernameAvailable == null
+                    ? null
+                    : Icon(
+                        _usernameAvailable!
+                            ? Icons.check_circle_outline
+                            : Icons.cancel_outlined,
+                        color: _usernameAvailable!
+                            ? Colors.green
+                            : const Color(0xFFDC2626),
+                        size: 20,
+                      ),
+          ),
+
+          // Availability badge
+          if (_usernameAvailable != null && !_checkingUsername) ...[
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 8),
+              child: Text(
+                _usernameAvailable!
+                    ? "✓ Username is available"
+                    : "✗ Username is taken",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: _usernameAvailable! ? Colors.green : const Color(0xFFDC2626),
+                  fontFamily: 'Sora',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+
+          // Suggestions when taken
+          if (_usernameSuggestions.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 4),
+              child: const Text(
+                "Try one of these instead:",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.slate500,
+                  fontFamily: 'Sora',
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _usernameSuggestions
+                  .map(
+                    (s) => GestureDetector(
+                      onTap: () {
+                        _usernameController.text = s;
+                        setState(() {
+                          _usernameAvailable = true;
+                          _usernameSuggestions = [];
+                          _errors.remove('username');
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          border:
+                              Border.all(color: AppColors.slate200, width: 1.5),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          s,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.slate700,
+                            fontFamily: 'Sora',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ],
       );
     }
   }
@@ -261,7 +452,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Top Bar (Back button and Step dots)
+              // Top Bar
               Row(
                 children: [
                   GestureDetector(
@@ -274,11 +465,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
-                        child: Icon(
-                          Icons.arrow_back_rounded,
-                          color: Color(0xFF1F2937),
-                          size: 20,
-                        ),
+                        child: Icon(Icons.arrow_back_rounded,
+                            color: Color(0xFF1F2937), size: 20),
                       ),
                     ),
                   ),
@@ -291,14 +479,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           height: 8,
                           margin: const EdgeInsets.symmetric(horizontal: 4),
                           decoration: BoxDecoration(
-                            color: index <= _step ? Colors.black : AppColors.slate200,
+                            color: index <= _step
+                                ? Colors.black
+                                : AppColors.slate200,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         );
                       }),
                     ),
                   ),
-                  const SizedBox(width: 40), // Spacer for balance
+                  const SizedBox(width: 40),
                 ],
               ),
               const SizedBox(height: 40),
@@ -347,11 +537,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.error_outline_rounded,
-                        color: Color(0xFF111111),
-                        size: 20,
-                      ),
+                      const Icon(Icons.error_outline_rounded,
+                          color: Color(0xFF111111), size: 20),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -385,20 +572,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           width: 20,
                           height: 20,
                           decoration: BoxDecoration(
-                            color: _acceptTerms ? Colors.black : Colors.transparent,
+                            color:
+                                _acceptTerms ? Colors.black : Colors.transparent,
                             border: Border.all(
-                              color: _acceptTerms ? Colors.black : AppColors.slate300,
+                              color: _acceptTerms
+                                  ? Colors.black
+                                  : AppColors.slate300,
                               width: 1.5,
                             ),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: _acceptTerms
                               ? const Center(
-                                  child: Icon(
-                                    Icons.check_rounded,
-                                    color: Colors.white,
-                                    size: 14,
-                                  )
+                                  child: Icon(Icons.check_rounded,
+                                      color: Colors.white, size: 14),
                                 )
                               : null,
                         ),
@@ -410,12 +597,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               children: [
                                 TextSpan(
                                   text: 'Terms of Service',
-                                  style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
+                                  style: TextStyle(
+                                      color: Color(0xFF0095F6),
+                                      fontWeight: FontWeight.w700),
                                 ),
                                 TextSpan(text: ' and '),
                                 TextSpan(
                                   text: 'Privacy Policy',
-                                  style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
+                                  style: TextStyle(
+                                      color: Color(0xFF0095F6),
+                                      fontWeight: FontWeight.w700),
                                 ),
                                 TextSpan(text: '.'),
                               ],
@@ -455,9 +646,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           height: 24,
                           width: 24,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.5,
-                          ),
+                              color: Colors.white, strokeWidth: 2.5),
                         )
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -472,11 +661,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                             if (!isLastStep) ...[
                               const SizedBox(width: 8),
-                              const Icon(
-                                Icons.arrow_forward_rounded,
-                                color: Colors.white,
-                                size: 18,
-                              ),
+                              const Icon(Icons.arrow_forward_rounded,
+                                  color: Colors.white, size: 18),
                             ],
                           ],
                         ),
@@ -489,7 +675,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Row(
                     children: [
-                      Expanded(child: Container(height: 1, color: AppColors.slate200)),
+                      Expanded(
+                          child:
+                              Container(height: 1, color: AppColors.slate200)),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
@@ -502,7 +690,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                         ),
                       ),
-                      Expanded(child: Container(height: 1, color: AppColors.slate200)),
+                      Expanded(
+                          child:
+                              Container(height: 1, color: AppColors.slate200)),
                     ],
                   ),
                 ),
@@ -543,17 +733,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     children: [
                       TextSpan(
                         text: 'Terms of Service',
-                        style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                            color: Color(0xFF0095F6),
+                            fontWeight: FontWeight.w700),
                       ),
                       TextSpan(text: ' and '),
                       TextSpan(
                         text: 'Privacy Policy',
-                        style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                            color: Color(0xFF0095F6),
+                            fontWeight: FontWeight.w700),
                       ),
                       TextSpan(text: ', including '),
                       TextSpan(
                         text: 'Cookie Use',
-                        style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                            color: Color(0xFF0095F6),
+                            fontWeight: FontWeight.w700),
                       ),
                       TextSpan(text: '.'),
                     ],

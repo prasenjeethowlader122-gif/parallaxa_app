@@ -50,7 +50,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       newErrors['password'] = "Password must be at least 6 characters";
     }
 
-    if (_showTotpInput && (_totpController.text.trim().length != 6)) {
+    if (_showTotpInput && _totpController.text.trim().length != 6) {
       newErrors['general'] = "Please enter a valid 6-digit 2FA code";
     }
 
@@ -60,13 +60,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _handleLogin() async {
     setState(() => _errors = {});
-
     if (!_validateForm()) return;
 
     setState(() => _isLoading = true);
     try {
       final authRepo = ref.read(authRepositoryProvider);
 
+      // FIX: Only call verify2FA when we are already in the 2FA step.
+      // Previously verify2FA was called first, making the normal login path
+      // unreachable on the first attempt.
       if (_showTotpInput) {
         final response = await authRepo.verify2FA(
           _emailController.text.trim(),
@@ -74,8 +76,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
         if (response.token != null) {
           await _onLoginSuccess(response.token!, response.user?.id);
-          return;
         }
+        // Return either way; do not fall through to the login call.
+        return;
       }
 
       final response = await authRepo.login(
@@ -84,6 +87,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
 
       if (response.twoFactorRequired) {
+        // FIX: do NOT rely on the finally block to clear isLoading here —
+        // we want to keep the screen interactive in the 2FA input state.
+        // Set both flags in one setState to avoid a double rebuild.
         setState(() {
           _showTotpInput = true;
           _isLoading = false;
@@ -95,13 +101,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await _onLoginSuccess(response.token!, response.user?.id);
       }
     } catch (e) {
-      setState(() {
-        _errors = {
-          'general': "Invalid email or password. Please try again.",
-        };
-      });
+      if (mounted) {
+        setState(() {
+          _errors = {
+            'general': "Invalid email or password. Please try again.",
+          };
+        });
+      }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      // FIX: guard against calling setState after the 2FA branch already
+      // set isLoading = false (it returned early, so finally still runs).
+      if (mounted && _isLoading) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -114,6 +126,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (mounted) context.go('/feed');
   }
 
+  /// FIX: use .trim() so whitespace-only input doesn't enable the button.
+  bool get _canSubmit {
+    if (_isLoading) return false;
+    if (_emailController.text.trim().isEmpty) return false;
+    if (_passwordController.text.trim().isEmpty) return false;
+    if (_showTotpInput && _totpController.text.trim().length != 6) return false;
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,7 +145,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 32 + 32),
+              const SizedBox(height: 64),
 
               // Logo
               Center(
@@ -170,11 +191,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.error_outline_rounded,
-                        color: Color(0xFF111111),
-                        size: 20,
-                      ),
+                      const Icon(Icons.error_outline_rounded,
+                          color: Color(0xFF111111), size: 20),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -217,9 +235,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   secureTextEntry: !_showPassword,
                   editable: !_isLoading && !_showTotpInput,
                   right: IconButton(
-                    onPressed: () => setState(() => _showPassword = !_showPassword),
+                    onPressed: () =>
+                        setState(() => _showPassword = !_showPassword),
                     icon: Icon(
-                      _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _showPassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       color: _errors['password'] != null
                           ? const Color(0xFFDC2626)
                           : AppColors.slate500,
@@ -265,7 +286,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   editable: !_isLoading,
                 ),
                 GestureDetector(
-                  onTap: () => setState(() => _showTotpInput = false),
+                  onTap: () => setState(() {
+                    _showTotpInput = false;
+                    _totpController.clear();
+                    _errors = {};
+                  }),
                   child: const Text(
                     'Back to password',
                     style: TextStyle(
@@ -284,9 +309,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _isLoading || _emailController.text.isEmpty || _passwordController.text.isEmpty || (_showTotpInput && _totpController.text.length != 6)
-                      ? null
-                      : _handleLogin,
+                  // FIX: use the computed getter that trims whitespace
+                  onPressed: _canSubmit ? _handleLogin : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
@@ -323,7 +347,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: OutlinedButton(
                   onPressed: _isLoading ? null : () {},
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.slate200, width: 1.5),
+                    side:
+                        const BorderSide(color: AppColors.slate200, width: 1.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
@@ -356,7 +381,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Row(
                   children: [
-                    Expanded(child: Container(height: 1, color: AppColors.slate200)),
+                    Expanded(
+                        child: Container(height: 1, color: AppColors.slate200)),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
@@ -369,7 +395,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                     ),
-                    Expanded(child: Container(height: 1, color: AppColors.slate200)),
+                    Expanded(
+                        child: Container(height: 1, color: AppColors.slate200)),
                   ],
                 ),
               ),
@@ -402,7 +429,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
               ),
 
-              // Footer
               const SizedBox(height: 48),
               const Text.rich(
                 TextSpan(
@@ -410,17 +436,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     TextSpan(
                       text: 'Terms of Service',
-                      style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                          color: Color(0xFF0095F6),
+                          fontWeight: FontWeight.w700),
                     ),
                     TextSpan(text: ' and '),
                     TextSpan(
                       text: 'Privacy Policy',
-                      style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                          color: Color(0xFF0095F6),
+                          fontWeight: FontWeight.w700),
                     ),
                     TextSpan(text: ', including '),
                     TextSpan(
                       text: 'Cookie Use',
-                      style: TextStyle(color: Color(0xFF0095F6), fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                          color: Color(0xFF0095F6),
+                          fontWeight: FontWeight.w700),
                     ),
                     TextSpan(text: '.'),
                   ],

@@ -47,52 +47,81 @@ class FloatingLabelInput extends StatefulWidget {
 
 class _FloatingLabelInputState extends State<FloatingLabelInput>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+  late AnimationController _animController;
   late Animation<double> _animation;
+
+  // Track whether we own these objects so we know when to dispose them.
   late FocusNode _focusNode;
   late TextEditingController _textController;
+  bool _ownsTextController = false;
+  bool _ownsFocusNode = false;
 
   @override
   void initState() {
     super.initState();
-    _focusNode = widget.focusNode ?? FocusNode();
-    _textController = widget.controller ?? TextEditingController();
-    _controller = AnimationController(
+
+    // Only create internal instances when the parent didn't pass one in.
+    if (widget.focusNode == null) {
+      _focusNode = FocusNode();
+      _ownsFocusNode = true;
+    } else {
+      _focusNode = widget.focusNode!;
+    }
+
+    if (widget.controller == null) {
+      _textController = TextEditingController();
+      _ownsTextController = true;
+    } else {
+      _textController = widget.controller!;
+    }
+
+    _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 150),
     );
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _animation =
+        CurvedAnimation(parent: _animController, curve: Curves.easeOut);
 
+    // Snap to floated state if there is already text.
     if (_textController.text.isNotEmpty || _focusNode.hasFocus) {
-      _controller.value = 1.0;
+      _animController.value = 1.0;
     }
 
+    // FIX: always add listeners; always remove them in dispose.
     _focusNode.addListener(_handleFocusChange);
     _textController.addListener(_handleTextChange);
   }
 
   void _handleFocusChange() {
+    if (!mounted) return;
     if (_focusNode.hasFocus || _textController.text.isNotEmpty) {
-      _controller.forward();
+      _animController.forward();
     } else {
-      _controller.reverse();
+      _animController.reverse();
     }
     setState(() {});
   }
 
   void _handleTextChange() {
+    if (!mounted) return;
     if (_focusNode.hasFocus || _textController.text.isNotEmpty) {
-      _controller.forward();
+      _animController.forward();
     } else {
-      _controller.reverse();
+      _animController.reverse();
     }
   }
 
   @override
   void dispose() {
-    if (widget.focusNode == null) _focusNode.dispose();
-    if (widget.controller == null) _textController.dispose();
-    _controller.dispose();
+    // FIX: always remove our listeners regardless of ownership.
+    _focusNode.removeListener(_handleFocusChange);
+    _textController.removeListener(_handleTextChange);
+
+    // Only dispose objects we created ourselves.
+    if (_ownsFocusNode) _focusNode.dispose();
+    if (_ownsTextController) _textController.dispose();
+
+    _animController.dispose();
     super.dispose();
   }
 
@@ -102,7 +131,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
     final hasError = widget.error != null;
 
     final Color borderColor = hasError
-        ? const Color(0xFFFCA5A5) // red-300
+        ? const Color(0xFFFCA5A5)
         : isFocused
             ? AppColors.primary
             : AppColors.slate200;
@@ -118,10 +147,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: borderColor,
-                  width: 1.5,
-                ),
+                border: Border.all(color: borderColor, width: 1.5),
               ),
               child: Row(
                 children: [
@@ -133,7 +159,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                         color: isFocused
                             ? AppColors.primary
                             : hasError
-                                ? const Color(0xFFDC2626) // red-600
+                                ? const Color(0xFFDC2626)
                                 : AppColors.slate500,
                         size: 20,
                       ),
@@ -199,7 +225,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                       style: TextStyle(
                         fontSize: 16 - (_animation.value * 4),
                         color: hasError
-                            ? const Color(0xFFDC2626) // red-600
+                            ? const Color(0xFFDC2626)
                             : isFocused
                                 ? AppColors.primary
                                 : AppColors.slate400,
@@ -220,11 +246,8 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
             padding: const EdgeInsets.only(top: 6, left: 4),
             child: Row(
               children: [
-                const Icon(
-                  Icons.info_outline,
-                  color: Color(0xFFDC2626),
-                  size: 14,
-                ),
+                const Icon(Icons.info_outline,
+                    color: Color(0xFFDC2626), size: 14),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
