@@ -131,7 +131,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: SvgPicture.asset(
                   'assets/images/parallaxa-logo.svg',
                   width: 220,
-                  height: 64,
+                  height: 84,
                   fit: BoxFit.contain,
                 ),
               ),
