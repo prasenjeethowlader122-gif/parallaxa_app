@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'src/routing/app_router.dart';
 import 'src/core/api_client.dart';
 import 'src/core/storage_service.dart';
+import 'src/core/app_colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,7 @@ void main() async {
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
     ),
   );
 
@@ -21,7 +23,8 @@ void main() async {
   runApp(
     ProviderScope(
       overrides: [
-        storageServiceProvider.overrideWithValue(StorageService(prefs)),
+        storageServiceProvider
+            .overrideWithValue(StorageService(prefs)),
       ],
       child: const MainApp(),
     ),
@@ -41,50 +44,134 @@ class MainApp extends ConsumerWidget {
       routerConfig: router,
       theme: ThemeData(
         fontFamily: 'Sora',
+        useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0095F6),
+          seedColor: AppColors.primary,
           brightness: Brightness.light,
+          surface: AppColors.background,
         ),
-        scaffoldBackgroundColor: Colors.white,
+        scaffoldBackgroundColor: AppColors.background,
+
+        // AppBar
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.background,
           elevation: 0,
           scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
           titleTextStyle: TextStyle(
             fontFamily: 'Sora',
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Colors.black,
+            fontWeight: FontWeight.w800,
+            fontSize: 20,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.3,
           ),
-          iconTheme: IconThemeData(color: Colors.black),
+          iconTheme: IconThemeData(color: AppColors.textPrimary),
         ),
-        navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: Colors.white,
-          labelTextStyle: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF0095F6));
-            }
-            return TextStyle(fontSize: 11, color: Colors.grey.shade600);
-          }),
-        ),
+
+        // Elevated button defaults
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF0095F6),
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
             elevation: 0,
+            shape: const StadiumBorder(),
+            textStyle: const TextStyle(
+              fontFamily: 'Sora',
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+            ),
           ),
         ),
+
+        // Outlined button
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.textPrimary,
+            side: const BorderSide(color: AppColors.border),
+            shape: const StadiumBorder(),
+            textStyle: const TextStyle(
+              fontFamily: 'Sora',
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+            ),
+          ),
+        ),
+
+        // Text button
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            textStyle: const TextStyle(
+              fontFamily: 'Sora',
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
+        ),
+
+        // Input decoration
         inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: AppColors.muted,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(
+                color: AppColors.primary, width: 1.5),
+          ),
+          hintStyle: const TextStyle(
+            color: AppColors.mutedForeground,
+            fontSize: 15,
+          ),
+          labelStyle: const TextStyle(
+            color: AppColors.mutedForeground,
+            fontSize: 14,
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 16),
+        ),
+
+        // Divider
+        dividerColor: AppColors.border,
+        dividerTheme: const DividerThemeData(
+          color: AppColors.border,
+          thickness: 0.5,
+          space: 0.5,
+        ),
+
+        // FAB
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 6,
+          shape: CircleBorder(),
+        ),
+
+        // Tabs
+        tabBarTheme: const TabBarThemeData(
+          labelColor: AppColors.foreground,
+          unselectedLabelColor: AppColors.mutedForeground,
+          indicatorColor: AppColors.foreground,
+          indicatorSize: TabBarIndicatorSize.label,
+          dividerColor: Colors.transparent,
+          labelStyle: TextStyle(
+            fontFamily: 'Sora',
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontFamily: 'Sora',
+            fontWeight: FontWeight.w400,
+            fontSize: 15,
           ),
         ),
-        useMaterial3: true,
       ),
     );
   }

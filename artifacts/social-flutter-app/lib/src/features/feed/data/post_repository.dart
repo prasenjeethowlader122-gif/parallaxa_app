@@ -7,6 +7,17 @@ final postRepositoryProvider = Provider<PostRepository>((ref) {
   return PostRepository(ref.watch(dioProvider));
 });
 
+final publicFeedProvider = FutureProvider<List<Post>>((ref) async {
+  final page = await ref.watch(postRepositoryProvider).getFeed();
+  return page.posts;
+});
+
+final followingFeedProvider = FutureProvider<List<Post>>((ref) async {
+  final page =
+      await ref.watch(postRepositoryProvider).getFollowingFeed();
+  return page.posts;
+});
+
 class PostRepository {
   final Dio _dio;
 
@@ -18,6 +29,20 @@ class PostRepository {
       'limit': limit,
     });
     return PostPage.fromJson(response.data);
+  }
+
+  Future<PostPage> getFollowingFeed(
+      {String? cursor, int limit = 20}) async {
+    try {
+      final response =
+          await _dio.get('/feed/following', queryParameters: {
+        if (cursor != null) 'cursor': cursor,
+        'limit': limit,
+      });
+      return PostPage.fromJson(response.data);
+    } catch (_) {
+      return PostPage(posts: const [], nextCursor: null);
+    }
   }
 
   Future<Post> createPost({
@@ -39,8 +64,10 @@ class PostRepository {
     return Post.fromJson(response.data);
   }
 
-  Future<PostPage> getExplorePosts({String? cursor, int limit = 20}) async {
-    final response = await _dio.get('/explore', queryParameters: {
+  Future<PostPage> getExplorePosts(
+      {String? cursor, int limit = 20}) async {
+    final response =
+        await _dio.get('/explore', queryParameters: {
       if (cursor != null) 'cursor': cursor,
       'limit': limit,
     });

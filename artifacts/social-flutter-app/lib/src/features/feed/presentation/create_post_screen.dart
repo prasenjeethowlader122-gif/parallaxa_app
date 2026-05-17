@@ -4,13 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../data/post_repository.dart';
-import 'feed_screen.dart';
+import '../../../core/app_colors.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   const CreatePostScreen({super.key});
 
   @override
-  ConsumerState<CreatePostScreen> createState() => _CreatePostScreenState();
+  ConsumerState<CreatePostScreen> createState() =>
+      _CreatePostScreenState();
 }
 
 class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
@@ -53,7 +54,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final content = _contentController.text.trim();
     if (content.isEmpty && _selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Write something or add a photo')),
+        const SnackBar(
+            content: Text('Write something or add a photo')),
       );
       return;
     }
@@ -64,7 +66,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       await repo.createPost(
         content: content.isNotEmpty ? content : null,
       );
-      ref.invalidate(feedProvider);
+      ref.invalidate(publicFeedProvider);
+      ref.invalidate(followingFeedProvider);
       if (mounted) {
         context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -74,7 +77,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to post: ${e.toString()}')),
+          SnackBar(
+              content:
+                  Text('Failed to post: ${e.toString()}')),
         );
       }
     } finally {
@@ -84,40 +89,53 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hasContent = _contentController.text.trim().isNotEmpty || _selectedImage != null;
+    final hasContent = _contentController.text.trim().isNotEmpty ||
+        _selectedImage != null;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: TextButton(
           onPressed: _isPosting ? null : () => context.pop(),
-          child: const Text('Cancel',
-              style: TextStyle(color: Colors.black, fontSize: 16)),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(
+              fontFamily: 'Sora',
+              color: AppColors.textPrimary,
+              fontSize: 15,
+            ),
+          ),
         ),
         leadingWidth: 80,
         title: const Text(
           'New Post',
           style: TextStyle(
-              fontFamily: 'Sora',
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-              fontSize: 16),
+            fontFamily: 'Sora',
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+            fontSize: 16,
+          ),
         ),
         centerTitle: true,
         actions: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 12, vertical: 8),
             child: ElevatedButton(
-              onPressed: _isPosting || !hasContent ? null : _submitPost,
+              onPressed:
+                  _isPosting || !hasContent ? null : _submitPost,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0095F6),
-                disabledBackgroundColor: Colors.blue.shade200,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                backgroundColor: AppColors.textPrimary,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor:
+                    AppColors.textPrimary.withOpacity(0.3),
+                shape: const StadiumBorder(),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 0),
               ),
               child: _isPosting
                   ? const SizedBox(
@@ -126,15 +144,28 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Post',
-                      style: TextStyle(color: Colors.white, fontSize: 14)),
+                  : const Text(
+                      'Post',
+                      style: TextStyle(
+                        fontFamily: 'Sora',
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                    ),
             ),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(0.5),
+          child: Divider(
+              height: 0.5,
+              thickness: 0.5,
+              color: AppColors.border),
+        ),
       ),
       body: Column(
         children: [
-          const Divider(height: 1),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -144,15 +175,26 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                   TextField(
                     controller: _contentController,
                     maxLines: null,
-                    minLines: 5,
+                    minLines: 6,
                     maxLength: 500,
                     autofocus: true,
-                    style: const TextStyle(fontSize: 16, height: 1.5),
+                    style: const TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 16,
+                      height: 1.5,
+                      color: AppColors.textPrimary,
+                    ),
                     decoration: const InputDecoration(
                       hintText: "What's on your mind?",
-                      hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
+                      hintStyle: TextStyle(
+                        color: AppColors.mutedForeground,
+                        fontSize: 16,
+                      ),
                       border: InputBorder.none,
-                      counterStyle: TextStyle(color: Colors.grey),
+                      filled: false,
+                      counterStyle:
+                          TextStyle(color: AppColors.mutedForeground),
+                      contentPadding: EdgeInsets.zero,
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
@@ -172,15 +214,19 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                           top: 8,
                           right: 8,
                           child: GestureDetector(
-                            onTap: () => setState(() => _selectedImage = null),
+                            onTap: () => setState(
+                                () => _selectedImage = null),
                             child: Container(
-                              padding: const EdgeInsets.all(4),
+                              padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                 color: Colors.black54,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius:
+                                    BorderRadius.circular(20),
                               ),
-                              child: const Icon(Icons.close,
-                                  color: Colors.white, size: 18),
+                              child: const Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.white,
+                                  size: 16),
                             ),
                           ),
                         ),
@@ -191,21 +237,22 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               ),
             ),
           ),
-          const Divider(height: 1),
+          const Divider(height: 0.5, thickness: 0.5),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 12, vertical: 8),
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.image_outlined,
-                        color: Color(0xFF0095F6)),
+                        color: AppColors.primary),
                     onPressed: _isPosting ? null : _pickImage,
                     tooltip: 'Gallery',
                   ),
                   IconButton(
                     icon: const Icon(Icons.camera_alt_outlined,
-                        color: Color(0xFF0095F6)),
+                        color: AppColors.primary),
                     onPressed: _isPosting ? null : _takePhoto,
                     tooltip: 'Camera',
                   ),

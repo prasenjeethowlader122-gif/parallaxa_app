@@ -5,6 +5,7 @@ import '../data/search_repository.dart';
 import '../domain/search.dart';
 import '../../feed/domain/post.dart';
 import '../../feed/data/post_repository.dart';
+import '../../../core/app_colors.dart';
 
 final explorePostsProvider = FutureProvider<PostPage>((ref) {
   return ref.watch(postRepositoryProvider).getExplorePosts();
@@ -54,48 +55,65 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   Widget build(BuildContext context) {
     final query = ref.watch(_searchQueryProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        titleSpacing: 16,
-        title: Container(
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(12),
+    return Column(
+      children: [
+        // ── Search bar ────────────────────────────────────────────────
+        Container(
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            border: Border(
+              bottom: BorderSide(color: AppColors.border, width: 0.5),
+            ),
           ),
-          child: TextField(
-            controller: _searchController,
-            onChanged: _onSearchChanged,
-            style: const TextStyle(fontSize: 15),
-            decoration: InputDecoration(
-              hintText: 'Search users, posts, hashtags...',
-              hintStyle:
-                  TextStyle(color: Colors.grey.shade500, fontSize: 14),
-              prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 20),
-              suffixIcon: _isSearching
-                  ? IconButton(
-                      icon: const Icon(Icons.close, size: 18),
-                      color: Colors.grey,
-                      onPressed: _clearSearch,
-                    )
-                  : null,
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.muted,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              style: const TextStyle(
+                  fontSize: 15, color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Search users, posts, hashtags...',
+                hintStyle: const TextStyle(
+                    color: AppColors.mutedForeground, fontSize: 14),
+                prefixIcon: const Icon(Icons.search_rounded,
+                    color: AppColors.mutedForeground, size: 20),
+                suffixIcon: _isSearching
+                    ? IconButton(
+                        icon: const Icon(Icons.close_rounded,
+                            size: 18,
+                            color: AppColors.mutedForeground),
+                        onPressed: _clearSearch,
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 10),
+              ),
             ),
           ),
         ),
-      ),
-      body: _isSearching
-          ? _SearchResults(query: query)
-          : _ExploreGrid(),
+        // ── Body ──────────────────────────────────────────────────────
+        Expanded(
+          child: _isSearching
+              ? _SearchResults(query: query)
+              : const _ExploreGrid(),
+        ),
+      ],
     );
   }
 }
 
+// ─── Explore grid ─────────────────────────────────────────────────────────────
+
 class _ExploreGrid extends ConsumerWidget {
+  const _ExploreGrid();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final exploreAsync = ref.watch(explorePostsProvider);
@@ -104,54 +122,66 @@ class _ExploreGrid extends ConsumerWidget {
       data: (page) => page.posts.isEmpty
           ? const Center(
               child: Text('Nothing to explore yet',
-                  style: TextStyle(color: Colors.grey)))
+                  style: TextStyle(color: AppColors.mutedForeground)),
+            )
           : RefreshIndicator(
-              onRefresh: () => ref.refresh(explorePostsProvider.future),
+              color: AppColors.primary,
+              onRefresh: () =>
+                  ref.refresh(explorePostsProvider.future),
               child: GridView.builder(
-                padding: const EdgeInsets.all(2),
+                padding: const EdgeInsets.all(1),
                 gridDelegate:
                     const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  crossAxisSpacing: 2,
-                  mainAxisSpacing: 2,
+                  crossAxisSpacing: 1,
+                  mainAxisSpacing: 1,
                 ),
                 itemCount: page.posts.length,
                 itemBuilder: (context, index) {
                   final post = page.posts[index];
-                  return Container(
-                    color: Colors.grey.shade100,
-                    child: post.imageUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: post.imageUrl!,
-                            fit: BoxFit.cover,
-                            placeholder: (_, __) =>
-                                Container(color: Colors.grey.shade200),
-                            errorWidget: (_, __, ___) => const Icon(
-                                Icons.broken_image,
-                                color: Colors.grey),
-                          )
-                        : Container(
-                            alignment: Alignment.center,
-                            padding: const EdgeInsets.all(6),
-                            child: Text(
-                              post.content ?? '',
-                              style: const TextStyle(fontSize: 10),
-                              maxLines: 4,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                            ),
+                  return post.imageUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: post.imageUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) =>
+                              Container(color: AppColors.muted),
+                          errorWidget: (_, __, ___) => Container(
+                            color: AppColors.muted,
+                            child: const Icon(Icons.broken_image,
+                                color: AppColors.mutedForeground,
+                                size: 20),
                           ),
-                  );
+                        )
+                      : Container(
+                          color: AppColors.muted,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.all(6),
+                          child: Text(
+                            post.content ?? '',
+                            style: const TextStyle(
+                                fontSize: 10,
+                                color: AppColors.foreground),
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        );
                 },
               ),
             ),
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(
+        child: CircularProgressIndicator(
+            color: AppColors.primary, strokeWidth: 2),
+      ),
       error: (_, __) => const Center(
-          child: Text('Could not load explore',
-              style: TextStyle(color: Colors.grey))),
+        child: Text('Could not load explore',
+            style: TextStyle(color: AppColors.mutedForeground)),
+      ),
     );
   }
 }
+
+// ─── Search results ───────────────────────────────────────────────────────────
 
 class _SearchResults extends ConsumerWidget {
   final String query;
@@ -173,10 +203,18 @@ class _SearchResults extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.search_off, size: 40, color: Colors.grey),
-                const SizedBox(height: 8),
-                Text('No results for "$query"',
-                    style: const TextStyle(color: Colors.grey)),
+                const Icon(Icons.search_off_rounded,
+                    size: 44, color: AppColors.mutedForeground),
+                const SizedBox(height: 12),
+                Text(
+                  'No results for "$query"',
+                  style: const TextStyle(
+                    fontFamily: 'Sora',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
               ],
             ),
           );
@@ -186,95 +224,154 @@ class _SearchResults extends ConsumerWidget {
           children: [
             if (results.users.isNotEmpty) ...[
               const Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: Text('People',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15)),
+                padding: EdgeInsets.fromLTRB(16, 14, 16, 4),
+                child: Text(
+                  'People',
+                  style: TextStyle(
+                    fontFamily: 'Sora',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ),
               ...results.users.map((user) => ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 4),
                     leading: CircleAvatar(
-                      backgroundColor: Colors.grey.shade200,
+                      radius: 22,
+                      backgroundColor: AppColors.muted,
                       backgroundImage: user.avatarUrl != null
-                          ? CachedNetworkImageProvider(user.avatarUrl!)
+                          ? CachedNetworkImageProvider(
+                              user.avatarUrl!)
                           : null,
                       child: user.avatarUrl == null
-                          ? const Icon(Icons.person, color: Colors.grey)
+                          ? const Icon(Icons.person,
+                              color: AppColors.mutedForeground)
                           : null,
                     ),
                     title: Row(
                       children: [
-                        Text(user.displayName,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text(
+                          user.displayName,
+                          style: const TextStyle(
+                            fontFamily: 'Sora',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
                         if (user.isVerified) ...[
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 3),
                           const Icon(Icons.verified,
-                              size: 14, color: Color(0xFF0095F6)),
+                              size: 14, color: AppColors.verified),
                         ],
                       ],
                     ),
-                    subtitle: Text('@${user.username}',
-                        style: TextStyle(
-                            color: Colors.grey.shade500, fontSize: 13)),
+                    subtitle: Text(
+                      '@${user.username}',
+                      style: const TextStyle(
+                          color: AppColors.textMuted, fontSize: 13),
+                    ),
                     onTap: () {},
                   )),
             ],
             if (results.hashtags.isNotEmpty) ...[
               const Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: Text('Hashtags',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15)),
+                padding: EdgeInsets.fromLTRB(16, 14, 16, 4),
+                child: Text(
+                  'Hashtags',
+                  style: TextStyle(
+                    fontFamily: 'Sora',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ),
               ...results.hashtags.map((tag) => ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 4),
                     leading: Container(
                       width: 44,
                       height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                      decoration: const BoxDecoration(
+                        color: AppColors.muted,
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
-                      child: const Text('#',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 18)),
+                      child: const Text(
+                        '#',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                     ),
-                    title: Text('#${tag.name}',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('${tag.postCount} posts',
-                        style: TextStyle(color: Colors.grey.shade500)),
+                    title: Text(
+                      '#${tag.name}',
+                      style: const TextStyle(
+                        fontFamily: 'Sora',
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${tag.postCount} posts',
+                      style: const TextStyle(
+                          color: AppColors.textMuted, fontSize: 13),
+                    ),
                     onTap: () {},
                   )),
             ],
             if (results.posts.isNotEmpty) ...[
               const Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: Text('Posts',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15)),
+                padding: EdgeInsets.fromLTRB(16, 14, 16, 4),
+                child: Text(
+                  'Posts',
+                  style: TextStyle(
+                    fontFamily: 'Sora',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ),
               ...results.posts.map((post) => ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 4),
                     leading: CircleAvatar(
-                      backgroundColor: Colors.grey.shade200,
+                      radius: 22,
+                      backgroundColor: AppColors.muted,
                       backgroundImage: post.author.avatarUrl != null
-                          ? CachedNetworkImageProvider(post.author.avatarUrl!)
+                          ? CachedNetworkImageProvider(
+                              post.author.avatarUrl!)
                           : null,
                       child: post.author.avatarUrl == null
-                          ? const Icon(Icons.person, color: Colors.grey)
+                          ? const Icon(Icons.person,
+                              color: AppColors.mutedForeground)
                           : null,
                     ),
-                    title: Text(post.author.displayName,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 13)),
+                    title: Text(
+                      post.author.displayName,
+                      style: const TextStyle(
+                        fontFamily: 'Sora',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                     subtitle: Text(
                       post.content ?? '',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13),
+                      style: const TextStyle(
+                          fontSize: 13, color: AppColors.foreground),
                     ),
                     trailing: post.imageUrl != null
                         ? ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(6),
                             child: CachedNetworkImage(
                               imageUrl: post.imageUrl!,
                               width: 48,
@@ -289,9 +386,14 @@ class _SearchResults extends ConsumerWidget {
           ],
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(
+        child: CircularProgressIndicator(
+            color: AppColors.primary, strokeWidth: 2),
+      ),
       error: (_, __) => const Center(
-          child: Text('Search failed', style: TextStyle(color: Colors.grey))),
+        child: Text('Search failed',
+            style: TextStyle(color: AppColors.mutedForeground)),
+      ),
     );
   }
 }

@@ -1,85 +1,180 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../data/post_repository.dart';
-import '../domain/post.dart';
-import './post_card.dart';
+import '../../../core/app_colors.dart';
+import 'post_card.dart';
 
-final feedProvider = FutureProvider<PostPage>((ref) {
-  return ref.watch(postRepositoryProvider).getFeed();
-});
-
-class FeedScreen extends ConsumerWidget {
+class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final feedAsync = ref.watch(feedProvider);
+  ConsumerState<FeedScreen> createState() => _FeedScreenState();
+}
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Parallaxa',
-          style: TextStyle(
-            fontFamily: 'Sora',
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-            color: Colors.black,
+class _FeedScreenState extends ConsumerState<FeedScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tab;
+  static const _tabs = ['For You', 'Following', 'Trending'];
+
+  @override
+  void initState() {
+    super.initState();
+    _tab = TabController(length: _tabs.length, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tab.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // ── Tab bar ──────────────────────────────────────────────────
+        Container(
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            border: Border(
+              bottom:
+                  BorderSide(color: AppColors.border, width: 0.5),
+            ),
+          ),
+          child: TabBar(
+            controller: _tab,
+            tabs: _tabs.map((t) => Tab(text: t)).toList(),
+            labelStyle: const TextStyle(
+              fontFamily: 'Sora',
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontFamily: 'Sora',
+              fontWeight: FontWeight.w400,
+              fontSize: 15,
+            ),
+            labelColor: AppColors.foreground,
+            unselectedLabelColor: AppColors.mutedForeground,
+            indicatorColor: AppColors.foreground,
+            indicatorWeight: 3,
+            indicatorSize: TabBarIndicatorSize.label,
+            splashFactory: NoSplash.splashFactory,
+            overlayColor:
+                WidgetStateProperty.all(Colors.transparent),
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline, color: Colors.black),
-            onPressed: () => context.go('/messages'),
+        // ── Tab views ─────────────────────────────────────────────────
+        Expanded(
+          child: TabBarView(
+            controller: _tab,
+            children: [
+              _FeedList(feedType: 'public'),
+              _FeedList(feedType: 'following'),
+              _FeedList(feedType: 'public'),
+            ],
           ),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _FeedList extends ConsumerWidget {
+  final String feedType;
+
+  const _FeedList({required this.feedType});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final postsAsync = feedType == 'following'
+        ? ref.watch(followingFeedProvider)
+        : ref.watch(publicFeedProvider);
+
+    return postsAsync.when(
+      loading: () => const Center(
+        child: CircularProgressIndicator(
+          color: AppColors.primary,
+          strokeWidth: 2,
+        ),
       ),
-      body: feedAsync.when(
-        data: (page) => page.posts.isEmpty
-            ? const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.feed_outlined, size: 48, color: Colors.grey),
-                    SizedBox(height: 12),
-                    Text('No posts yet. Follow some people!',
-                        style: TextStyle(color: Colors.grey)),
-                  ],
-                ),
-              )
-            : RefreshIndicator(
-                onRefresh: () => ref.refresh(feedProvider.future),
-                child: ListView.builder(
-                  itemCount: page.posts.length,
-                  itemBuilder: (context, index) =>
-                      PostCard(post: page.posts[index]),
-                ),
-              ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(
+      error: (e, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.grey),
-              const SizedBox(height: 12),
-              Text('Could not load feed', style: TextStyle(color: Colors.grey.shade600)),
+              const Icon(Icons.wifi_off_rounded,
+                  size: 44, color: AppColors.mutedForeground),
+              const SizedBox(height: 16),
+              Text(
+                e.toString().contains('401')
+                    ? 'Please log in to continue'
+                    : 'Could not load posts',
+                style: const TextStyle(
+                  fontFamily: 'Sora',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.foreground,
+                ),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () => ref.invalidate(feedProvider),
-                child: const Text('Retry'),
+              Text(
+                'Pull down to retry',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.mutedForeground,
+                ),
               ),
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/create-post'),
-        backgroundColor: const Color(0xFF0095F6),
-        child: const Icon(Icons.edit_outlined, color: Colors.white),
-      ),
+      data: (posts) {
+        if (posts.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.article_outlined,
+                      size: 48,
+                      color: AppColors.mutedForeground
+                          .withOpacity(0.5)),
+                  const SizedBox(height: 16),
+                  Text(
+                    feedType == 'following'
+                        ? 'Follow people to see their posts here'
+                        : 'Nothing here yet',
+                    style: const TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.foreground,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async {
+            ref.invalidate(publicFeedProvider);
+            ref.invalidate(followingFeedProvider);
+          },
+          child: ListView.builder(
+            itemCount: posts.length,
+            itemBuilder: (_, i) => PostCard(post: posts[i]),
+          ),
+        );
+      },
     );
   }
 }
