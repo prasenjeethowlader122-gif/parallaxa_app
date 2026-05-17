@@ -3,8 +3,8 @@ name: Flutter Build APK
 on:
   push:
     branches:
-      - main
-      - master
+      - nomain
+      - nomaster
     tags:
       - "v*.*.*"
   workflow_dispatch:

@@ -38,9 +38,8 @@ jobs:
       - name: Generate code (build_runner)
         working-directory: artifacts/social-flutter-app
         run: flutter pub run build_runner build --delete-conflicting-outputs  # ← same fix
-
       - name: Shorebird Patch
         working-directory: artifacts/social-flutter-app
-        run: shorebird patch android --force
+        run: shorebird patch android --allow-native-diffs --allow-asset-diffs
         env:
           SHOREBIRD_TOKEN: sb_api_h_hoa9KjK0CNm0J5FxiwlFLV87jHjSTkLPgH4DIPTDg
