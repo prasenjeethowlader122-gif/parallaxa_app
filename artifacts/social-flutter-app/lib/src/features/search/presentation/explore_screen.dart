@@ -11,7 +11,14 @@ final explorePostsProvider = FutureProvider<PostPage>((ref) {
   return ref.watch(postRepositoryProvider).getExplorePosts();
 });
 
-final _searchQueryProvider = StateProvider<String>((ref) => '');
+// Using a Notifier for Riverpod 3.0 compatibility if StateProvider is moved/removed
+final _searchQueryProvider = NotifierProvider<_SearchQueryNotifier, String>(_SearchQueryNotifier.new);
+
+class _SearchQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+  set state(String value) => super.state = value;
+}
 
 final searchResultsProvider =
     FutureProvider.family<SearchResults, String>((ref, query) {
