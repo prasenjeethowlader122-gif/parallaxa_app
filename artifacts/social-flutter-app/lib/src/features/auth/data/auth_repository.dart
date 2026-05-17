@@ -22,17 +22,49 @@ class AuthRepository {
 
   Future<AuthResponse> register({
     required String username,
-    required String email,
+    String? email,
+    String? phoneNumber,
     required String password,
     required String displayName,
-    required DateTime dateOfBirth,
+    required String dateOfBirth,
   }) async {
     final response = await _dio.post('/auth/register', data: {
       'username': username,
       'email': email,
+      'phoneNumber': phoneNumber,
       'password': password,
       'displayName': displayName,
-      'dateOfBirth': dateOfBirth.toIso8601String(),
+      'dateOfBirth': dateOfBirth,
+    });
+    return AuthResponse.fromJson(response.data);
+  }
+
+  Future<bool> checkUsername(String username) async {
+    try {
+      final response = await _dio.get('/auth/check-username', queryParameters: {
+        'username': username,
+      });
+      return response.data['available'] ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<List<String>> suggestUsernames(String username) async {
+    try {
+      final response = await _dio.get('/auth/suggest-usernames', queryParameters: {
+        'username': username,
+      });
+      return List<String>.from(response.data['suggestions'] ?? []);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<AuthResponse> verify2FA(String email, String code) async {
+    final response = await _dio.post('/auth/2fa/verify', data: {
+      'email': email,
+      'code': code,
     });
     return AuthResponse.fromJson(response.data);
   }
