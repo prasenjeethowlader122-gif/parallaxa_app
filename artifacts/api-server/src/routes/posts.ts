@@ -152,7 +152,13 @@ router.post("/posts", authenticate, async (req: AuthRequest, res) => {
       .insert(postsTable)
       .values(
         parentPostId
-          ? { id, userId: req.userId!, parentPostId, content: content ?? null }
+          ? {
+              id,
+              userId: req.userId!,
+              parentPostId,
+              content: content ?? null,
+              location: location ?? null,
+            }
           : {
               id,
               userId: req.userId!,
@@ -415,6 +421,58 @@ router.get("/feed", optionalAuthenticate, async (req: AuthRequest, res) => {
     res.json({ posts: formatted, nextCursor: null });
   } catch (err) {
     logger.error({ err }, "GET /feed error");
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
+// Following feed — posts from users you follow
+router.get("/feed/following", authenticate, async (req: AuthRequest, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 20, 100);
+    const myId = req.userId!;
+
+    const following = await db
+      .select({ followingId: followsTable.followingId })
+      .from(followsTable)
+      .where(eq(followsTable.followerId, myId));
+
+    const followingIds = following.map((f) => f.followingId);
+
+    if (followingIds.length === 0) {
+      res.json({ posts: [], nextCursor: null });
+      return;
+    }
+
+    const posts = await db
+      .select({
+        post: postsTable,
+        score: sql<number>`
+            ((${postsTable.likesCount} * 2) + (${postsTable.repliesCount} * 3) + 1) /
+            POWER(EXTRACT(EPOCH FROM (NOW() - ${postsTable.createdAt})) / 3600 + 2, 1.5)
+          `
+      })
+      .from(postsTable)
+      .where(
+        and(
+          inArray(postsTable.userId, followingIds),
+          eq(postsTable.isArchived, false),
+          isNull(postsTable.parentPostId),
+        ),
+      )
+      .orderBy(desc(sql`score`))
+      .limit(limit);
+
+    const userIds = [...new Set(posts.map(p => p.post.userId))];
+    const [authors, storyStatuses] = await Promise.all([
+      db.select().from(usersTable).where(inArray(usersTable.id, userIds)),
+      getUsersStoryStatus(userIds, myId)
+    ]);
+    const authorMap = Object.fromEntries(authors.map(a => [a.id, a]));
+
+    const formatted = await Promise.all(posts.map((p) => formatPost(p.post, myId, authorMap[p.post.userId], storyStatuses[p.post.userId])));
+    res.json({ posts: formatted, nextCursor: null });
+  } catch (err) {
+    logger.error({ err }, "GET /feed/following error");
     res.status(500).json({ error: "Internal Server Error", message: String(err) });
   }
 });

@@ -81,6 +81,19 @@ async function formatUserSummary(user: typeof usersTable.$inferSelect, isFollowi
   };
 }
 
+router.get("/users/me", authenticate, async (req: AuthRequest, res) => {
+  try {
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.userId!)).limit(1);
+    if (!user) {
+      res.status(404).json({ error: "Not Found", message: "User not found" });
+      return;
+    }
+    res.json(await formatUser(user, false, false, req.userId));
+  } catch (err) {
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
 router.get("/users/suggested", authenticate, async (req: AuthRequest, res) => {
   try {
     const myId = req.userId!;
