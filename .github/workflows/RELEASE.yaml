@@ -1,9 +1,5 @@
 name: Shorebird Release
 
-# Run this workflow ONCE to publish the first release to Shorebird.
-# After that, every subsequent push triggers shorebird-ota.yml (patch).
-# You can also re-run manually via workflow_dispatch whenever you bump
-# the version in pubspec.yaml and want to cut a new release.
 on:
   workflow_dispatch:
 
@@ -46,3 +42,15 @@ jobs:
         run: shorebird release android
         env:
           SHOREBIRD_TOKEN: sb_api_h_hoa9KjK0CNm0J5FxiwlFLV87jHjSTkLPgH4DIPTDg
+
+      # ✅ Build APK separately after the Shorebird release
+      - name: Build APK
+        run: flutter build apk --release
+
+      # ✅ Upload APK as a workflow artifact
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: artifacts/social-flutter-app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
