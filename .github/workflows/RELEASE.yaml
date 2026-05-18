@@ -1,0 +1,48 @@
+name: Shorebird Release
+
+# Run this workflow ONCE to publish the first release to Shorebird.
+# After that, every subsequent push triggers shorebird-ota.yml (patch).
+# You can also re-run manually via workflow_dispatch whenever you bump
+# the version in pubspec.yaml and want to cut a new release.
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Shorebird Release (Android)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    defaults:
+      run:
+        working-directory: artifacts/social-flutter-app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: stable
+
+      - name: Setup Shorebird
+        uses: shorebirdtech/setup-shorebird@v1
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build
+
+      - name: Shorebird Release (Android)
+        run: shorebird release android
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
