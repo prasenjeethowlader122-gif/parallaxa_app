@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -97,14 +98,14 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                   fontSize: 14,
                 ),
                 prefixIcon: const Icon(
-                  Icons.search_rounded,
+                  CupertinoIcons.search,
                   color: AppColors.mutedForeground,
                   size: 20,
                 ),
                 suffixIcon: _isSearching
                     ? IconButton(
                         icon: const Icon(
-                          Icons.close_rounded,
+                          CupertinoIcons.xmark,
                           size: 18,
                           color: AppColors.mutedForeground,
                         ),
@@ -167,7 +168,7 @@ class _ExploreGrid extends ConsumerWidget {
                           errorWidget: (_, __, ___) => Container(
                             color: AppColors.muted,
                             child: const Icon(
-                              Icons.broken_image,
+                              CupertinoIcons.photo,
                               color: AppColors.mutedForeground,
                               size: 20,
                             ),
@@ -231,7 +232,7 @@ class _SearchResults extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(
-                  Icons.search_off_rounded,
+                  CupertinoIcons.search,
                   size: 44,
                   color: AppColors.mutedForeground,
                 ),
@@ -279,7 +280,7 @@ class _SearchResults extends ConsumerWidget {
                         : null,
                     child: user.avatarUrl == null
                         ? const Icon(
-                            Icons.person,
+                            CupertinoIcons.person_fill,
                             color: AppColors.mutedForeground,
                           )
                         : null,
@@ -298,7 +299,7 @@ class _SearchResults extends ConsumerWidget {
                       if (user.isVerified) ...[
                         const SizedBox(width: 3),
                         const Icon(
-                          Icons.verified,
+                          CupertinoIcons.checkmark_seal_fill,
                           size: 14,
                           color: AppColors.verified,
                         ),
@@ -398,7 +399,7 @@ class _SearchResults extends ConsumerWidget {
                         : null,
                     child: post.author.avatarUrl == null
                         ? const Icon(
-                            Icons.person,
+                            CupertinoIcons.person_fill,
                             color: AppColors.mutedForeground,
                           )
                         : null,

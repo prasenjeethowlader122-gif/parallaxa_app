@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -60,7 +61,7 @@ class ConversationsScreen extends ConsumerWidget {
                     fontSize: 15,
                   ),
                   prefixIcon: Icon(
-                    Icons.search_rounded,
+                    CupertinoIcons.search,
                     color: AppColors.mutedForeground,
                     size: 20,
                   ),
@@ -79,7 +80,7 @@ class ConversationsScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
-                          Icons.chat_bubble_outline_rounded,
+                          CupertinoIcons.chat_bubble,
                           size: 52,
                           color: AppColors.mutedForeground,
                         ),
@@ -162,7 +163,7 @@ class _ConversationTile extends StatelessWidget {
                       : null,
                   child: conv.participant.avatarUrl == null
                       ? const Icon(
-                          Icons.person,
+                          CupertinoIcons.person_fill,
                           color: AppColors.mutedForeground,
                           size: 24,
                         )

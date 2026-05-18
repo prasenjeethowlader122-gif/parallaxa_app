@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -106,7 +107,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Icons.error_outline,
+                CupertinoIcons.exclamationmark_circle,
                 size: 40,
                 color: AppColors.mutedForeground,
               ),
@@ -177,14 +178,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   _PostsGrid(postsAsync: postsAsync),
                   // Replies — placeholder
                   _EmptyTab(
-                    icon: Icons.chat_bubble_outline_rounded,
+                    icon: CupertinoIcons.chat_bubble,
                     message: 'No replies yet',
                   ),
                   // Media — grid filtered to posts with images
                   _PostsGrid(postsAsync: postsAsync, mediaOnly: true),
                   // Likes — placeholder
                   _EmptyTab(
-                    icon: Icons.favorite_border_rounded,
+                    icon: CupertinoIcons.heart,
                     message: 'No liked posts yet',
                   ),
                 ],
@@ -245,7 +246,7 @@ class _ProfileHeader extends StatelessWidget {
               if (isOwnProfile)
                 IconButton(
                   icon: const Icon(
-                    Icons.logout_rounded,
+                    CupertinoIcons.square_arrow_right,
                     color: AppColors.textPrimary,
                     size: 22,
                   ),
@@ -254,11 +255,11 @@ class _ProfileHeader extends StatelessWidget {
               else
                 IconButton(
                   icon: const Icon(
-                    Icons.more_horiz_rounded,
+                    CupertinoIcons.ellipsis,
                     color: AppColors.textPrimary,
                     size: 22,
                   ),
-                  onPressed: () {},
+                  onPressed: () => context.push('/profile/options', extra: user),
                 ),
             ],
           ),
@@ -304,7 +305,7 @@ class _ProfileHeader extends StatelessWidget {
                         : null,
                     child: user.avatarUrl == null
                         ? const Icon(
-                            Icons.person,
+                            CupertinoIcons.person_fill,
                             size: 38,
                             color: AppColors.mutedForeground,
                           )
@@ -318,7 +319,7 @@ class _ProfileHeader extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 6),
                 child: isOwnProfile
                     ? OutlinedButton(
-                        onPressed: () {},
+                        onPressed: () => context.push('/profile/edit', extra: user),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(
                             color: AppColors.border,
@@ -407,7 +408,7 @@ class _ProfileHeader extends StatelessWidget {
                   if (user.isVerified) ...[
                     const SizedBox(width: 4),
                     const Icon(
-                      Icons.verified,
+                      CupertinoIcons.checkmark_seal_fill,
                       size: 18,
                       color: AppColors.verified,
                     ),
@@ -438,7 +439,7 @@ class _ProfileHeader extends StatelessWidget {
                 Row(
                   children: [
                     const Icon(
-                      Icons.link_rounded,
+                      CupertinoIcons.link,
                       size: 14,
                       color: AppColors.primary,
                     ),
@@ -571,8 +572,8 @@ class _PostsGrid extends StatelessWidget {
         if (posts.isEmpty) {
           return _EmptyTab(
             icon: mediaOnly
-                ? Icons.photo_library_outlined
-                : Icons.article_outlined,
+                ? CupertinoIcons.photo_on_rectangle
+                : CupertinoIcons.doc_text,
             message: mediaOnly ? 'No media yet' : 'No posts yet',
           );
         }
@@ -607,7 +608,7 @@ class _GridTile extends StatelessWidget {
             errorWidget: (_, __, ___) => Container(
               color: AppColors.muted,
               child: const Icon(
-                Icons.broken_image,
+                CupertinoIcons.photo,
                 color: AppColors.mutedForeground,
                 size: 20,
               ),

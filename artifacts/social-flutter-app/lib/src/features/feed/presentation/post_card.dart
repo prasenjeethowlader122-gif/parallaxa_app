@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../data/post_repository.dart';
@@ -74,7 +76,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     final repostCount = (_likesCount / 2.5).floor();
 
     return GestureDetector(
-      onTap: widget.onTap,
+      onTap: widget.onTap ?? () => context.push('/post/${post.id}'),
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -119,7 +121,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                           if (post.author.isVerified) ...[
                             const SizedBox(width: 4),
                             const Icon(
-                              Icons.verified,
+                              CupertinoIcons.checkmark_seal_fill,
                               size: 15,
                               color: AppColors.verified,
                             ),
@@ -140,7 +142,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                   ),
                 ),
                 const Icon(
-                  Icons.more_horiz_rounded,
+                  CupertinoIcons.ellipsis,
                   size: 20,
                   color: AppColors.mutedForeground,
                 ),
@@ -167,7 +169,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                     errorWidget: (_, __, ___) => Container(
                       color: AppColors.muted,
                       child: const Icon(
-                        Icons.image_outlined,
+                        CupertinoIcons.photo,
                         color: AppColors.mutedForeground,
                       ),
                     ),
@@ -182,36 +184,36 @@ class _PostCardState extends ConsumerState<PostCard> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _ActionItem(
-                  icon: Icons.chat_bubble_outline_rounded,
+                  icon: CupertinoIcons.chat_bubble,
                   count: post.repliesCount,
                   color: AppColors.mutedForeground,
                   onTap: () {},
                 ),
                 _ActionItem(
-                  icon: Icons.repeat_rounded,
+                  icon: CupertinoIcons.arrow_2_squarepath,
                   count: repostCount,
                   color: AppColors.mutedForeground,
                   onTap: () {},
                 ),
                 _ActionItem(
                   icon: _isLiked
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
+                      ? CupertinoIcons.heart_fill
+                      : CupertinoIcons.heart,
                   count: _likesCount,
                   color: _isLiked ? AppColors.like : AppColors.mutedForeground,
                   onTap: _toggleLike,
                 ),
                 _ActionItem(
                   icon: _isSaved
-                      ? Icons.bookmark_rounded
-                      : Icons.bookmark_border_rounded,
+                      ? CupertinoIcons.bookmark_fill
+                      : CupertinoIcons.bookmark,
                   count: 0,
                   color: _isSaved ? AppColors.saved : AppColors.mutedForeground,
                   onTap: _toggleSave,
                   showCount: false,
                 ),
                 _ActionItem(
-                  icon: Icons.ios_share_rounded,
+                  icon: CupertinoIcons.share,
                   count: 0,
                   color: AppColors.mutedForeground,
                   onTap: () {},

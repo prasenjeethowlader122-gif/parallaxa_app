@@ -12,11 +12,11 @@ class User {
   final String? avatarUrl;
   final String? website;
   final bool isVerified;
-  final String verificationStatus;
-  final String role;
-  final bool isFrozen;
-  final bool twoFactorEnabled;
-  final bool isPrivate;
+  final String? verificationStatus;
+  final String? role;
+  final bool? isFrozen;
+  final bool? twoFactorEnabled;
+  final bool? isPrivate;
   final int followersCount;
   final int followingCount;
   final int postsCount;
@@ -32,11 +32,11 @@ class User {
     this.avatarUrl,
     this.website,
     required this.isVerified,
-    required this.verificationStatus,
-    required this.role,
+    this.verificationStatus,
+    this.role,
     this.isFrozen = false,
-    required this.twoFactorEnabled,
-    required this.isPrivate,
+    this.twoFactorEnabled = false,
+    this.isPrivate = false,
     required this.followersCount,
     required this.followingCount,
     required this.postsCount,

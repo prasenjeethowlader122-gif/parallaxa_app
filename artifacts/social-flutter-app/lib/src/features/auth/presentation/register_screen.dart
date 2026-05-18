@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -265,7 +266,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return FloatingLabelInput(
         key: const ValueKey(0),
         label: "Full Name",
-        icon: Icons.person_outline_rounded,
+        icon: CupertinoIcons.person,
         controller: _displayNameController,
         error: _errors['displayName'],
         textCapitalization: TextCapitalization.words,
@@ -284,7 +285,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: AbsorbPointer(
               child: FloatingLabelInput(
                 label: "Birthday (tap to select)",
-                icon: Icons.calendar_today_outlined,
+                icon: CupertinoIcons.calendar,
                 controller: _dateOfBirthController,
                 error: _errors['dateOfBirth'],
                 keyboardType: TextInputType.none,
@@ -324,7 +325,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return FloatingLabelInput(
         key: const ValueKey(2),
         label: "Email Address",
-        icon: Icons.mail_outline_rounded,
+        icon: CupertinoIcons.mail,
         controller: _emailController,
         error: _errors['email'],
         keyboardType: TextInputType.emailAddress,
@@ -337,7 +338,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return FloatingLabelInput(
         key: const ValueKey(3),
         label: "Password",
-        icon: Icons.lock_outline_rounded,
+        icon: CupertinoIcons.lock,
         controller: _passwordController,
         error: _errors['password'],
         secureTextEntry: !_showPassword,
@@ -349,8 +350,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           onPressed: () => setState(() => _showPassword = !_showPassword),
           icon: Icon(
             _showPassword
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
+                ? CupertinoIcons.eye_slash
+                : CupertinoIcons.eye,
             color: _errors['password'] != null
                 ? const Color(0xFFDC2626)
                 : AppColors.slate500,
@@ -368,7 +369,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         children: [
           FloatingLabelInput(
             label: "Username",
-            icon: Icons.alternate_email_rounded,
+            icon: CupertinoIcons.at,
             controller: _usernameController,
             error: _errors['username'],
             textInputAction: TextInputAction.done,
@@ -388,8 +389,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ? null
                 : Icon(
                     _usernameAvailable!
-                        ? Icons.check_circle_outline
-                        : Icons.cancel_outlined,
+                        ? CupertinoIcons.check_mark_circled
+                        : CupertinoIcons.xmark_circle,
                     color: _usernameAvailable!
                         ? Colors.green
                         : const Color(0xFFDC2626),
@@ -519,7 +520,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                       child: const Center(
                         child: Icon(
-                          Icons.arrow_back_rounded,
+                          CupertinoIcons.arrow_left,
                           color: Color(0xFF1F2937),
                           size: 20,
                         ),
@@ -602,7 +603,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: Row(
                     children: [
                       const Icon(
-                        Icons.error_outline_rounded,
+                        CupertinoIcons.exclamationmark_circle,
                         color: Color(0xFFDC2626),
                         size: 20,
                       ),
@@ -658,7 +659,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           child: _acceptTerms
                               ? const Center(
                                   child: Icon(
-                                    Icons.check_rounded,
+                                    CupertinoIcons.check_mark,
                                     color: Colors.white,
                                     size: 14,
                                   ),
@@ -744,7 +745,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             if (!isLastStep) ...[
                               const SizedBox(width: 8),
                               const Icon(
-                                Icons.arrow_forward_rounded,
+                                CupertinoIcons.arrow_right,
                                 color: Colors.white,
                                 size: 18,
                               ),

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -203,7 +204,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Row(
                     children: [
                       const Icon(
-                        Icons.error_outline_rounded,
+                        CupertinoIcons.exclamationmark_circle,
                         color: Color(0xFFDC2626),
                         size: 20,
                       ),
@@ -230,7 +231,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 opacity: _showTotpInput ? 0.45 : 1.0,
                 child: FloatingLabelInput(
                   label: "Email Address",
-                  icon: Icons.mail_outline_rounded,
+                  icon: CupertinoIcons.mail,
                   controller: _emailController,
                   error: _errors['email'],
                   keyboardType: TextInputType.emailAddress,
@@ -245,7 +246,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 opacity: _showTotpInput ? 0.45 : 1.0,
                 child: FloatingLabelInput(
                   label: "Password",
-                  icon: Icons.lock_outline_rounded,
+                  icon: CupertinoIcons.lock,
                   controller: _passwordController,
                   error: _errors['password'],
                   secureTextEntry: !_showPassword,
@@ -262,8 +263,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         setState(() => _showPassword = !_showPassword),
                     icon: Icon(
                       _showPassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+                          ? CupertinoIcons.eye_slash
+                          : CupertinoIcons.eye,
                       color: _errors['password'] != null
                           ? const Color(0xFFDC2626)
                           : AppColors.slate500,
@@ -300,7 +301,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (_showTotpInput) ...[
                 FloatingLabelInput(
                   label: "6-digit 2FA Code",
-                  icon: Icons.shield_outlined,
+                  icon: CupertinoIcons.shield,
                   controller: _totpController,
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.done,

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/app_colors.dart';
 
@@ -19,6 +20,7 @@ class FloatingLabelInput extends StatefulWidget {
   final bool autoFocus;
   final TextCapitalization textCapitalization;
   final bool autoCorrect;
+  final int? maxLines;
 
   const FloatingLabelInput({
     super.key,
@@ -39,6 +41,7 @@ class FloatingLabelInput extends StatefulWidget {
     this.autoFocus = false,
     this.textCapitalization = TextCapitalization.none,
     this.autoCorrect = true,
+    this.maxLines = 1,
   });
 
   @override
@@ -140,7 +143,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
           clipBehavior: Clip.none,
           children: [
             Container(
-              height: 56,
+              constraints: const BoxConstraints(minHeight: 56),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -169,6 +172,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                         focusNode: _focusNode,
                         obscureText: widget.secureTextEntry,
                         keyboardType: widget.keyboardType,
+                        maxLines: widget.maxLines,
                         textInputAction: widget.textInputAction,
                         onChanged: widget.onChanged,
                         onEditingComplete: widget.onEditingComplete,
@@ -244,7 +248,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
             child: Row(
               children: [
                 const Icon(
-                  Icons.info_outline,
+                      CupertinoIcons.info,
                   color: Color(0xFFDC2626),
                   size: 14,
                 ),

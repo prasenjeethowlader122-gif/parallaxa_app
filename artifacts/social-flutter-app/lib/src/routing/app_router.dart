@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +17,17 @@ import '../features/notifications/presentation/notifications_screen.dart'
     as notifications;
 import '../features/messaging/presentation/conversations_screen.dart';
 import '../features/messaging/presentation/chat_screen.dart';
+import '../features/feed/presentation/post_detail_screen.dart';
+import '../features/admin/presentation/admin_dashboard_screen.dart';
+import '../features/admin/presentation/admin_users_screen.dart';
+import '../features/stories/presentation/story_view_screen.dart';
+import '../features/stories/presentation/story_create_screen.dart';
+import '../features/profile/presentation/edit_profile_screen.dart';
+import '../features/profile/presentation/bookmarks_screen.dart';
+import '../features/profile/presentation/account_verification_screen.dart';
+import '../features/profile/presentation/profile_options_screen.dart';
+import '../features/auth/presentation/two_factor_setup_screen.dart';
+import '../features/auth/domain/user.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final storageService = ref.watch(storageServiceProvider);
@@ -55,9 +67,50 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const CreatePostScreen(),
       ),
       GoRoute(
+        path: '/post/:postId',
+        builder: (_, state) =>
+            PostDetailScreen(postId: state.pathParameters['postId']!),
+      ),
+      GoRoute(
+        path: '/admin',
+        builder: (_, _) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/admin/users',
+        builder: (_, _) => const AdminUsersScreen(),
+      ),
+      GoRoute(
+        path: '/stories/:userId',
+        builder: (_, state) => StoryViewScreen(userId: state.pathParameters['userId']!),
+      ),
+      GoRoute(
+        path: '/story/create',
+        builder: (_, _) => const StoryCreateScreen(),
+      ),
+      GoRoute(
         path: '/user/:userId',
         builder: (_, state) =>
             profile.ProfileScreen(userId: state.pathParameters['userId']!),
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        builder: (_, state) => EditProfileScreen(user: state.extra as User),
+      ),
+      GoRoute(
+        path: '/profile/options',
+        builder: (_, state) => ProfileOptionsScreen(user: state.extra as User),
+      ),
+      GoRoute(
+        path: '/bookmarks',
+        builder: (_, _) => const BookmarksScreen(),
+      ),
+      GoRoute(
+        path: '/account-verification',
+        builder: (_, _) => const AccountVerificationScreen(),
+      ),
+      GoRoute(
+        path: '/two-factor-setup',
+        builder: (_, _) => const TwoFactorSetupScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) =>
@@ -110,7 +163,7 @@ class _MainShell extends StatelessWidget {
               elevation: 6,
               shape: const CircleBorder(),
               child: const Icon(
-                Icons.add_rounded,
+                CupertinoIcons.add,
                 color: Colors.white,
                 size: 24,
               ),
@@ -141,7 +194,7 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: Builder(
         builder: (context) => IconButton(
           icon: const Icon(
-            Icons.menu_rounded,
+            CupertinoIcons.line_horizontal_3,
             color: AppColors.textPrimary,
             size: 22,
           ),
@@ -157,7 +210,7 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         IconButton(
           icon: const Icon(
-            Icons.search_rounded,
+            CupertinoIcons.search,
             color: AppColors.textPrimary,
             size: 22,
           ),
@@ -165,7 +218,7 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         IconButton(
           icon: const Icon(
-            Icons.notifications_none_rounded,
+            CupertinoIcons.bell,
             color: AppColors.textPrimary,
             size: 22,
           ),
@@ -173,7 +226,7 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         IconButton(
           icon: const Icon(
-            Icons.chat_bubble_outline_rounded,
+            CupertinoIcons.chat_bubble,
             color: AppColors.textPrimary,
             size: 22,
           ),
@@ -211,7 +264,7 @@ class _AppDrawer extends StatelessWidget {
                 children: [
                   IconButton(
                     icon: const Icon(
-                      Icons.arrow_back_rounded,
+                      CupertinoIcons.arrow_left,
                       color: AppColors.textPrimary,
                       size: 22,
                     ),
@@ -237,8 +290,8 @@ class _AppDrawer extends StatelessWidget {
                 ),
                 children: [
                   _DrawerItem(
-                    icon: Icons.home_outlined,
-                    activeIcon: Icons.home_rounded,
+                    icon: CupertinoIcons.house,
+                    activeIcon: CupertinoIcons.house_fill,
                     label: 'Home',
                     isActive: location == '/feed',
                     onTap: () {
@@ -247,8 +300,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: Icons.search_outlined,
-                    activeIcon: Icons.search_rounded,
+                    icon: CupertinoIcons.search,
+                    activeIcon: CupertinoIcons.search,
                     label: 'Explore',
                     isActive: location == '/explore',
                     onTap: () {
@@ -257,8 +310,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: Icons.notifications_none_rounded,
-                    activeIcon: Icons.notifications_rounded,
+                    icon: CupertinoIcons.bell,
+                    activeIcon: CupertinoIcons.bell_fill,
                     label: 'Notifications',
                     isActive: location == '/notifications',
                     onTap: () {
@@ -267,8 +320,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    activeIcon: Icons.chat_bubble_rounded,
+                    icon: CupertinoIcons.chat_bubble,
+                    activeIcon: CupertinoIcons.chat_bubble_fill,
                     label: 'Messages',
                     isActive: location == '/messages',
                     onTap: () {
@@ -277,8 +330,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: Icons.person_outline_rounded,
-                    activeIcon: Icons.person_rounded,
+                    icon: CupertinoIcons.person,
+                    activeIcon: CupertinoIcons.person_fill,
                     label: 'Profile',
                     isActive: location == '/profile',
                     onTap: () {
@@ -288,15 +341,18 @@ class _AppDrawer extends StatelessWidget {
                   ),
                   const Divider(color: AppColors.border, height: 24),
                   _DrawerItem(
-                    icon: Icons.bookmark_border_rounded,
-                    activeIcon: Icons.bookmark_rounded,
+                    icon: CupertinoIcons.bookmark,
+                    activeIcon: CupertinoIcons.bookmark_fill,
                     label: 'Bookmarks',
-                    isActive: false,
-                    onTap: () => Navigator.of(context).pop(),
+                    isActive: location == '/bookmarks',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      context.push('/bookmarks');
+                    },
                   ),
                   _DrawerItem(
-                    icon: Icons.settings_outlined,
-                    activeIcon: Icons.settings_rounded,
+                    icon: CupertinoIcons.settings,
+                    activeIcon: CupertinoIcons.settings_solid,
                     label: 'Settings',
                     isActive: false,
                     onTap: () => Navigator.of(context).pop(),

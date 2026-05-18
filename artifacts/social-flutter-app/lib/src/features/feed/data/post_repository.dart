@@ -93,4 +93,17 @@ class PostRepository {
   Future<void> deletePost(String postId) async {
     await _dio.delete('/posts/$postId');
   }
+
+  Future<PostPage> getPostReplies(String postId) async {
+    final response = await _dio.get('/posts/$postId/replies');
+    return PostPage.fromJson(response.data);
+  }
 }
+
+final postDetailProvider = FutureProvider.family<Post, String>((ref, id) {
+  return ref.watch(postRepositoryProvider).getPost(id);
+});
+
+final postRepliesProvider = FutureProvider.family<PostPage, String>((ref, id) {
+  return ref.watch(postRepositoryProvider).getPostReplies(id);
+});

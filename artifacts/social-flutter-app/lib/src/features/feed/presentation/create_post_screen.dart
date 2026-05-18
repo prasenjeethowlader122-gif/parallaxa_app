@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -234,7 +235,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(
-            Icons.close_rounded,
+            CupertinoIcons.xmark,
             color: AppColors.textPrimary,
             size: 24,
           ),
@@ -370,7 +371,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(
-                                          Icons.close_rounded,
+                                          CupertinoIcons.xmark,
                                           color: Colors.white,
                                           size: 16,
                                         ),
@@ -533,7 +534,7 @@ class _AudienceChip extends StatelessWidget {
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.public_rounded, color: Color(0xFF1D9BF0), size: 14),
+          Icon(CupertinoIcons.globe, color: Color(0xFF1D9BF0), size: 14),
           SizedBox(width: 4),
           Text(
             'Everyone',
@@ -567,7 +568,7 @@ class _LocationTag extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(
-            Icons.location_on_rounded,
+            CupertinoIcons.location_solid,
             color: Color(0xFF1D9BF0),
             size: 14,
           ),
@@ -584,7 +585,7 @@ class _LocationTag extends StatelessWidget {
           GestureDetector(
             onTap: onRemove,
             child: const Icon(
-              Icons.close_rounded,
+              CupertinoIcons.xmark,
               color: Color(0xFF1D9BF0),
               size: 14,
             ),
@@ -630,7 +631,7 @@ class _Toolbar extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(
-              Icons.image_outlined,
+              CupertinoIcons.photo,
               color: Color(0xFF1D9BF0),
               size: 24,
             ),
@@ -638,7 +639,7 @@ class _Toolbar extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(
-              Icons.gif_box_outlined,
+              CupertinoIcons.videocam_circle,
               color: Color(0xFF1D9BF0),
               size: 24,
             ),
@@ -646,7 +647,7 @@ class _Toolbar extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(
-              Icons.poll_outlined,
+              CupertinoIcons.list_bullet_indent,
               color: Color(0xFF1D9BF0),
               size: 24,
             ),
@@ -654,7 +655,7 @@ class _Toolbar extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(
-              Icons.emoji_emotions_outlined,
+              CupertinoIcons.smiley,
               color: Color(0xFF1D9BF0),
               size: 24,
             ),
@@ -664,7 +665,7 @@ class _Toolbar extends StatelessWidget {
             children: [
               IconButton(
                 icon: const Icon(
-                  Icons.location_on_outlined,
+                  CupertinoIcons.location,
                   color: Color(0xFF1D9BF0),
                   size: 24,
                 ),
@@ -700,7 +701,7 @@ class _Toolbar extends StatelessWidget {
               ),
               child: const Center(
                 child: Icon(
-                  Icons.calendar_today_outlined,
+                  CupertinoIcons.calendar,
                   color: Color(0xFF1D9BF0),
                   size: 16,
                 ),

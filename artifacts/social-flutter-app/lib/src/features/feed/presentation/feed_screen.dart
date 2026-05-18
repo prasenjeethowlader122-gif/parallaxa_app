@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/post_repository.dart';
@@ -107,7 +108,7 @@ class _FeedList extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Icons.wifi_off_rounded,
+                CupertinoIcons.wifi_exclamationmark,
                 size: 44,
                 color: AppColors.mutedForeground,
               ),
@@ -145,7 +146,7 @@ class _FeedList extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.article_outlined,
+                    CupertinoIcons.doc_text,
                     size: 48,
                     color: AppColors.mutedForeground.withOpacity(0.5),
                   ),
