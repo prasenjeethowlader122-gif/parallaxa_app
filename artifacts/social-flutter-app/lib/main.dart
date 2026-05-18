@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shorebird_code_push/shorebird_code_push.dart';
 import 'src/routing/app_router.dart';
 import 'src/core/api_client.dart';
 import 'src/core/storage_service.dart';
 import 'src/core/app_colors.dart';
 import 'src/core/widgets/processing_overlay.dart';
+import 'src/core/ota_provider.dart';
 
-final _updater = ShorebirdUpdater();
+final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,10 +21,6 @@ void main() async {
       statusBarBrightness: Brightness.light,
     ),
   );
-
-  // Silently check for OTA patches on launch.
-  // Any downloaded patch takes effect on the next cold start.
-  _checkForUpdate();
 
   final prefs = await SharedPreferences.getInstance();
 
@@ -38,19 +34,6 @@ void main() async {
   );
 }
 
-/// Silently checks for a Shorebird patch and downloads it in the background.
-/// The new patch takes effect on the next cold start.
-Future<void> _checkForUpdate() async {
-  try {
-    final status = await _updater.checkForUpdate();
-    if (status == UpdateStatus.outdated) {
-      await _updater.update();
-    }
-  } catch (_) {
-    // Network errors or running in dev mode — safe to ignore.
-  }
-}
-
 class MainApp extends ConsumerWidget {
   const MainApp({super.key});
 
@@ -61,9 +44,12 @@ class MainApp extends ConsumerWidget {
     return MaterialApp.router(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: scaffoldMessengerKey,
       routerConfig: router,
       builder: (context, child) {
-        return ProcessingOverlay(child: child!);
+        return OTAUpdateListener(
+          child: ProcessingOverlay(child: child!),
+        );
       },
       theme: ThemeData(
         fontFamily: 'Sora',
@@ -196,6 +182,68 @@ class MainApp extends ConsumerWidget {
             fontSize: 15,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class OTAUpdateListener extends ConsumerStatefulWidget {
+  final Widget child;
+  const OTAUpdateListener({super.key, required this.child});
+
+  @override
+  ConsumerState<OTAUpdateListener> createState() => _OTAUpdateListenerState();
+}
+
+class _OTAUpdateListenerState extends ConsumerState<OTAUpdateListener> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(otaProvider.notifier).checkForUpdate();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(otaProvider, (previous, next) {
+      if (next.status == OTAStatus.downloading) {
+        _showSnackBar(next.message ?? "Downloading update...");
+      } else if (next.status == OTAStatus.downloaded) {
+        _showSnackBar(
+          next.message ?? "Update ready. Please restart the app.",
+          isPersistent: true,
+        );
+      }
+    });
+    return widget.child;
+  }
+
+  void _showSnackBar(String message, {bool isPersistent = false}) {
+    scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+    scaffoldMessengerKey.currentState?.showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontFamily: 'Sora',
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+        duration:
+            isPersistent ? const Duration(days: 1) : const Duration(seconds: 4),
+        action: isPersistent
+            ? SnackBarAction(
+              label: 'Dismiss',
+              textColor: Colors.white,
+              onPressed: () {
+                scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+              },
+            )
+            : null,
       ),
     );
   }
