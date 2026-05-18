@@ -1,5 +1,4 @@
 import 'package:json_annotation/json_annotation.dart';
-import '../../auth/domain/user.dart';
 
 part 'post.g.dart';
 
@@ -57,7 +56,8 @@ class UserSummary {
     required this.isFollowing,
   });
 
-  factory UserSummary.fromJson(Map<String, dynamic> json) => _$UserSummaryFromJson(json);
+  factory UserSummary.fromJson(Map<String, dynamic> json) =>
+      _$UserSummaryFromJson(json);
   Map<String, dynamic> toJson() => _$UserSummaryToJson(this);
 }
 
@@ -66,11 +66,9 @@ class PostPage {
   final List<Post> posts;
   final String? nextCursor;
 
-  PostPage({
-    required this.posts,
-    this.nextCursor,
-  });
+  PostPage({required this.posts, this.nextCursor});
 
-  factory PostPage.fromJson(Map<String, dynamic> json) => _$PostPageFromJson(json);
+  factory PostPage.fromJson(Map<String, dynamic> json) =>
+      _$PostPageFromJson(json);
   Map<String, dynamic> toJson() => _$PostPageToJson(this);
 }

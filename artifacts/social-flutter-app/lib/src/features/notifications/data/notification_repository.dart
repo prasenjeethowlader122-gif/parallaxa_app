@@ -12,12 +12,14 @@ class NotificationRepository {
 
   NotificationRepository(this._dio);
 
-  Future<NotificationPage> getNotifications(
-      {String? cursor, int limit = 20}) async {
-    final response = await _dio.get('/notifications', queryParameters: {
-      if (cursor != null) 'cursor': cursor,
-      'limit': limit,
-    });
+  Future<NotificationPage> getNotifications({
+    String? cursor,
+    int limit = 20,
+  }) async {
+    final response = await _dio.get(
+      '/notifications',
+      queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
+    );
     return NotificationPage.fromJson(response.data);
   }
 

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../data/auth_repository.dart';
 import '../../../core/api_client.dart';
 import '../../../core/app_colors.dart';
+import '../../../core/processing_provider.dart';
 import 'widgets/floating_label_input.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -62,6 +64,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _errors = {});
     if (!_validateForm()) return;
 
+    ref.read(processingProvider.notifier).show("Logging in...");
     setState(() => _isLoading = true);
     try {
       final authRepo = ref.read(authRepositoryProvider);
@@ -95,13 +98,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String errorMessage = "Invalid email or password. Please try again.";
+        if (e is DioException) {
+          final data = e.response?.data;
+          if (data is Map && data.containsKey('message')) {
+            errorMessage = data['message'];
+          } else if (e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout) {
+            errorMessage = "Connection timed out. Please check your internet.";
+          } else if (e.type == DioExceptionType.connectionError) {
+            errorMessage = "Unable to connect to the server.";
+          }
+        }
         setState(() {
-          _errors = {
-            'general': "Invalid email or password. Please try again.",
-          };
+          _errors = {'general': errorMessage};
         });
       }
     } finally {
+      ref.read(processingProvider.notifier).hide();
       if (mounted && _isLoading) {
         setState(() => _isLoading = false);
       }
@@ -178,7 +192,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (_errors['general'] != null) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(12),
@@ -186,8 +202,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded,
-                          color: Color(0xFFDC2626), size: 20),
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        color: Color(0xFFDC2626),
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -351,81 +370,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Google Sign In Button
-              SizedBox(
-                height: 54,
-                child: OutlinedButton(
-                  onPressed: _isLoading ? null : () {},
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(
-                        color: AppColors.slate200, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(27),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Use a Material icon as fallback to avoid network dependency
-                      Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: AppColors.slate100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Center(
-                          child: Text('G',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.slate700,
-                              )),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Continue with Google',
-                        style: TextStyle(
-                          color: AppColors.slate900,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'Sora',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Divider
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Row(
-                  children: [
-                    Expanded(
-                        child:
-                            Container(height: 1, color: AppColors.slate200)),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        'OR',
-                        style: TextStyle(
-                          color: AppColors.slate400,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1,
-                          fontFamily: 'Sora',
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                        child:
-                            Container(height: 1, color: AppColors.slate200)),
-                  ],
-                ),
-              ),
-
               // Sign Up CTA
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -462,15 +406,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     TextSpan(
                       text: 'Terms of Service',
                       style: TextStyle(
-                          color: Color(0xFF0095F6),
-                          fontWeight: FontWeight.w700),
+                        color: Color(0xFF0095F6),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     TextSpan(text: ' and '),
                     TextSpan(
                       text: 'Privacy Policy',
                       style: TextStyle(
-                          color: Color(0xFF0095F6),
-                          fontWeight: FontWeight.w700),
+                        color: Color(0xFF0095F6),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     TextSpan(text: '.'),
                   ],

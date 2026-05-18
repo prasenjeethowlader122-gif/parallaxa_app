@@ -13,8 +13,7 @@ final publicFeedProvider = FutureProvider<List<Post>>((ref) async {
 });
 
 final followingFeedProvider = FutureProvider<List<Post>>((ref) async {
-  final page =
-      await ref.watch(postRepositoryProvider).getFollowingFeed();
+  final page = await ref.watch(postRepositoryProvider).getFollowingFeed();
   return page.posts;
 });
 
@@ -24,21 +23,19 @@ class PostRepository {
   PostRepository(this._dio);
 
   Future<PostPage> getFeed({String? cursor, int limit = 20}) async {
-    final response = await _dio.get('/feed', queryParameters: {
-      if (cursor != null) 'cursor': cursor,
-      'limit': limit,
-    });
+    final response = await _dio.get(
+      '/feed',
+      queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
+    );
     return PostPage.fromJson(response.data);
   }
 
-  Future<PostPage> getFollowingFeed(
-      {String? cursor, int limit = 20}) async {
+  Future<PostPage> getFollowingFeed({String? cursor, int limit = 20}) async {
     try {
-      final response =
-          await _dio.get('/feed/following', queryParameters: {
-        if (cursor != null) 'cursor': cursor,
-        'limit': limit,
-      });
+      final response = await _dio.get(
+        '/feed/following',
+        queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
+      );
       return PostPage.fromJson(response.data);
     } catch (_) {
       return PostPage(posts: const [], nextCursor: null);
@@ -53,24 +50,25 @@ class PostRepository {
     List<String>? hashtags,
     String? parentPostId,
   }) async {
-    final response = await _dio.post('/posts', data: {
-      if (content != null) 'content': content,
-      if (imageUrl != null) 'imageUrl': imageUrl,
-      if (videoUrl != null) 'videoUrl': videoUrl,
-      if (location != null) 'location': location,
-      if (hashtags != null) 'hashtags': hashtags,
-      if (parentPostId != null) 'parentPostId': parentPostId,
-    });
+    final response = await _dio.post(
+      '/posts',
+      data: {
+        if (content != null) 'content': content,
+        if (imageUrl != null) 'imageUrl': imageUrl,
+        if (videoUrl != null) 'videoUrl': videoUrl,
+        if (location != null) 'location': location,
+        if (hashtags != null) 'hashtags': hashtags,
+        if (parentPostId != null) 'parentPostId': parentPostId,
+      },
+    );
     return Post.fromJson(response.data);
   }
 
-  Future<PostPage> getExplorePosts(
-      {String? cursor, int limit = 20}) async {
-    final response =
-        await _dio.get('/explore', queryParameters: {
-      if (cursor != null) 'cursor': cursor,
-      'limit': limit,
-    });
+  Future<PostPage> getExplorePosts({String? cursor, int limit = 20}) async {
+    final response = await _dio.get(
+      '/explore',
+      queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
+    );
     return PostPage.fromJson(response.data);
   }
 

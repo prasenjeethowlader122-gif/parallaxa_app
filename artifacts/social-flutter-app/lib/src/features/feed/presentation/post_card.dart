@@ -93,7 +93,8 @@ class _PostCardState extends ConsumerState<PostCard> {
                 UserAvatar(
                   uri: post.author.avatarUrl,
                   size: 40,
-                  hasStory: false, // In a real app, this would come from a story state
+                  hasStory:
+                      false, // In a real app, this would come from a story state
                   hasUnviewedStory: false,
                 ),
                 const SizedBox(width: 10),
@@ -193,13 +194,17 @@ class _PostCardState extends ConsumerState<PostCard> {
                   onTap: () {},
                 ),
                 _ActionItem(
-                  icon: _isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                  icon: _isLiked
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
                   count: _likesCount,
                   color: _isLiked ? AppColors.like : AppColors.mutedForeground,
                   onTap: _toggleLike,
                 ),
                 _ActionItem(
-                  icon: _isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                  icon: _isSaved
+                      ? Icons.bookmark_rounded
+                      : Icons.bookmark_border_rounded,
                   count: 0,
                   color: _isSaved ? AppColors.saved : AppColors.mutedForeground,
                   onTap: _toggleSave,
@@ -231,11 +236,15 @@ class _ContentText extends StatelessWidget {
     final parts = content.split(RegExp(r'((?:@|#)\w+|(?:https?://[^\s]+))'));
     final spans = <InlineSpan>[];
     for (final part in parts) {
-      if (part.startsWith('#') || part.startsWith('@') || part.startsWith('http')) {
-        spans.add(TextSpan(
-          text: part,
-          style: const TextStyle(color: AppColors.primary),
-        ));
+      if (part.startsWith('#') ||
+          part.startsWith('@') ||
+          part.startsWith('http')) {
+        spans.add(
+          TextSpan(
+            text: part,
+            style: const TextStyle(color: AppColors.primary),
+          ),
+        );
       } else {
         spans.add(TextSpan(text: part));
       }

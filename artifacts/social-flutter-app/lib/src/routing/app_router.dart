@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../core/api_client.dart';
-import '../core/storage_service.dart';
 import '../core/app_colors.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
+import '../features/auth/presentation/forgot_password_screen.dart';
+import '../features/auth/presentation/splash_screen.dart';
 import '../features/profile/presentation/profile_screen.dart' as profile;
 import '../features/feed/presentation/feed_screen.dart' as feed;
 import '../features/feed/presentation/create_post_screen.dart';
@@ -19,22 +21,27 @@ final routerProvider = Provider<GoRouter>((ref) {
   final storageService = ref.watch(storageServiceProvider);
 
   return GoRouter(
-    initialLocation: '/feed',
+    initialLocation: '/splash',
     redirect: (context, state) {
       final token = storageService.getAuthToken();
       final loc = state.matchedLocation;
-      final isAuth = loc == '/login' || loc == '/register';
+
+      if (loc == '/splash') return null;
+
+      final isAuth =
+          loc == '/login' || loc == '/register' || loc == '/forgot-password';
       if (token == null && !isAuth) return '/login';
       if (token != null && isAuth) return '/feed';
       return null;
     },
     routes: [
+      GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(
-          path: '/login',
-          builder: (_, __) => const LoginScreen()),
-      GoRoute(
-          path: '/register',
-          builder: (_, __) => const RegisterScreen()),
+        path: '/forgot-password',
+        builder: (_, _) => const ForgotPasswordScreen(),
+      ),
       GoRoute(
         path: '/messages/:conversationId',
         builder: (_, state) {
@@ -44,34 +51,35 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-          path: '/create-post',
-          builder: (_, __) => const CreatePostScreen()),
+        path: '/create-post',
+        builder: (_, _) => const CreatePostScreen(),
+      ),
       GoRoute(
         path: '/user/:userId',
-        builder: (_, state) => profile.ProfileScreen(
-            userId: state.pathParameters['userId']!),
+        builder: (_, state) =>
+            profile.ProfileScreen(userId: state.pathParameters['userId']!),
       ),
       ShellRoute(
         builder: (context, state, child) =>
             _MainShell(location: state.matchedLocation, child: child),
         routes: [
+          GoRoute(path: '/feed', builder: (_, _) => const feed.FeedScreen()),
           GoRoute(
-              path: '/feed',
-              builder: (_, __) => const feed.FeedScreen()),
+            path: '/explore',
+            builder: (_, _) => const search.ExploreScreen(),
+          ),
           GoRoute(
-              path: '/explore',
-              builder: (_, __) => const search.ExploreScreen()),
+            path: '/messages',
+            builder: (_, _) => const ConversationsScreen(),
+          ),
           GoRoute(
-              path: '/messages',
-              builder: (_, __) => const ConversationsScreen()),
+            path: '/notifications',
+            builder: (_, _) => const notifications.NotificationsScreen(),
+          ),
           GoRoute(
-              path: '/notifications',
-              builder: (_, __) =>
-                  const notifications.NotificationsScreen()),
-          GoRoute(
-              path: '/profile',
-              builder: (_, __) =>
-                  const profile.ProfileScreen(userId: 'me')),
+            path: '/profile',
+            builder: (_, _) => const profile.ProfileScreen(userId: 'me'),
+          ),
         ],
       ),
     ],
@@ -88,21 +96,6 @@ class _MainShell extends StatelessWidget {
 
   bool get _showFab => location == '/feed';
 
-  String get _pageTitle {
-    switch (location) {
-      case '/explore':
-        return 'Explore';
-      case '/messages':
-        return 'Messages';
-      case '/notifications':
-        return 'Activity';
-      case '/profile':
-        return 'Profile';
-      default:
-        return '';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,8 +109,11 @@ class _MainShell extends StatelessWidget {
               backgroundColor: AppColors.primary,
               elevation: 6,
               shape: const CircleBorder(),
-              child: const Icon(Icons.add_rounded,
-                  color: Colors.white, size: 24),
+              child: const Icon(
+                Icons.add_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
             )
           : null,
     );
@@ -126,8 +122,7 @@ class _MainShell extends StatelessWidget {
 
 // ─── App Bar ─────────────────────────────────────────────────────────────────
 
-class _ParallaxaAppBar extends StatelessWidget
-    implements PreferredSizeWidget {
+class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String location;
 
   const _ParallaxaAppBar({required this.location});
@@ -145,46 +140,49 @@ class _ParallaxaAppBar extends StatelessWidget
       titleSpacing: 0,
       leading: Builder(
         builder: (context) => IconButton(
-          icon: const Icon(Icons.menu_rounded,
-              color: AppColors.textPrimary, size: 22),
+          icon: const Icon(
+            Icons.menu_rounded,
+            color: AppColors.textPrimary,
+            size: 22,
+          ),
           onPressed: () => Scaffold.of(context).openDrawer(),
         ),
       ),
-      title: const Text(
-        'Parallaxa',
-        style: TextStyle(
-          fontFamily: 'Sora',
-          fontWeight: FontWeight.w800,
-          fontSize: 20,
-          color: AppColors.textPrimary,
-          letterSpacing: -0.3,
-        ),
+      title: SvgPicture.asset(
+        'assets/images/parallaxa-logo.svg',
+        height: 24,
+        fit: BoxFit.contain,
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.search_rounded,
-              color: AppColors.textPrimary, size: 22),
+          icon: const Icon(
+            Icons.search_rounded,
+            color: AppColors.textPrimary,
+            size: 22,
+          ),
           onPressed: () => context.go('/explore'),
         ),
         IconButton(
-          icon: const Icon(Icons.notifications_none_rounded,
-              color: AppColors.textPrimary, size: 22),
+          icon: const Icon(
+            Icons.notifications_none_rounded,
+            color: AppColors.textPrimary,
+            size: 22,
+          ),
           onPressed: () => context.go('/notifications'),
         ),
         IconButton(
-          icon: const Icon(Icons.chat_bubble_outline_rounded,
-              color: AppColors.textPrimary, size: 22),
+          icon: const Icon(
+            Icons.chat_bubble_outline_rounded,
+            color: AppColors.textPrimary,
+            size: 22,
+          ),
           onPressed: () => context.go('/messages'),
         ),
         const SizedBox(width: 4),
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(0.5),
-        child: Divider(
-          height: 0.5,
-          thickness: 0.5,
-          color: AppColors.border,
-        ),
+        child: Divider(height: 0.5, thickness: 0.5, color: AppColors.border),
       ),
     );
   }
@@ -211,20 +209,19 @@ class _AppDrawer extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded,
-                        color: AppColors.textPrimary, size: 22),
+                    icon: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: AppColors.textPrimary,
+                      size: 22,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                     padding: EdgeInsets.zero,
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    'Parallaxa',
-                    style: TextStyle(
-                      fontFamily: 'Sora',
-                      fontWeight: FontWeight.w800,
-                      fontSize: 20,
-                      color: AppColors.textPrimary,
-                    ),
+                  SvgPicture.asset(
+                    'assets/images/parallaxa-logo.svg',
+                    height: 24,
+                    fit: BoxFit.contain,
                   ),
                 ],
               ),
@@ -233,7 +230,9 @@ class _AppDrawer extends StatelessWidget {
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 8),
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 children: [
                   _DrawerItem(
                     icon: Icons.home_outlined,
@@ -285,8 +284,7 @@ class _AppDrawer extends StatelessWidget {
                       context.go('/profile');
                     },
                   ),
-                  const Divider(
-                      color: AppColors.border, height: 24),
+                  const Divider(color: AppColors.border, height: 24),
                   _DrawerItem(
                     icon: Icons.bookmark_border_rounded,
                     activeIcon: Icons.bookmark_rounded,
@@ -312,8 +310,7 @@ class _AppDrawer extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         shape: const StadiumBorder(),
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         elevation: 0,
                       ),
                       child: const Text(
@@ -358,8 +355,7 @@ class _DrawerItem extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: Row(
           children: [
             Icon(
@@ -373,8 +369,7 @@ class _DrawerItem extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'Sora',
                 fontSize: 20,
-                fontWeight:
-                    isActive ? FontWeight.w800 : FontWeight.w500,
+                fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
                 color: AppColors.textPrimary,
               ),
             ),

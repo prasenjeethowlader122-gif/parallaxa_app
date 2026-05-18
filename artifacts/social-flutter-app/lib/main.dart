@@ -7,6 +7,7 @@ import 'src/routing/app_router.dart';
 import 'src/core/api_client.dart';
 import 'src/core/storage_service.dart';
 import 'src/core/app_colors.dart';
+import 'src/core/widgets/processing_overlay.dart';
 
 final _updater = ShorebirdUpdater();
 
@@ -30,8 +31,7 @@ void main() async {
   runApp(
     ProviderScope(
       overrides: [
-        storageServiceProvider
-            .overrideWithValue(StorageService(prefs)),
+        storageServiceProvider.overrideWithValue(StorageService(prefs)),
       ],
       child: const MainApp(),
     ),
@@ -62,6 +62,9 @@ class MainApp extends ConsumerWidget {
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       routerConfig: router,
+      builder: (context, child) {
+        return ProcessingOverlay(child: child!);
+      },
       theme: ThemeData(
         fontFamily: 'Sora',
         useMaterial3: true,
@@ -143,8 +146,7 @@ class MainApp extends ConsumerWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(
-                color: AppColors.primary, width: 1.5),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
           ),
           hintStyle: const TextStyle(
             color: AppColors.mutedForeground,
@@ -155,7 +157,9 @@ class MainApp extends ConsumerWidget {
             fontSize: 14,
           ),
           contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16, vertical: 16),
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
 
         // Divider

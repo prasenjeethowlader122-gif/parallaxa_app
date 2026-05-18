@@ -19,29 +19,38 @@ class MessageRepository {
         .toList();
   }
 
-  Future<MessagePage> getMessages(String conversationId,
-      {String? cursor, int limit = 30}) async {
-    final response =
-        await _dio.get('/conversations/$conversationId/messages', queryParameters: {
-      if (cursor != null) 'cursor': cursor,
-      'limit': limit,
-    });
+  Future<MessagePage> getMessages(
+    String conversationId, {
+    String? cursor,
+    int limit = 30,
+  }) async {
+    final response = await _dio.get(
+      '/conversations/$conversationId/messages',
+      queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
+    );
     return MessagePage.fromJson(response.data);
   }
 
-  Future<Message> sendMessage(String conversationId,
-      {String? content, String? mediaUrl}) async {
-    final response =
-        await _dio.post('/conversations/$conversationId/messages', data: {
-      if (content != null) 'content': content,
-      if (mediaUrl != null) 'mediaUrl': mediaUrl,
-    });
+  Future<Message> sendMessage(
+    String conversationId, {
+    String? content,
+    String? mediaUrl,
+  }) async {
+    final response = await _dio.post(
+      '/conversations/$conversationId/messages',
+      data: {
+        if (content != null) 'content': content,
+        if (mediaUrl != null) 'mediaUrl': mediaUrl,
+      },
+    );
     return Message.fromJson(response.data);
   }
 
   Future<Conversation> startConversation(String userId) async {
-    final response =
-        await _dio.post('/conversations/start', data: {'userId': userId});
+    final response = await _dio.post(
+      '/conversations/start',
+      data: {'userId': userId},
+    );
     return Conversation.fromJson(response.data);
   }
 }

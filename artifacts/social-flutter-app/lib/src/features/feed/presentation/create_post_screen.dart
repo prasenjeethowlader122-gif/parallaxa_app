@@ -10,8 +10,7 @@ class CreatePostScreen extends ConsumerStatefulWidget {
   const CreatePostScreen({super.key});
 
   @override
-  ConsumerState<CreatePostScreen> createState() =>
-      _CreatePostScreenState();
+  ConsumerState<CreatePostScreen> createState() => _CreatePostScreenState();
 }
 
 class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
@@ -54,8 +53,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final content = _contentController.text.trim();
     if (content.isEmpty && _selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Write something or add a photo')),
+        const SnackBar(content: Text('Write something or add a photo')),
       );
       return;
     }
@@ -63,23 +61,19 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     setState(() => _isPosting = true);
     try {
       final repo = ref.read(postRepositoryProvider);
-      await repo.createPost(
-        content: content.isNotEmpty ? content : null,
-      );
+      await repo.createPost(content: content.isNotEmpty ? content : null);
       ref.invalidate(publicFeedProvider);
       ref.invalidate(followingFeedProvider);
       if (mounted) {
         context.pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post published!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Post published!')));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text('Failed to post: ${e.toString()}')),
+          SnackBar(content: Text('Failed to post: ${e.toString()}')),
         );
       }
     } finally {
@@ -89,8 +83,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hasContent = _contentController.text.trim().isNotEmpty ||
-        _selectedImage != null;
+    final hasContent =
+        _contentController.text.trim().isNotEmpty || _selectedImage != null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -122,27 +116,28 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         centerTitle: true,
         actions: [
           Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: ElevatedButton(
-              onPressed:
-                  _isPosting || !hasContent ? null : _submitPost,
+              onPressed: _isPosting || !hasContent ? null : _submitPost,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.textPrimary,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor:
-                    AppColors.textPrimary.withOpacity(0.3),
+                disabledBackgroundColor: AppColors.textPrimary.withOpacity(0.3),
                 shape: const StadiumBorder(),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 0),
+                  horizontal: 20,
+                  vertical: 0,
+                ),
               ),
               child: _isPosting
                   ? const SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Text(
                       'Post',
@@ -158,10 +153,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(0.5),
-          child: Divider(
-              height: 0.5,
-              thickness: 0.5,
-              color: AppColors.border),
+          child: Divider(height: 0.5, thickness: 0.5, color: AppColors.border),
         ),
       ),
       body: Column(
@@ -192,8 +184,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       ),
                       border: InputBorder.none,
                       filled: false,
-                      counterStyle:
-                          TextStyle(color: AppColors.mutedForeground),
+                      counterStyle: TextStyle(color: AppColors.mutedForeground),
                       contentPadding: EdgeInsets.zero,
                     ),
                     onChanged: (_) => setState(() {}),
@@ -214,19 +205,18 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                           top: 8,
                           right: 8,
                           child: GestureDetector(
-                            onTap: () => setState(
-                                () => _selectedImage = null),
+                            onTap: () => setState(() => _selectedImage = null),
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                 color: Colors.black54,
-                                borderRadius:
-                                    BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(20),
                               ),
                               child: const Icon(
-                                  Icons.close_rounded,
-                                  color: Colors.white,
-                                  size: 16),
+                                Icons.close_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                             ),
                           ),
                         ),
@@ -240,19 +230,22 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           const Divider(height: 0.5, thickness: 0.5),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.image_outlined,
-                        color: AppColors.primary),
+                    icon: const Icon(
+                      Icons.image_outlined,
+                      color: AppColors.primary,
+                    ),
                     onPressed: _isPosting ? null : _pickImage,
                     tooltip: 'Gallery',
                   ),
                   IconButton(
-                    icon: const Icon(Icons.camera_alt_outlined,
-                        color: AppColors.primary),
+                    icon: const Icon(
+                      Icons.camera_alt_outlined,
+                      color: AppColors.primary,
+                    ),
                     onPressed: _isPosting ? null : _takePhoto,
                     tooltip: 'Camera',
                   ),

@@ -23,7 +23,8 @@ class NotificationItem {
     required this.createdAt,
   });
 
-  factory NotificationItem.fromJson(Map<String, dynamic> json) => _$NotificationItemFromJson(json);
+  factory NotificationItem.fromJson(Map<String, dynamic> json) =>
+      _$NotificationItemFromJson(json);
   Map<String, dynamic> toJson() => _$NotificationItemToJson(this);
 }
 
@@ -32,11 +33,9 @@ class NotificationPage {
   final List<NotificationItem> notifications;
   final String? nextCursor;
 
-  NotificationPage({
-    required this.notifications,
-    this.nextCursor,
-  });
+  NotificationPage({required this.notifications, this.nextCursor});
 
-  factory NotificationPage.fromJson(Map<String, dynamic> json) => _$NotificationPageFromJson(json);
+  factory NotificationPage.fromJson(Map<String, dynamic> json) =>
+      _$NotificationPageFromJson(json);
   Map<String, dynamic> toJson() => _$NotificationPageToJson(this);
 }

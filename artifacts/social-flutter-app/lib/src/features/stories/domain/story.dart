@@ -42,7 +42,8 @@ class StoryReaction {
 
   StoryReaction({required this.emoji, required this.count});
 
-  factory StoryReaction.fromJson(Map<String, dynamic> json) => _$StoryReactionFromJson(json);
+  factory StoryReaction.fromJson(Map<String, dynamic> json) =>
+      _$StoryReactionFromJson(json);
   Map<String, dynamic> toJson() => _$StoryReactionToJson(this);
 }
 
@@ -58,6 +59,7 @@ class StoryGroup {
     required this.hasUnviewed,
   });
 
-  factory StoryGroup.fromJson(Map<String, dynamic> json) => _$StoryGroupFromJson(json);
+  factory StoryGroup.fromJson(Map<String, dynamic> json) =>
+      _$StoryGroupFromJson(json);
   Map<String, dynamic> toJson() => _$StoryGroupToJson(this);
 }
