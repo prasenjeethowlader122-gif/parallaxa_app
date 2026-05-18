@@ -26,25 +26,25 @@ args = "Start Backend"
 name = "Start application"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=5000 BASE_PATH=/ pnpm --filter @workspace/mockup-sandbox run dev"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd artifacts/mockup-sandbox && PORT=5000 BASE_PATH=/ pnpm run dev"
+waitForPort = 5000
 
 [[workflows.workflow]]
 name = "Start Backend"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=3000 pnpm --filter @workspace/api-server run dev"
-waitForPort = 3000
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd artifacts/api-server && PORT=3000 pnpm run dev"
+waitForPort = 3000
 
 [[ports]]
 localPort = 3000
@@ -53,10 +53,6 @@ externalPort = 3000
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 26175
-externalPort = 3001
 
 [deployment]
 deploymentTarget = "autoscale"
