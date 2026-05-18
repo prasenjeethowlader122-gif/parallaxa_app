@@ -32,6 +32,15 @@ jobs:
       - name: Setup Shorebird
         uses: shorebirdtech/setup-shorebird@v1
 
+      - name: Bump version (auto-increment build number)
+        run: |
+          CURRENT=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          VERSION_NAME=$(echo $CURRENT | cut -d'+' -f1)
+          BUILD_NUMBER=${{ github.run_number }}
+          NEW_VERSION="${VERSION_NAME}+${BUILD_NUMBER}"
+          echo "Bumping version to $NEW_VERSION"
+          sed -i "s/^version: .*/version: $NEW_VERSION/" pubspec.yaml
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -43,11 +52,9 @@ jobs:
         env:
           SHOREBIRD_TOKEN: sb_api_h_hoa9KjK0CNm0J5FxiwlFLV87jHjSTkLPgH4DIPTDg
 
-      # ✅ Build APK separately after the Shorebird release
       - name: Build APK
         run: flutter build apk --release
 
-      # ✅ Upload APK as a workflow artifact
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
