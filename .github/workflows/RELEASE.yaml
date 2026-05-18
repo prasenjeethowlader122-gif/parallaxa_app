@@ -45,4 +45,4 @@ jobs:
       - name: Shorebird Release (Android)
         run: shorebird release android
         env:
-          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+          SHOREBIRD_TOKEN: sb_api_h_hoa9KjK0CNm0J5FxiwlFLV87jHjSTkLPgH4DIPTDg

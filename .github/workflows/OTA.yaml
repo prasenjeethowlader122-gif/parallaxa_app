@@ -51,4 +51,4 @@ jobs:
             --allow-native-diffs \
             --allow-asset-diffs
         env:
-          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+          SHOREBIRD_TOKEN: sb_api_h_hoa9KjK0CNm0J5FxiwlFLV87jHjSTkLPgH4DIPTDg
