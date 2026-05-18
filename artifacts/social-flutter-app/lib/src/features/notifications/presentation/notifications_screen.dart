@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -63,7 +64,7 @@ class NotificationsScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(
-                  Icons.notifications_none_rounded,
+                  CupertinoIcons.bell,
                   size: 52,
                   color: AppColors.mutedForeground,
                 ),
@@ -147,7 +148,7 @@ class _NotificationRow extends StatelessWidget {
                 : null,
             child: n.fromUser.avatarUrl == null
                 ? const Icon(
-                    Icons.person,
+                    CupertinoIcons.person_fill,
                     color: AppColors.mutedForeground,
                     size: 22,
                   )

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -121,7 +122,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(
-                  Icons.check_circle_outline,
+                  CupertinoIcons.check_mark_circled,
                   size: 80,
                   color: Colors.green,
                 ),
@@ -178,7 +179,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.slate900),
+          icon: const Icon(CupertinoIcons.arrow_left, color: AppColors.slate900),
           onPressed: () => context.pop(),
         ),
       ),
@@ -238,7 +239,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               if (!_showTokenInput)
                 FloatingLabelInput(
                   label: "Email Address",
-                  icon: Icons.mail_outline_rounded,
+                  icon: CupertinoIcons.mail,
                   controller: _emailController,
                   error: _errors['email'],
                   keyboardType: TextInputType.emailAddress,
@@ -249,7 +250,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               else ...[
                 FloatingLabelInput(
                   label: "Reset Token",
-                  icon: Icons.key_outlined,
+                  icon: CupertinoIcons.ticket,
                   controller: _tokenController,
                   error: _errors['token'],
                   textInputAction: TextInputAction.next,
@@ -257,7 +258,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
                 FloatingLabelInput(
                   label: "New Password",
-                  icon: Icons.lock_outline_rounded,
+                  icon: CupertinoIcons.lock,
                   controller: _passwordController,
                   error: _errors['password'],
                   secureTextEntry: !_showPassword,
@@ -269,8 +270,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         setState(() => _showPassword = !_showPassword),
                     icon: Icon(
                       _showPassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+                          ? CupertinoIcons.eye_slash
+                          : CupertinoIcons.eye,
                       color: AppColors.slate500,
                       size: 18,
                     ),

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/app_colors.dart';
@@ -57,14 +58,14 @@ class UserAvatar extends StatelessWidget {
                   ),
                 ),
                 errorWidget: (context, url, error) => Icon(
-                  Icons.person,
+                  CupertinoIcons.person_fill,
                   color: AppColors.slate400,
                   size: size * 0.6,
                 ),
               )
             : Center(
                 child: Icon(
-                  Icons.person,
+                  CupertinoIcons.person_fill,
                   color: AppColors.slate400,
                   size: size * 0.6,
                 ),

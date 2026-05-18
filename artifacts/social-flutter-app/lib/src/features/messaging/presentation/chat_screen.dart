@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -116,7 +117,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         elevation: 0,
         titleSpacing: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(CupertinoIcons.arrow_left, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -130,11 +131,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.phone_outlined, color: Colors.black),
+            icon: const Icon(CupertinoIcons.phone, color: Colors.black),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.videocam_outlined, color: Colors.black),
+            icon: const Icon(CupertinoIcons.videocam, color: Colors.black),
             onPressed: () {},
           ),
         ],
@@ -218,7 +219,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.send,
+                        CupertinoIcons.arrow_up_circle_fill,
                         color: Colors.white,
                         size: 20,
                       ),

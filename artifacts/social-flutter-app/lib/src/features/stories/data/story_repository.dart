@@ -1,5 +1,15 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api_client.dart';
 import '../domain/story.dart';
+
+final storyRepositoryProvider = Provider<StoryRepository>((ref) {
+  return StoryRepository(ref.watch(dioProvider));
+});
+
+final userStoriesProvider = FutureProvider.family<List<Story>, String>((ref, userId) {
+  return ref.watch(storyRepositoryProvider).getUserStories(userId);
+});
 
 class StoryRepository {
   final Dio _dio;
@@ -19,5 +29,23 @@ class StoryRepository {
 
   Future<void> reactToStory(String storyId, String emoji) async {
     await _dio.post('/stories/$storyId/react', data: {'emoji': emoji});
+  }
+
+  Future<List<Story>> getUserStories(String userId) async {
+    final response = await _dio.get('/users/$userId/stories');
+    return (response.data as List).map((e) => Story.fromJson(e)).toList();
+  }
+
+  Future<Story> createStory({
+    required String mediaUrl,
+    required String mediaType,
+    int? duration,
+  }) async {
+    final response = await _dio.post('/stories', data: {
+      'mediaUrl': mediaUrl,
+      'mediaType': mediaType,
+      if (duration != null) 'duration': duration,
+    });
+    return Story.fromJson(response.data);
   }
 }
