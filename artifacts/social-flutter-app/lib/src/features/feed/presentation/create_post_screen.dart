@@ -32,10 +32,12 @@ class HighlightsEditingController extends TextEditingController {
     text.splitMapJoin(
       pattern,
       onMatch: (m) {
-        children.add(TextSpan(
-          text: m.group(0),
-          style: style?.copyWith(color: const Color(0xFF1D9BF0)),
-        ));
+        children.add(
+          TextSpan(
+            text: m.group(0),
+            style: style?.copyWith(color: const Color(0xFF1D9BF0)),
+          ),
+        );
         return '';
       },
       onNonMatch: (s) {
@@ -108,8 +110,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final textBeforeCursor = text.substring(0, selection.baseOffset);
     final textAfterCursor = text.substring(selection.baseOffset);
 
-    final newTextBefore =
-        textBeforeCursor.replaceFirst(RegExp(r'@\w*$'), '@$username ');
+    final newTextBefore = textBeforeCursor.replaceFirst(
+      RegExp(r'@\w*$'),
+      '@$username ',
+    );
     _contentController.value = TextEditingValue(
       text: newTextBefore + textAfterCursor,
       selection: TextSelection.collapsed(offset: newTextBefore.length),
@@ -152,9 +156,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         ),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'e.g. Dhaka, Bangladesh',
-          ),
+          decoration: const InputDecoration(hintText: 'e.g. Dhaka, Bangladesh'),
           autofocus: true,
         ),
         actions: [
@@ -220,7 +222,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final hasContent =
         _contentController.text.trim().isNotEmpty || _selectedImage != null;
     final canPost =
-        !_isPosting && hasContent && _contentController.text.length <= _charLimit;
+        !_isPosting &&
+        hasContent &&
+        _contentController.text.length <= _charLimit;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -229,8 +233,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded,
-              color: AppColors.textPrimary, size: 24),
+          icon: const Icon(
+            Icons.close_rounded,
+            color: AppColors.textPrimary,
+            size: 24,
+          ),
           onPressed: _isPosting ? null : () => context.pop(),
         ),
         actions: [
@@ -246,21 +253,25 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 minimumSize: const Size(68, 36),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
               child: _isPosting
                   ? const SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Text(
                       'Post',
                       style: TextStyle(
-                          fontFamily: 'Sora',
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15),
+                        fontFamily: 'Sora',
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
                     ),
             ),
           ),
@@ -272,8 +283,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             child: Stack(
               children: [
                 SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -312,13 +325,16 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                               decoration: const InputDecoration(
                                 hintText: "What's happening?!",
                                 hintStyle: TextStyle(
-                                    color: Color(0xFFAAB8C2), fontSize: 18),
+                                  color: Color(0xFFAAB8C2),
+                                  fontSize: 18,
+                                ),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
                                 filled: false,
-                                contentPadding:
-                                    EdgeInsets.symmetric(vertical: 8),
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
                               ),
                               onChanged: (_) => setState(() {}),
                             ),
@@ -353,8 +369,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                           color: Colors.black54,
                                           shape: BoxShape.circle,
                                         ),
-                                        child: const Icon(Icons.close_rounded,
-                                            color: Colors.white, size: 16),
+                                        child: const Icon(
+                                          Icons.close_rounded,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -395,12 +414,16 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 }
 
 // ─── Mention Suggestions ─────────────────────────────────────────────────────
-final searchUsersProvider =
-    FutureProvider.family<List<UserSummary>, String>((ref, query) async {
+final searchUsersProvider = FutureProvider.family<List<UserSummary>, String>((
+  ref,
+  query,
+) async {
   if (query.isEmpty) return [];
   final dio = ref.watch(dioProvider);
-  final response =
-      await dio.get('/search', queryParameters: {'q': query, 'type': 'users'});
+  final response = await dio.get(
+    '/search',
+    queryParameters: {'q': query, 'type': 'users'},
+  );
   final users = (response.data['users'] as List)
       .map((u) => UserSummary.fromJson(u))
       .toList();
@@ -458,17 +481,24 @@ class _MentionSuggestions extends ConsumerWidget {
                               ? user.displayName[0].toUpperCase()
                               : '?',
                           style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1D9BF0)),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1D9BF0),
+                          ),
                         )
                       : null,
                 ),
-                title: Text(user.displayName,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, color: Color(0xFF14171A))),
-                subtitle: Text('@${user.username}',
-                    style: const TextStyle(color: Color(0xFF657786))),
+                title: Text(
+                  user.displayName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF14171A),
+                  ),
+                ),
+                subtitle: Text(
+                  '@${user.username}',
+                  style: const TextStyle(color: Color(0xFF657786)),
+                ),
               );
             },
           ),
@@ -478,7 +508,9 @@ class _MentionSuggestions extends ConsumerWidget {
         width: 250,
         height: 50,
         decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(12)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
       error: (_, __) => const SizedBox.shrink(),
@@ -506,9 +538,10 @@ class _AudienceChip extends StatelessWidget {
           Text(
             'Everyone',
             style: TextStyle(
-                color: Color(0xFF1D9BF0),
-                fontSize: 11,
-                fontWeight: FontWeight.w600),
+              color: Color(0xFF1D9BF0),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -533,21 +566,28 @@ class _LocationTag extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.location_on_rounded,
-              color: Color(0xFF1D9BF0), size: 14),
+          const Icon(
+            Icons.location_on_rounded,
+            color: Color(0xFF1D9BF0),
+            size: 14,
+          ),
           const SizedBox(width: 5),
           Text(
             label,
             style: const TextStyle(
-                color: Color(0xFF1D9BF0),
-                fontSize: 13,
-                fontWeight: FontWeight.w600),
+              color: Color(0xFF1D9BF0),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(width: 5),
           GestureDetector(
             onTap: onRemove,
-            child: const Icon(Icons.close_rounded,
-                color: Color(0xFF1D9BF0), size: 14),
+            child: const Icon(
+              Icons.close_rounded,
+              color: Color(0xFF1D9BF0),
+              size: 14,
+            ),
           ),
         ],
       ),
@@ -589,30 +629,45 @@ class _Toolbar extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.image_outlined,
-                color: Color(0xFF1D9BF0), size: 24),
+            icon: const Icon(
+              Icons.image_outlined,
+              color: Color(0xFF1D9BF0),
+              size: 24,
+            ),
             onPressed: onPickImage,
           ),
           IconButton(
-            icon: const Icon(Icons.gif_box_outlined,
-                color: Color(0xFF1D9BF0), size: 24),
+            icon: const Icon(
+              Icons.gif_box_outlined,
+              color: Color(0xFF1D9BF0),
+              size: 24,
+            ),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.poll_outlined,
-                color: Color(0xFF1D9BF0), size: 24),
+            icon: const Icon(
+              Icons.poll_outlined,
+              color: Color(0xFF1D9BF0),
+              size: 24,
+            ),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.emoji_emotions_outlined,
-                color: Color(0xFF1D9BF0), size: 24),
+            icon: const Icon(
+              Icons.emoji_emotions_outlined,
+              color: Color(0xFF1D9BF0),
+              size: 24,
+            ),
             onPressed: () {},
           ),
           Stack(
             children: [
               IconButton(
-                icon: const Icon(Icons.location_on_outlined,
-                    color: Color(0xFF1D9BF0), size: 24),
+                icon: const Icon(
+                  Icons.location_on_outlined,
+                  color: Color(0xFF1D9BF0),
+                  size: 24,
+                ),
                 onPressed: onLocationPress,
               ),
               if (isLocationActive)
@@ -623,7 +678,9 @@ class _Toolbar extends StatelessWidget {
                     width: 6,
                     height: 6,
                     decoration: const BoxDecoration(
-                        color: Color(0xFF1D9BF0), shape: BoxShape.circle),
+                      color: Color(0xFF1D9BF0),
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
             ],
@@ -642,8 +699,11 @@ class _Toolbar extends StatelessWidget {
                 border: Border.all(color: const Color(0xFFE1E8ED)),
               ),
               child: const Center(
-                child: Icon(Icons.calendar_today_outlined,
-                    color: Color(0xFF1D9BF0), size: 16),
+                child: Icon(
+                  Icons.calendar_today_outlined,
+                  color: Color(0xFF1D9BF0),
+                  size: 16,
+                ),
               ),
             ),
           ],
@@ -666,8 +726,8 @@ class _CharRing extends StatelessWidget {
     final Color color = remaining <= 0
         ? const Color(0xFFE0245E)
         : remaining <= 20
-            ? const Color(0xFFF5A623)
-            : const Color(0xFF1D9BF0);
+        ? const Color(0xFFF5A623)
+        : const Color(0xFF1D9BF0);
 
     return SizedBox(
       width: 26,
