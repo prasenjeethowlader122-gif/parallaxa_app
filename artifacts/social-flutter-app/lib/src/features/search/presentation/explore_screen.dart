@@ -19,6 +19,7 @@ final _searchQueryProvider = NotifierProvider<_SearchQueryNotifier, String>(
 class _SearchQueryNotifier extends Notifier<String> {
   @override
   String build() => '';
+  @override
   set state(String value) => super.state = value;
 }
 

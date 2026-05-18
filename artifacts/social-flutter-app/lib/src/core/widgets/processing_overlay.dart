@@ -17,7 +17,7 @@ class ProcessingOverlay extends ConsumerWidget {
         child,
         if (state.isProcessing)
           Container(
-            color: Colors.white.withOpacity(0.9),
+            color: const Color.fromRGBO(255, 255, 255, 0.9),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,

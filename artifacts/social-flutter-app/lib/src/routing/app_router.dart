@@ -35,12 +35,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+      GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(
         path: '/forgot-password',
-        builder: (_, __) => const ForgotPasswordScreen(),
+        builder: (_, _) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/messages/:conversationId',
@@ -52,7 +52,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/create-post',
-        builder: (_, __) => const CreatePostScreen(),
+        builder: (_, _) => const CreatePostScreen(),
       ),
       GoRoute(
         path: '/user/:userId',
@@ -63,22 +63,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, child) =>
             _MainShell(location: state.matchedLocation, child: child),
         routes: [
-          GoRoute(path: '/feed', builder: (_, __) => const feed.FeedScreen()),
+          GoRoute(path: '/feed', builder: (_, _) => const feed.FeedScreen()),
           GoRoute(
             path: '/explore',
-            builder: (_, __) => const search.ExploreScreen(),
+            builder: (_, _) => const search.ExploreScreen(),
           ),
           GoRoute(
             path: '/messages',
-            builder: (_, __) => const ConversationsScreen(),
+            builder: (_, _) => const ConversationsScreen(),
           ),
           GoRoute(
             path: '/notifications',
-            builder: (_, __) => const notifications.NotificationsScreen(),
+            builder: (_, _) => const notifications.NotificationsScreen(),
           ),
           GoRoute(
             path: '/profile',
-            builder: (_, __) => const profile.ProfileScreen(userId: 'me'),
+            builder: (_, _) => const profile.ProfileScreen(userId: 'me'),
           ),
         ],
       ),
