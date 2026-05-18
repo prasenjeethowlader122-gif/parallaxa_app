@@ -26,7 +26,11 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       await ref.read(adminRepositoryProvider).verifyUser(user.id);
       ref.invalidate(adminUsersProvider);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 
@@ -62,32 +66,54 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
               final user = users[index];
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
-                  child: user.avatarUrl == null ? const Icon(CupertinoIcons.person) : null,
+                  backgroundImage: user.avatarUrl != null
+                      ? NetworkImage(user.avatarUrl!)
+                      : null,
+                  child: user.avatarUrl == null
+                      ? const Icon(CupertinoIcons.person)
+                      : null,
                 ),
-                title: Text(user.displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(
+                  user.displayName,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 subtitle: Text('@${user.username}'),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (user.isVerified)
-                      const Icon(CupertinoIcons.checkmark_seal_fill, color: AppColors.verified, size: 20)
+                      const Icon(
+                        CupertinoIcons.checkmark_seal_fill,
+                        color: AppColors.verified,
+                        size: 20,
+                      )
                     else
                       IconButton(
-                        icon: const Icon(CupertinoIcons.checkmark_seal, size: 20),
+                        icon: const Icon(
+                          CupertinoIcons.checkmark_seal,
+                          size: 20,
+                        ),
                         onPressed: () => _toggleVerify(user),
                       ),
                     PopupMenuButton(
-                      icon: const Icon(CupertinoIcons.ellipsis_vertical, size: 20),
+                      icon: const Icon(
+                        CupertinoIcons.ellipsis_vertical,
+                        size: 20,
+                      ),
                       itemBuilder: (context) => [
                         PopupMenuItem(
-                          child: Text(user.isFrozen == true ? 'Unfreeze' : 'Freeze'),
+                          child: Text(
+                            user.isFrozen == true ? 'Unfreeze' : 'Freeze',
+                          ),
                           onTap: () {
                             // Logic
                           },
                         ),
                         const PopupMenuItem(
-                          child: Text('Delete User', style: TextStyle(color: Colors.red)),
+                          child: Text(
+                            'Delete User',
+                            style: TextStyle(color: Colors.red),
+                          ),
                         ),
                       ],
                     ),

@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/post_repository.dart';
-import '../domain/post.dart';
 import '../../../core/app_colors.dart';
 import 'post_card.dart';
 
@@ -31,18 +30,17 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      await ref.read(postRepositoryProvider).createPost(
-        content: content,
-        parentPostId: widget.postId,
-      );
+      await ref
+          .read(postRepositoryProvider)
+          .createPost(content: content, parentPostId: widget.postId);
       _commentController.clear();
       ref.invalidate(postRepliesProvider(widget.postId));
       ref.invalidate(postDetailProvider(widget.postId));
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to post comment')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to post comment')));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -91,7 +89,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   const Divider(height: 1),
                   repliesAsync.when(
                     data: (page) => Column(
-                      children: page.posts.map((reply) => PostCard(post: reply)).toList(),
+                      children: page.posts
+                          .map((reply) => PostCard(post: reply))
+                          .toList(),
                     ),
                     loading: () => const Center(
                       child: Padding(
@@ -138,7 +138,9 @@ class _CommentInput extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AppColors.background,
-        border: const Border(top: BorderSide(color: AppColors.border, width: 0.5)),
+        border: const Border(
+          top: BorderSide(color: AppColors.border, width: 0.5),
+        ),
       ),
       child: Row(
         children: [

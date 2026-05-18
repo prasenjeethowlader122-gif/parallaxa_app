@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../data/story_repository.dart';
-import '../../../core/app_colors.dart';
 
 class StoryCreateScreen extends ConsumerStatefulWidget {
   const StoryCreateScreen({super.key});
@@ -33,13 +32,21 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
     try {
       // In a real app, you'd upload the image to S3/Firebase and get a URL
       // For now, we'll simulate it by calling the repository with a placeholder URL
-      await ref.read(storyRepositoryProvider).createStory(
-        mediaUrl: 'https://via.placeholder.com/1080x1920',
-        mediaType: 'image',
-      );
-      if (mounted) context.pop();
+      await ref
+          .read(storyRepositoryProvider)
+          .createStory(
+            mediaUrl: 'https://via.placeholder.com/1080x1920',
+            mediaType: 'image',
+          );
+      if (mounted) {
+        context.pop();
+      }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
@@ -51,7 +58,10 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text('Add to Story', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Add to Story',
+          style: TextStyle(color: Colors.white),
+        ),
         leading: IconButton(
           icon: const Icon(CupertinoIcons.xmark, color: Colors.white),
           onPressed: () => context.pop(),
@@ -61,8 +71,14 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
             TextButton(
               onPressed: _isUploading ? null : _uploadStory,
               child: _isUploading
-                ? const CupertinoActivityIndicator(color: Colors.white)
-                : const Text('Share', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ? const CupertinoActivityIndicator(color: Colors.white)
+                  : const Text(
+                      'Share',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
         ],
       ),
@@ -71,7 +87,11 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(CupertinoIcons.camera_fill, color: Colors.white, size: 64),
+                  const Icon(
+                    CupertinoIcons.camera_fill,
+                    color: Colors.white,
+                    size: 64,
+                  ),
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: _pickImage,

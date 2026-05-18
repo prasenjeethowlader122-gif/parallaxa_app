@@ -2,18 +2,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../auth/data/auth_repository.dart';
-import '../../auth/domain/user.dart';
 import '../../../core/app_colors.dart';
 
 class AccountVerificationScreen extends ConsumerStatefulWidget {
   const AccountVerificationScreen({super.key});
 
   @override
-  ConsumerState<AccountVerificationScreen> createState() => _AccountVerificationScreenState();
+  ConsumerState<AccountVerificationScreen> createState() =>
+      _AccountVerificationScreenState();
 }
 
-class _AccountVerificationScreenState extends ConsumerState<AccountVerificationScreen> {
+class _AccountVerificationScreenState
+    extends ConsumerState<AccountVerificationScreen> {
   final _otpController = TextEditingController();
   String _step = 'start';
   String? _verifyingType;
@@ -36,14 +36,22 @@ class _AccountVerificationScreenState extends ConsumerState<AccountVerificationS
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 
   void _verifyOTP() {
     if (_otpController.text.length != 6) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${_verifyingType == 'email' ? 'Email' : 'Phone'} verified successfully!')),
+      SnackBar(
+        content: Text(
+          '${_verifyingType == 'email' ? 'Email' : 'Phone'} verified successfully!',
+        ),
+      ),
     );
     setState(() {
       _step = 'start';
@@ -73,7 +81,10 @@ class _AccountVerificationScreenState extends ConsumerState<AccountVerificationS
             if (_verifyingType != null) ...[
               Text(
                 'Verify your $_verifyingType',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -86,16 +97,24 @@ class _AccountVerificationScreenState extends ConsumerState<AccountVerificationS
                 textAlign: TextAlign.center,
                 keyboardType: TextInputType.number,
                 maxLength: 6,
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 10),
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 10,
+                ),
                 decoration: const InputDecoration(hintText: '000000'),
                 onChanged: (val) {
-                  if (val.length == 6) _verifyOTP();
+                  if (val.length == 6) {
+                    _verifyOTP();
+                  }
                 },
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _otpController.text.length == 6 ? _verifyOTP : null,
-                style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 56)),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 56),
+                ),
                 child: const Text('Verify'),
               ),
               TextButton(
@@ -106,11 +125,18 @@ class _AccountVerificationScreenState extends ConsumerState<AccountVerificationS
               const Center(
                 child: Column(
                   children: [
-                    Icon(CupertinoIcons.info_circle, size: 64, color: AppColors.primary),
+                    Icon(
+                      CupertinoIcons.info_circle,
+                      size: 64,
+                      color: AppColors.primary,
+                    ),
                     SizedBox(height: 24),
                     Text(
                       'Request Pending',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     SizedBox(height: 16),
                     Text(
@@ -153,8 +179,8 @@ class _AccountVerificationScreenState extends ConsumerState<AccountVerificationS
                   backgroundColor: Colors.black,
                 ),
                 child: _isLoading
-                  ? const CupertinoActivityIndicator(color: Colors.white)
-                  : const Text('Request Verification'),
+                    ? const CupertinoActivityIndicator(color: Colors.white)
+                    : const Text('Request Verification'),
               ),
             ],
           ],
@@ -192,7 +218,10 @@ class _VerificationOption extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
               child: Icon(icon, color: AppColors.primary),
             ),
             const SizedBox(width: 16),
@@ -200,12 +229,25 @@ class _VerificationOption extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.mutedForeground)),
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
                 ],
               ),
             ),
-            const Icon(CupertinoIcons.chevron_right, size: 16, color: AppColors.mutedForeground),
+            const Icon(
+              CupertinoIcons.chevron_right,
+              size: 16,
+              color: AppColors.mutedForeground,
+            ),
           ],
         ),
       ),
