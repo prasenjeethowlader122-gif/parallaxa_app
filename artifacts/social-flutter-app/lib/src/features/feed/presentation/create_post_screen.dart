@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'dart:io';
 import 'dart:math' as math;
 import '../data/post_repository.dart';
+import '../domain/post.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../auth/domain/user.dart';
 import '../../../core/app_colors.dart';
 import '../../../core/api_client.dart';
 import '../../profile/presentation/widgets/user_avatar.dart';
-import '../../search/presentation/explore_screen.dart'; // Assuming search repository or providers might be here
+
+final currentUserProvider = FutureProvider<User>((ref) {
+  return ref.watch(authRepositoryProvider).getMe();
+});
 
 // ─── Highlights Controller ──────────────────────────────────────────────────
 class HighlightsEditingController extends TextEditingController {
@@ -80,7 +84,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final selection = _contentController.selection;
 
     if (!selection.isCollapsed || selection.baseOffset <= 0) {
-      setState(() => _mentionKeyword = null);
+      if (_mentionKeyword != null) {
+        setState(() => _mentionKeyword = null);
+      }
       return;
     }
 
@@ -102,7 +108,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final textBeforeCursor = text.substring(0, selection.baseOffset);
     final textAfterCursor = text.substring(selection.baseOffset);
 
-    final newTextBefore = textBeforeCursor.replaceFirst(RegExp(r'@\w*$'), '@$username ');
+    final newTextBefore =
+        textBeforeCursor.replaceFirst(RegExp(r'@\w*$'), '@$username ');
     _contentController.value = TextEditingValue(
       text: newTextBefore + textAfterCursor,
       selection: TextSelection.collapsed(offset: newTextBefore.length),
@@ -139,7 +146,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Location', style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Add Location',
+          style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.bold),
+        ),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
@@ -148,7 +158,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           autofocus: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context, controller.text),
             child: const Text('Add'),
@@ -171,7 +184,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     try {
       final repo = ref.read(postRepositoryProvider);
 
-      final hashtags = RegExp(r'#\w+').allMatches(content).map((m) => m.group(0)!.substring(1).toLowerCase()).toList();
+      final hashtags = RegExp(r'#\w+')
+          .allMatches(content)
+          .map((m) => m.group(0)!.substring(1).toLowerCase())
+          .toList();
 
       await repo.createPost(
         content: content.isNotEmpty ? content : null,
@@ -199,9 +215,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserProvider).value;
-    final hasContent = _contentController.text.trim().isNotEmpty || _selectedImage != null;
-    final canPost = !_isPosting && hasContent && _contentController.text.length <= _charLimit;
+    final userAsync = ref.watch(currentUserProvider);
+    final user = userAsync.value;
+    final hasContent =
+        _contentController.text.trim().isNotEmpty || _selectedImage != null;
+    final canPost =
+        !_isPosting && hasContent && _contentController.text.length <= _charLimit;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -210,7 +229,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const HugeIcon(icon: HugeIcons.stroke01Cancel01, color: AppColors.textPrimary, size: 22),
+          icon: const Icon(Icons.close_rounded,
+              color: AppColors.textPrimary, size: 24),
           onPressed: _isPosting ? null : () => context.pop(),
         ),
         actions: [
@@ -225,17 +245,22 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 elevation: 0,
                 minimumSize: const Size(68, 36),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
               ),
               child: _isPosting
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
                     )
                   : const Text(
                       'Post',
-                      style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w800, fontSize: 15),
+                      style: TextStyle(
+                          fontFamily: 'Sora',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15),
                     ),
             ),
           ),
@@ -247,7 +272,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             child: Stack(
               children: [
                 SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -285,12 +311,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                               ),
                               decoration: const InputDecoration(
                                 hintText: "What's happening?!",
-                                hintStyle: TextStyle(color: Color(0xFFAAB8C2), fontSize: 18),
+                                hintStyle: TextStyle(
+                                    color: Color(0xFFAAB8C2), fontSize: 18),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
                                 filled: false,
-                                contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                contentPadding:
+                                    EdgeInsets.symmetric(vertical: 8),
                               ),
                               onChanged: (_) => setState(() {}),
                             ),
@@ -317,14 +345,16 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                     top: 10,
                                     right: 10,
                                     child: GestureDetector(
-                                      onTap: () => setState(() => _selectedImage = null),
+                                      onTap: () =>
+                                          setState(() => _selectedImage = null),
                                       child: Container(
                                         padding: const EdgeInsets.all(6),
                                         decoration: const BoxDecoration(
                                           color: Colors.black54,
                                           shape: BoxShape.circle,
                                         ),
-                                        child: const Icon(Icons.close_rounded, color: Colors.white, size: 16),
+                                        child: const Icon(Icons.close_rounded,
+                                            color: Colors.white, size: 16),
                                       ),
                                     ),
                                   ),
@@ -340,7 +370,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 if (_mentionKeyword != null)
                   Positioned(
                     left: 72,
-                    top: 60, // Rough estimate, ideally you'd use a LayerLink and CompositedTransformFollower
+                    top:
+                        60, // Rough estimate, ideally you'd use a LayerLink and CompositedTransformFollower
                     child: _MentionSuggestions(
                       keyword: _mentionKeyword!,
                       onSelect: _onSuggestionSelect,
@@ -364,11 +395,15 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 }
 
 // ─── Mention Suggestions ─────────────────────────────────────────────────────
-final searchUsersProvider = FutureProvider.family<List<UserSummary>, String>((ref, query) async {
+final searchUsersProvider =
+    FutureProvider.family<List<UserSummary>, String>((ref, query) async {
   if (query.isEmpty) return [];
   final dio = ref.watch(dioProvider);
-  final response = await dio.get('/search', queryParameters: {'q': query, 'type': 'users'});
-  final users = (response.data['users'] as List).map((u) => UserSummary.fromJson(u)).toList();
+  final response =
+      await dio.get('/search', queryParameters: {'q': query, 'type': 'users'});
+  final users = (response.data['users'] as List)
+      .map((u) => UserSummary.fromJson(u))
+      .toList();
   return users;
 });
 
@@ -404,7 +439,8 @@ class _MentionSuggestions extends ConsumerWidget {
             shrinkWrap: true,
             padding: EdgeInsets.zero,
             itemCount: users.length,
-            separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF2F2F2)),
+            separatorBuilder: (_, __) =>
+                const Divider(height: 1, color: Color(0xFFF2F2F2)),
             itemBuilder: (context, index) {
               final user = users[index];
               return ListTile(
@@ -413,16 +449,26 @@ class _MentionSuggestions extends ConsumerWidget {
                 leading: CircleAvatar(
                   radius: 17,
                   backgroundColor: const Color(0xFFE8F5FD),
-                  backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
+                  backgroundImage: user.avatarUrl != null
+                      ? NetworkImage(user.avatarUrl!)
+                      : null,
                   child: user.avatarUrl == null
                       ? Text(
-                          user.displayName[0].toUpperCase(),
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1D9BF0)),
+                          user.displayName.isNotEmpty
+                              ? user.displayName[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1D9BF0)),
                         )
                       : null,
                 ),
-                title: Text(user.displayName, style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF14171A))),
-                subtitle: Text('@${user.username}', style: const TextStyle(color: Color(0xFF657786))),
+                title: Text(user.displayName,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, color: Color(0xFF14171A))),
+                subtitle: Text('@${user.username}',
+                    style: const TextStyle(color: Color(0xFF657786))),
               );
             },
           ),
@@ -431,7 +477,8 @@ class _MentionSuggestions extends ConsumerWidget {
       loading: () => Container(
         width: 250,
         height: 50,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(12)),
         child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
       error: (_, __) => const SizedBox.shrink(),
@@ -454,11 +501,14 @@ class _AudienceChip extends StatelessWidget {
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          HugeIcon(icon: HugeIcons.stroke01Globe02, color: Color(0xFF1D9BF0), size: 11),
+          Icon(Icons.public_rounded, color: Color(0xFF1D9BF0), size: 14),
           SizedBox(width: 4),
           Text(
             'Everyone',
-            style: TextStyle(color: Color(0xFF1D9BF0), fontSize: 11, fontWeight: FontWeight.w600),
+            style: TextStyle(
+                color: Color(0xFF1D9BF0),
+                fontSize: 11,
+                fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -483,16 +533,21 @@ class _LocationTag extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const HugeIcon(icon: HugeIcons.stroke01Location01, color: Color(0xFF1D9BF0), size: 13),
+          const Icon(Icons.location_on_rounded,
+              color: Color(0xFF1D9BF0), size: 14),
           const SizedBox(width: 5),
           Text(
             label,
-            style: const TextStyle(color: Color(0xFF1D9BF0), fontSize: 13, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+                color: Color(0xFF1D9BF0),
+                fontSize: 13,
+                fontWeight: FontWeight.w600),
           ),
           const SizedBox(width: 5),
           GestureDetector(
             onTap: onRemove,
-            child: const HugeIcon(icon: HugeIcons.stroke01Cancel01, color: Color(0xFF1D9BF0), size: 12),
+            child: const Icon(Icons.close_rounded,
+                color: Color(0xFF1D9BF0), size: 14),
           ),
         ],
       ),
@@ -527,30 +582,37 @@ class _Toolbar extends StatelessWidget {
         left: 14,
         right: 14,
         top: 12,
-        bottom: MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom : 16,
+        bottom: MediaQuery.of(context).padding.bottom > 0
+            ? MediaQuery.of(context).padding.bottom
+            : 16,
       ),
       child: Row(
         children: [
           IconButton(
-            icon: const HugeIcon(icon: HugeIcons.stroke01Image01, color: Color(0xFF1D9BF0), size: 22),
+            icon: const Icon(Icons.image_outlined,
+                color: Color(0xFF1D9BF0), size: 24),
             onPressed: onPickImage,
           ),
           IconButton(
-            icon: const HugeIcon(icon: HugeIcons.stroke01Gif01, color: Color(0xFF1D9BF0), size: 22),
+            icon: const Icon(Icons.gif_box_outlined,
+                color: Color(0xFF1D9BF0), size: 24),
             onPressed: () {},
           ),
           IconButton(
-            icon: const HugeIcon(icon: HugeIcons.stroke01BarChart02, color: Color(0xFF1D9BF0), size: 22),
+            icon: const Icon(Icons.poll_outlined,
+                color: Color(0xFF1D9BF0), size: 24),
             onPressed: () {},
           ),
           IconButton(
-            icon: const HugeIcon(icon: HugeIcons.stroke01Smile, color: Color(0xFF1D9BF0), size: 22),
+            icon: const Icon(Icons.emoji_emotions_outlined,
+                color: Color(0xFF1D9BF0), size: 24),
             onPressed: () {},
           ),
           Stack(
             children: [
               IconButton(
-                icon: const HugeIcon(icon: HugeIcons.stroke01Location01, color: Color(0xFF1D9BF0), size: 22),
+                icon: const Icon(Icons.location_on_outlined,
+                    color: Color(0xFF1D9BF0), size: 24),
                 onPressed: onLocationPress,
               ),
               if (isLocationActive)
@@ -560,7 +622,8 @@ class _Toolbar extends StatelessWidget {
                   child: Container(
                     width: 6,
                     height: 6,
-                    decoration: const BoxDecoration(color: Color(0xFF1D9BF0), shape: BoxShape.circle),
+                    decoration: const BoxDecoration(
+                        color: Color(0xFF1D9BF0), shape: BoxShape.circle),
                   ),
                 ),
             ],
@@ -579,7 +642,8 @@ class _Toolbar extends StatelessWidget {
                 border: Border.all(color: const Color(0xFFE1E8ED)),
               ),
               child: const Center(
-                child: HugeIcon(icon: HugeIcons.stroke01CalendarCheckOut01, color: Color(0xFF1D9BF0), size: 16),
+                child: Icon(Icons.calendar_today_outlined,
+                    color: Color(0xFF1D9BF0), size: 16),
               ),
             ),
           ],
@@ -623,7 +687,9 @@ class _CharRing extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: remaining <= 0 ? const Color(0xFFE0245E) : const Color(0xFF536471),
+                color: remaining <= 0
+                    ? const Color(0xFFE0245E)
+                    : const Color(0xFF536471),
               ),
             ),
         ],
