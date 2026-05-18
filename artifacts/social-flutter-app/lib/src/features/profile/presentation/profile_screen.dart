@@ -7,6 +7,7 @@ import '../../feed/domain/post.dart';
 import '../data/profile_repository.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/api_client.dart';
+import '../../../core/processing_provider.dart';
 import '../../../core/storage_service.dart';
 import '../../../core/app_colors.dart';
 
@@ -77,10 +78,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   Future<void> _logout() async {
+    ref.read(processingProvider.notifier).show("Logging out...");
     try {
       await ref.read(authRepositoryProvider).logout();
     } catch (_) {}
     await ref.read(storageServiceProvider).clearAll();
+    ref.read(processingProvider.notifier).hide();
     if (mounted) context.go('/login');
   }
 

@@ -7,6 +7,7 @@ import 'src/routing/app_router.dart';
 import 'src/core/api_client.dart';
 import 'src/core/storage_service.dart';
 import 'src/core/app_colors.dart';
+import 'src/core/widgets/processing_overlay.dart';
 
 final _updater = ShorebirdUpdater();
 
@@ -62,6 +63,9 @@ class MainApp extends ConsumerWidget {
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       routerConfig: router,
+      builder: (context, child) {
+        return ProcessingOverlay(child: child!);
+      },
       theme: ThemeData(
         fontFamily: 'Sora',
         useMaterial3: true,

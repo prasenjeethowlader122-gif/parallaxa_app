@@ -67,4 +67,15 @@ class AuthRepository {
     });
     return List<String>.from(response.data['suggestions'] ?? []);
   }
+
+  Future<void> forgotPassword(String email) async {
+    await _dio.post('/auth/forgot-password', data: {'email': email});
+  }
+
+  Future<void> resetPassword(String token, String password) async {
+    await _dio.post('/auth/reset-password', data: {
+      'token': token,
+      'password': password,
+    });
+  }
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../data/auth_repository.dart';
 import '../../../core/api_client.dart';
 import '../../../core/app_colors.dart';
+import '../../../core/processing_provider.dart';
 import 'widgets/floating_label_input.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -184,6 +186,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_validateStep()) return;
 
+    ref.read(processingProvider.notifier).show("Creating account...");
     setState(() => _isLoading = true);
     try {
       final authRepo = ref.read(authRepositoryProvider);
@@ -206,15 +209,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String errorMessage = "Registration failed. Please try again.";
+        if (e is DioException) {
+          errorMessage = e.response?.data['message'] ?? errorMessage;
+        } else if (e.toString().contains('409')) {
+          errorMessage = "Username or email already taken";
+        }
         setState(() {
           _errors = {
-            'general': e.toString().contains('409')
-                ? "Username or email already taken"
-                : "Registration failed. Please try again.",
+            'general': errorMessage,
           };
         });
       }
     } finally {
+      ref.read(processingProvider.notifier).hide();
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -249,6 +257,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget _renderStep() {
     if (_step == 0) {
       return FloatingLabelInput(
+        key: const ValueKey(0),
         label: "Full Name",
         icon: Icons.person_outline_rounded,
         controller: _displayNameController,
@@ -257,9 +266,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         textInputAction: TextInputAction.next,
         editable: !_isLoading,
         onChanged: (_) => setState(() => _errors.remove('displayName')),
+        onFieldSubmitted: (_) => _goNext(),
       );
     } else if (_step == 1) {
       return Column(
+        key: const ValueKey(1),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
@@ -305,6 +316,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       );
     } else if (_step == 2) {
       return FloatingLabelInput(
+        key: const ValueKey(2),
         label: "Email Address",
         icon: Icons.mail_outline_rounded,
         controller: _emailController,
@@ -313,17 +325,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         textInputAction: TextInputAction.next,
         editable: !_isLoading,
         onChanged: (_) => setState(() => _errors.remove('email')),
+        onFieldSubmitted: (_) => _goNext(),
       );
     } else if (_step == 3) {
       return FloatingLabelInput(
+        key: const ValueKey(3),
         label: "Password",
         icon: Icons.lock_outline_rounded,
         controller: _passwordController,
         error: _errors['password'],
         secureTextEntry: !_showPassword,
-        textInputAction: TextInputAction.done,
+        textInputAction: TextInputAction.next,
         editable: !_isLoading,
         onChanged: (_) => setState(() => _errors.remove('password')),
+        onFieldSubmitted: (_) => _goNext(),
         right: IconButton(
           onPressed: () => setState(() => _showPassword = !_showPassword),
           icon: Icon(
@@ -342,6 +357,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } else {
       // Step 4 — Username with live availability check (debounced)
       return Column(
+        key: const ValueKey(4),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FloatingLabelInput(
@@ -352,6 +368,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             textInputAction: TextInputAction.done,
             editable: !_isLoading,
             onChanged: _onUsernameChanged,
+            onFieldSubmitted: (_) => _handleRegister(),
             right: _checkingUsername
                 ? const SizedBox(
                     width: 18,

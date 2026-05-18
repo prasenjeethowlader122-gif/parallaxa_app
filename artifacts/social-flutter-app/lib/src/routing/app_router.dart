@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../core/api_client.dart';
 import '../core/storage_service.dart';
 import '../core/app_colors.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
+import '../features/auth/presentation/forgot_password_screen.dart';
+import '../features/auth/presentation/splash_screen.dart';
 import '../features/profile/presentation/profile_screen.dart' as profile;
 import '../features/feed/presentation/feed_screen.dart' as feed;
 import '../features/feed/presentation/create_post_screen.dart';
@@ -19,22 +22,31 @@ final routerProvider = Provider<GoRouter>((ref) {
   final storageService = ref.watch(storageServiceProvider);
 
   return GoRouter(
-    initialLocation: '/feed',
+    initialLocation: '/splash',
     redirect: (context, state) {
       final token = storageService.getAuthToken();
       final loc = state.matchedLocation;
-      final isAuth = loc == '/login' || loc == '/register';
+
+      if (loc == '/splash') return null;
+
+      final isAuth = loc == '/login' || loc == '/register' || loc == '/forgot-password';
       if (token == null && !isAuth) return '/login';
       if (token != null && isAuth) return '/feed';
       return null;
     },
     routes: [
       GoRoute(
+          path: '/splash',
+          builder: (_, __) => const SplashScreen()),
+      GoRoute(
           path: '/login',
           builder: (_, __) => const LoginScreen()),
       GoRoute(
           path: '/register',
           builder: (_, __) => const RegisterScreen()),
+      GoRoute(
+          path: '/forgot-password',
+          builder: (_, __) => const ForgotPasswordScreen()),
       GoRoute(
         path: '/messages/:conversationId',
         builder: (_, state) {
@@ -150,15 +162,10 @@ class _ParallaxaAppBar extends StatelessWidget
           onPressed: () => Scaffold.of(context).openDrawer(),
         ),
       ),
-      title: const Text(
-        'Parallaxa',
-        style: TextStyle(
-          fontFamily: 'Sora',
-          fontWeight: FontWeight.w800,
-          fontSize: 20,
-          color: AppColors.textPrimary,
-          letterSpacing: -0.3,
-        ),
+      title: SvgPicture.asset(
+        'assets/images/parallaxa-logo.svg',
+        height: 24,
+        fit: BoxFit.contain,
       ),
       actions: [
         IconButton(
@@ -217,14 +224,10 @@ class _AppDrawer extends StatelessWidget {
                     padding: EdgeInsets.zero,
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    'Parallaxa',
-                    style: TextStyle(
-                      fontFamily: 'Sora',
-                      fontWeight: FontWeight.w800,
-                      fontSize: 20,
-                      color: AppColors.textPrimary,
-                    ),
+                  SvgPicture.asset(
+                    'assets/images/parallaxa-logo.svg',
+                    height: 24,
+                    fit: BoxFit.contain,
                   ),
                 ],
               ),
