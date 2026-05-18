@@ -13,7 +13,11 @@ import {
   storyViewsTable,
 } from "@workspace/db";
 import { eq, and, desc, inArray, sql, isNull, gt } from "drizzle-orm";
-import { authenticate, optionalAuthenticate, type AuthRequest } from "../middleware/authenticate";
+import {
+  authenticate,
+  optionalAuthenticate,
+  type AuthRequest,
+} from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
 import { logger } from "../lib/logger";
 
@@ -21,34 +25,57 @@ const router = Router();
 
 async function getUsersStoryStatus(userIds: string[], myId?: string) {
   const now = new Date();
-  const activeStories = userIds.length > 0
-    ? await db
-        .select()
-        .from(storiesTable)
-        .where(and(inArray(storiesTable.userId, userIds), gt(storiesTable.expiresAt, now)))
-    : [];
+  const activeStories =
+    userIds.length > 0
+      ? await db
+          .select()
+          .from(storiesTable)
+          .where(
+            and(
+              inArray(storiesTable.userId, userIds),
+              gt(storiesTable.expiresAt, now),
+            ),
+          )
+      : [];
 
-  const storyMap: Record<string, { hasStory: boolean; hasUnviewedStory: boolean; storyIds: string[] }> = {};
-  userIds.forEach(id => storyMap[id] = { hasStory: false, hasUnviewedStory: false, storyIds: [] });
+  const storyMap: Record<
+    string,
+    { hasStory: boolean; hasUnviewedStory: boolean; storyIds: string[] }
+  > = {};
+  userIds.forEach(
+    (id) =>
+      (storyMap[id] = {
+        hasStory: false,
+        hasUnviewedStory: false,
+        storyIds: [],
+      }),
+  );
 
-  activeStories.forEach(s => {
+  activeStories.forEach((s) => {
     storyMap[s.userId].hasStory = true;
     storyMap[s.userId].storyIds.push(s.id);
   });
 
   if (myId && activeStories.length > 0) {
-    const allActiveStoryIds = activeStories.map(s => s.id);
+    const allActiveStoryIds = activeStories.map((s) => s.id);
     const views = await db
       .select()
       .from(storyViewsTable)
-      .where(and(eq(storyViewsTable.userId, myId), inArray(storyViewsTable.storyId, allActiveStoryIds)));
+      .where(
+        and(
+          eq(storyViewsTable.userId, myId),
+          inArray(storyViewsTable.storyId, allActiveStoryIds),
+        ),
+      );
 
-    const viewedSet = new Set(views.map(v => v.storyId));
+    const viewedSet = new Set(views.map((v) => v.storyId));
 
-    userIds.forEach(id => {
+    userIds.forEach((id) => {
       const userStoryIds = storyMap[id].storyIds;
       if (userStoryIds.length > 0) {
-        storyMap[id].hasUnviewedStory = userStoryIds.some(sid => !viewedSet.has(sid));
+        storyMap[id].hasUnviewedStory = userStoryIds.some(
+          (sid) => !viewedSet.has(sid),
+        );
       }
     });
   }
@@ -60,30 +87,47 @@ async function formatPost(
   post: typeof postsTable.$inferSelect,
   myId?: string,
   authorData?: typeof usersTable.$inferSelect,
-  storyStatus?: { hasStory: boolean; hasUnviewedStory: boolean }
+  storyStatus?: { hasStory: boolean; hasUnviewedStory: boolean },
 ) {
-  const author = authorData || (await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, post.userId))
-    .limit(1))[0];
+  const author =
+    authorData ||
+    (
+      await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.id, post.userId))
+        .limit(1)
+    )[0];
 
-  const status = storyStatus || (await getUsersStoryStatus([post.userId], myId))[post.userId];
+  const status =
+    storyStatus ||
+    (await getUsersStoryStatus([post.userId], myId))[post.userId];
 
   const liked = myId
-    ? (await db
-        .select()
-        .from(likesTable)
-        .where(and(eq(likesTable.userId, myId), eq(likesTable.postId, post.id)))
-        .limit(1))[0]
+    ? (
+        await db
+          .select()
+          .from(likesTable)
+          .where(
+            and(eq(likesTable.userId, myId), eq(likesTable.postId, post.id)),
+          )
+          .limit(1)
+      )[0]
     : null;
 
   const saved = myId
-    ? (await db
-        .select()
-        .from(savedPostsTable)
-        .where(and(eq(savedPostsTable.userId, myId), eq(savedPostsTable.postId, post.id)))
-        .limit(1))[0]
+    ? (
+        await db
+          .select()
+          .from(savedPostsTable)
+          .where(
+            and(
+              eq(savedPostsTable.userId, myId),
+              eq(savedPostsTable.postId, post.id),
+            ),
+          )
+          .limit(1)
+      )[0]
     : null;
 
   const hashtagRows = await db
@@ -121,10 +165,16 @@ async function formatPost(
 // Create a post or a comment/reply (if parentPostId is provided)
 router.post("/posts", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { content, imageUrl, videoUrl, location, hashtags, parentPostId } = req.body;
+    const { content, imageUrl, videoUrl, location, hashtags, parentPostId } =
+      req.body;
 
     if (!content && !imageUrl && !videoUrl) {
-      res.status(400).json({ error: "Bad Request", message: "Post must have content, image, or video" });
+      res
+        .status(400)
+        .json({
+          error: "Bad Request",
+          message: "Post must have content, image, or video",
+        });
       return;
     }
 
@@ -137,7 +187,9 @@ router.post("/posts", authenticate, async (req: AuthRequest, res) => {
         .where(eq(postsTable.id, parentPostId))
         .limit(1);
       if (!found) {
-        res.status(404).json({ error: "Not Found", message: "Parent post not found" });
+        res
+          .status(404)
+          .json({ error: "Not Found", message: "Parent post not found" });
         return;
       }
       parentPost = found;
@@ -152,7 +204,13 @@ router.post("/posts", authenticate, async (req: AuthRequest, res) => {
       .insert(postsTable)
       .values(
         parentPostId
-          ? { id, userId: req.userId!, parentPostId, content: content ?? null }
+          ? {
+              id,
+              userId: req.userId!,
+              parentPostId,
+              content: content ?? null,
+              location: location ?? null,
+            }
           : {
               id,
               userId: req.userId!,
@@ -205,7 +263,9 @@ router.post("/posts", authenticate, async (req: AuthRequest, res) => {
           const hashtagId = existing?.id ?? generateId();
 
           if (!existing) {
-            await db.insert(hashtagsTable).values({ id: hashtagId, name, postCount: 1 });
+            await db
+              .insert(hashtagsTable)
+              .values({ id: hashtagId, name, postCount: 1 });
           } else {
             await db
               .update(hashtagsTable)
@@ -222,92 +282,120 @@ router.post("/posts", authenticate, async (req: AuthRequest, res) => {
     res.status(201).json(formatted);
   } catch (err) {
     logger.error({ err }, "POST /posts error");
-    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", message: String(err) });
   }
 });
 
 // Get a single post by ID
-router.get("/posts/:postId", optionalAuthenticate, async (req: AuthRequest, res) => {
-  try {
-    const [post] = await db
-      .select()
-      .from(postsTable)
-      .where(eq(postsTable.id, req.params.postId as string))
-      .limit(1);
+router.get(
+  "/posts/:postId",
+  optionalAuthenticate,
+  async (req: AuthRequest, res) => {
+    try {
+      const [post] = await db
+        .select()
+        .from(postsTable)
+        .where(eq(postsTable.id, req.params.postId as string))
+        .limit(1);
 
-    if (!post) {
-      res.status(404).json({ error: "Not Found", message: "Post not found" });
-      return;
+      if (!post) {
+        res.status(404).json({ error: "Not Found", message: "Post not found" });
+        return;
+      }
+
+      res.json(await formatPost(post, req.userId!));
+    } catch (err) {
+      logger.error({ err }, "GET /posts/:postId error");
+      res
+        .status(500)
+        .json({ error: "Internal Server Error", message: String(err) });
     }
-
-    res.json(await formatPost(post, req.userId!));
-  } catch (err) {
-    logger.error({ err }, "GET /posts/:postId error");
-    res.status(500).json({ error: "Internal Server Error", message: String(err) });
-  }
-});
+  },
+);
 
 // Get replies/comments of a post
-router.get("/posts/:postId/replies", optionalAuthenticate, async (req: AuthRequest, res) => {
-  try {
-    const postId = req.params.postId as string;
-    const limit = Math.min(Number(req.query.limit) || 50, 100);
+router.get(
+  "/posts/:postId/replies",
+  optionalAuthenticate,
+  async (req: AuthRequest, res) => {
+    try {
+      const postId = req.params.postId as string;
+      const limit = Math.min(Number(req.query.limit) || 50, 100);
 
-    const [parent] = await db
-      .select()
-      .from(postsTable)
-      .where(eq(postsTable.id, postId))
-      .limit(1);
+      const [parent] = await db
+        .select()
+        .from(postsTable)
+        .where(eq(postsTable.id, postId))
+        .limit(1);
 
-    if (!parent) {
-      res.status(404).json({ error: "Not Found", message: "Post not found" });
-      return;
-    }
+      if (!parent) {
+        res.status(404).json({ error: "Not Found", message: "Post not found" });
+        return;
+      }
 
-    // To support threading (one level deep in the UI), we fetch replies to this post
-    // and also replies to those replies.
-    const directReplies = await db
-      .select()
-      .from(postsTable)
-      .where(and(eq(postsTable.parentPostId, postId), eq(postsTable.isArchived, false)))
-      .orderBy(desc(postsTable.createdAt))
-      .limit(limit);
-
-    if (directReplies.length === 0) {
-      res.json({ posts: [], nextCursor: null });
-      return;
-    }
-
-    const directReplyIds = directReplies.map(r => r.id);
-    const nestedReplies = await db
-      .select()
-      .from(postsTable)
-      .where(
-        and(
-          inArray(postsTable.parentPostId, directReplyIds),
-          eq(postsTable.isArchived, false)
+      // To support threading (one level deep in the UI), we fetch replies to this post
+      // and also replies to those replies.
+      const directReplies = await db
+        .select()
+        .from(postsTable)
+        .where(
+          and(
+            eq(postsTable.parentPostId, postId),
+            eq(postsTable.isArchived, false),
+          ),
         )
-      )
-      .orderBy(desc(postsTable.createdAt));
+        .orderBy(desc(postsTable.createdAt))
+        .limit(limit);
 
-    const allReplies = [...directReplies, ...nestedReplies];
-    const userIds = [...new Set(allReplies.map(r => r.userId))];
+      if (directReplies.length === 0) {
+        res.json({ posts: [], nextCursor: null });
+        return;
+      }
 
-    const [authors, storyStatuses] = await Promise.all([
-      db.select().from(usersTable).where(inArray(usersTable.id, userIds)),
-      getUsersStoryStatus(userIds, req.userId)
-    ]);
+      const directReplyIds = directReplies.map((r) => r.id);
+      const nestedReplies = await db
+        .select()
+        .from(postsTable)
+        .where(
+          and(
+            inArray(postsTable.parentPostId, directReplyIds),
+            eq(postsTable.isArchived, false),
+          ),
+        )
+        .orderBy(desc(postsTable.createdAt));
 
-    const authorMap = Object.fromEntries(authors.map(a => [a.id, a]));
+      const allReplies = [...directReplies, ...nestedReplies];
+      const userIds = [...new Set(allReplies.map((r) => r.userId))];
 
-    const formatted = await Promise.all(allReplies.map((p) => formatPost(p, req.userId, authorMap[p.userId], storyStatuses[p.userId])));
+      const [authors, storyStatuses] = await Promise.all([
+        db.select().from(usersTable).where(inArray(usersTable.id, userIds)),
+        getUsersStoryStatus(userIds, req.userId),
+      ]);
 
-    res.json({ posts: formatted, nextCursor: null });
-  } catch (err) {
-    logger.error({ err }, "GET /posts/:postId/replies error");
-    res.status(500).json({ error: "Internal Server Error", message: String(err) });
-  }
-});
+      const authorMap = Object.fromEntries(authors.map((a) => [a.id, a]));
+
+      const formatted = await Promise.all(
+        allReplies.map((p) =>
+          formatPost(
+            p,
+            req.userId,
+            authorMap[p.userId],
+            storyStatuses[p.userId],
+          ),
+        ),
+      );
+
+      res.json({ posts: formatted, nextCursor: null });
+    } catch (err) {
+      logger.error({ err }, "GET /posts/:postId/replies error");
+      res
+        .status(500)
+        .json({ error: "Internal Server Error", message: String(err) });
+    }
+  },
+);
 
 // Delete a post (or comment/reply)
 router.delete("/posts/:postId", authenticate, async (req: AuthRequest, res) => {
@@ -324,11 +412,18 @@ router.delete("/posts/:postId", authenticate, async (req: AuthRequest, res) => {
     }
 
     if (post.userId !== req.userId && !req.isAdmin) {
-      res.status(403).json({ error: "Forbidden", message: "Cannot delete another user's post" });
+      res
+        .status(403)
+        .json({
+          error: "Forbidden",
+          message: "Cannot delete another user's post",
+        });
       return;
     }
 
-    await db.delete(postsTable).where(eq(postsTable.id, req.params.postId as string));
+    await db
+      .delete(postsTable)
+      .where(eq(postsTable.id, req.params.postId as string));
 
     if (post.parentPostId) {
       await db
@@ -345,7 +440,9 @@ router.delete("/posts/:postId", authenticate, async (req: AuthRequest, res) => {
     res.json({ message: "Post deleted" });
   } catch (err) {
     logger.error({ err }, "DELETE /posts/:postId error");
-    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", message: String(err) });
   }
 });
 
@@ -371,7 +468,7 @@ router.get("/feed", optionalAuthenticate, async (req: AuthRequest, res) => {
           score: sql<number>`
             ((${postsTable.likesCount} * 2) + (${postsTable.repliesCount} * 3) + 1) /
             POWER(EXTRACT(EPOCH FROM (NOW() - ${postsTable.createdAt})) / 3600 + 2, 1.5)
-          `
+          `,
         })
         .from(postsTable)
         .where(
@@ -391,7 +488,7 @@ router.get("/feed", optionalAuthenticate, async (req: AuthRequest, res) => {
           score: sql<number>`
             ((${postsTable.likesCount} * 2) + (${postsTable.repliesCount} * 3) + 1) /
             POWER(EXTRACT(EPOCH FROM (NOW() - ${postsTable.createdAt})) / 3600 + 2, 1.5)
-          `
+          `,
         })
         .from(postsTable)
         .where(
@@ -404,18 +501,92 @@ router.get("/feed", optionalAuthenticate, async (req: AuthRequest, res) => {
         .limit(limit);
     }
 
-    const userIds = [...new Set(posts.map(p => p.post.userId))];
+    const userIds = [...new Set(posts.map((p) => p.post.userId))];
     const [authors, storyStatuses] = await Promise.all([
       db.select().from(usersTable).where(inArray(usersTable.id, userIds)),
-      getUsersStoryStatus(userIds, myId)
+      getUsersStoryStatus(userIds, myId),
     ]);
-    const authorMap = Object.fromEntries(authors.map(a => [a.id, a]));
+    const authorMap = Object.fromEntries(authors.map((a) => [a.id, a]));
 
-    const formatted = await Promise.all(posts.map((p) => formatPost(p.post, myId, authorMap[p.post.userId], storyStatuses[p.post.userId])));
+    const formatted = await Promise.all(
+      posts.map((p) =>
+        formatPost(
+          p.post,
+          myId,
+          authorMap[p.post.userId],
+          storyStatuses[p.post.userId],
+        ),
+      ),
+    );
     res.json({ posts: formatted, nextCursor: null });
   } catch (err) {
     logger.error({ err }, "GET /feed error");
-    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", message: String(err) });
+  }
+});
+
+// Following feed — posts from users you follow
+router.get("/feed/following", authenticate, async (req: AuthRequest, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 20, 100);
+    const myId = req.userId!;
+
+    const following = await db
+      .select({ followingId: followsTable.followingId })
+      .from(followsTable)
+      .where(eq(followsTable.followerId, myId));
+
+    const followingIds = following.map((f) => f.followingId);
+
+    if (followingIds.length === 0) {
+      res.json({ posts: [], nextCursor: null });
+      return;
+    }
+
+    const posts = await db
+      .select({
+        post: postsTable,
+        score: sql<number>`
+            ((${postsTable.likesCount} * 2) + (${postsTable.repliesCount} * 3) + 1) /
+            POWER(EXTRACT(EPOCH FROM (NOW() - ${postsTable.createdAt})) / 3600 + 2, 1.5)
+          `,
+      })
+      .from(postsTable)
+      .where(
+        and(
+          inArray(postsTable.userId, followingIds),
+          eq(postsTable.isArchived, false),
+          isNull(postsTable.parentPostId),
+        ),
+      )
+      .orderBy(desc(sql`score`))
+      .limit(limit);
+
+    const userIds = [...new Set(posts.map((p) => p.post.userId))];
+    const [authors, storyStatuses] = await Promise.all([
+      db.select().from(usersTable).where(inArray(usersTable.id, userIds)),
+      getUsersStoryStatus(userIds, myId),
+    ]);
+    const authorMap = Object.fromEntries(authors.map((a) => [a.id, a]));
+
+    const formatted = await Promise.all(
+      posts.map((p) =>
+        formatPost(
+          p.post,
+          myId,
+          authorMap[p.post.userId],
+          storyStatuses[p.post.userId],
+        ),
+      ),
+    );
+    res.json({ posts: formatted, nextCursor: null });
+  } catch (err) {
+    logger.error({ err }, "GET /feed/following error");
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", message: String(err) });
   }
 });
 
@@ -427,22 +598,35 @@ router.get("/explore", optionalAuthenticate, async (req: AuthRequest, res) => {
     const posts = await db
       .select()
       .from(postsTable)
-      .where(and(eq(postsTable.isArchived, false), isNull(postsTable.parentPostId)))
+      .where(
+        and(eq(postsTable.isArchived, false), isNull(postsTable.parentPostId)),
+      )
       .orderBy(desc(postsTable.likesCount), desc(postsTable.createdAt))
       .limit(limit);
 
-    const userIds = [...new Set(posts.map(p => p.userId))];
+    const userIds = [...new Set(posts.map((p) => p.userId))];
     const [authors, storyStatuses] = await Promise.all([
       db.select().from(usersTable).where(inArray(usersTable.id, userIds)),
-      getUsersStoryStatus(userIds, req.userId)
+      getUsersStoryStatus(userIds, req.userId),
     ]);
-    const authorMap = Object.fromEntries(authors.map(a => [a.id, a]));
+    const authorMap = Object.fromEntries(authors.map((a) => [a.id, a]));
 
-    const formatted = await Promise.all(posts.map((p) => formatPost(p, req.userId!, authorMap[p.userId], storyStatuses[p.userId])));
+    const formatted = await Promise.all(
+      posts.map((p) =>
+        formatPost(
+          p,
+          req.userId!,
+          authorMap[p.userId],
+          storyStatuses[p.userId],
+        ),
+      ),
+    );
     res.json({ posts: formatted, nextCursor: null });
   } catch (err) {
     logger.error({ err }, "GET /explore error");
-    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", message: String(err) });
   }
 });
 

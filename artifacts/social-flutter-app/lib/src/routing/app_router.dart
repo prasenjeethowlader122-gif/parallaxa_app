@@ -149,8 +149,9 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       title: SvgPicture.asset(
-        'assets/images/parallaxa-logo.svg',
-        height: 24,
+        'assets/images/text-logo-dark.svg',
+        height: 26,
+        width: 148,
         fit: BoxFit.contain,
       ),
       actions: [
@@ -219,8 +220,9 @@ class _AppDrawer extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   SvgPicture.asset(
-                    'assets/images/parallaxa-logo.svg',
-                    height: 24,
+                    'assets/images/text-logo-dark.svg',
+                    height: 26,
+                    width: 148,
                     fit: BoxFit.contain,
                   ),
                 ],

@@ -14,7 +14,8 @@ class ProfileRepository {
   ProfileRepository(this._dio);
 
   Future<User> getUserProfile(String userId) async {
-    final response = await _dio.get('/users/$userId');
+    final path = userId == 'me' ? '/users/me' : '/users/$userId';
+    final response = await _dio.get(path);
     return User.fromJson(response.data);
   }
 

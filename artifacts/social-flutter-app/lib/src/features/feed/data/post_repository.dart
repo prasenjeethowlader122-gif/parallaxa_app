@@ -17,6 +17,11 @@ final followingFeedProvider = FutureProvider<List<Post>>((ref) async {
   return page.posts;
 });
 
+final trendingFeedProvider = FutureProvider<List<Post>>((ref) async {
+  final page = await ref.watch(postRepositoryProvider).getExplorePosts();
+  return page.posts;
+});
+
 class PostRepository {
   final Dio _dio;
 

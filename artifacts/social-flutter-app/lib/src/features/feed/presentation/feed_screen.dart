@@ -67,9 +67,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
           child: TabBarView(
             controller: _tab,
             children: [
-              _FeedList(feedType: 'public'),
-              _FeedList(feedType: 'following'),
-              _FeedList(feedType: 'public'),
+              const _FeedList(feedType: 'public'),
+              const _FeedList(feedType: 'following'),
+              const _FeedList(feedType: 'trending'),
             ],
           ),
         ),
@@ -87,9 +87,11 @@ class _FeedList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final postsAsync = feedType == 'following'
-        ? ref.watch(followingFeedProvider)
-        : ref.watch(publicFeedProvider);
+    final postsAsync = switch (feedType) {
+      'following' => ref.watch(followingFeedProvider),
+      'trending' => ref.watch(trendingFeedProvider),
+      _ => ref.watch(publicFeedProvider),
+    };
 
     return postsAsync.when(
       loading: () => const Center(
@@ -170,6 +172,7 @@ class _FeedList extends ConsumerWidget {
           onRefresh: () async {
             ref.invalidate(publicFeedProvider);
             ref.invalidate(followingFeedProvider);
+            ref.invalidate(trendingFeedProvider);
           },
           child: ListView.builder(
             itemCount: posts.length,
