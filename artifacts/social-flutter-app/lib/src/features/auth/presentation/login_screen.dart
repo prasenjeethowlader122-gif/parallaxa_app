@@ -66,9 +66,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final authRepo = ref.read(authRepositoryProvider);
 
-      // FIX: Only call verify2FA when we are already in the 2FA step.
-      // Previously verify2FA was called first, making the normal login path
-      // unreachable on the first attempt.
       if (_showTotpInput) {
         final response = await authRepo.verify2FA(
           _emailController.text.trim(),
@@ -77,7 +74,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (response.token != null) {
           await _onLoginSuccess(response.token!, response.user?.id);
         }
-        // Return either way; do not fall through to the login call.
         return;
       }
 
@@ -87,9 +83,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
 
       if (response.twoFactorRequired) {
-        // FIX: do NOT rely on the finally block to clear isLoading here —
-        // we want to keep the screen interactive in the 2FA input state.
-        // Set both flags in one setState to avoid a double rebuild.
         setState(() {
           _showTotpInput = true;
           _isLoading = false;
@@ -109,8 +102,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         });
       }
     } finally {
-      // FIX: guard against calling setState after the 2FA branch already
-      // set isLoading = false (it returned early, so finally still runs).
       if (mounted && _isLoading) {
         setState(() => _isLoading = false);
       }
@@ -126,7 +117,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (mounted) context.go('/feed');
   }
 
-  /// FIX: use .trim() so whitespace-only input doesn't enable the button.
   bool get _canSubmit {
     if (_isLoading) return false;
     if (_emailController.text.trim().isEmpty) return false;
@@ -137,68 +127,73 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 64),
+              const SizedBox(height: 48),
 
-              // Logo
+              // Logo — capped to screen width to prevent overflow on small devices
               Center(
                 child: SvgPicture.asset(
                   'assets/images/parallaxa-logo.svg',
-                  width: 220,
-                  height: 84,
+                  width: (screenWidth - 80).clamp(120.0, 200.0),
+                  height: 76,
                   fit: BoxFit.contain,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
 
               // Heading
               const Text(
                 'Welcome back',
                 style: TextStyle(
-                  fontSize: 30,
+                  fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppColors.slate900,
                   fontFamily: 'Sora',
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               const Text(
                 'Sign in to continue to your account',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   color: AppColors.slate500,
                   fontFamily: 'Sora',
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
               // General Error Alert
               if (_errors['general'] != null) ...[
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: AppColors.slate50,
+                    color: const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFCA5A5)),
                   ),
                   child: Row(
                     children: [
                       const Icon(Icons.error_outline_rounded,
-                          color: Color(0xFF111111), size: 20),
+                          color: Color(0xFFDC2626), size: 20),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           _errors['general']!,
                           style: const TextStyle(
-                            color: Color(0xFF111111),
+                            color: Color(0xFFDC2626),
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                             fontFamily: 'Sora',
@@ -208,32 +203,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
               ],
 
-              // Email Input
+              // Email Input — dimmed during 2FA step
               Opacity(
-                opacity: _showTotpInput ? 0.5 : 1.0,
+                opacity: _showTotpInput ? 0.45 : 1.0,
                 child: FloatingLabelInput(
                   label: "Email Address",
                   icon: Icons.mail_outline_rounded,
                   controller: _emailController,
                   error: _errors['email'],
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
                   editable: !_isLoading && !_showTotpInput,
+                  onChanged: (_) => setState(() => _errors.remove('email')),
                 ),
               ),
 
-              // Password Input
+              // Password Input — dimmed during 2FA step
               Opacity(
-                opacity: _showTotpInput ? 0.5 : 1.0,
+                opacity: _showTotpInput ? 0.45 : 1.0,
                 child: FloatingLabelInput(
                   label: "Password",
                   icon: Icons.lock_outline_rounded,
                   controller: _passwordController,
                   error: _errors['password'],
                   secureTextEntry: !_showPassword,
+                  textInputAction: _showTotpInput
+                      ? TextInputAction.next
+                      : TextInputAction.done,
                   editable: !_isLoading && !_showTotpInput,
+                  onChanged: (_) => setState(() => _errors.remove('password')),
+                  onFieldSubmitted: (_) {
+                    if (!_showTotpInput) _handleLogin();
+                  },
                   right: IconButton(
                     onPressed: () =>
                         setState(() => _showPassword = !_showPassword),
@@ -252,12 +256,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
 
-              // Forgot Password Link
+              // Forgot Password link (hidden in 2FA mode)
               if (!_showTotpInput)
                 Align(
                   alignment: Alignment.centerRight,
                   child: Padding(
-                    padding: const EdgeInsets.only(bottom: 32),
+                    padding: const EdgeInsets.only(bottom: 24),
                     child: GestureDetector(
                       onTap: () => context.push('/forgot-password'),
                       child: const Text(
@@ -275,55 +279,61 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               // 2FA Input
               if (_showTotpInput) ...[
-                const SizedBox(height: 16),
                 FloatingLabelInput(
-                  label: "2FA Code",
-                  icon: Icons.lock_outline_rounded,
+                  label: "6-digit 2FA Code",
+                  icon: Icons.shield_outlined,
                   controller: _totpController,
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
                   maxLength: 6,
                   autoFocus: true,
                   editable: !_isLoading,
+                  onChanged: (_) => setState(() => _errors.remove('general')),
+                  onFieldSubmitted: (_) => _handleLogin(),
                 ),
-                GestureDetector(
-                  onTap: () => setState(() {
-                    _showTotpInput = false;
-                    _totpController.clear();
-                    _errors = {};
-                  }),
-                  child: const Text(
-                    'Back to password',
-                    style: TextStyle(
-                      color: Color(0xFF0095F6),
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      fontFamily: 'Sora',
+                Align(
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: GestureDetector(
+                      onTap: () => setState(() {
+                        _showTotpInput = false;
+                        _totpController.clear();
+                        _errors = {};
+                      }),
+                      child: const Text(
+                        '← Back to password',
+                        style: TextStyle(
+                          color: Color(0xFF0095F6),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          fontFamily: 'Sora',
+                        ),
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: 24),
               ],
 
               // Sign In Button
               SizedBox(
-                height: 56,
+                height: 54,
                 child: ElevatedButton(
-                  // FIX: use the computed getter that trims whitespace
                   onPressed: _canSubmit ? _handleLogin : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(27),
                     ),
                     elevation: 0,
-                    disabledBackgroundColor: AppColors.slate300,
+                    disabledBackgroundColor: AppColors.slate200,
+                    disabledForegroundColor: AppColors.slate400,
                   ),
                   child: _isLoading
                       ? const SizedBox(
-                          height: 24,
-                          width: 24,
+                          height: 22,
+                          width: 22,
                           child: CircularProgressIndicator(
                             color: Colors.white,
                             strokeWidth: 2.5,
@@ -339,34 +349,46 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
               // Google Sign In Button
               SizedBox(
-                height: 56,
+                height: 54,
                 child: OutlinedButton(
                   onPressed: _isLoading ? null : () {},
                   style: OutlinedButton.styleFrom(
-                    side:
-                        const BorderSide(color: AppColors.slate200, width: 1.5),
+                    side: const BorderSide(
+                        color: AppColors.slate200, width: 1.5),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(27),
                     ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SvgPicture.network(
-                        'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                      // Use a Material icon as fallback to avoid network dependency
+                      Container(
                         width: 20,
                         height: 20,
+                        decoration: BoxDecoration(
+                          color: AppColors.slate100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Text('G',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.slate700,
+                              )),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       const Text(
                         'Continue with Google',
                         style: TextStyle(
                           color: AppColors.slate900,
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w700,
                           fontFamily: 'Sora',
                         ),
@@ -378,25 +400,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               // Divider
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Row(
                   children: [
                     Expanded(
-                        child: Container(height: 1, color: AppColors.slate200)),
+                        child:
+                            Container(height: 1, color: AppColors.slate200)),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
                         'OR',
                         style: TextStyle(
-                          color: AppColors.slate500,
-                          fontSize: 12,
+                          color: AppColors.slate400,
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
                           fontFamily: 'Sora',
                         ),
                       ),
                     ),
                     Expanded(
-                        child: Container(height: 1, color: AppColors.slate200)),
+                        child:
+                            Container(height: 1, color: AppColors.slate200)),
                   ],
                 ),
               ),
@@ -429,7 +454,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
               ),
 
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
               const Text.rich(
                 TextSpan(
                   text: 'By signing in, you agree to our ',
@@ -447,26 +472,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: Color(0xFF0095F6),
                           fontWeight: FontWeight.w700),
                     ),
-                    TextSpan(text: ', including '),
-                    TextSpan(
-                      text: 'Cookie Use',
-                      style: TextStyle(
-                          color: Color(0xFF0095F6),
-                          fontWeight: FontWeight.w700),
-                    ),
                     TextSpan(text: '.'),
                   ],
                 ),
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: AppColors.slate500,
+                  color: AppColors.slate400,
                   fontSize: 12,
-                  height: 1.4,
+                  height: 1.5,
                   fontFamily: 'Sora',
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
             ],
           ),
         ),

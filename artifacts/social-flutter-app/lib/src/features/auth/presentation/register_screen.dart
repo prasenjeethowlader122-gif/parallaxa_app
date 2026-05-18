@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,10 +29,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _showPassword = false;
   bool _acceptTerms = false;
 
-  // Username availability state
   bool? _usernameAvailable;
   bool _checkingUsername = false;
   List<String> _usernameSuggestions = [];
+
+  // Debounce timer to avoid firing a check on every keystroke
+  Timer? _usernameDebounce;
 
   Map<String, String> _errors = {};
 
@@ -50,6 +53,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _emailController.dispose();
     _dateOfBirthController.dispose();
     _passwordController.dispose();
+    _usernameDebounce?.cancel();
     super.dispose();
   }
 
@@ -79,7 +83,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             newErrors['dateOfBirth'] = "You must be at least 18 years old";
           }
         } catch (_) {
-          newErrors['dateOfBirth'] = "Invalid date format (YYYY-MM-DD)";
+          newErrors['dateOfBirth'] = "Invalid date format";
         }
       }
     } else if (_step == 2) {
@@ -101,10 +105,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       } else if (_usernameController.text.trim().length < 3) {
         newErrors['username'] = "Username must be at least 3 characters";
       } else if (_usernameAvailable == false) {
-        // FIX: block submission if we know the username is taken
         newErrors['username'] = "This username is not available";
       }
-
       if (!_acceptTerms) {
         newErrors['general'] = "You must accept the terms to continue";
       }
@@ -117,8 +119,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   void _goNext() {
     if (!_validateStep()) return;
     if (_step < _totalSteps - 1) {
-      // FIX: clear errors when advancing so stale messages don't bleed
-      // back into a previous step if the user navigates back and forward.
       setState(() {
         _step++;
         _errors = {};
@@ -130,17 +130,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (_step > 0) {
       setState(() {
         _step--;
-        _errors = {}; // always wipe stale errors on direction change
+        _errors = {};
       });
     } else {
       context.pop();
     }
   }
 
-  // FIX: wire up checkUsername / suggestUsernames from the repository
-  Future<void> _checkUsernameAvailability(String username) async {
-    if (username.trim().length < 3) return;
+  // Debounced username availability check — waits 500ms after last keystroke
+  void _onUsernameChanged(String value) {
+    setState(() {
+      _errors.remove('username');
+      _usernameAvailable = null;
+      _usernameSuggestions = [];
+    });
 
+    _usernameDebounce?.cancel();
+    if (value.trim().length < 3) return;
+
+    _usernameDebounce = Timer(const Duration(milliseconds: 500), () {
+      _checkUsernameAvailability(value);
+    });
+  }
+
+  Future<void> _checkUsernameAvailability(String username) async {
+    if (!mounted) return;
     setState(() {
       _checkingUsername = true;
       _usernameAvailable = null;
@@ -156,12 +170,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       setState(() => _usernameAvailable = available);
 
       if (!available) {
-        final suggestions = await authRepo
-            .suggestUsernames(username.trim().toLowerCase());
+        final suggestions =
+            await authRepo.suggestUsernames(username.trim().toLowerCase());
         if (mounted) setState(() => _usernameSuggestions = suggestions);
       }
     } catch (_) {
-      // Non-fatal: just hide the indicator; server-side validation still runs
       if (mounted) setState(() => _usernameAvailable = null);
     } finally {
       if (mounted) setState(() => _checkingUsername = false);
@@ -206,17 +219,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 
-  // FIX: use showDatePicker instead of a raw text field for date of birth
   Future<void> _pickDateOfBirth() async {
     final now = DateTime.now();
-    final eighteenYearsAgo =
-        DateTime(now.year - 18, now.month, now.day);
+    final eighteenYearsAgo = DateTime(now.year - 18, now.month, now.day);
 
     final picked = await showDatePicker(
       context: context,
       initialDate: eighteenYearsAgo,
       firstDate: DateTime(1900),
-      lastDate: eighteenYearsAgo, // cannot pick a date that makes user < 18
+      lastDate: eighteenYearsAgo,
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -227,9 +238,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       },
     );
 
-    if (picked != null) {
-      _dateOfBirthController.text = DateFormat('yyyy-MM-dd').format(picked);
-      setState(() => _errors.remove('dateOfBirth'));
+    if (picked != null && mounted) {
+      setState(() {
+        _dateOfBirthController.text = DateFormat('yyyy-MM-dd').format(picked);
+        _errors.remove('dateOfBirth');
+      });
     }
   }
 
@@ -241,11 +254,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         controller: _displayNameController,
         error: _errors['displayName'],
         textCapitalization: TextCapitalization.words,
+        textInputAction: TextInputAction.next,
         editable: !_isLoading,
         onChanged: (_) => setState(() => _errors.remove('displayName')),
       );
     } else if (_step == 1) {
-      // FIX: replaced raw text input with a tappable date picker field
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -253,7 +266,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             onTap: _isLoading ? null : _pickDateOfBirth,
             child: AbsorbPointer(
               child: FloatingLabelInput(
-                label: "Birthday",
+                label: "Birthday (tap to select)",
                 icon: Icons.calendar_today_outlined,
                 controller: _dateOfBirthController,
                 error: _errors['dateOfBirth'],
@@ -262,8 +275,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ),
           ),
+          if (_dateOfBirthController.text.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 4),
+              child: Text(
+                "Tap the field above to open the date picker",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.slate400,
+                  fontFamily: 'Sora',
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 16, top: 4),
+            padding: const EdgeInsets.only(left: 4),
             child: Text(
               "This will not be shown publicly. You must be at least 18.",
               style: TextStyle(
@@ -283,6 +310,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         controller: _emailController,
         error: _errors['email'],
         keyboardType: TextInputType.emailAddress,
+        textInputAction: TextInputAction.next,
         editable: !_isLoading,
         onChanged: (_) => setState(() => _errors.remove('email')),
       );
@@ -293,6 +321,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         controller: _passwordController,
         error: _errors['password'],
         secureTextEntry: !_showPassword,
+        textInputAction: TextInputAction.done,
         editable: !_isLoading,
         onChanged: (_) => setState(() => _errors.remove('password')),
         right: IconButton(
@@ -311,7 +340,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
       );
     } else {
-      // Step 4 – Username with live availability check
+      // Step 4 — Username with live availability check (debounced)
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -320,18 +349,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             icon: Icons.alternate_email_rounded,
             controller: _usernameController,
             error: _errors['username'],
+            textInputAction: TextInputAction.done,
             editable: !_isLoading,
-            // FIX: trigger availability check as the user types
-            onChanged: (value) {
-              setState(() {
-                _errors.remove('username');
-                _usernameAvailable = null;
-                _usernameSuggestions = [];
-              });
-              if (value.trim().length >= 3) {
-                _checkUsernameAvailability(value);
-              }
-            },
+            onChanged: _onUsernameChanged,
             right: _checkingUsername
                 ? const SizedBox(
                     width: 18,
@@ -353,7 +373,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
 
           // Availability badge
-          if (_usernameAvailable != null && !_checkingUsername) ...[
+          if (_usernameAvailable != null && !_checkingUsername)
             Padding(
               padding: const EdgeInsets.only(left: 4, bottom: 8),
               child: Text(
@@ -362,19 +382,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     : "✗ Username is taken",
                 style: TextStyle(
                   fontSize: 12,
-                  color: _usernameAvailable! ? Colors.green : const Color(0xFFDC2626),
+                  color: _usernameAvailable!
+                      ? Colors.green
+                      : const Color(0xFFDC2626),
                   fontFamily: 'Sora',
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          ],
 
           // Suggestions when taken
           if (_usernameSuggestions.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 4),
-              child: const Text(
+            const Padding(
+              padding: EdgeInsets.only(left: 4, bottom: 8),
+              child: Text(
                 "Try one of these instead:",
                 style: TextStyle(
                   fontSize: 12,
@@ -392,6 +413,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     (s) => GestureDetector(
                       onTap: () {
                         _usernameController.text = s;
+                        _usernameDebounce?.cancel();
                         setState(() {
                           _usernameAvailable = true;
                           _usernameSuggestions = [];
@@ -402,8 +424,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          border:
-                              Border.all(color: AppColors.slate200, width: 1.5),
+                          border: Border.all(
+                              color: AppColors.slate200, width: 1.5),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -430,12 +452,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final isLastStep = _step == _totalSteps - 1;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -445,14 +469,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               Center(
                 child: SvgPicture.asset(
                   'assets/images/parallaxa-logo.svg',
-                  width: 180,
-                  height: 52,
+                  width: (screenWidth - 120).clamp(100.0, 160.0),
+                  height: 48,
                   fit: BoxFit.contain,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              // Top Bar
+              // Top Bar — back button + progress dots
               Row(
                 children: [
                   GestureDetector(
@@ -474,12 +498,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(_totalSteps, (index) {
-                        return Container(
-                          width: index == _step ? 24 : 8,
+                        final isActive = index == _step;
+                        final isDone = index < _step;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeInOut,
+                          width: isActive ? 24 : 8,
                           height: 8,
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
                           decoration: BoxDecoration(
-                            color: index <= _step
+                            color: isDone || isActive
                                 ? Colors.black
                                 : AppColors.slate200,
                             borderRadius: BorderRadius.circular(4),
@@ -491,60 +519,62 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   const SizedBox(width: 40),
                 ],
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 32),
 
-              // Heading
+              // Step heading
               Text(
                 'Step ${_step + 1} of $_totalSteps',
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w800,
                   color: AppColors.slate400,
-                  letterSpacing: 1.2,
+                  letterSpacing: 1.4,
                   fontFamily: 'Sora',
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 _stepInfo[_step]['title']!,
                 style: const TextStyle(
-                  fontSize: 30,
+                  fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppColors.slate900,
                   fontFamily: 'Sora',
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 _stepInfo[_step]['subtitle']!,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   color: AppColors.slate500,
                   fontFamily: 'Sora',
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              // General Error Alert
+              // General error alert
               if (_errors['general'] != null) ...[
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: AppColors.slate50,
+                    color: const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFCA5A5)),
                   ),
                   child: Row(
                     children: [
                       const Icon(Icons.error_outline_rounded,
-                          color: Color(0xFF111111), size: 20),
+                          color: Color(0xFFDC2626), size: 20),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           _errors['general']!,
                           style: const TextStyle(
-                            color: Color(0xFF111111),
+                            color: Color(0xFFDC2626),
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                             fontFamily: 'Sora',
@@ -554,26 +584,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
               ],
 
-              // Step Content
+              // Step content
               _renderStep(),
 
-              // Terms Acceptance (Last Step)
+              // Spacing before action area
+              const SizedBox(height: 8),
+
+              // Terms checkbox (last step only)
               if (isLastStep) ...[
                 GestureDetector(
                   onTap: () => setState(() => _acceptTerms = !_acceptTerms),
                   child: Padding(
-                    padding: const EdgeInsets.only(bottom: 24, left: 4),
+                    padding: const EdgeInsets.only(bottom: 20),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 20,
-                          height: 20,
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          width: 22,
+                          height: 22,
                           decoration: BoxDecoration(
-                            color:
-                                _acceptTerms ? Colors.black : Colors.transparent,
+                            color: _acceptTerms
+                                ? Colors.black
+                                : Colors.transparent,
                             border: Border.all(
                               color: _acceptTerms
                                   ? Colors.black
@@ -614,6 +650,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             style: TextStyle(
                               color: AppColors.slate600,
                               fontSize: 14,
+                              height: 1.4,
                               fontFamily: 'Sora',
                               fontWeight: FontWeight.w500,
                             ),
@@ -627,7 +664,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
               // CTA Button
               SizedBox(
-                height: 56,
+                height: 54,
                 child: ElevatedButton(
                   onPressed: (_isLoading || (isLastStep && !_acceptTerms))
                       ? null
@@ -636,15 +673,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(27),
                     ),
                     elevation: 0,
-                    disabledBackgroundColor: AppColors.slate300,
+                    disabledBackgroundColor: AppColors.slate200,
+                    disabledForegroundColor: AppColors.slate400,
                   ),
                   child: _isLoading
                       ? const SizedBox(
-                          height: 24,
-                          width: 24,
+                          height: 22,
+                          width: 22,
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2.5),
                         )
@@ -669,30 +707,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
               ),
 
-              // Sign In Link (Step 0)
+              // "Already have an account?" — step 0 only
               if (_step == 0) ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 20),
                   child: Row(
                     children: [
                       Expanded(
-                          child:
-                              Container(height: 1, color: AppColors.slate200)),
+                          child: Container(
+                              height: 1, color: AppColors.slate200)),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
                           'OR',
                           style: TextStyle(
-                            color: AppColors.slate500,
-                            fontSize: 12,
+                            color: AppColors.slate400,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
+                            letterSpacing: 1,
                             fontFamily: 'Sora',
                           ),
                         ),
                       ),
                       Expanded(
-                          child:
-                              Container(height: 1, color: AppColors.slate200)),
+                          child: Container(
+                              height: 1, color: AppColors.slate200)),
                     ],
                   ),
                 ),
@@ -724,9 +763,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
               ],
 
-              // Final Terms (Last Step)
+              // Final disclaimer (last step only)
               if (isLastStep) ...[
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 const Text.rich(
                   TextSpan(
                     text: 'By creating an account, you agree to our ',
@@ -744,27 +783,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             color: Color(0xFF0095F6),
                             fontWeight: FontWeight.w700),
                       ),
-                      TextSpan(text: ', including '),
-                      TextSpan(
-                        text: 'Cookie Use',
-                        style: TextStyle(
-                            color: Color(0xFF0095F6),
-                            fontWeight: FontWeight.w700),
-                      ),
                       TextSpan(text: '.'),
                     ],
                   ),
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: AppColors.slate500,
+                    color: AppColors.slate400,
                     fontSize: 12,
-                    height: 1.4,
+                    height: 1.5,
                     fontFamily: 'Sora',
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
-              const SizedBox(height: 24),
+
+              const SizedBox(height: 32),
             ],
           ),
         ),

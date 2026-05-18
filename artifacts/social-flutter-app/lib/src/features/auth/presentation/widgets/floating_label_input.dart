@@ -50,7 +50,6 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
   late AnimationController _animController;
   late Animation<double> _animation;
 
-  // Track whether we own these objects so we know when to dispose them.
   late FocusNode _focusNode;
   late TextEditingController _textController;
   bool _ownsTextController = false;
@@ -60,7 +59,6 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
   void initState() {
     super.initState();
 
-    // Only create internal instances when the parent didn't pass one in.
     if (widget.focusNode == null) {
       _focusNode = FocusNode();
       _ownsFocusNode = true;
@@ -82,12 +80,10 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
     _animation =
         CurvedAnimation(parent: _animController, curve: Curves.easeOut);
 
-    // Snap to floated state if there is already text.
     if (_textController.text.isNotEmpty || _focusNode.hasFocus) {
       _animController.value = 1.0;
     }
 
-    // FIX: always add listeners; always remove them in dispose.
     _focusNode.addListener(_handleFocusChange);
     _textController.addListener(_handleTextChange);
   }
@@ -113,14 +109,10 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
 
   @override
   void dispose() {
-    // FIX: always remove our listeners regardless of ownership.
     _focusNode.removeListener(_handleFocusChange);
     _textController.removeListener(_handleTextChange);
-
-    // Only dispose objects we created ourselves.
     if (_ownsFocusNode) _focusNode.dispose();
     if (_ownsTextController) _textController.dispose();
-
     _animController.dispose();
     super.dispose();
   }
@@ -136,9 +128,12 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
             ? AppColors.primary
             : AppColors.slate200;
 
+    // The label floats to top: -10 when fully animated.
+    // We add 12px of top space so it never overlaps the widget above.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 12),
         Stack(
           clipBehavior: Clip.none,
           children: [
@@ -263,7 +258,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
               ],
             ),
           ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 8),
       ],
     );
   }
