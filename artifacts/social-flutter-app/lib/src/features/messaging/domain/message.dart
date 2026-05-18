@@ -23,7 +23,8 @@ class Message {
     required this.createdAt,
   });
 
-  factory Message.fromJson(Map<String, dynamic> json) => _$MessageFromJson(json);
+  factory Message.fromJson(Map<String, dynamic> json) =>
+      _$MessageFromJson(json);
   Map<String, dynamic> toJson() => _$MessageToJson(this);
 }
 
@@ -43,7 +44,8 @@ class Conversation {
     required this.updatedAt,
   });
 
-  factory Conversation.fromJson(Map<String, dynamic> json) => _$ConversationFromJson(json);
+  factory Conversation.fromJson(Map<String, dynamic> json) =>
+      _$ConversationFromJson(json);
   Map<String, dynamic> toJson() => _$ConversationToJson(this);
 }
 
@@ -52,11 +54,9 @@ class MessagePage {
   final List<Message> messages;
   final String? nextCursor;
 
-  MessagePage({
-    required this.messages,
-    this.nextCursor,
-  });
+  MessagePage({required this.messages, this.nextCursor});
 
-  factory MessagePage.fromJson(Map<String, dynamic> json) => _$MessagePageFromJson(json);
+  factory MessagePage.fromJson(Map<String, dynamic> json) =>
+      _$MessagePageFromJson(json);
   Map<String, dynamic> toJson() => _$MessagePageToJson(this);
 }

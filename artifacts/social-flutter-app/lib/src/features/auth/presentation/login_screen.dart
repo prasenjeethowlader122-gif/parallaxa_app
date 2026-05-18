@@ -111,9 +111,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           }
         }
         setState(() {
-          _errors = {
-            'general': errorMessage,
-          };
+          _errors = {'general': errorMessage};
         });
       }
     } finally {
@@ -194,7 +192,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (_errors['general'] != null) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(12),
@@ -202,8 +202,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded,
-                          color: Color(0xFFDC2626), size: 20),
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        color: Color(0xFFDC2626),
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -367,7 +370,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 12),
 
-
               // Sign Up CTA
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -404,15 +406,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     TextSpan(
                       text: 'Terms of Service',
                       style: TextStyle(
-                          color: Color(0xFF0095F6),
-                          fontWeight: FontWeight.w700),
+                        color: Color(0xFF0095F6),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     TextSpan(text: ' and '),
                     TextSpan(
                       text: 'Privacy Policy',
                       style: TextStyle(
-                          color: Color(0xFF0095F6),
-                          fontWeight: FontWeight.w700),
+                        color: Color(0xFF0095F6),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     TextSpan(text: '.'),
                   ],

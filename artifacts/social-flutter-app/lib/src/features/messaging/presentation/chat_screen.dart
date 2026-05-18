@@ -5,13 +5,12 @@ import 'package:intl/intl.dart';
 import '../data/message_repository.dart';
 import '../domain/message.dart';
 import '../../../core/api_client.dart';
-import '../../../core/storage_service.dart';
 
-final chatMessagesProvider =
-    FutureProvider.family<MessagePage, String>((ref, conversationId) {
-  return ref
-      .watch(messageRepositoryProvider)
-      .getMessages(conversationId);
+final chatMessagesProvider = FutureProvider.family<MessagePage, String>((
+  ref,
+  conversationId,
+) {
+  return ref.watch(messageRepositoryProvider).getMessages(conversationId);
 });
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -83,17 +82,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
       if (mounted) {
         setState(() {
-          final idx =
-              _localMessages.indexWhere((m) => m.id == optimistic.id);
+          final idx = _localMessages.indexWhere((m) => m.id == optimistic.id);
           if (idx != -1) _localMessages[idx] = sent;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _localMessages.removeWhere((m) => m.id == optimistic.id));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to send message')),
+        setState(
+          () => _localMessages.removeWhere((m) => m.id == optimistic.id),
         );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to send message')));
         _messageController.text = content;
       }
     } finally {
@@ -103,8 +103,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final messagesAsync =
-        ref.watch(chatMessagesProvider(widget.conversationId));
+    final messagesAsync = ref.watch(
+      chatMessagesProvider(widget.conversationId),
+    );
     final storageService = ref.read(storageServiceProvider);
     final currentUserId = storageService.getCurrentUserId() ?? '';
 
@@ -148,28 +149,32 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 if (allMessages.isNotEmpty) _scrollToBottom();
                 return allMessages.isEmpty
                     ? const Center(
-                        child: Text('No messages yet. Say hello!',
-                            style: TextStyle(color: Colors.grey)),
+                        child: Text(
+                          'No messages yet. Say hello!',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       )
                     : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         itemCount: allMessages.length,
                         itemBuilder: (context, index) {
                           final msg = allMessages[index];
                           final isMine = msg.senderId == currentUserId;
-                          return _MessageBubble(
-                            message: msg,
-                            isMine: isMine,
-                          );
+                          return _MessageBubble(message: msg, isMine: isMine);
                         },
                       );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (_, __) => const Center(
-                  child: Text('Could not load messages',
-                      style: TextStyle(color: Colors.grey))),
+                child: Text(
+                  'Could not load messages',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
             ),
           ),
           const Divider(height: 1),
@@ -194,7 +199,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           hintStyle: TextStyle(color: Colors.grey),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
                         ),
                         onSubmitted: (_) => _sendMessage(),
                         textInputAction: TextInputAction.send,
@@ -210,7 +217,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         color: Color(0xFF0095F6),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.send, color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.send,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -236,19 +247,17 @@ class _MessageBubble extends StatelessWidget {
       child: Align(
         alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
         child: Column(
-          crossAxisAlignment:
-              isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isMine
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             Container(
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.7,
               ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isMine
-                    ? const Color(0xFF0095F6)
-                    : Colors.grey.shade100,
+                color: isMine ? const Color(0xFF0095F6) : Colors.grey.shade100,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),
                   topRight: const Radius.circular(18),

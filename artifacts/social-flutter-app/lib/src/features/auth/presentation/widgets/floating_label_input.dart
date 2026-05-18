@@ -77,8 +77,10 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
       vsync: this,
       duration: const Duration(milliseconds: 150),
     );
-    _animation =
-        CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _animation = CurvedAnimation(
+      parent: _animController,
+      curve: Curves.easeOut,
+    );
 
     if (_textController.text.isNotEmpty || _focusNode.hasFocus) {
       _animController.value = 1.0;
@@ -125,8 +127,8 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
     final Color borderColor = hasError
         ? const Color(0xFFFCA5A5)
         : isFocused
-            ? AppColors.primary
-            : AppColors.slate200;
+        ? AppColors.primary
+        : AppColors.slate200;
 
     // The label floats to top: -10 when fully animated.
     // We add 12px of top space so it never overlaps the widget above.
@@ -154,8 +156,8 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                         color: isFocused
                             ? AppColors.primary
                             : hasError
-                                ? const Color(0xFFDC2626)
-                                : AppColors.slate500,
+                            ? const Color(0xFFDC2626)
+                            : AppColors.slate500,
                         size: 20,
                       ),
                     ),
@@ -222,8 +224,8 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                         color: hasError
                             ? const Color(0xFFDC2626)
                             : isFocused
-                                ? AppColors.primary
-                                : AppColors.slate400,
+                            ? AppColors.primary
+                            : AppColors.slate400,
                         fontFamily: 'Sora',
                         fontWeight: _animation.value > 0
                             ? FontWeight.w600
@@ -241,8 +243,11 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
             padding: const EdgeInsets.only(top: 6, left: 4),
             child: Row(
               children: [
-                const Icon(Icons.info_outline,
-                    color: Color(0xFFDC2626), size: 14),
+                const Icon(
+                  Icons.info_outline,
+                  color: Color(0xFFDC2626),
+                  size: 14,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(

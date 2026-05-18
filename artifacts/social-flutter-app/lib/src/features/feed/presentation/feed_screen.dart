@@ -37,8 +37,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
           decoration: const BoxDecoration(
             color: AppColors.background,
             border: Border(
-              bottom:
-                  BorderSide(color: AppColors.border, width: 0.5),
+              bottom: BorderSide(color: AppColors.border, width: 0.5),
             ),
           ),
           child: TabBar(
@@ -60,8 +59,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
             indicatorWeight: 3,
             indicatorSize: TabBarIndicatorSize.label,
             splashFactory: NoSplash.splashFactory,
-            overlayColor:
-                WidgetStateProperty.all(Colors.transparent),
+            overlayColor: WidgetStateProperty.all(Colors.transparent),
           ),
         ),
         // ── Tab views ─────────────────────────────────────────────────
@@ -106,8 +104,11 @@ class _FeedList extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.wifi_off_rounded,
-                  size: 44, color: AppColors.mutedForeground),
+              const Icon(
+                Icons.wifi_off_rounded,
+                size: 44,
+                color: AppColors.mutedForeground,
+              ),
               const SizedBox(height: 16),
               Text(
                 e.toString().contains('401')
@@ -141,10 +142,11 @@ class _FeedList extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.article_outlined,
-                      size: 48,
-                      color: AppColors.mutedForeground
-                          .withOpacity(0.5)),
+                  Icon(
+                    Icons.article_outlined,
+                    size: 48,
+                    color: AppColors.mutedForeground.withOpacity(0.5),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     feedType == 'following'

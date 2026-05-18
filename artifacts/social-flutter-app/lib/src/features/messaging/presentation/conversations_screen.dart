@@ -7,8 +7,7 @@ import '../data/message_repository.dart';
 import '../domain/message.dart';
 import '../../../core/app_colors.dart';
 
-final conversationsProvider =
-    FutureProvider<List<Conversation>>((ref) {
+final conversationsProvider = FutureProvider<List<Conversation>>((ref) {
   return ref.watch(messageRepositoryProvider).getConversations();
 });
 
@@ -31,11 +30,15 @@ class ConversationsScreen extends ConsumerWidget {
     return convAsync.when(
       loading: () => const Center(
         child: CircularProgressIndicator(
-            color: AppColors.primary, strokeWidth: 2),
+          color: AppColors.primary,
+          strokeWidth: 2,
+        ),
       ),
       error: (_, __) => const Center(
-        child: Text('Could not load messages',
-            style: TextStyle(color: AppColors.mutedForeground)),
+        child: Text(
+          'Could not load messages',
+          style: TextStyle(color: AppColors.mutedForeground),
+        ),
       ),
       data: (conversations) => Column(
         children: [
@@ -49,17 +52,20 @@ class ConversationsScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const TextField(
-                style: TextStyle(
-                    fontSize: 15, color: AppColors.foreground),
+                style: TextStyle(fontSize: 15, color: AppColors.foreground),
                 decoration: InputDecoration(
                   hintText: 'Search messages',
                   hintStyle: TextStyle(
-                      color: AppColors.mutedForeground, fontSize: 15),
-                  prefixIcon: Icon(Icons.search_rounded,
-                      color: AppColors.mutedForeground, size: 20),
+                    color: AppColors.mutedForeground,
+                    fontSize: 15,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: AppColors.mutedForeground,
+                    size: 20,
+                  ),
                   border: InputBorder.none,
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 10),
+                  contentPadding: EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
             ),
@@ -73,9 +79,10 @@ class ConversationsScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
-                            Icons.chat_bubble_outline_rounded,
-                            size: 52,
-                            color: AppColors.mutedForeground),
+                          Icons.chat_bubble_outline_rounded,
+                          size: 52,
+                          color: AppColors.mutedForeground,
+                        ),
                         const SizedBox(height: 16),
                         const Text(
                           'No messages yet',
@@ -99,8 +106,7 @@ class ConversationsScreen extends ConsumerWidget {
                   )
                 : RefreshIndicator(
                     color: AppColors.primary,
-                    onRefresh: () =>
-                        ref.refresh(conversationsProvider.future),
+                    onRefresh: () => ref.refresh(conversationsProvider.future),
                     child: ListView.builder(
                       itemCount: conversations.length,
                       itemBuilder: (context, i) {
@@ -142,8 +148,7 @@ class _ConversationTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           children: [
             // ── Avatar (46px) ──────────────────────────────────────
@@ -152,15 +157,15 @@ class _ConversationTile extends StatelessWidget {
                 CircleAvatar(
                   radius: 23,
                   backgroundColor: AppColors.muted,
-                  backgroundImage:
-                      conv.participant.avatarUrl != null
-                          ? CachedNetworkImageProvider(
-                              conv.participant.avatarUrl!)
-                          : null,
+                  backgroundImage: conv.participant.avatarUrl != null
+                      ? CachedNetworkImageProvider(conv.participant.avatarUrl!)
+                      : null,
                   child: conv.participant.avatarUrl == null
-                      ? const Icon(Icons.person,
+                      ? const Icon(
+                          Icons.person,
                           color: AppColors.mutedForeground,
-                          size: 24)
+                          size: 24,
+                        )
                       : null,
                 ),
               ],
@@ -225,7 +230,9 @@ class _ConversationTile extends StatelessWidget {
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(10),

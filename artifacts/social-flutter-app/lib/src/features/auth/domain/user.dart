@@ -54,12 +54,9 @@ class AuthResponse {
   final User? user;
   final bool twoFactorRequired;
 
-  AuthResponse({
-    this.token,
-    this.user,
-    required this.twoFactorRequired,
-  });
+  AuthResponse({this.token, this.user, required this.twoFactorRequired});
 
-  factory AuthResponse.fromJson(Map<String, dynamic> json) => _$AuthResponseFromJson(json);
+  factory AuthResponse.fromJson(Map<String, dynamic> json) =>
+      _$AuthResponseFromJson(json);
   Map<String, dynamic> toJson() => _$AuthResponseToJson(this);
 }

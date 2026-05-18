@@ -8,16 +8,16 @@ import '../data/profile_repository.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/api_client.dart';
 import '../../../core/processing_provider.dart';
-import '../../../core/storage_service.dart';
 import '../../../core/app_colors.dart';
 
-final userProfileProvider =
-    FutureProvider.family<User, String>((ref, userId) {
+final userProfileProvider = FutureProvider.family<User, String>((ref, userId) {
   return ref.watch(profileRepositoryProvider).getUserProfile(userId);
 });
 
-final userPostsProvider =
-    FutureProvider.family<PostPage, String>((ref, userId) {
+final userPostsProvider = FutureProvider.family<PostPage, String>((
+  ref,
+  userId,
+) {
   return ref.watch(profileRepositoryProvider).getUserPosts(userId);
 });
 
@@ -89,32 +89,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    final userAsync =
-        ref.watch(userProfileProvider(effectiveUserId));
-    final postsAsync =
-        ref.watch(userPostsProvider(effectiveUserId));
+    final userAsync = ref.watch(userProfileProvider(effectiveUserId));
+    final postsAsync = ref.watch(userPostsProvider(effectiveUserId));
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: userAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(
-              color: AppColors.primary, strokeWidth: 2),
+            color: AppColors.primary,
+            strokeWidth: 2,
+          ),
         ),
         error: (_, __) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline,
-                  size: 40, color: AppColors.mutedForeground),
+              const Icon(
+                Icons.error_outline,
+                size: 40,
+                color: AppColors.mutedForeground,
+              ),
               const SizedBox(height: 12),
-              const Text('Could not load profile',
-                  style:
-                      TextStyle(color: AppColors.mutedForeground)),
+              const Text(
+                'Could not load profile',
+                style: TextStyle(color: AppColors.mutedForeground),
+              ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => ref
-                    .invalidate(userProfileProvider(effectiveUserId)),
+                onPressed: () =>
+                    ref.invalidate(userProfileProvider(effectiveUserId)),
                 child: const Text('Retry'),
               ),
             ],
@@ -124,73 +128,69 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           return RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () async {
-              ref.invalidate(
-                  userProfileProvider(effectiveUserId));
+              ref.invalidate(userProfileProvider(effectiveUserId));
               ref.invalidate(userPostsProvider(effectiveUserId));
             },
             child: NestedScrollView(
-                headerSliverBuilder: (context, _) => [
-                  SliverToBoxAdapter(
-                    child: _ProfileHeader(
-                      user: user,
-                      isOwnProfile: isOwnProfile,
-                      isFollowing: _isFollowing ?? false,
-                      isFollowLoading: _isFollowLoading,
-                      onFollow: () => _toggleFollow(user),
-                      onLogout: _logout,
+              headerSliverBuilder: (context, _) => [
+                SliverToBoxAdapter(
+                  child: _ProfileHeader(
+                    user: user,
+                    isOwnProfile: isOwnProfile,
+                    isFollowing: _isFollowing ?? false,
+                    isFollowLoading: _isFollowLoading,
+                    onFollow: () => _toggleFollow(user),
+                    onLogout: _logout,
+                  ),
+                ),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _TabBarDelegate(
+                    TabBar(
+                      controller: _tab,
+                      tabs: _tabs.map((t) => Tab(text: t)).toList(),
+                      labelStyle: const TextStyle(
+                        fontFamily: 'Sora',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontFamily: 'Sora',
+                        fontWeight: FontWeight.w400,
+                        fontSize: 14,
+                      ),
+                      labelColor: AppColors.textPrimary,
+                      unselectedLabelColor: AppColors.mutedForeground,
+                      indicatorColor: AppColors.primary,
+                      indicatorWeight: 3,
+                      indicatorSize: TabBarIndicatorSize.label,
+                      splashFactory: NoSplash.splashFactory,
+                      overlayColor: WidgetStateProperty.all(Colors.transparent),
                     ),
                   ),
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _TabBarDelegate(
-                      TabBar(
-                        controller: _tab,
-                        tabs: _tabs
-                            .map((t) => Tab(text: t))
-                            .toList(),
-                        labelStyle: const TextStyle(
-                          fontFamily: 'Sora',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                        unselectedLabelStyle: const TextStyle(
-                          fontFamily: 'Sora',
-                          fontWeight: FontWeight.w400,
-                          fontSize: 14,
-                        ),
-                        labelColor: AppColors.textPrimary,
-                        unselectedLabelColor:
-                            AppColors.mutedForeground,
-                        indicatorColor: AppColors.primary,
-                        indicatorWeight: 3,
-                        indicatorSize: TabBarIndicatorSize.label,
-                        splashFactory: NoSplash.splashFactory,
-                        overlayColor: WidgetStateProperty.all(
-                            Colors.transparent),
-                      ),
-                    ),
+                ),
+              ],
+              body: TabBarView(
+                controller: _tab,
+                children: [
+                  // Posts tab — grid
+                  _PostsGrid(postsAsync: postsAsync),
+                  // Replies — placeholder
+                  _EmptyTab(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    message: 'No replies yet',
+                  ),
+                  // Media — grid filtered to posts with images
+                  _PostsGrid(postsAsync: postsAsync, mediaOnly: true),
+                  // Likes — placeholder
+                  _EmptyTab(
+                    icon: Icons.favorite_border_rounded,
+                    message: 'No liked posts yet',
                   ),
                 ],
-                body: TabBarView(
-                  controller: _tab,
-                  children: [
-                    // Posts tab — grid
-                    _PostsGrid(postsAsync: postsAsync),
-                    // Replies — placeholder
-                    _EmptyTab(
-                        icon: Icons.chat_bubble_outline_rounded,
-                        message: 'No replies yet'),
-                    // Media — grid filtered to posts with images
-                    _PostsGrid(
-                        postsAsync: postsAsync, mediaOnly: true),
-                    // Likes — placeholder
-                    _EmptyTab(
-                        icon: Icons.favorite_border_rounded,
-                        message: 'No liked posts yet'),
-                  ],
-                ),
               ),
-            );
+            ),
+          );
         },
       ),
     );
@@ -244,14 +244,20 @@ class _ProfileHeader extends StatelessWidget {
               ),
               if (isOwnProfile)
                 IconButton(
-                  icon: const Icon(Icons.logout_rounded,
-                      color: AppColors.textPrimary, size: 22),
+                  icon: const Icon(
+                    Icons.logout_rounded,
+                    color: AppColors.textPrimary,
+                    size: 22,
+                  ),
                   onPressed: onLogout,
                 )
               else
                 IconButton(
-                  icon: const Icon(Icons.more_horiz_rounded,
-                      color: AppColors.textPrimary, size: 22),
+                  icon: const Icon(
+                    Icons.more_horiz_rounded,
+                    color: AppColors.textPrimary,
+                    size: 22,
+                  ),
                   onPressed: () {},
                 ),
             ],
@@ -288,20 +294,20 @@ class _ProfileHeader extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(
-                        color: AppColors.background, width: 3),
+                    border: Border.all(color: AppColors.background, width: 3),
                   ),
                   child: CircleAvatar(
                     radius: 38,
                     backgroundColor: AppColors.muted,
                     backgroundImage: user.avatarUrl != null
-                        ? CachedNetworkImageProvider(
-                            user.avatarUrl!)
+                        ? CachedNetworkImageProvider(user.avatarUrl!)
                         : null,
                     child: user.avatarUrl == null
-                        ? const Icon(Icons.person,
+                        ? const Icon(
+                            Icons.person,
                             size: 38,
-                            color: AppColors.mutedForeground)
+                            color: AppColors.mutedForeground,
+                          )
                         : null,
                   ),
                 ),
@@ -315,11 +321,14 @@ class _ProfileHeader extends StatelessWidget {
                         onPressed: () {},
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(
-                              color: AppColors.border,
-                              width: 1.2),
+                            color: AppColors.border,
+                            width: 1.2,
+                          ),
                           shape: const StadiumBorder(),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 8),
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
                           minimumSize: Size.zero,
                         ),
                         child: const Text(
@@ -333,42 +342,46 @@ class _ProfileHeader extends StatelessWidget {
                         ),
                       )
                     : isFollowLoading
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.primary),
-                          )
-                        : ElevatedButton(
-                            onPressed: onFollow,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: isFollowing
-                                  ? AppColors.background
-                                  : AppColors.textPrimary,
-                              foregroundColor: isFollowing
-                                  ? AppColors.textPrimary
-                                  : Colors.white,
-                              side: isFollowing
-                                  ? const BorderSide(
-                                      color: AppColors.border,
-                                      width: 1.2)
-                                  : BorderSide.none,
-                              elevation: 0,
-                              shape: const StadiumBorder(),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 8),
-                              minimumSize: Size.zero,
-                            ),
-                            child: Text(
-                              isFollowing ? 'Following' : 'Follow',
-                              style: const TextStyle(
-                                fontFamily: 'Sora',
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                              ),
-                            ),
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : ElevatedButton(
+                        onPressed: onFollow,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isFollowing
+                              ? AppColors.background
+                              : AppColors.textPrimary,
+                          foregroundColor: isFollowing
+                              ? AppColors.textPrimary
+                              : Colors.white,
+                          side: isFollowing
+                              ? const BorderSide(
+                                  color: AppColors.border,
+                                  width: 1.2,
+                                )
+                              : BorderSide.none,
+                          elevation: 0,
+                          shape: const StadiumBorder(),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
                           ),
+                          minimumSize: Size.zero,
+                        ),
+                        child: Text(
+                          isFollowing ? 'Following' : 'Follow',
+                          style: const TextStyle(
+                            fontFamily: 'Sora',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
               ),
             ],
           ),
@@ -393,8 +406,11 @@ class _ProfileHeader extends StatelessWidget {
                   ),
                   if (user.isVerified) ...[
                     const SizedBox(width: 4),
-                    const Icon(Icons.verified,
-                        size: 18, color: AppColors.verified),
+                    const Icon(
+                      Icons.verified,
+                      size: 18,
+                      color: AppColors.verified,
+                    ),
                   ],
                 ],
               ),
@@ -417,19 +433,22 @@ class _ProfileHeader extends StatelessWidget {
                   ),
                 ),
               ],
-              if (user.website != null &&
-                  user.website!.isNotEmpty) ...[
+              if (user.website != null && user.website!.isNotEmpty) ...[
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(Icons.link_rounded,
-                        size: 14, color: AppColors.primary),
+                    const Icon(
+                      Icons.link_rounded,
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       user.website!,
                       style: const TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 13),
+                        color: AppColors.primary,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -439,13 +458,9 @@ class _ProfileHeader extends StatelessWidget {
               // ── Stats row (Following X · Followers X) ────────────
               Row(
                 children: [
-                  _StatChip(
-                      count: user.followingCount,
-                      label: 'Following'),
+                  _StatChip(count: user.followingCount, label: 'Following'),
                   const SizedBox(width: 16),
-                  _StatChip(
-                      count: user.followersCount,
-                      label: 'Followers'),
+                  _StatChip(count: user.followersCount, label: 'Followers'),
                 ],
               ),
               const SizedBox(height: 14),
@@ -486,10 +501,7 @@ class _StatChip extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: AppColors.textMuted,
-          ),
+          style: const TextStyle(fontSize: 14, color: AppColors.textMuted),
         ),
       ],
     );
@@ -511,13 +523,14 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.background,
-        border: Border(
-          bottom: BorderSide(color: AppColors.border, width: 0.5),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
       ),
       child: tabBar,
     );
@@ -540,11 +553,15 @@ class _PostsGrid extends StatelessWidget {
     return postsAsync.when(
       loading: () => const Center(
         child: CircularProgressIndicator(
-            color: AppColors.primary, strokeWidth: 2),
+          color: AppColors.primary,
+          strokeWidth: 2,
+        ),
       ),
       error: (_, __) => const Center(
-        child: Text('Could not load posts',
-            style: TextStyle(color: AppColors.mutedForeground)),
+        child: Text(
+          'Could not load posts',
+          style: TextStyle(color: AppColors.mutedForeground),
+        ),
       ),
       data: (page) {
         final posts = mediaOnly
@@ -586,12 +603,14 @@ class _GridTile extends StatelessWidget {
         ? CachedNetworkImage(
             imageUrl: post.imageUrl!,
             fit: BoxFit.cover,
-            placeholder: (_, __) =>
-                Container(color: AppColors.muted),
+            placeholder: (_, __) => Container(color: AppColors.muted),
             errorWidget: (_, __, ___) => Container(
               color: AppColors.muted,
-              child: const Icon(Icons.broken_image,
-                  color: AppColors.mutedForeground, size: 20),
+              child: const Icon(
+                Icons.broken_image,
+                color: AppColors.mutedForeground,
+                size: 20,
+              ),
             ),
           )
         : Container(
@@ -600,8 +619,7 @@ class _GridTile extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             child: Text(
               post.content ?? '',
-              style: const TextStyle(
-                  fontSize: 11, color: AppColors.foreground),
+              style: const TextStyle(fontSize: 11, color: AppColors.foreground),
               maxLines: 4,
               overflow: TextOverflow.ellipsis,
             ),
@@ -621,9 +639,11 @@ class _EmptyTab extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon,
-              size: 44,
-              color: AppColors.mutedForeground.withOpacity(0.5)),
+          Icon(
+            icon,
+            size: 44,
+            color: AppColors.mutedForeground.withOpacity(0.5),
+          ),
           const SizedBox(height: 14),
           Text(
             message,

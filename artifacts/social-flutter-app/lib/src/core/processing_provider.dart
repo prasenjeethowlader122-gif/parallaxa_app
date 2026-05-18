@@ -29,6 +29,7 @@ class ProcessingNotifier extends Notifier<ProcessingState> {
   }
 }
 
-final processingProvider = NotifierProvider<ProcessingNotifier, ProcessingState>(() {
-  return ProcessingNotifier();
-});
+final processingProvider =
+    NotifierProvider<ProcessingNotifier, ProcessingState>(() {
+      return ProcessingNotifier();
+    });

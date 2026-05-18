@@ -6,8 +6,7 @@ import '../data/notification_repository.dart';
 import '../domain/notification.dart';
 import '../../../core/app_colors.dart';
 
-final notificationsProvider =
-    FutureProvider<NotificationPage>((ref) {
+final notificationsProvider = FutureProvider<NotificationPage>((ref) {
   return ref.watch(notificationRepositoryProvider).getNotifications();
 });
 
@@ -47,11 +46,15 @@ class NotificationsScreen extends ConsumerWidget {
     return notifAsync.when(
       loading: () => const Center(
         child: CircularProgressIndicator(
-            color: AppColors.primary, strokeWidth: 2),
+          color: AppColors.primary,
+          strokeWidth: 2,
+        ),
       ),
       error: (_, __) => const Center(
-        child: Text('Could not load notifications',
-            style: TextStyle(color: AppColors.mutedForeground)),
+        child: Text(
+          'Could not load notifications',
+          style: TextStyle(color: AppColors.mutedForeground),
+        ),
       ),
       data: (page) {
         if (page.notifications.isEmpty) {
@@ -59,9 +62,11 @@ class NotificationsScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.notifications_none_rounded,
-                    size: 52,
-                    color: AppColors.mutedForeground),
+                const Icon(
+                  Icons.notifications_none_rounded,
+                  size: 52,
+                  color: AppColors.mutedForeground,
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   'No notifications yet',
@@ -129,8 +134,7 @@ class _NotificationRow extends StatelessWidget {
 
     return Container(
       color: isUnread ? AppColors.unreadBg : AppColors.background,
-      padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -142,8 +146,11 @@ class _NotificationRow extends StatelessWidget {
                 ? CachedNetworkImageProvider(n.fromUser.avatarUrl!)
                 : null,
             child: n.fromUser.avatarUrl == null
-                ? const Icon(Icons.person,
-                    color: AppColors.mutedForeground, size: 22)
+                ? const Icon(
+                    Icons.person,
+                    color: AppColors.mutedForeground,
+                    size: 22,
+                  )
                 : null,
           ),
           const SizedBox(width: 12),
@@ -165,8 +172,9 @@ class _NotificationRow extends StatelessWidget {
                       TextSpan(
                         text: n.fromUser.displayName,
                         style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary),
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                       TextSpan(text: ' $actionText'),
                     ],

@@ -15,7 +15,8 @@ class SearchResults {
     required this.hashtags,
   });
 
-  factory SearchResults.fromJson(Map<String, dynamic> json) => _$SearchResultsFromJson(json);
+  factory SearchResults.fromJson(Map<String, dynamic> json) =>
+      _$SearchResultsFromJson(json);
   Map<String, dynamic> toJson() => _$SearchResultsToJson(this);
 }
 
@@ -26,6 +27,7 @@ class Hashtag {
 
   Hashtag({required this.name, required this.postCount});
 
-  factory Hashtag.fromJson(Map<String, dynamic> json) => _$HashtagFromJson(json);
+  factory Hashtag.fromJson(Map<String, dynamic> json) =>
+      _$HashtagFromJson(json);
   Map<String, dynamic> toJson() => _$HashtagToJson(this);
 }

@@ -18,13 +18,15 @@ class ProfileRepository {
     return User.fromJson(response.data);
   }
 
-  Future<PostPage> getUserPosts(String userId,
-      {String? cursor, int limit = 20}) async {
-    final response =
-        await _dio.get('/users/$userId/posts', queryParameters: {
-      if (cursor != null) 'cursor': cursor,
-      'limit': limit,
-    });
+  Future<PostPage> getUserPosts(
+    String userId, {
+    String? cursor,
+    int limit = 20,
+  }) async {
+    final response = await _dio.get(
+      '/users/$userId/posts',
+      queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
+    );
     return PostPage.fromJson(response.data);
   }
 
