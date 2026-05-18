@@ -196,8 +196,19 @@ router.get(
   optionalAuthenticate,
   async (req: AuthRequest, res): Promise<any> => {
     try {
-      const userId = req.params.userId as string;
+      let userId = req.params.userId as string;
       const myId = req.userId;
+
+      if (userId === "me") {
+        if (!myId) {
+          res.status(401).json({
+            error: "Unauthorized",
+            message: "Authentication required for 'me' alias",
+          });
+          return;
+        }
+        userId = myId;
+      }
       const [user] = await db
         .select()
         .from(usersTable)
@@ -271,7 +282,9 @@ router.get(
 
 router.put("/users/:userId", authenticate, async (req: AuthRequest, res) => {
   try {
-    const userId = req.params.userId as string;
+    let userId = req.params.userId as string;
+    if (userId === "me") userId = req.userId!;
+
     if (userId !== req.userId && !req.isAdmin) {
       res
         .status(403)
@@ -308,8 +321,19 @@ router.get(
   optionalAuthenticate,
   async (req: AuthRequest, res): Promise<any> => {
     try {
-      const userId = req.params.userId as string;
+      let userId = req.params.userId as string;
       const myId = req.userId;
+
+      if (userId === "me") {
+        if (!myId) {
+          res.status(401).json({
+            error: "Unauthorized",
+            message: "Authentication required for 'me' alias",
+          });
+          return;
+        }
+        userId = myId;
+      }
       const limit = Math.min(Number(req.query.limit) || 20, 100);
 
       const [user] = await db
@@ -398,7 +422,9 @@ router.get(
   authenticate,
   async (req: AuthRequest, res) => {
     try {
-      const userId = req.params.userId as string;
+      let userId = req.params.userId as string;
+      if (userId === "me") userId = req.userId!;
+
       const now = new Date();
       const stories = await db
         .select()
@@ -436,7 +462,17 @@ router.get(
   optionalAuthenticate,
   async (req: AuthRequest, res) => {
     try {
-      const userId = req.params.userId as string;
+      let userId = req.params.userId as string;
+      if (userId === "me") {
+        if (!req.userId) {
+          res.status(401).json({
+            error: "Unauthorized",
+            message: "Authentication required for 'me' alias",
+          });
+          return;
+        }
+        userId = req.userId;
+      }
       const limit = Math.min(Number(req.query.limit) || 20, 100);
       const rows = await db
         .select({ user: usersTable })
@@ -463,7 +499,17 @@ router.get(
   optionalAuthenticate,
   async (req: AuthRequest, res) => {
     try {
-      const userId = req.params.userId as string;
+      let userId = req.params.userId as string;
+      if (userId === "me") {
+        if (!req.userId) {
+          res.status(401).json({
+            error: "Unauthorized",
+            message: "Authentication required for 'me' alias",
+          });
+          return;
+        }
+        userId = req.userId;
+      }
       const limit = Math.min(Number(req.query.limit) || 20, 100);
       const rows = await db
         .select({ user: usersTable })
@@ -490,8 +536,10 @@ router.post(
   authenticate,
   async (req: AuthRequest, res) => {
     try {
-      const userId = req.params.userId as string;
+      let userId = req.params.userId as string;
       const myId = req.userId!;
+      if (userId === "me") userId = myId;
+
       if (userId === myId) {
         res
           .status(400)
@@ -535,8 +583,10 @@ router.delete(
   authenticate,
   async (req: AuthRequest, res) => {
     try {
-      const userId = req.params.userId as string;
+      let userId = req.params.userId as string;
       const myId = req.userId!;
+      if (userId === "me") userId = myId;
+
       const [existing] = await db
         .select()
         .from(followsTable)
