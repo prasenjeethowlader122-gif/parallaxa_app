@@ -47,9 +47,7 @@ class MainApp extends ConsumerWidget {
       scaffoldMessengerKey: scaffoldMessengerKey,
       routerConfig: router,
       builder: (context, child) {
-        return OTAUpdateListener(
-          child: ProcessingOverlay(child: child!),
-        );
+        return OTAUpdateListener(child: ProcessingOverlay(child: child!));
       },
       theme: ThemeData(
         fontFamily: 'Sora',
@@ -233,16 +231,17 @@ class _OTAUpdateListenerState extends ConsumerState<OTAUpdateListener> {
         ),
         backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
-        duration:
-            isPersistent ? const Duration(days: 1) : const Duration(seconds: 4),
+        duration: isPersistent
+            ? const Duration(days: 1)
+            : const Duration(seconds: 4),
         action: isPersistent
             ? SnackBarAction(
-              label: 'Dismiss',
-              textColor: Colors.white,
-              onPressed: () {
-                scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
-              },
-            )
+                label: 'Dismiss',
+                textColor: Colors.white,
+                onPressed: () {
+                  scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+                },
+              )
             : null,
       ),
     );
