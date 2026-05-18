@@ -1,0 +1,537 @@
+2026-05-18T09:02:33.0792919Z Current runner version: '2.334.0'
+2026-05-18T09:02:33.0819841Z ##[group]Runner Image Provisioner
+2026-05-18T09:02:33.0820576Z Hosted Compute Agent
+2026-05-18T09:02:33.0821198Z Version: 20260213.493
+2026-05-18T09:02:33.0821782Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+2026-05-18T09:02:33.0822468Z Build Date: 2026-02-13T00:28:41Z
+2026-05-18T09:02:33.0823098Z Worker ID: {dc3463a0-8fbc-43d9-ba92-bdfae474a571}
+2026-05-18T09:02:33.0823813Z Azure Region: eastus2
+2026-05-18T09:02:33.0824340Z ##[endgroup]
+2026-05-18T09:02:33.0826006Z ##[group]Operating System
+2026-05-18T09:02:33.0826632Z Ubuntu
+2026-05-18T09:02:33.0827066Z 24.04.4
+2026-05-18T09:02:33.0827551Z LTS
+2026-05-18T09:02:33.0828014Z ##[endgroup]
+2026-05-18T09:02:33.0828510Z ##[group]Runner Image
+2026-05-18T09:02:33.0829076Z Image: ubuntu-24.04
+2026-05-18T09:02:33.0829554Z Version: 20260513.135.3
+2026-05-18T09:02:33.0830691Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260513.135/images/ubuntu/Ubuntu2404-Readme.md
+2026-05-18T09:02:33.0832144Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260513.135
+2026-05-18T09:02:33.0833062Z ##[endgroup]
+2026-05-18T09:02:33.0836404Z ##[group]GITHUB_TOKEN Permissions
+2026-05-18T09:02:33.0838775Z Actions: write
+2026-05-18T09:02:33.0839365Z ArtifactMetadata: write
+2026-05-18T09:02:33.0839976Z Attestations: write
+2026-05-18T09:02:33.0840437Z Checks: write
+2026-05-18T09:02:33.0840965Z CodeQuality: write
+2026-05-18T09:02:33.0841447Z Contents: write
+2026-05-18T09:02:33.0841992Z Deployments: write
+2026-05-18T09:02:33.0842442Z Discussions: write
+2026-05-18T09:02:33.0843025Z Issues: write
+2026-05-18T09:02:33.0843469Z Metadata: read
+2026-05-18T09:02:33.0843936Z Models: read
+2026-05-18T09:02:33.0844462Z Packages: write
+2026-05-18T09:02:33.0845377Z Pages: write
+2026-05-18T09:02:33.0845846Z PullRequests: write
+2026-05-18T09:02:33.0846831Z RepositoryProjects: write
+2026-05-18T09:02:33.0847410Z SecurityEvents: write
+2026-05-18T09:02:33.0847916Z Statuses: write
+2026-05-18T09:02:33.0848595Z VulnerabilityAlerts: read
+2026-05-18T09:02:33.0849131Z ##[endgroup]
+2026-05-18T09:02:33.0851149Z Secret source: Actions
+2026-05-18T09:02:33.0852190Z Prepare workflow directory
+2026-05-18T09:02:33.1181587Z Prepare all required actions
+2026-05-18T09:02:33.1218771Z Getting action download info
+2026-05-18T09:02:33.5785957Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-05-18T09:02:33.7486009Z Download action repository 'actions/setup-java@v4' (SHA:c1e323688fd81a25caa38c78aa6df2d33d3e20d9)
+2026-05-18T09:02:34.0639735Z Download action repository 'subosito/flutter-action@v2' (SHA:1a449444c387b1966244ae4d4f8c696479add0b2)
+2026-05-18T09:02:34.2698057Z Download action repository 'shorebirdtech/setup-shorebird@v1' (SHA:4dd9d7dc2d7930bfeadb053b6e94b5110779d1e5)
+2026-05-18T09:02:34.5157042Z Getting action download info
+2026-05-18T09:02:34.6780058Z Download action repository 'actions/cache@v5' (SHA:27d5ce7f107fe9357f9df03efb73ab90386fccae)
+2026-05-18T09:02:34.8527236Z Getting action download info
+2026-05-18T09:02:35.0386253Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-05-18T09:02:35.1677785Z Complete job name: Shorebird Patch
+2026-05-18T09:02:35.2532496Z ##[group]Run actions/checkout@v4
+2026-05-18T09:02:35.2533811Z with:
+2026-05-18T09:02:35.2534936Z   repository: prasenjeethowlader122-gif/parallaxa_app
+2026-05-18T09:02:35.2536392Z   token: ***
+2026-05-18T09:02:35.2537116Z   ssh-strict: true
+2026-05-18T09:02:35.2537873Z   ssh-user: git
+2026-05-18T09:02:35.2538657Z   persist-credentials: true
+2026-05-18T09:02:35.2539516Z   clean: true
+2026-05-18T09:02:35.2540277Z   sparse-checkout-cone-mode: true
+2026-05-18T09:02:35.2541213Z   fetch-depth: 1
+2026-05-18T09:02:35.2541968Z   fetch-tags: false
+2026-05-18T09:02:35.2542736Z   show-progress: true
+2026-05-18T09:02:35.2543519Z   lfs: false
+2026-05-18T09:02:35.2544232Z   submodules: false
+2026-05-18T09:02:35.2545165Z   set-safe-directory: true
+2026-05-18T09:02:35.2546607Z ##[endgroup]
+2026-05-18T09:02:35.3733111Z Syncing repository: prasenjeethowlader122-gif/parallaxa_app
+2026-05-18T09:02:35.3736198Z ##[group]Getting Git version info
+2026-05-18T09:02:35.3737635Z Working directory is '/home/runner/work/parallaxa_app/parallaxa_app'
+2026-05-18T09:02:35.3739474Z [command]/usr/bin/git version
+2026-05-18T09:02:35.3826535Z git version 2.54.0
+2026-05-18T09:02:35.3852771Z ##[endgroup]
+2026-05-18T09:02:35.3867733Z Temporarily overriding HOME='/home/runner/work/_temp/0d28091d-4e47-4141-b09f-7308e9f553b5' before making global git config changes
+2026-05-18T09:02:35.3870222Z Adding repository directory to the temporary git global config as a safe directory
+2026-05-18T09:02:35.3879881Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/parallaxa_app/parallaxa_app
+2026-05-18T09:02:35.3929935Z Deleting the contents of '/home/runner/work/parallaxa_app/parallaxa_app'
+2026-05-18T09:02:35.3933362Z ##[group]Initializing the repository
+2026-05-18T09:02:35.3937604Z [command]/usr/bin/git init /home/runner/work/parallaxa_app/parallaxa_app
+2026-05-18T09:02:35.4060779Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-05-18T09:02:35.4062649Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-05-18T09:02:35.4064388Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-05-18T09:02:35.4065867Z hint: call:
+2026-05-18T09:02:35.4066928Z hint:
+2026-05-18T09:02:35.4068291Z hint: 	git config --global init.defaultBranch <name>
+2026-05-18T09:02:35.4070227Z hint:
+2026-05-18T09:02:35.4072067Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-05-18T09:02:35.4075509Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-05-18T09:02:35.4077899Z hint:
+2026-05-18T09:02:35.4079140Z hint: 	git branch -m <name>
+2026-05-18T09:02:35.4080614Z hint:
+2026-05-18T09:02:35.4082622Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-05-18T09:02:35.4086291Z Initialized empty Git repository in /home/runner/work/parallaxa_app/parallaxa_app/.git/
+2026-05-18T09:02:35.4090462Z [command]/usr/bin/git remote add origin https://github.com/prasenjeethowlader122-gif/parallaxa_app
+2026-05-18T09:02:35.4140324Z ##[endgroup]
+2026-05-18T09:02:35.4142595Z ##[group]Disabling automatic garbage collection
+2026-05-18T09:02:35.4144940Z [command]/usr/bin/git config --local gc.auto 0
+2026-05-18T09:02:35.4173707Z ##[endgroup]
+2026-05-18T09:02:35.4176143Z ##[group]Setting up auth
+2026-05-18T09:02:35.4181395Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-05-18T09:02:35.4217798Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-05-18T09:02:35.4581481Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-05-18T09:02:35.4610893Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-05-18T09:02:35.4826595Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-05-18T09:02:35.4855809Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-05-18T09:02:35.5082671Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-05-18T09:02:35.5116701Z ##[endgroup]
+2026-05-18T09:02:35.5119028Z ##[group]Fetching the repository
+2026-05-18T09:02:35.5128245Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +a1ba5efefed4e005750a67e1b0b80f8d1d1b5e72:refs/remotes/origin/master
+2026-05-18T09:02:35.9142194Z From https://github.com/prasenjeethowlader122-gif/parallaxa_app
+2026-05-18T09:02:35.9146293Z  * [new ref]         a1ba5efefed4e005750a67e1b0b80f8d1d1b5e72 -> origin/master
+2026-05-18T09:02:35.9200070Z ##[endgroup]
+2026-05-18T09:02:35.9201845Z ##[group]Determining the checkout info
+2026-05-18T09:02:35.9203327Z ##[endgroup]
+2026-05-18T09:02:35.9208637Z [command]/usr/bin/git sparse-checkout disable
+2026-05-18T09:02:35.9254126Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-05-18T09:02:35.9281392Z ##[group]Checking out the ref
+2026-05-18T09:02:35.9285189Z [command]/usr/bin/git checkout --progress --force -B master refs/remotes/origin/master
+2026-05-18T09:02:35.9763863Z Reset branch 'master'
+2026-05-18T09:02:35.9765841Z branch 'master' set up to track 'origin/master'.
+2026-05-18T09:02:35.9776511Z ##[endgroup]
+2026-05-18T09:02:35.9819219Z [command]/usr/bin/git log -1 --format=%H
+2026-05-18T09:02:35.9842269Z a1ba5efefed4e005750a67e1b0b80f8d1d1b5e72
+2026-05-18T09:02:36.0191457Z ##[group]Run actions/setup-java@v4
+2026-05-18T09:02:36.0192453Z with:
+2026-05-18T09:02:36.0193143Z   distribution: temurin
+2026-05-18T09:02:36.0193935Z   java-version: 17
+2026-05-18T09:02:36.0194858Z   java-package: jdk
+2026-05-18T09:02:36.0195627Z   check-latest: false
+2026-05-18T09:02:36.0196392Z   server-id: github
+2026-05-18T09:02:36.0197170Z   server-username: GITHUB_ACTOR
+2026-05-18T09:02:36.0198082Z   server-password: GITHUB_TOKEN
+2026-05-18T09:02:36.0198981Z   overwrite-settings: true
+2026-05-18T09:02:36.0199831Z   job-status: success
+2026-05-18T09:02:36.0200835Z   token: ***
+2026-05-18T09:02:36.0201512Z ##[endgroup]
+2026-05-18T09:02:36.2285381Z ##[group]Installed distributions
+2026-05-18T09:02:36.2349927Z Resolved Java 17.0.19+10 from tool-cache
+2026-05-18T09:02:36.2351753Z Setting Java 17.0.19+10 as the default
+2026-05-18T09:02:36.2364856Z Creating toolchains.xml for JDK version 17 from temurin
+2026-05-18T09:02:36.2440449Z Writing to /home/runner/.m2/toolchains.xml
+2026-05-18T09:02:36.2441857Z 
+2026-05-18T09:02:36.2442421Z Java configuration:
+2026-05-18T09:02:36.2443777Z   Distribution: temurin
+2026-05-18T09:02:36.2445477Z   Version: 17.0.19+10
+2026-05-18T09:02:36.2447407Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:02:36.2449155Z 
+2026-05-18T09:02:36.2450515Z ##[endgroup]
+2026-05-18T09:02:36.2473408Z Creating settings.xml with server-id: github
+2026-05-18T09:02:36.2475589Z Writing to /home/runner/.m2/settings.xml
+2026-05-18T09:02:36.2973823Z ##[group]Run subosito/flutter-action@v2
+2026-05-18T09:02:36.2975036Z with:
+2026-05-18T09:02:36.2975706Z   channel: stable
+2026-05-18T09:02:36.2976429Z   architecture: X64
+2026-05-18T09:02:36.2977146Z   cache: false
+2026-05-18T09:02:36.2977872Z   pub-cache-path: default
+2026-05-18T09:02:36.2978672Z   dry-run: false
+2026-05-18T09:02:36.2979548Z   git-source: https://github.com/flutter/flutter.git
+2026-05-18T09:02:36.2980569Z env:
+2026-05-18T09:02:36.2981561Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:02:36.2983206Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:02:36.2984511Z ##[endgroup]
+2026-05-18T09:02:36.3140288Z ##[group]Run chmod +x "$GITHUB_ACTION_PATH/setup.sh"
+2026-05-18T09:02:36.3141533Z [36;1mchmod +x "$GITHUB_ACTION_PATH/setup.sh"[0m
+2026-05-18T09:02:36.3191837Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-18T09:02:36.3192955Z env:
+2026-05-18T09:02:36.3194010Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:02:36.3195907Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:02:36.3197222Z ##[endgroup]
+2026-05-18T09:02:36.3383540Z ##[group]Run $GITHUB_ACTION_PATH/setup.sh -p \
+2026-05-18T09:02:36.3385061Z [36;1m$GITHUB_ACTION_PATH/setup.sh -p \[0m
+2026-05-18T09:02:36.3386081Z [36;1m  -n '' \[0m
+2026-05-18T09:02:36.3386818Z [36;1m  -f '' \[0m
+2026-05-18T09:02:36.3387545Z [36;1m  -a 'X64' \[0m
+2026-05-18T09:02:36.3388282Z [36;1m  -k '' \[0m
+2026-05-18T09:02:36.3388996Z [36;1m  -c '' \[0m
+2026-05-18T09:02:36.3389994Z [36;1m  -l '' \[0m
+2026-05-18T09:02:36.3390754Z [36;1m  -d 'default' \[0m
+2026-05-18T09:02:36.3391754Z [36;1m  -g 'https://github.com/flutter/flutter.git' \[0m
+2026-05-18T09:02:36.3392839Z [36;1m  stable[0m
+2026-05-18T09:02:36.3433418Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-18T09:02:36.3434536Z env:
+2026-05-18T09:02:36.3435903Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:02:36.3437551Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:02:36.3438848Z ##[endgroup]
+2026-05-18T09:02:36.5417320Z ##[group]Run $GITHUB_ACTION_PATH/setup.sh \
+2026-05-18T09:02:36.5418390Z [36;1m$GITHUB_ACTION_PATH/setup.sh \[0m
+2026-05-18T09:02:36.5419315Z [36;1m  -n '3.41.9' \[0m
+2026-05-18T09:02:36.5420081Z [36;1m  -a 'x64' \[0m
+2026-05-18T09:02:36.5421047Z [36;1m  -c '/opt/hostedtoolcache/flutter/stable-3.41.9-x64' \[0m
+2026-05-18T09:02:36.5422208Z [36;1m  -d '/home/runner/.pub-cache' \[0m
+2026-05-18T09:02:36.5423138Z [36;1m  stable[0m
+2026-05-18T09:02:36.5461795Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-18T09:02:36.5462878Z env:
+2026-05-18T09:02:36.5463844Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:02:36.5465693Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:02:36.5466965Z ##[endgroup]
+2026-05-18T09:02:36.7172141Z   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+2026-05-18T09:02:36.7173908Z                                  Dload  Upload   Total   Spent    Left  Speed
+2026-05-18T09:02:36.7175263Z 
+2026-05-18T09:02:37.1869809Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+2026-05-18T09:02:38.1988023Z   6 1448M    6 96.0M    0     0   204M      0  0:00:07 --:--:--  0:00:07  204M
+2026-05-18T09:02:39.1882511Z  23 1448M   23  344M    0     0   232M      0  0:00:06  0:00:01  0:00:05  232M
+2026-05-18T09:02:40.1898493Z  44 1448M   44  644M    0     0   260M      0  0:00:05  0:00:02  0:00:03  260M
+2026-05-18T09:02:41.1877278Z  65 1448M   65  945M    0     0   272M      0  0:00:05  0:00:03  0:00:02  272M
+2026-05-18T09:02:41.8223355Z  86 1448M   86 1258M    0     0   281M      0  0:00:05  0:00:04  0:00:01  281M
+2026-05-18T09:02:41.8224385Z 100 1448M  100 1448M    0     0   283M      0  0:00:05  0:00:05 --:--:--  291M
+2026-05-18T09:03:33.5468503Z ##[group]Run shorebirdtech/setup-shorebird@v1
+2026-05-18T09:03:33.5468827Z with:
+2026-05-18T09:03:33.5469010Z   cache: false
+2026-05-18T09:03:33.5469182Z env:
+2026-05-18T09:03:33.5469472Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:03:33.5469954Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:03:33.5470415Z   FLUTTER_ROOT: /opt/hostedtoolcache/flutter/stable-3.41.9-x64/flutter
+2026-05-18T09:03:33.5470765Z   PUB_CACHE: /home/runner/.pub-cache
+2026-05-18T09:03:33.5471032Z ##[endgroup]
+2026-05-18T09:03:33.5494481Z ##[group]Run install_path=$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.shorebird" || printf %s "${XDG_CONFIG_HOME}/shorebird")
+2026-05-18T09:03:33.5495611Z [36;1minstall_path=$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.shorebird" || printf %s "${XDG_CONFIG_HOME}/shorebird")[0m
+2026-05-18T09:03:33.5496177Z [36;1mecho install_path=$install_path >> $GITHUB_ENV[0m
+2026-05-18T09:03:33.5530137Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-18T09:03:33.5530476Z env:
+2026-05-18T09:03:33.5530764Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:03:33.5531231Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:03:33.5531685Z   FLUTTER_ROOT: /opt/hostedtoolcache/flutter/stable-3.41.9-x64/flutter
+2026-05-18T09:03:33.5532049Z   PUB_CACHE: /home/runner/.pub-cache
+2026-05-18T09:03:33.5532281Z ##[endgroup]
+2026-05-18T09:03:33.5623072Z ##[group]Run curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh -sSf | bash -s -- --force
+2026-05-18T09:03:33.5624273Z [36;1mcurl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh -sSf | bash -s -- --force[0m
+2026-05-18T09:03:33.5655052Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-18T09:03:33.5655378Z env:
+2026-05-18T09:03:33.5655712Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:03:33.5656217Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:03:33.5656671Z   FLUTTER_ROOT: /opt/hostedtoolcache/flutter/stable-3.41.9-x64/flutter
+2026-05-18T09:03:33.5657022Z   PUB_CACHE: /home/runner/.pub-cache
+2026-05-18T09:03:33.5657295Z   install_path: /home/runner/.config/shorebird
+2026-05-18T09:03:33.5657565Z ##[endgroup]
+2026-05-18T09:03:33.6198586Z Cloning Shorebird into /home/runner/.config/shorebird
+2026-05-18T09:03:33.6216443Z Cloning into '/home/runner/.config/shorebird'...
+2026-05-18T09:03:37.3558836Z Updating Flutter...
+2026-05-18T09:03:37.3573910Z Cloning into '/home/runner/.config/shorebird/bin/cache/flutter/70488d38f94268163dc4177b3ec268330766b4a3'...
+2026-05-18T09:03:49.2449467Z HEAD is now at 70488d38f chore: bump engine to e838fe1c30a
+2026-05-18T09:03:49.2499380Z Shorebird Engine • revision e838fe1c30a47ae7770d64cce15944cc2fa2c408
+2026-05-18T09:03:49.2901855Z Downloading Linux x64 Dart SDK from Flutter engine e838fe1c30a47ae7770d64cce15944cc2fa2c408...
+2026-05-18T09:03:49.2974455Z   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+2026-05-18T09:03:49.2975720Z                                  Dload  Upload   Total   Spent    Left  Speed
+2026-05-18T09:03:49.2976116Z 
+2026-05-18T09:03:49.4824813Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+2026-05-18T09:03:49.4825452Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+2026-05-18T09:03:49.9909845Z 
+2026-05-18T09:03:49.9910519Z 100  135M  100  135M    0     0   195M      0 --:--:-- --:--:-- --:--:--  195M
+2026-05-18T09:03:52.8667005Z Building flutter tool...
+2026-05-18T09:03:52.8828960Z Resolving dependencies...
+2026-05-18T09:03:57.2220857Z Downloading packages...
+2026-05-18T09:04:00.6603882Z + _fe_analyzer_shared 92.0.0 (100.0.0 available)
+2026-05-18T09:04:00.6604957Z + analyzer 9.0.0 (13.0.0 available)
+2026-05-18T09:04:00.6605761Z + archive 3.6.1 (4.0.9 available)
+2026-05-18T09:04:00.6606163Z + args 2.7.0
+2026-05-18T09:04:00.6606483Z + async 2.13.0 (2.13.1 available)
+2026-05-18T09:04:00.6606886Z + boolean_selector 2.1.2
+2026-05-18T09:04:00.6607281Z + browser_launcher 1.1.3
+2026-05-18T09:04:00.6607669Z + built_collection 5.1.1
+2026-05-18T09:04:00.6608007Z + built_value 8.12.1 (8.12.6 available)
+2026-05-18T09:04:00.6608395Z + checked_yaml 2.0.4
+2026-05-18T09:04:00.6608688Z + cli_config 0.2.0
+2026-05-18T09:04:00.6608965Z + clock 1.1.2
+2026-05-18T09:04:00.6609257Z + code_assets 1.0.0
+2026-05-18T09:04:00.6609624Z + code_builder 4.11.1
+2026-05-18T09:04:00.6609969Z + collection 1.19.1
+2026-05-18T09:04:00.6610348Z + completion 1.0.2
+2026-05-18T09:04:00.6610664Z + convert 3.1.2
+2026-05-18T09:04:00.6610993Z + coverage 1.15.0
+2026-05-18T09:04:00.6611346Z + crypto 3.0.7
+2026-05-18T09:04:00.6611682Z + csslib 1.0.2
+2026-05-18T09:04:00.6612016Z + dap 1.4.0
+2026-05-18T09:04:00.6612380Z + dart_service_protocol_shared 0.0.3
+2026-05-18T09:04:00.6612926Z + dart_style 3.1.3 (3.1.9 available)
+2026-05-18T09:04:00.6613402Z + data_assets 0.19.6
+2026-05-18T09:04:00.6613790Z + dds 5.1.0 (5.3.0 available)
+2026-05-18T09:04:00.6614212Z + dds_service_extensions 2.1.0
+2026-05-18T09:04:00.6614923Z + devtools_shared 12.0.0 (13.0.1 available)
+2026-05-18T09:04:00.6615378Z + dtd 4.0.0
+2026-05-18T09:04:00.6615672Z + dwds 26.2.3 (27.1.1 available)
+2026-05-18T09:04:00.6616063Z + extension_discovery 2.1.0
+2026-05-18T09:04:00.6616417Z + fake_async 1.3.3
+2026-05-18T09:04:00.6616739Z + ffi 2.1.4 (2.2.0 available)
+2026-05-18T09:04:00.6617365Z + file 7.0.1
+2026-05-18T09:04:00.6617660Z + file_testing 3.0.2
+2026-05-18T09:04:00.6617975Z + fixnum 1.1.1
+2026-05-18T09:04:00.6618302Z + flutter_template_images 5.0.0
+2026-05-18T09:04:00.6618697Z + frontend_server_client 4.0.0
+2026-05-18T09:04:00.6619065Z + glob 2.1.3
+2026-05-18T09:04:00.6619352Z + graphs 2.3.2
+2026-05-18T09:04:00.6619689Z + hooks 1.0.0 (1.0.3 available)
+2026-05-18T09:04:00.6620104Z + hooks_runner 1.0.1 (1.2.1 available)
+2026-05-18T09:04:00.6620524Z + html 0.15.6
+2026-05-18T09:04:00.6620828Z + http 1.6.0
+2026-05-18T09:04:00.6621143Z + http_multi_server 3.2.2
+2026-05-18T09:04:00.6621497Z + http_parser 4.1.2
+2026-05-18T09:04:00.6621806Z + intl 0.20.2
+2026-05-18T09:04:00.6622092Z + io 1.0.5
+2026-05-18T09:04:00.6622378Z + js 0.7.2 (discontinued)
+2026-05-18T09:04:00.6622750Z + json_annotation 4.9.0 (4.12.0 available)
+2026-05-18T09:04:00.6623190Z + json_rpc_2 4.0.0 (4.1.0 available)
+2026-05-18T09:04:00.6623583Z + logging 1.3.0
+2026-05-18T09:04:00.6623913Z + matcher 0.12.19 (0.12.20 available)
+2026-05-18T09:04:00.6624340Z + meta 1.17.0 (1.18.2 available)
+2026-05-18T09:04:00.6624975Z + mime 2.0.0
+2026-05-18T09:04:00.6625280Z + multicast_dns 0.3.3
+2026-05-18T09:04:00.6625653Z + mustache_template 2.0.2 (2.0.4 available)
+2026-05-18T09:04:00.6626084Z + native_stack_traces 0.6.1
+2026-05-18T09:04:00.6626446Z + node_preamble 2.0.2
+2026-05-18T09:04:00.6626786Z + package_config 2.2.0
+2026-05-18T09:04:00.6627130Z + path 1.9.1
+2026-05-18T09:04:00.6627457Z + petitparser 7.0.1 (7.0.2 available)
+2026-05-18T09:04:00.6627863Z + platform 3.1.6
+2026-05-18T09:04:00.6628171Z + pool 1.5.2
+2026-05-18T09:04:00.6628460Z + process 5.0.5
+2026-05-18T09:04:00.6628846Z + pub_semver 2.2.0
+2026-05-18T09:04:00.6629241Z + pubspec_parse 1.5.0
+2026-05-18T09:04:00.6629595Z + shelf 1.4.2
+2026-05-18T09:04:00.6629930Z + shelf_packages_handler 3.0.2
+2026-05-18T09:04:00.6630326Z + shelf_proxy 1.0.4 (1.0.5 available)
+2026-05-18T09:04:00.6630739Z + shelf_static 1.1.3
+2026-05-18T09:04:00.6631077Z + shelf_web_socket 3.0.0
+2026-05-18T09:04:00.6632032Z + shorebird_build_trace 0.1.0 from git https://github.com/shorebirdtech/shorebird.git at cff436 in packages/shorebird_build_trace
+2026-05-18T09:04:00.6633066Z + source_map_stack_trace 2.1.2
+2026-05-18T09:04:00.6633486Z + source_maps 0.10.13
+2026-05-18T09:04:00.6633852Z + source_span 1.10.1 (1.10.2 available)
+2026-05-18T09:04:00.6634277Z + sprintf 7.0.0
+2026-05-18T09:04:00.6634602Z + sse 4.1.8 (4.2.0 available)
+2026-05-18T09:04:00.6635513Z + stack_trace 1.12.1
+2026-05-18T09:04:00.6635894Z + standard_message_codec 0.0.1+4
+2026-05-18T09:04:00.6636301Z + stream_channel 2.1.4
+2026-05-18T09:04:00.6636654Z + string_scanner 1.4.1
+2026-05-18T09:04:00.6636981Z + sync_http 0.3.1
+2026-05-18T09:04:00.6637296Z + term_glyph 1.2.2
+2026-05-18T09:04:00.6637641Z + test 1.30.0 (1.31.1 available)
+2026-05-18T09:04:00.6638051Z + test_api 0.7.10 (0.7.12 available)
+2026-05-18T09:04:00.6638463Z + test_core 0.6.16 (0.6.18 available)
+2026-05-18T09:04:00.6638862Z + typed_data 1.4.0
+2026-05-18T09:04:00.6639229Z + unified_analytics 8.0.10 (8.0.14 available)
+2026-05-18T09:04:00.6639680Z + usage 4.1.1 (discontinued)
+2026-05-18T09:04:00.6640049Z + uuid 4.5.2 (4.5.3 available)
+2026-05-18T09:04:00.6640439Z + vm_service 15.0.2 (15.2.0 available)
+2026-05-18T09:04:00.6640871Z + vm_service_interface 2.0.1
+2026-05-18T09:04:00.6641257Z + vm_snapshot_analysis 0.7.6
+2026-05-18T09:04:00.6641660Z + watcher 1.2.0 (1.2.1 available)
+2026-05-18T09:04:00.6642057Z + web 1.1.1
+2026-05-18T09:04:00.6642358Z + web_socket 1.0.1
+2026-05-18T09:04:00.6642679Z + web_socket_channel 3.0.3
+2026-05-18T09:04:00.6643047Z + webdriver 3.1.0
+2026-05-18T09:04:00.6643389Z + webkit_inspection_protocol 1.2.1
+2026-05-18T09:04:00.6643800Z + xml 6.6.1 (7.0.1 available)
+2026-05-18T09:04:00.6644155Z + yaml 3.1.3
+2026-05-18T09:04:00.6644469Z + yaml_edit 2.2.3 (2.2.4 available)
+2026-05-18T09:04:00.6645228Z Changed 102 dependencies!
+2026-05-18T09:04:00.6645594Z 2 packages are discontinued.
+2026-05-18T09:04:00.6646171Z 30 packages have newer versions incompatible with dependency constraints.
+2026-05-18T09:04:00.6647095Z Try `dart pub outdated` for more information.
+2026-05-18T09:04:15.4689010Z Flutter 3.41.9 • channel [user-branch] • unknown source
+2026-05-18T09:04:15.4689684Z Framework • revision 70488d38f9 (35 hours ago) • 2026-05-16 14:50:33 -0700
+2026-05-18T09:04:15.4690968Z Engine • hash f0ec82d2e128bb3e9d242b98f38a357f2a1c542b (revision e838fe1c30) (35 hours ago) • 2026-05-16 20:59:23.000Z
+2026-05-18T09:04:15.4692036Z Tools • Dart 3.11.5 • DevTools 2.54.2
+2026-05-18T09:04:15.4711563Z Building Shorebird...
+2026-05-18T09:04:15.4909054Z Resolving dependencies in `/home/runner/.config/shorebird`...
+2026-05-18T09:04:16.0676641Z Downloading packages...
+2026-05-18T09:04:19.2422201Z   _fe_analyzer_shared 98.0.0 (100.0.0 available)
+2026-05-18T09:04:19.2422745Z   analyzer 12.0.0 (13.0.0 available)
+2026-05-18T09:04:19.2423154Z   build 4.0.5 (4.0.6 available)
+2026-05-18T09:04:19.2423530Z   built_value 8.12.5 (8.12.6 available)
+2026-05-18T09:04:19.2423931Z   dart_style 3.1.8 (3.1.9 available)
+2026-05-18T09:04:19.2424399Z   google_cloud 0.4.0 (0.5.0 available)
+2026-05-18T09:04:19.2425036Z   json_annotation 4.11.0 (4.12.0 available)
+2026-05-18T09:04:19.2425489Z   json_serializable 6.13.2 (6.14.0 available)
+2026-05-18T09:04:19.2425912Z   matcher 0.12.19 (0.12.20 available)
+2026-05-18T09:04:19.2426311Z   source_gen 4.2.2 (4.2.3 available)
+2026-05-18T09:04:19.2426718Z   source_helper 1.3.11 (1.3.12 available)
+2026-05-18T09:04:19.2427143Z   vm_service 15.0.2 (15.2.0 available)
+2026-05-18T09:04:19.2427547Z   win32 5.15.0 (6.2.0 available)
+2026-05-18T09:04:19.2427921Z   xml 6.6.1 (7.0.1 available)
+2026-05-18T09:04:19.2428377Z Got dependencies in `/home/runner/.config/shorebird`!
+2026-05-18T09:04:19.2432145Z 14 packages have newer versions incompatible with dependency constraints.
+2026-05-18T09:04:19.2432804Z Try `dart pub outdated` for more information.
+2026-05-18T09:04:27.1639240Z Shorebird 1.6.100 • git@github.com:shorebirdtech/shorebird.git
+2026-05-18T09:04:27.1639788Z Flutter 3.41.9 • revision 70488d38f94268163dc4177b3ec268330766b4a3
+2026-05-18T09:04:27.1640247Z Engine • revision e838fe1c30a47ae7770d64cce15944cc2fa2c408
+2026-05-18T09:04:27.4611337Z Adding Shorebird to your PATH
+2026-05-18T09:04:27.4611929Z Updating /home/runner/.bashrc
+2026-05-18T09:04:27.4622337Z 
+2026-05-18T09:04:27.4623083Z 🐦 Shorebird has been installed!
+2026-05-18T09:04:27.4629818Z 
+2026-05-18T09:04:27.4630872Z Close and reopen your terminal to start using Shorebird or run the following command to start using it now:
+2026-05-18T09:04:27.4631611Z 
+2026-05-18T09:04:27.4631882Z   export PATH="/home/runner/.config/shorebird/bin:$PATH"
+2026-05-18T09:04:27.4632311Z 
+2026-05-18T09:04:27.4632597Z To create an account, visit: https://console.shorebird.dev
+2026-05-18T09:04:27.4633166Z Then login using:
+2026-05-18T09:04:27.4633365Z 
+2026-05-18T09:04:27.4633493Z   shorebird login
+2026-05-18T09:04:27.4633699Z 
+2026-05-18T09:04:27.4633855Z For more information, visit:
+2026-05-18T09:04:27.4634274Z https://docs.shorebird.dev
+2026-05-18T09:04:27.4634578Z 
+2026-05-18T09:04:27.4668250Z ##[group]Run install_path=/home/runner/.config/shorebird
+2026-05-18T09:04:27.4668636Z [36;1minstall_path=/home/runner/.config/shorebird[0m
+2026-05-18T09:04:27.4668961Z [36;1mecho $install_path/bin >> $GITHUB_PATH[0m
+2026-05-18T09:04:27.4669271Z [36;1mecho "added $install_path/bin to GITHUB_PATH"[0m
+2026-05-18T09:04:27.4703025Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-18T09:04:27.4703367Z env:
+2026-05-18T09:04:27.4703660Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:04:27.4704126Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:04:27.4704809Z   FLUTTER_ROOT: /opt/hostedtoolcache/flutter/stable-3.41.9-x64/flutter
+2026-05-18T09:04:27.4705310Z   PUB_CACHE: /home/runner/.pub-cache
+2026-05-18T09:04:27.4705575Z   install_path: /home/runner/.config/shorebird
+2026-05-18T09:04:27.4705833Z ##[endgroup]
+2026-05-18T09:04:27.4763969Z added /home/runner/.config/shorebird/bin to GITHUB_PATH
+2026-05-18T09:04:27.4825232Z ##[group]Run flutter pub get
+2026-05-18T09:04:27.4825543Z [36;1mflutter pub get[0m
+2026-05-18T09:04:27.4859911Z shell: /usr/bin/bash -e {0}
+2026-05-18T09:04:27.4860139Z env:
+2026-05-18T09:04:27.4860419Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:04:27.4860892Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:04:27.4861350Z   FLUTTER_ROOT: /opt/hostedtoolcache/flutter/stable-3.41.9-x64/flutter
+2026-05-18T09:04:27.4861692Z   PUB_CACHE: /home/runner/.pub-cache
+2026-05-18T09:04:27.4861954Z   install_path: /home/runner/.config/shorebird
+2026-05-18T09:04:27.4862202Z ##[endgroup]
+2026-05-18T09:04:29.0182002Z Resolving dependencies...
+2026-05-18T09:04:29.7997635Z Downloading packages...
+2026-05-18T09:04:35.0647817Z   _fe_analyzer_shared 92.0.0 (100.0.0 available)
+2026-05-18T09:04:35.0648630Z   analyzer 9.0.0 (13.0.0 available)
+2026-05-18T09:04:35.0649220Z   analyzer_buffer 0.3.0 (0.3.2 available)
+2026-05-18T09:04:35.0649901Z   dart_style 3.1.3 (3.1.9 available)
+2026-05-18T09:04:35.0650350Z   json_annotation 4.9.0 (4.12.0 available)
+2026-05-18T09:04:35.0650822Z   json_serializable 6.11.4 (6.14.0 available)
+2026-05-18T09:04:35.0651262Z   matcher 0.12.19 (0.12.20 available)
+2026-05-18T09:04:35.0651697Z   meta 1.17.0 (1.18.2 available)
+2026-05-18T09:04:35.0652082Z   mockito 5.6.4 (5.6.5 available)
+2026-05-18T09:04:35.0652521Z   native_toolchain_c 0.17.6 (0.18.0 available)
+2026-05-18T09:04:35.0653132Z   riverpod_analyzer_utils 1.0.0-dev.9 (1.0.0-dev.10 available)
+2026-05-18T09:04:35.0653680Z   test 1.30.0 (1.31.1 available)
+2026-05-18T09:04:35.0654086Z   test_api 0.7.10 (0.7.12 available)
+2026-05-18T09:04:35.0654511Z   test_core 0.6.16 (0.6.18 available)
+2026-05-18T09:04:35.0655212Z   vector_math 2.2.0 (2.3.0 available)
+2026-05-18T09:04:35.0655623Z   xml 6.6.1 (7.0.1 available)
+2026-05-18T09:04:35.0656020Z Got dependencies!
+2026-05-18T09:04:35.0664578Z 16 packages have newer versions incompatible with dependency constraints.
+2026-05-18T09:04:35.0665386Z Try `flutter pub outdated` for more information.
+2026-05-18T09:04:35.6453871Z ##[group]Run flutter pub run build_runner build --delete-conflicting-outputs
+2026-05-18T09:04:35.6454427Z [36;1mflutter pub run build_runner build --delete-conflicting-outputs[0m
+2026-05-18T09:04:35.6488330Z shell: /usr/bin/bash -e {0}
+2026-05-18T09:04:35.6488561Z env:
+2026-05-18T09:04:35.6488842Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:04:35.6489321Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:04:35.6489778Z   FLUTTER_ROOT: /opt/hostedtoolcache/flutter/stable-3.41.9-x64/flutter
+2026-05-18T09:04:35.6490150Z   PUB_CACHE: /home/runner/.pub-cache
+2026-05-18T09:04:35.6490419Z   install_path: /home/runner/.config/shorebird
+2026-05-18T09:04:35.6490670Z ##[endgroup]
+2026-05-18T09:04:41.2631017Z   1s compiling builders/aot
+2026-05-18T09:04:42.3579662Z   2s compiling builders/aot
+2026-05-18T09:04:43.4579884Z   3s compiling builders/aot
+2026-05-18T09:04:44.4579913Z   4s compiling builders/aot
+2026-05-18T09:04:45.5579263Z   5s compiling builders/aot
+2026-05-18T09:04:46.5579354Z   6s compiling builders/aot
+2026-05-18T09:04:47.5579321Z   7s compiling builders/aot
+2026-05-18T09:04:48.6579128Z   8s compiling builders/aot
+2026-05-18T09:04:49.7579805Z   9s compiling builders/aot
+2026-05-18T09:04:50.7579814Z   10s compiling builders/aot
+2026-05-18T09:04:51.8579607Z   11s compiling builders/aot
+2026-05-18T09:04:52.8580394Z   12s compiling builders/aot
+2026-05-18T09:04:53.9579700Z   13s compiling builders/aot
+2026-05-18T09:04:55.0579681Z   14s compiling builders/aot
+2026-05-18T09:04:56.0579432Z   15s compiling builders/aot
+2026-05-18T09:04:57.1579477Z   17s compiling builders/aot
+2026-05-18T09:04:58.2579758Z   18s compiling builders/aot
+2026-05-18T09:04:59.3579902Z   19s compiling builders/aot
+2026-05-18T09:05:00.4580744Z   20s compiling builders/aot
+2026-05-18T09:05:01.4579856Z   21s compiling builders/aot
+2026-05-18T09:05:02.5579202Z   22s compiling builders/aot
+2026-05-18T09:05:03.5579747Z   23s compiling builders/aot
+2026-05-18T09:05:04.6579125Z   24s compiling builders/aot
+2026-05-18T09:05:05.6579129Z   25s compiling builders/aot
+2026-05-18T09:05:06.6579277Z   26s compiling builders/aot
+2026-05-18T09:05:07.6579509Z   27s compiling builders/aot
+2026-05-18T09:05:08.7578718Z   28s compiling builders/aot
+2026-05-18T09:05:09.8936519Z   29s compiling builders/aot
+2026-05-18T09:05:09.9325848Z W These options have been removed and were ignored: --delete-conflicting-outputs
+2026-05-18T09:05:10.1987360Z   0s riverpod_generator on 32 inputs; lib/main.dart
+2026-05-18T09:05:11.8992972Z   2s riverpod_generator on 32 inputs: 1 no-op; spent 2s sdk; lib/src/core/api_client.dart
+2026-05-18T09:05:11.9544302Z   2s riverpod_generator on 32 inputs: 32 no-op; spent 2s sdk
+2026-05-18T09:05:11.9545126Z   0s json_serializable on 32 inputs; lib/main.dart
+2026-05-18T09:05:20.0334548Z   8s json_serializable on 32 inputs: 1 no-op; spent 7s analyzing, 1s resolving; lib/src/core/api_client.dart
+2026-05-18T09:05:20.0685595Z   8s json_serializable on 32 inputs: 6 output, 26 no-op; spent 7s analyzing, 1s resolving
+2026-05-18T09:05:20.0686514Z   0s source_gen:combining_builder on 32 inputs; lib/main.dart
+2026-05-18T09:05:20.0733504Z   0s source_gen:combining_builder on 32 inputs: 6 output, 26 no-op
+2026-05-18T09:05:20.1136538Z   Built with build_runner/aot in 40s; wrote 12 outputs.
+2026-05-18T09:05:20.1967414Z ##[group]Run shorebird patch android --allow-native-diffs --allow-asset-diffs
+2026-05-18T09:05:20.1967999Z [36;1mshorebird patch android --allow-native-diffs --allow-asset-diffs[0m
+2026-05-18T09:05:20.2001789Z shell: /usr/bin/bash -e {0}
+2026-05-18T09:05:20.2002019Z env:
+2026-05-18T09:05:20.2002299Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:05:20.2002769Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.19-10/x64
+2026-05-18T09:05:20.2003209Z   FLUTTER_ROOT: /opt/hostedtoolcache/flutter/stable-3.41.9-x64/flutter
+2026-05-18T09:05:20.2003572Z   PUB_CACHE: /home/runner/.pub-cache
+2026-05-18T09:05:20.2003833Z   install_path: /home/runner/.config/shorebird
+2026-05-18T09:05:20.2004186Z   SHOREBIRD_TOKEN: sb_api_h_hoa9KjK0CNm0J5FxiwlFLV87jHjSTkLPgH4DIPTDg
+2026-05-18T09:05:20.2004520Z ##[endgroup]
+2026-05-18T09:05:20.3635418Z [✗] android/app/src/main/AndroidManifest.xml is missing the INTERNET permission.
+2026-05-18T09:05:20.3640504Z Aborting due to validation errors.
+2026-05-18T09:05:20.3643328Z 1 issue can be fixed automatically with shorebird doctor --fix.
+2026-05-18T09:05:20.3659289Z 
+2026-05-18T09:05:20.3659867Z If you aren't sure why this command failed, re-run with the --verbose flag to see more information.
+2026-05-18T09:05:20.3660429Z 
+2026-05-18T09:05:20.3661303Z You can also [file an issue](https://github.com/shorebirdtech/shorebird/issues/new/choose) if you think this is a bug. Please include the following log file in your report:
+2026-05-18T09:05:20.3662669Z /home/runner/.config/shorebird/logs/1779095120237_shorebird.log
+2026-05-18T09:05:20.3663105Z 
+2026-05-18T09:05:20.6258733Z ##[error]Process completed with exit code 78.
+2026-05-18T09:05:20.6356656Z Post job cleanup.
+2026-05-18T09:05:20.6479313Z Post job cleanup.
+2026-05-18T09:05:20.6534532Z Post job cleanup.
+2026-05-18T09:05:20.8327007Z Post job cleanup.
+2026-05-18T09:05:20.9311853Z [command]/usr/bin/git version
+2026-05-18T09:05:20.9348625Z git version 2.54.0
+2026-05-18T09:05:20.9393698Z Temporarily overriding HOME='/home/runner/work/_temp/05028103-0bdd-476b-ad65-446c23001a91' before making global git config changes
+2026-05-18T09:05:20.9395285Z Adding repository directory to the temporary git global config as a safe directory
+2026-05-18T09:05:20.9407800Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/parallaxa_app/parallaxa_app
+2026-05-18T09:05:20.9443359Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-05-18T09:05:20.9475422Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-05-18T09:05:20.9698344Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-05-18T09:05:20.9722314Z http.https://github.com/.extraheader
+2026-05-18T09:05:20.9735141Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-05-18T09:05:20.9765383Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-05-18T09:05:20.9987772Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-05-18T09:05:21.0018753Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-05-18T09:05:21.0345595Z Cleaning up orphan processes
+2026-05-18T09:05:21.0609739Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-java@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
