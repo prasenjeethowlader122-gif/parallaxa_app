@@ -23,6 +23,11 @@ import { logger } from "../lib/logger";
 
 const router = Router();
 
+const trendingScore = sql<number>`
+  ((${postsTable.likesCount} * 2) + (${postsTable.repliesCount} * 3) + 1) /
+  POWER(EXTRACT(EPOCH FROM (NOW() - ${postsTable.createdAt})) / 3600 + 2, 1.5)
+`;
+
 async function getUsersStoryStatus(userIds: string[], myId?: string) {
   const now = new Date();
   const activeStories =
@@ -465,10 +470,7 @@ router.get("/feed", optionalAuthenticate, async (req: AuthRequest, res) => {
       posts = await db
         .select({
           post: postsTable,
-          score: sql<number>`
-            ((${postsTable.likesCount} * 2) + (${postsTable.repliesCount} * 3) + 1) /
-            POWER(EXTRACT(EPOCH FROM (NOW() - ${postsTable.createdAt})) / 3600 + 2, 1.5)
-          `,
+          score: trendingScore,
         })
         .from(postsTable)
         .where(
@@ -478,17 +480,14 @@ router.get("/feed", optionalAuthenticate, async (req: AuthRequest, res) => {
             isNull(postsTable.parentPostId),
           ),
         )
-        .orderBy(desc(sql`score`))
+        .orderBy(desc(trendingScore))
         .limit(limit);
     } else {
       // Guest feed: top trending posts
       posts = await db
         .select({
           post: postsTable,
-          score: sql<number>`
-            ((${postsTable.likesCount} * 2) + (${postsTable.repliesCount} * 3) + 1) /
-            POWER(EXTRACT(EPOCH FROM (NOW() - ${postsTable.createdAt})) / 3600 + 2, 1.5)
-          `,
+          score: trendingScore,
         })
         .from(postsTable)
         .where(
@@ -497,7 +496,7 @@ router.get("/feed", optionalAuthenticate, async (req: AuthRequest, res) => {
             isNull(postsTable.parentPostId),
           ),
         )
-        .orderBy(desc(sql`score`))
+        .orderBy(desc(trendingScore))
         .limit(limit);
     }
 
@@ -548,10 +547,7 @@ router.get("/feed/following", authenticate, async (req: AuthRequest, res) => {
     const posts = await db
       .select({
         post: postsTable,
-        score: sql<number>`
-            ((${postsTable.likesCount} * 2) + (${postsTable.repliesCount} * 3) + 1) /
-            POWER(EXTRACT(EPOCH FROM (NOW() - ${postsTable.createdAt})) / 3600 + 2, 1.5)
-          `,
+        score: trendingScore,
       })
       .from(postsTable)
       .where(
@@ -561,7 +557,7 @@ router.get("/feed/following", authenticate, async (req: AuthRequest, res) => {
           isNull(postsTable.parentPostId),
         ),
       )
-      .orderBy(desc(sql`score`))
+      .orderBy(desc(trendingScore))
       .limit(limit);
 
     const userIds = [...new Set(posts.map((p) => p.post.userId))];
