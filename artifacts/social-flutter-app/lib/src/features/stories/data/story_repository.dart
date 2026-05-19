@@ -7,7 +7,10 @@ final storyRepositoryProvider = Provider<StoryRepository>((ref) {
   return StoryRepository(ref.watch(dioProvider));
 });
 
-final userStoriesProvider = FutureProvider.family<List<Story>, String>((ref, userId) {
+final userStoriesProvider = FutureProvider.family<List<Story>, String>((
+  ref,
+  userId,
+) {
   return ref.watch(storyRepositoryProvider).getUserStories(userId);
 });
 
@@ -41,11 +44,14 @@ class StoryRepository {
     required String mediaType,
     int? duration,
   }) async {
-    final response = await _dio.post('/stories', data: {
-      'mediaUrl': mediaUrl,
-      'mediaType': mediaType,
-      if (duration != null) 'duration': duration,
-    });
+    final response = await _dio.post(
+      '/stories',
+      data: {
+        'mediaUrl': mediaUrl,
+        'mediaType': mediaType,
+        if (duration != null) 'duration': duration,
+      },
+    );
     return Story.fromJson(response.data);
   }
 }

@@ -59,13 +59,17 @@ class AdminDashboardScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               ListTile(
-                leading: const Icon(CupertinoIcons.person_crop_circle_badge_checkmark),
+                leading: const Icon(
+                  CupertinoIcons.person_crop_circle_badge_checkmark,
+                ),
                 title: const Text('User Management'),
                 subtitle: const Text('Verify, freeze, or delete users'),
                 trailing: const Icon(CupertinoIcons.chevron_right),
                 onTap: () => context.push('/admin/users'),
                 tileColor: AppColors.muted,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ],
           ),

@@ -349,9 +349,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         right: IconButton(
           onPressed: () => setState(() => _showPassword = !_showPassword),
           icon: Icon(
-            _showPassword
-                ? CupertinoIcons.eye_slash
-                : CupertinoIcons.eye,
+            _showPassword ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
             color: _errors['password'] != null
                 ? const Color(0xFFDC2626)
                 : AppColors.slate500,

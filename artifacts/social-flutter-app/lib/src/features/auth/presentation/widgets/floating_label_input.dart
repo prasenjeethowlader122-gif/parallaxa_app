@@ -248,7 +248,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
             child: Row(
               children: [
                 const Icon(
-                      CupertinoIcons.info,
+                  CupertinoIcons.info,
                   color: Color(0xFFDC2626),
                   size: 14,
                 ),

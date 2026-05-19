@@ -259,7 +259,8 @@ class _ProfileHeader extends StatelessWidget {
                     color: AppColors.textPrimary,
                     size: 22,
                   ),
-                  onPressed: () => context.push('/profile/options', extra: user),
+                  onPressed: () =>
+                      context.push('/profile/options', extra: user),
                 ),
             ],
           ),
@@ -319,7 +320,8 @@ class _ProfileHeader extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 6),
                 child: isOwnProfile
                     ? OutlinedButton(
-                        onPressed: () => context.push('/profile/edit', extra: user),
+                        onPressed: () =>
+                            context.push('/profile/edit', extra: user),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(
                             color: AppColors.border,

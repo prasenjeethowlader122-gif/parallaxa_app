@@ -92,41 +92,47 @@ class _PostCardState extends ConsumerState<PostCard> {
             // ── Author row ──
             Row(
               children: [
-                UserAvatar(
-                  uri: post.author.avatarUrl,
-                  size: 40,
-                  hasStory:
-                      false, // In a real app, this would come from a story state
-                  hasUnviewedStory: false,
+                GestureDetector(
+                  onTap: () => context.push('/user/${post.author.id}'),
+                  child: UserAvatar(
+                    uri: post.author.avatarUrl,
+                    size: 40,
+                    hasStory:
+                        false, // In a real app, this would come from a story state
+                    hasUnviewedStory: false,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              post.author.displayName,
-                              style: const TextStyle(
-                                fontFamily: 'Sora',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: AppColors.foreground,
+                      GestureDetector(
+                        onTap: () => context.push('/user/${post.author.id}'),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                post.author.displayName,
+                                style: const TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: AppColors.foreground,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          if (post.author.isVerified) ...[
-                            const SizedBox(width: 4),
-                            const Icon(
-                              CupertinoIcons.checkmark_seal_fill,
-                              size: 15,
-                              color: AppColors.verified,
-                            ),
+                            if (post.author.isVerified) ...[
+                              const SizedBox(width: 4),
+                              const Icon(
+                                CupertinoIcons.checkmark_seal_fill,
+                                size: 15,
+                                color: AppColors.verified,
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                       Text(
                         '@${post.author.username} · ${_timeAgo(post.createdAt)}',

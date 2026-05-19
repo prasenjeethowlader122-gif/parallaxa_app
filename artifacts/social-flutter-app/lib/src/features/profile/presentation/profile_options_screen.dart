@@ -91,9 +91,7 @@ class _OptionSection extends StatelessWidget {
             color: AppColors.muted,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Column(
-            children: items,
-          ),
+          child: Column(children: items),
         ),
       ],
     );
@@ -121,9 +119,17 @@ class _OptionItem extends StatelessWidget {
       leading: Icon(icon, color: color, size: 22),
       title: Text(
         label,
-        style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w500),
+        style: TextStyle(
+          color: color,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
       ),
-      trailing: const Icon(CupertinoIcons.chevron_right, size: 16, color: AppColors.mutedForeground),
+      trailing: const Icon(
+        CupertinoIcons.chevron_right,
+        size: 16,
+        color: AppColors.mutedForeground,
+      ),
       onTap: onTap,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     );

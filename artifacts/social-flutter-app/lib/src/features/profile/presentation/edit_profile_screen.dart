@@ -24,7 +24,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _displayNameController = TextEditingController(text: widget.user.displayName);
+    _displayNameController = TextEditingController(
+      text: widget.user.displayName,
+    );
     _bioController = TextEditingController(text: widget.user.bio);
     _websiteController = TextEditingController(text: widget.user.website);
   }
@@ -40,14 +42,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Future<void> _saveProfile() async {
     setState(() => _isSaving = true);
     try {
-      await ref.read(profileRepositoryProvider).updateProfile(
-        displayName: _displayNameController.text,
-        bio: _bioController.text,
-        website: _websiteController.text,
-      );
+      await ref
+          .read(profileRepositoryProvider)
+          .updateProfile(
+            displayName: _displayNameController.text,
+            bio: _bioController.text,
+            website: _websiteController.text,
+          );
       if (mounted) context.pop();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -63,8 +70,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           TextButton(
             onPressed: _isSaving ? null : _saveProfile,
             child: _isSaving
-              ? const CupertinoActivityIndicator()
-              : const Text('Save', style: TextStyle(fontWeight: FontWeight.bold)),
+                ? const CupertinoActivityIndicator()
+                : const Text(
+                    'Save',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
           ),
         ],
       ),
