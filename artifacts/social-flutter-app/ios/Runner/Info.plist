@@ -72,5 +72,7 @@
 		<string>This app needs camera access to take a photo of your face for registration.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>This app needs photo library access to select a photo of your face for registration.</string>
+		<key>GADApplicationIdentifier</key>
+		<string>ca-app-pub-7445203769667801~8760174499</string>
 	</dict>
 </plist>

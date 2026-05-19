@@ -15,7 +15,7 @@ class StoryBar extends ConsumerWidget {
     final storiesAsync = ref.watch(storiesProvider);
 
     return Container(
-      height: 110,
+      height: 90,
       decoration: const BoxDecoration(
         color: AppColors.background,
         border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
@@ -23,7 +23,7 @@ class StoryBar extends ConsumerWidget {
       child: storiesAsync.when(
         data: (groups) {
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             scrollDirection: Axis.horizontal,
             itemCount: groups.length + 1,
             itemBuilder: (context, index) {
@@ -64,7 +64,7 @@ class _CreateStoryItem extends StatelessWidget {
           children: [
             Stack(
               children: [
-                const UserAvatar(size: 64),
+                const UserAvatar(size: 50),
                 Positioned(
                   right: 0,
                   bottom: 0,
@@ -77,14 +77,14 @@ class _CreateStoryItem extends StatelessWidget {
                     padding: const EdgeInsets.all(2),
                     child: const Icon(
                       CupertinoIcons.add,
-                      size: 16,
+                      size: 12,
                       color: Colors.white,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             const Text(
               'Your Story',
               style: TextStyle(
@@ -115,13 +115,13 @@ class _StoryItem extends StatelessWidget {
           children: [
             UserAvatar(
               uri: group.user.avatarUrl,
-              size: 64,
+              size: 50,
               hasStory: true,
               hasUnviewedStory: group.hasUnviewed,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             SizedBox(
-              width: 68,
+              width: 58,
               child: Text(
                 group.user.displayName,
                 style: const TextStyle(
