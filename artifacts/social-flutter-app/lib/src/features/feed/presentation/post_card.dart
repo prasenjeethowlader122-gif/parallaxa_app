@@ -169,14 +169,12 @@ class _PostCardState extends ConsumerState<PostCard> {
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
                   child: GestureDetector(
-                    onLongPress: () => context.push(
-                      '/image-preview',
-                      extra: post.imageUrl,
-                    ),
+                    onLongPress: () =>
+                        context.push('/image-preview', extra: post.imageUrl),
                     child: CachedNetworkImage(
                       imageUrl: post.imageUrl!,
                       fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(color: AppColors.muted),
+                      placeholder: (_, __) => Container(color: AppColors.muted),
                       errorWidget: (_, __, ___) => Container(
                         color: AppColors.muted,
                         child: const Icon(

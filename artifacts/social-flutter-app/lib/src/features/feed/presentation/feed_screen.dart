@@ -115,10 +115,7 @@ class _FeedList extends ConsumerWidget {
                 ),
                 Text(
                   'See what\'s happening around the world',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textMuted,
-                  ),
+                  style: TextStyle(fontSize: 14, color: AppColors.textMuted),
                 ),
               ],
             ),

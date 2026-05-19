@@ -18,9 +18,7 @@ class StoryBar extends ConsumerWidget {
       height: 110,
       decoration: const BoxDecoration(
         color: AppColors.background,
-        border: Border(
-          bottom: BorderSide(color: AppColors.border, width: 0.5),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
       ),
       child: storiesAsync.when(
         data: (groups) {
