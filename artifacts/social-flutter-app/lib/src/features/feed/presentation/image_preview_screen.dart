@@ -21,7 +21,10 @@ class ImagePreviewScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(CupertinoIcons.cloud_download, color: Colors.white),
+            icon: const Icon(
+              CupertinoIcons.cloud_download,
+              color: Colors.white,
+            ),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Downloading image...')),
