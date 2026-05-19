@@ -133,8 +133,8 @@ class ImagePreviewScreen extends StatelessWidget {
           child: CachedNetworkImage(
             imageUrl: imageUrl,
             fit: BoxFit.contain,
-            placeholder: (_, __) => const CircularProgressIndicator(),
-            errorWidget: (_, __, ___) => const Icon(
+            placeholder: (_, _) => const CircularProgressIndicator(),
+            errorWidget: (_, _, _) => const Icon(
               CupertinoIcons.exclamationmark_circle,
               color: Colors.white,
             ),

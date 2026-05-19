@@ -53,7 +53,7 @@ class NotificationsScreen extends ConsumerWidget {
           strokeWidth: 2,
         ),
       ),
-      error: (_, __) => const Center(
+      error: (_, _) => const Center(
         child: Text(
           'Could not load notifications',
           style: TextStyle(color: AppColors.mutedForeground),
@@ -303,7 +303,7 @@ class _NotificationRow extends ConsumerWidget {
                     width: 44,
                     height: 44,
                     fit: BoxFit.cover,
-                    errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                    errorWidget: (_, _, _) => const SizedBox.shrink(),
                   ),
                 ),
               if (isUnread) ...[
