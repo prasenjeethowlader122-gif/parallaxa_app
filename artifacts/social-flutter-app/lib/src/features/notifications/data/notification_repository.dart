@@ -31,4 +31,12 @@ class NotificationRepository {
     final response = await _dio.get('/notifications/unread-count');
     return response.data['count'] as int;
   }
+
+  Future<void> blurFace(String notificationId) async {
+    await _dio.post('/notifications/$notificationId/blur');
+  }
+
+  Future<void> deletePhoto(String notificationId) async {
+    await _dio.post('/notifications/$notificationId/delete-photo');
+  }
 }

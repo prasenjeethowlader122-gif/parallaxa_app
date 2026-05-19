@@ -9,9 +9,7 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('About Parallaxa'),
-      ),
+      appBar: AppBar(title: const Text('About Parallaxa')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -31,10 +29,7 @@ class AboutScreen extends StatelessWidget {
                   ),
                   Text(
                     'Version 1.0.0',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textMuted,
-                    ),
+                    style: TextStyle(fontSize: 16, color: AppColors.textMuted),
                   ),
                 ],
               ),
@@ -86,10 +81,7 @@ class AboutScreen extends StatelessWidget {
             const Center(
               child: Text(
                 '© 2024 Parallaxa Inc. All rights reserved.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textMuted,
-                ),
+                style: TextStyle(fontSize: 14, color: AppColors.textMuted),
               ),
             ),
           ],
@@ -120,17 +112,11 @@ class _DeveloperInfoRow extends StatelessWidget {
           const SizedBox(width: 12),
           Text(
             '$label: ',
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
           ),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 16,
-              color: AppColors.textPrimary,
-            ),
+            style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
           ),
         ],
       ),

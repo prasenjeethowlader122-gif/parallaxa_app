@@ -30,17 +30,26 @@ class AuthRepository {
     required String password,
     required String displayName,
     required DateTime dateOfBirth,
+    String? faceImagePath,
   }) async {
-    final response = await _dio.post(
-      '/auth/register',
-      data: {
-        'username': username,
-        'email': email,
-        'password': password,
-        'displayName': displayName,
-        'dateOfBirth': dateOfBirth.toIso8601String(),
-      },
-    );
+    final formData = FormData.fromMap({
+      'username': username,
+      'email': email,
+      'password': password,
+      'displayName': displayName,
+      'dateOfBirth': dateOfBirth.toIso8601String(),
+    });
+
+    if (faceImagePath != null) {
+      formData.files.add(
+        MapEntry(
+          'faceImage',
+          await MultipartFile.fromFile(faceImagePath, filename: 'face.jpg'),
+        ),
+      );
+    }
+
+    final response = await _dio.post('/auth/register', data: formData);
     return AuthResponse.fromJson(response.data);
   }
 

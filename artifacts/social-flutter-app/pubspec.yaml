@@ -53,6 +53,10 @@ dependencies:
   json_annotation: ^4.9.0
   device_info_plus: ^13.1.0
   shorebird_code_push: ^2.0.2
+  image: ^4.8.0
+  path_provider: ^2.1.5
+  http: ^1.6.0
+  gal: ^2.3.2
 
 dev_dependencies:
   flutter_test:
