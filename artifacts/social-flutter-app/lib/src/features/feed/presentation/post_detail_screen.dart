@@ -598,7 +598,9 @@ class _CommentItemState extends State<_CommentItem> {
                                 ? CupertinoIcons.heart_fill
                                 : CupertinoIcons.heart,
                             size: widget.depth > 0 ? 14 : 16,
-                            color: post.isLiked ? Colors.red : AppColors.mutedForeground,
+                            color: post.isLiked
+                                ? Colors.red
+                                : AppColors.mutedForeground,
                           ),
                           count: post.likesCount,
                           onTap: () {},
