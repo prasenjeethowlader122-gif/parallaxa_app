@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:hugeicons/hugeicons.dart';
+
 import '../data/post_repository.dart';
 import '../domain/post.dart';
 import '../../../core/app_colors.dart';
 import '../../profile/presentation/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
+import 'package:social_app/src/features/auth/data/auth_repository.dart';
+
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const double parentAvatarSize = 38;
@@ -47,9 +49,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      await ref
-          .read(postRepositoryProvider)
-          .createPost(
+      await ref.read(postRepositoryProvider).createPost(
             content: content,
             parentPostId: _replyTargetId ?? widget.postId,
           );
@@ -62,9 +62,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       ref.invalidate(postDetailProvider(widget.postId));
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to post comment')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to post comment')),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -127,11 +127,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       fmtCount: _fmtCount,
                     ),
                     loading: () => const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
+                        child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: CircularProgressIndicator())),
                     error: (e, _) => Center(child: Text('Error: $e')),
                   ),
 
@@ -139,17 +137,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   if (_replyTargetUsername != null)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withOpacity(0.05),
                         border: const Border(
-                          bottom: BorderSide(
-                            color: AppColors.border,
-                            width: 0.5,
-                          ),
-                        ),
+                            bottom:
+                                BorderSide(color: AppColors.border, width: 0.5)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -158,15 +151,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                             TextSpan(
                               text: 'Replying to ',
                               style: const TextStyle(
-                                fontSize: 13,
-                                color: AppColors.mutedForeground,
-                              ),
+                                  fontSize: 13, color: AppColors.mutedForeground),
                               children: [
                                 TextSpan(
                                   text: '@$_replyTargetUsername',
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                  ),
+                                  style: const TextStyle(color: AppColors.primary),
                                 ),
                               ],
                             ),
@@ -179,10 +168,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                             child: const Text(
                               'Cancel',
                               style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary),
                             ),
                           ),
                         ],
@@ -195,22 +183,18 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       final tree = _buildCommentTree(page.posts);
                       return Column(
                         children: tree
-                            .map(
-                              (comment) => _CommentItem(
-                                comment: comment,
-                                onReply: _onReply,
-                                depth: 0,
-                              ),
-                            )
+                            .map((comment) => _CommentItem(
+                                  comment: comment,
+                                  onReply: _onReply,
+                                  depth: 0,
+                                ))
                             .toList(),
                       );
                     },
                     loading: () => const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
+                        child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: CircularProgressIndicator())),
                     error: (e, _) => Center(child: Text('Error: $e')),
                   ),
                 ],
@@ -233,8 +217,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final map = <String, _CommentNode>{};
     final roots = <_CommentNode>[];
 
-    final sorted = [...flat]
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final sorted = [...flat]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     for (var p in sorted) {
       map[p.id] = _CommentNode(p);
@@ -302,38 +285,28 @@ class _ParentPostView extends StatelessWidget {
                             child: Text(
                               post.author.displayName,
                               style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
+                                  fontWeight: FontWeight.bold, fontSize: 15),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (post.author.isVerified) ...[
                             const SizedBox(width: 4),
-                            const Icon(
-                              CupertinoIcons.checkmark_seal_fill,
-                              size: 16,
-                              color: AppColors.primary,
-                            ),
+                            const Icon(CupertinoIcons.checkmark_seal_fill,
+                                size: 16, color: AppColors.primary),
                           ],
                         ],
                       ),
                       Text(
                         '@${post.author.username}',
                         style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.mutedForeground,
-                        ),
+                            fontSize: 14, color: AppColors.mutedForeground),
                       ),
                     ],
                   ),
                 ),
               ),
-              const Icon(
-                CupertinoIcons.ellipsis,
-                size: 20,
-                color: AppColors.mutedForeground,
-              ),
+              const Icon(CupertinoIcons.ellipsis,
+                  size: 20, color: AppColors.mutedForeground),
             ],
           ),
         ),
@@ -357,7 +330,6 @@ class _ParentPostView extends StatelessWidget {
               child: CachedNetworkImage(
                 imageUrl: post.imageUrl!,
                 width: double.infinity,
-                aspectRatio: 16 / 9,
                 fit: BoxFit.cover,
               ),
             ),
@@ -368,10 +340,7 @@ class _ParentPostView extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Text(
             formatDate(post.createdAt),
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.mutedForeground,
-            ),
+            style: const TextStyle(fontSize: 14, color: AppColors.mutedForeground),
           ),
         ),
 
@@ -388,10 +357,8 @@ class _ParentPostView extends StatelessWidget {
                     fmtCount(post.repliesCount),
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  const Text(
-                    ' Replies',
-                    style: TextStyle(color: AppColors.mutedForeground),
-                  ),
+                  const Text(' Replies',
+                      style: TextStyle(color: AppColors.mutedForeground)),
                   const SizedBox(width: 16),
                 ],
                 if (post.likesCount > 0) ...[
@@ -399,17 +366,14 @@ class _ParentPostView extends StatelessWidget {
                     fmtCount(post.likesCount),
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  Text(
-                    post.likesCount == 1 ? ' Like' : ' Likes',
-                    style: const TextStyle(color: AppColors.mutedForeground),
-                  ),
+                  Text(post.likesCount == 1 ? ' Like' : ' Likes',
+                      style: const TextStyle(color: AppColors.mutedForeground)),
                 ],
               ],
             ),
           ),
 
-        if (post.likesCount > 0 || post.repliesCount > 0)
-          const Divider(height: 1),
+        if (post.likesCount > 0 || post.repliesCount > 0) const Divider(height: 1),
 
         // Actions
         Padding(
@@ -418,33 +382,24 @@ class _ParentPostView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               IconButton(
-                icon: const Icon(HugeiconsIcons.strokeRoundedAiChat),
-                onPressed: onReply,
-              ),
+                  icon: const Icon(CupertinoIcons.chat_bubble),
+                  onPressed: onReply),
               IconButton(
-                icon: const Icon(HugeiconsIcons.strokeRoundedArrowUp01),
-                onPressed: () {},
-              ),
+                  icon: const Icon(CupertinoIcons.arrow_up),
+                  onPressed: () {}),
               IconButton(
-                icon: Icon(
-                  post.isLiked
+                  icon: Icon(post.isLiked
                       ? CupertinoIcons.heart_fill
-                      : CupertinoIcons.heart,
-                ),
-                onPressed: () {},
-              ),
+                      : CupertinoIcons.heart),
+                  onPressed: () {}),
               IconButton(
-                icon: Icon(
-                  post.isSaved
+                  icon: Icon(post.isSaved
                       ? CupertinoIcons.bookmark_fill
-                      : CupertinoIcons.bookmark,
-                ),
-                onPressed: () {},
-              ),
+                      : CupertinoIcons.bookmark),
+                  onPressed: () {}),
               IconButton(
-                icon: const Icon(HugeiconsIcons.strokeRoundedShare01),
-                onPressed: () {},
-              ),
+                  icon: const Icon(CupertinoIcons.share),
+                  onPressed: () {}),
             ],
           ),
         ),
@@ -499,10 +454,7 @@ class _CommentItemState extends State<_CommentItem> {
                   children: [
                     GestureDetector(
                       onTap: () => context.push('/user/${post.author.id}'),
-                      child: UserAvatar(
-                        uri: post.author.avatarUrl,
-                        size: avatarSize,
-                      ),
+                      child: UserAvatar(uri: post.author.avatarUrl, size: avatarSize),
                     ),
                     if (hasReplies && _isExpanded)
                       Container(
@@ -540,11 +492,9 @@ class _CommentItemState extends State<_CommentItem> {
                           ),
                           if (post.author.isVerified) ...[
                             const SizedBox(width: 4),
-                            Icon(
-                              CupertinoIcons.checkmark_seal_fill,
-                              size: widget.depth > 0 ? 12 : 14,
-                              color: AppColors.primary,
-                            ),
+                            Icon(CupertinoIcons.checkmark_seal_fill,
+                                size: widget.depth > 0 ? 12 : 14,
+                                color: AppColors.primary),
                           ],
                           const SizedBox(width: 4),
                           Expanded(
@@ -569,7 +519,7 @@ class _CommentItemState extends State<_CommentItem> {
                     Row(
                       children: [
                         _CommentAction(
-                          icon: HugeiconsIcons.strokeRoundedAiChat,
+                          icon: CupertinoIcons.chat_bubble,
                           count: post.repliesCount,
                           onTap: () =>
                               widget.onReply(post.id, post.author.username),
@@ -587,7 +537,7 @@ class _CommentItemState extends State<_CommentItem> {
                         ),
                         const SizedBox(width: 20),
                         _CommentAction(
-                          icon: HugeiconsIcons.strokeRoundedShare01,
+                          icon: CupertinoIcons.share,
                           count: 0,
                           onTap: () {},
                           size: widget.depth > 0 ? 14 : 16,
@@ -726,7 +676,7 @@ class _CurvePainter extends CustomPainter {
 
 // ── Comment Input ─────────────────────────────────────────────────────────────
 
-class _CommentInput extends StatelessWidget {
+class _CommentInput extends ConsumerWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final bool isSubmitting;
@@ -743,11 +693,7 @@ class _CommentInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final me = ref
-        .watch(
-          futureProvider((ref) => ref.watch(authRepositoryProvider).getMe()),
-        )
-        .valueOrNull;
+    final me = ref.watch(meProvider).value;
 
     return Container(
       padding: EdgeInsets.only(

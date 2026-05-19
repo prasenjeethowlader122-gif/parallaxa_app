@@ -2,13 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hugeicons/hugeicons.dart';
 import '../../../core/app_colors.dart';
-import '../../auth/data/auth_repository.dart';
-import '../../auth/domain/user.dart';
+import 'package:social_app/src/features/auth/data/auth_repository.dart';
+
 import '../../../core/api_client.dart';
 import '../../../core/processing_provider.dart';
-import '../widgets/user_avatar.dart';
+import 'package:social_app/src/features/profile/presentation/widgets/user_avatar.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -46,9 +45,7 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final meAsync = ref.watch(
-      futureProvider((ref) => ref.watch(authRepositoryProvider).getMe()),
-    );
+    final meAsync = ref.watch(meProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -137,40 +134,40 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             if (me.role == 'admin') ...[
-              _SectionHeader(title: 'Administrative Tools'),
+              const _SectionHeader(title: 'Administrative Tools'),
               _SettingsTile(
-                icon: HugeiconsIcons.strokeRoundedSettings02,
+                icon: CupertinoIcons.settings,
                 label: 'User Management',
                 onTap: () => context.push('/admin/users'),
               ),
               const SizedBox(height: 24),
             ],
 
-            _SectionHeader(title: 'Account'),
+            const _SectionHeader(title: 'Account'),
             _SettingsTile(
-              icon: HugeiconsIcons.strokeRoundedEdit01,
+              icon: CupertinoIcons.pencil,
               label: 'Edit profile',
               onTap: () => context.push('/profile/edit', extra: me),
             ),
             _SettingsTile(
-              icon: HugeiconsIcons.strokeRoundedCheckmarkCircle01,
+              icon: CupertinoIcons.check_mark_circled,
               label: 'Account Verification',
               onTap: () => context.push('/account-verification'),
             ),
 
             const SizedBox(height: 24),
 
-            _SectionHeader(title: 'Security & Privacy'),
+            const _SectionHeader(title: 'Security & Privacy'),
             _SettingsTile(
-              icon: HugeiconsIcons.strokeRoundedLockPassword,
+              icon: CupertinoIcons.lock,
               label: 'Two-Factor Auth',
               onTap: () => context.push('/two-factor-setup'),
             ),
             _SettingsTile(
-              icon: HugeiconsIcons.strokeRoundedShield01,
+              icon: CupertinoIcons.shield,
               label: 'Private account',
               trailing: CupertinoSwitch(
-                value: me.isPrivate,
+                value: me.isPrivate ?? false,
                 onChanged: (val) {
                   // TODO: Implement update privacy
                 },
@@ -179,14 +176,14 @@ class SettingsScreen extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            _SectionHeader(title: 'Support & About'),
+            const _SectionHeader(title: 'Support & About'),
             _SettingsTile(
-              icon: HugeiconsIcons.strokeRoundedHelpCircle,
+              icon: CupertinoIcons.question_circle,
               label: 'Help & Support',
               onTap: () {},
             ),
             _SettingsTile(
-              icon: HugeiconsIcons.strokeRoundedInformationCircle,
+              icon: CupertinoIcons.info,
               label: 'About',
               onTap: () {
                 showAboutDialog(
@@ -211,7 +208,7 @@ class SettingsScreen extends ConsumerWidget {
                   side: const BorderSide(color: AppColors.border, width: 0.5),
                 ),
                 leading: const Icon(
-                  HugeiconsIcons.strokeRoundedLogout01,
+                  CupertinoIcons.square_arrow_right,
                   color: AppColors.destructive,
                 ),
                 title: const Text(
@@ -228,10 +225,7 @@ class SettingsScreen extends ConsumerWidget {
             const Center(
               child: Text(
                 'Parallaxa v1.0.0',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.mutedForeground,
-                ),
+                style: TextStyle(fontSize: 13, color: AppColors.mutedForeground),
               ),
             ),
             const SizedBox(height: 40),
@@ -281,7 +275,7 @@ class _SettingsTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       tileColor: AppColors.card,
-      leading: HugeIcon(icon: icon, color: AppColors.foreground, size: 22),
+      leading: Icon(icon, color: AppColors.foreground, size: 22),
       title: Text(
         label,
         style: const TextStyle(
@@ -290,13 +284,7 @@ class _SettingsTile extends StatelessWidget {
           color: AppColors.foreground,
         ),
       ),
-      trailing:
-          trailing ??
-          const Icon(
-            CupertinoIcons.chevron_right,
-            size: 16,
-            color: AppColors.mutedForeground,
-          ),
+      trailing: trailing ?? const Icon(CupertinoIcons.chevron_right, size: 16, color: AppColors.mutedForeground),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
     );
   }

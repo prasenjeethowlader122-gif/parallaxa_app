@@ -7,6 +7,10 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.watch(dioProvider));
 });
 
+final meProvider = FutureProvider<User>((ref) async {
+  return ref.watch(authRepositoryProvider).getMe();
+});
+
 class AuthRepository {
   final Dio _dio;
 
