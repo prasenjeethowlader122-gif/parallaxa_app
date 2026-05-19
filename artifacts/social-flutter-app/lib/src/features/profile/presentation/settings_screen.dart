@@ -5,10 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../core/app_colors.dart';
 import '../../auth/data/auth_repository.dart';
-import '../../auth/domain/user.dart';
 import '../../../core/api_client.dart';
 import '../../../core/processing_provider.dart';
-import '../widgets/user_avatar.dart';
+import 'widgets/user_avatar.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -46,9 +45,7 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final meAsync = ref.watch(
-      futureProvider((ref) => ref.watch(authRepositoryProvider).getMe()),
-    );
+    final meAsync = ref.watch(currentUserProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -139,7 +136,7 @@ class SettingsScreen extends ConsumerWidget {
             if (me.role == 'admin') ...[
               _SectionHeader(title: 'Administrative Tools'),
               _SettingsTile(
-                icon: HugeiconsIcons.strokeRoundedSettings02,
+                icon: HugeIcons.strokeRoundedSettings02,
                 label: 'User Management',
                 onTap: () => context.push('/admin/users'),
               ),
@@ -148,12 +145,12 @@ class SettingsScreen extends ConsumerWidget {
 
             _SectionHeader(title: 'Account'),
             _SettingsTile(
-              icon: HugeiconsIcons.strokeRoundedEdit01,
+              icon: HugeIcons.strokeRoundedEdit01,
               label: 'Edit profile',
               onTap: () => context.push('/profile/edit', extra: me),
             ),
             _SettingsTile(
-              icon: HugeiconsIcons.strokeRoundedCheckmarkCircle01,
+              icon: HugeIcons.strokeRoundedCheckmarkCircle01,
               label: 'Account Verification',
               onTap: () => context.push('/account-verification'),
             ),
@@ -162,15 +159,15 @@ class SettingsScreen extends ConsumerWidget {
 
             _SectionHeader(title: 'Security & Privacy'),
             _SettingsTile(
-              icon: HugeiconsIcons.strokeRoundedLockPassword,
+              icon: HugeIcons.strokeRoundedLockPassword,
               label: 'Two-Factor Auth',
               onTap: () => context.push('/two-factor-setup'),
             ),
             _SettingsTile(
-              icon: HugeiconsIcons.strokeRoundedShield01,
+              icon: HugeIcons.strokeRoundedShield01,
               label: 'Private account',
               trailing: CupertinoSwitch(
-                value: me.isPrivate,
+                value: me.isPrivate ?? false,
                 onChanged: (val) {
                   // TODO: Implement update privacy
                 },
@@ -181,12 +178,12 @@ class SettingsScreen extends ConsumerWidget {
 
             _SectionHeader(title: 'Support & About'),
             _SettingsTile(
-              icon: HugeiconsIcons.strokeRoundedHelpCircle,
+              icon: HugeIcons.strokeRoundedHelpCircle,
               label: 'Help & Support',
               onTap: () {},
             ),
             _SettingsTile(
-              icon: HugeiconsIcons.strokeRoundedInformationCircle,
+              icon: HugeIcons.strokeRoundedInformationCircle,
               label: 'About',
               onTap: () {
                 showAboutDialog(
@@ -210,8 +207,8 @@ class SettingsScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                   side: const BorderSide(color: AppColors.border, width: 0.5),
                 ),
-                leading: const Icon(
-                  HugeiconsIcons.strokeRoundedLogout01,
+                leading: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedLogout01,
                   color: AppColors.destructive,
                 ),
                 title: const Text(
@@ -264,7 +261,7 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _SettingsTile extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final String label;
   final VoidCallback? onTap;
   final Widget? trailing;
@@ -281,7 +278,9 @@ class _SettingsTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       tileColor: AppColors.card,
-      leading: HugeIcon(icon: icon, color: AppColors.foreground, size: 22),
+      leading: icon is IconData
+          ? Icon(icon as IconData, color: AppColors.foreground, size: 22)
+          : HugeIcon(icon: icon, color: AppColors.foreground, size: 22),
       title: Text(
         label,
         style: const TextStyle(

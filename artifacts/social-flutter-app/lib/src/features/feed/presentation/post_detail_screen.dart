@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
+import '../../auth/data/auth_repository.dart';
 import '../data/post_repository.dart';
 import '../domain/post.dart';
 import '../../../core/app_colors.dart';
@@ -354,11 +355,13 @@ class _ParentPostView extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: CachedNetworkImage(
-                imageUrl: post.imageUrl!,
-                width: double.infinity,
+              child: AspectRatio(
                 aspectRatio: 16 / 9,
-                fit: BoxFit.cover,
+                child: CachedNetworkImage(
+                  imageUrl: post.imageUrl!,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
@@ -418,11 +421,17 @@ class _ParentPostView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               IconButton(
-                icon: const Icon(HugeiconsIcons.strokeRoundedAiChat),
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedAiChat01,
+                  color: AppColors.mutedForeground,
+                ),
                 onPressed: onReply,
               ),
               IconButton(
-                icon: const Icon(HugeiconsIcons.strokeRoundedArrowUp01),
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowUp01,
+                  color: AppColors.mutedForeground,
+                ),
                 onPressed: () {},
               ),
               IconButton(
@@ -442,7 +451,10 @@ class _ParentPostView extends StatelessWidget {
                 onPressed: () {},
               ),
               IconButton(
-                icon: const Icon(HugeiconsIcons.strokeRoundedShare01),
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedShare01,
+                  color: AppColors.mutedForeground,
+                ),
                 onPressed: () {},
               ),
             ],
@@ -569,7 +581,11 @@ class _CommentItemState extends State<_CommentItem> {
                     Row(
                       children: [
                         _CommentAction(
-                          icon: HugeiconsIcons.strokeRoundedAiChat,
+                          icon: HugeIcon(
+                            icon: HugeIcons.strokeRoundedAiChat01,
+                            color: AppColors.mutedForeground,
+                            size: widget.depth > 0 ? 14 : 16,
+                          ),
                           count: post.repliesCount,
                           onTap: () =>
                               widget.onReply(post.id, post.author.username),
@@ -577,9 +593,15 @@ class _CommentItemState extends State<_CommentItem> {
                         ),
                         const SizedBox(width: 20),
                         _CommentAction(
-                          icon: post.isLiked
-                              ? CupertinoIcons.heart_fill
-                              : CupertinoIcons.heart,
+                          icon: Icon(
+                            post.isLiked
+                                ? CupertinoIcons.heart_fill
+                                : CupertinoIcons.heart,
+                            size: widget.depth > 0 ? 14 : 16,
+                            color: post.isLiked
+                                ? Colors.red
+                                : AppColors.mutedForeground,
+                          ),
                           count: post.likesCount,
                           onTap: () {},
                           size: widget.depth > 0 ? 14 : 16,
@@ -587,7 +609,11 @@ class _CommentItemState extends State<_CommentItem> {
                         ),
                         const SizedBox(width: 20),
                         _CommentAction(
-                          icon: HugeiconsIcons.strokeRoundedShare01,
+                          icon: HugeIcon(
+                            icon: HugeIcons.strokeRoundedShare01,
+                            color: AppColors.mutedForeground,
+                            size: widget.depth > 0 ? 14 : 16,
+                          ),
                           count: 0,
                           onTap: () {},
                           size: widget.depth > 0 ? 14 : 16,
@@ -663,7 +689,7 @@ class _CommentItemState extends State<_CommentItem> {
 }
 
 class _CommentAction extends StatelessWidget {
-  final IconData icon;
+  final Widget icon;
   final int count;
   final VoidCallback onTap;
   final double size;
@@ -683,7 +709,7 @@ class _CommentAction extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: [
-          Icon(icon, size: size, color: color ?? AppColors.mutedForeground),
+          icon,
           if (count > 0) ...[
             const SizedBox(width: 4),
             Text(
@@ -726,7 +752,7 @@ class _CurvePainter extends CustomPainter {
 
 // ── Comment Input ─────────────────────────────────────────────────────────────
 
-class _CommentInput extends StatelessWidget {
+class _CommentInput extends ConsumerWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final bool isSubmitting;
@@ -743,11 +769,7 @@ class _CommentInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final me = ref
-        .watch(
-          futureProvider((ref) => ref.watch(authRepositoryProvider).getMe()),
-        )
-        .valueOrNull;
+    final me = ref.watch(currentUserProvider).value;
 
     return Container(
       padding: EdgeInsets.only(

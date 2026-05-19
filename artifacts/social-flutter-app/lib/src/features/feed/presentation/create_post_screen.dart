@@ -8,14 +8,9 @@ import 'dart:math' as math;
 import '../data/post_repository.dart';
 import '../domain/post.dart';
 import '../../auth/data/auth_repository.dart';
-import '../../auth/domain/user.dart';
 import '../../../core/app_colors.dart';
 import '../../../core/api_client.dart';
 import '../../profile/presentation/widgets/user_avatar.dart';
-
-final currentUserProvider = FutureProvider<User>((ref) {
-  return ref.watch(authRepositoryProvider).getMe();
-});
 
 // ─── Highlights Controller ──────────────────────────────────────────────────
 class HighlightsEditingController extends TextEditingController {
