@@ -72,17 +72,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) =>
             PostDetailScreen(postId: state.pathParameters['postId']!),
       ),
-      GoRoute(
-        path: '/admin',
-        builder: (_, _) => const AdminDashboardScreen(),
-      ),
+      GoRoute(path: '/admin', builder: (_, _) => const AdminDashboardScreen()),
       GoRoute(
         path: '/admin/users',
         builder: (_, _) => const AdminUsersScreen(),
       ),
       GoRoute(
         path: '/stories/:userId',
-        builder: (_, state) => StoryViewScreen(userId: state.pathParameters['userId']!),
+        builder: (_, state) =>
+            StoryViewScreen(userId: state.pathParameters['userId']!),
       ),
       GoRoute(
         path: '/story/create',
@@ -101,10 +99,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/profile/options',
         builder: (_, state) => ProfileOptionsScreen(user: state.extra as User),
       ),
-      GoRoute(
-        path: '/bookmarks',
-        builder: (_, _) => const BookmarksScreen(),
-      ),
+      GoRoute(path: '/bookmarks', builder: (_, _) => const BookmarksScreen()),
       GoRoute(
         path: '/account-verification',
         builder: (_, _) => const AccountVerificationScreen(),
@@ -113,10 +108,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/two-factor-setup',
         builder: (_, _) => const TwoFactorSetupScreen(),
       ),
-      GoRoute(
-        path: '/settings',
-        builder: (_, _) => const SettingsScreen(),
-      ),
+      GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
       ShellRoute(
         builder: (context, state, child) =>
             _MainShell(location: state.matchedLocation, child: child),

@@ -123,15 +123,16 @@ class _PostCardState extends ConsumerState<PostCard> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          if (post.author.isVerified) ...[
-                            const SizedBox(width: 4),
-                            const Icon(
-                              CupertinoIcons.checkmark_seal_fill,
-                              size: 15,
-                              color: AppColors.verified,
-                            ),
+                            if (post.author.isVerified) ...[
+                              const SizedBox(width: 4),
+                              const Icon(
+                                CupertinoIcons.checkmark_seal_fill,
+                                size: 15,
+                                color: AppColors.verified,
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                       Text(
                         '@${post.author.username} · ${_timeAgo(post.createdAt)}',

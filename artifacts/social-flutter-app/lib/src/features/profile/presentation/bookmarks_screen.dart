@@ -30,9 +30,16 @@ class BookmarksScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(CupertinoIcons.bookmark, size: 64, color: AppColors.mutedForeground.withOpacity(0.5)),
+                  Icon(
+                    CupertinoIcons.bookmark,
+                    size: 64,
+                    color: AppColors.mutedForeground.withOpacity(0.5),
+                  ),
                   const SizedBox(height: 16),
-                  const Text('No bookmarks yet', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'No bookmarks yet',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             );

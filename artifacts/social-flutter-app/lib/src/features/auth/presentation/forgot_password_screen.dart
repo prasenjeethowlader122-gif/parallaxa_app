@@ -179,7 +179,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.arrow_left, color: AppColors.slate900),
+          icon: const Icon(
+            CupertinoIcons.arrow_left,
+            color: AppColors.slate900,
+          ),
           onPressed: () => context.pop(),
         ),
       ),

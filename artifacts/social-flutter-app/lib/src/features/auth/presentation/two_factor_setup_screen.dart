@@ -9,7 +9,8 @@ class TwoFactorSetupScreen extends ConsumerStatefulWidget {
   const TwoFactorSetupScreen({super.key});
 
   @override
-  ConsumerState<TwoFactorSetupScreen> createState() => _TwoFactorSetupScreenState();
+  ConsumerState<TwoFactorSetupScreen> createState() =>
+      _TwoFactorSetupScreenState();
 }
 
 class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
@@ -52,7 +53,9 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
     try {
       await Future.delayed(const Duration(seconds: 1));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('2FA Enabled Successfully')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('2FA Enabled Successfully')),
+        );
         context.pop();
       }
     } catch (e) {
@@ -87,11 +90,18 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                     Center(
                       child: Column(
                         children: [
-                          Image.network(_setupData!['qrCodeUri'], width: 200, height: 200),
+                          Image.network(
+                            _setupData!['qrCodeUri'],
+                            width: 200,
+                            height: 200,
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             _setupData!['secret'],
-                            style: const TextStyle(fontFamily: 'monospace', color: AppColors.mutedForeground),
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              color: AppColors.mutedForeground,
+                            ),
                           ),
                         ],
                       ),
@@ -108,16 +118,24 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                     textAlign: TextAlign.center,
                     keyboardType: TextInputType.number,
                     maxLength: 6,
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 10),
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 10,
+                    ),
                     decoration: const InputDecoration(hintText: '000000'),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: _codeController.text.length == 6 ? _enable2FA : null,
-                    style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 56)),
+                    onPressed: _codeController.text.length == 6
+                        ? _enable2FA
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 56),
+                    ),
                     child: _isLoading
-                      ? const CupertinoActivityIndicator(color: Colors.white)
-                      : const Text('Enable 2FA'),
+                        ? const CupertinoActivityIndicator(color: Colors.white)
+                        : const Text('Enable 2FA'),
                   ),
                 ],
               ),

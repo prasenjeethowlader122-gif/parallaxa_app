@@ -46,7 +46,9 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final meAsync = ref.watch(futureProvider((ref) => ref.watch(authRepositoryProvider).getMe()));
+    final meAsync = ref.watch(
+      futureProvider((ref) => ref.watch(authRepositoryProvider).getMe()),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -226,7 +228,10 @@ class SettingsScreen extends ConsumerWidget {
             const Center(
               child: Text(
                 'Parallaxa v1.0.0',
-                style: TextStyle(fontSize: 13, color: AppColors.mutedForeground),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.mutedForeground,
+                ),
               ),
             ),
             const SizedBox(height: 40),
@@ -285,7 +290,13 @@ class _SettingsTile extends StatelessWidget {
           color: AppColors.foreground,
         ),
       ),
-      trailing: trailing ?? const Icon(CupertinoIcons.chevron_right, size: 16, color: AppColors.mutedForeground),
+      trailing:
+          trailing ??
+          const Icon(
+            CupertinoIcons.chevron_right,
+            size: 16,
+            color: AppColors.mutedForeground,
+          ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
     );
   }
