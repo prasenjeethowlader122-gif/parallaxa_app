@@ -1,0 +1,69 @@
+Analyzing social-flutter-app...
+
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/src/features/admin/presentation/admin_dashboard_screen.dart:110:28 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/src/features/admin/presentation/admin_users_screen.dart:30:9 • curly_braces_in_flow_control_structures
+   info • Unnecessary use of multiple underscores • lib/src/features/admin/presentation/admin_users_screen.dart:63:35 • unnecessary_underscores
+warning • Unused import: '../data/auth_repository.dart' • lib/src/features/auth/presentation/two_factor_setup_screen.dart:5:8 • unused_import
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/feed/data/post_repository.dart:33:25 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/feed/data/post_repository.dart:42:27 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/feed/data/post_repository.dart:61:9 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/feed/data/post_repository.dart:62:9 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/feed/data/post_repository.dart:63:9 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/feed/data/post_repository.dart:64:9 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/feed/data/post_repository.dart:65:9 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/feed/data/post_repository.dart:66:9 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/feed/data/post_repository.dart:75:25 • use_null_aware_elements
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/src/features/feed/presentation/create_post_screen.dart:451:37 • deprecated_member_use
+   info • Unnecessary use of multiple underscores • lib/src/features/feed/presentation/create_post_screen.dart:461:35 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/feed/presentation/create_post_screen.dart:512:18 • unnecessary_underscores
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/src/features/feed/presentation/feed_screen.dart:158:54 • deprecated_member_use
+   info • Unnecessary use of multiple underscores • lib/src/features/feed/presentation/image_preview_screen.dart:136:30 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/feed/presentation/image_preview_screen.dart:137:30 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/feed/presentation/image_preview_screen.dart:137:34 • unnecessary_underscores
+   info • The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/cupertino.dart' • lib/src/features/feed/presentation/post_card.dart:2:8 • unnecessary_import
+   info • Unnecessary use of multiple underscores • lib/src/features/feed/presentation/post_card.dart:177:40 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/feed/presentation/post_card.dart:178:40 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/feed/presentation/post_card.dart:178:44 • unnecessary_underscores
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/src/features/feed/presentation/post_detail_screen.dart:147:50 • deprecated_member_use
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/messaging/data/message_repository.dart:29:25 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/messaging/data/message_repository.dart:42:9 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/messaging/data/message_repository.dart:43:9 • use_null_aware_elements
+   info • Unnecessary use of multiple underscores • lib/src/features/messaging/presentation/chat_screen.dart:173:26 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/messaging/presentation/conversations_screen.dart:38:18 • unnecessary_underscores
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/notifications/data/notification_repository.dart:21:25 • use_null_aware_elements
+   info • Unnecessary use of multiple underscores • lib/src/features/notifications/presentation/notifications_screen.dart:56:18 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/notifications/presentation/notifications_screen.dart:306:38 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/notifications/presentation/notifications_screen.dart:306:42 • unnecessary_underscores
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/profile/data/profile_repository.dart:29:25 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/profile/data/profile_repository.dart:53:9 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/profile/data/profile_repository.dart:54:9 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/profile/data/profile_repository.dart:55:9 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/profile/data/profile_repository.dart:56:9 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/profile/data/profile_repository.dart:57:9 • use_null_aware_elements
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/profile/data/profile_repository.dart:58:9 • use_null_aware_elements
+warning • Unused import: '../../auth/data/auth_repository.dart' • lib/src/features/profile/presentation/account_verification_screen.dart:5:8 • unused_import
+warning • Unused import: '../../auth/domain/user.dart' • lib/src/features/profile/presentation/account_verification_screen.dart:6:8 • unused_import
+   info • Statements in an if should be enclosed in a block • lib/src/features/profile/presentation/account_verification_screen.dart:42:9 • curly_braces_in_flow_control_structures
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/src/features/profile/presentation/bookmarks_screen.dart:36:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/src/features/profile/presentation/edit_profile_screen.dart:147:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/src/features/profile/presentation/edit_profile_screen.dart:203:45 • deprecated_member_use
+   info • Unnecessary use of multiple underscores • lib/src/features/profile/presentation/profile_screen.dart:106:20 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/profile/presentation/profile_screen.dart:607:18 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/profile/presentation/profile_screen.dart:661:30 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/profile/presentation/profile_screen.dart:662:30 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/profile/presentation/profile_screen.dart:662:34 • unnecessary_underscores
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/src/features/profile/presentation/profile_screen.dart:700:46 • deprecated_member_use
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/search/data/search_repository.dart:27:25 • use_null_aware_elements
+   info • Unnecessary use of multiple underscores • lib/src/features/search/presentation/explore_screen.dart:166:44 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/search/presentation/explore_screen.dart:168:44 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/search/presentation/explore_screen.dart:168:48 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/search/presentation/explore_screen.dart:201:18 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/src/features/search/presentation/explore_screen.dart:449:18 • unnecessary_underscores
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/src/features/stories/data/story_repository.dart:52:9 • use_null_aware_elements
+warning • Unused import: '../../../core/app_colors.dart' • lib/src/features/stories/presentation/story_create_screen.dart:8:8 • unused_import
+   info • Statements in an if should be enclosed in a block • lib/src/features/stories/presentation/story_create_screen.dart:45:9 • curly_braces_in_flow_control_structures
+warning • Unused import: '../../../core/app_colors.dart' • lib/src/features/stories/presentation/story_view_screen.dart:7:8 • unused_import
+   info • Unnecessary use of multiple underscores • lib/src/features/stories/presentation/story_view_screen.dart:62:40 • unnecessary_underscores
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/src/features/stories/presentation/story_view_screen.dart:85:52 • deprecated_member_use
+
+65 issues found. (ran in 22.3s)
