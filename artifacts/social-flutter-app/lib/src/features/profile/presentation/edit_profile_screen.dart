@@ -81,7 +81,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Future<void> _saveProfile() async {
     setState(() => _isSaving = true);
     try {
-      await ref.read(profileRepositoryProvider).updateProfile(
+      await ref
+          .read(profileRepositoryProvider)
+          .updateProfile(
             displayName: _displayNameController.text,
             bio: _bioController.text,
             website: _websiteController.text,
@@ -94,9 +96,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -167,8 +169,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border:
-                            Border.all(color: AppColors.background, width: 4),
+                        border: Border.all(
+                          color: AppColors.background,
+                          width: 4,
+                        ),
                       ),
                       child: CircleAvatar(
                         radius: 50,
@@ -176,11 +180,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         backgroundImage: _newAvatarUrl != null
                             ? FileImage(File(_newAvatarUrl!))
                             : (widget.user.avatarUrl != null
-                                ? CachedNetworkImageProvider(
-                                    widget.user.avatarUrl!,
-                                  )
-                                : null) as ImageProvider?,
-                        child: _newAvatarUrl == null &&
+                                      ? CachedNetworkImageProvider(
+                                          widget.user.avatarUrl!,
+                                        )
+                                      : null)
+                                  as ImageProvider?,
+                        child:
+                            _newAvatarUrl == null &&
                                 widget.user.avatarUrl == null
                             ? const Icon(
                                 CupertinoIcons.person_fill,

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -8,7 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
-import '../../../core/app_colors.dart';
+import 'package:gal/gal.dart';
+import 'package:flutter/foundation.dart';
 
 class ImagePreviewScreen extends StatelessWidget {
   final String imageUrl;
@@ -17,64 +17,85 @@ class ImagePreviewScreen extends StatelessWidget {
 
   Future<void> _downloadImage(BuildContext context) async {
     try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Processing image...')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Processing image...')));
 
-      // 1. Download image
-      final response = await http.get(Uri.parse(imageUrl));
-      if (response.statusCode != 200) throw Exception('Failed to download image');
+      // Use compute to run image processing in a separate isolate
+      final filePath = await compute(_processAndSaveImage, {
+        'imageUrl': imageUrl,
+        'tempDir': (await getTemporaryDirectory()).path,
+      });
 
-      final Uint8List bytes = response.bodyBytes;
-      img.Image? image = img.decodeImage(bytes);
-      if (image == null) throw Exception('Failed to decode image');
-
-      // 2. Add watermark
-      final watermarkColor = img.ColorRgba8(255, 255, 255, 128);
-      final font = img.arial24;
-
-      final watermarkText =
-          'Social App - ${DateFormat('yyyy-MM-dd').format(DateTime.now())}';
-
-      // Draw shadow for better visibility
-      img.drawString(
-        image,
-        watermarkText,
-        font: font,
-        x: 21,
-        y: image.height - 49,
-        color: img.ColorRgba8(0, 0, 0, 128),
-      );
-
-      img.drawString(
-        image,
-        watermarkText,
-        font: font,
-        x: 20,
-        y: image.height - 50,
-        color: watermarkColor,
-      );
-
-      // 3. Save to file
-      final directory = await getTemporaryDirectory();
-      final fileName = 'downloaded_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final filePath = '${directory.path}/$fileName';
-
-      final encodedImage = img.encodeJpg(image, quality: 90);
-      await File(filePath).writeAsBytes(encodedImage);
+      // Save to gallery using gal
+      await Gal.putImage(filePath);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Image saved to: $filePath')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Image saved to gallery')));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error downloading image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error downloading image: $e')));
       }
     }
+  }
+
+  static Future<String> _processAndSaveImage(Map<String, String> params) async {
+    final imageUrl = params['imageUrl']!;
+    final tempDir = params['tempDir']!;
+
+    // 1. Download image
+    final response = await http.get(Uri.parse(imageUrl));
+    if (response.statusCode != 200) {
+      throw Exception('Failed to download image');
+    }
+
+    final Uint8List bytes = response.bodyBytes;
+    img.Image? image = img.decodeImage(bytes);
+    if (image == null) throw Exception('Failed to decode image');
+
+    // 2. Add watermark & metadata (EXIF)
+    final watermarkColor = img.ColorRgba8(255, 255, 255, 128);
+    final font = img.arial24;
+
+    final watermarkText =
+        'Social App - ${DateFormat('yyyy-MM-dd').format(DateTime.now())}';
+
+    // Draw shadow for better visibility
+    img.drawString(
+      image,
+      watermarkText,
+      font: font,
+      x: 21,
+      y: image.height - 49,
+      color: img.ColorRgba8(0, 0, 0, 128),
+    );
+
+    img.drawString(
+      image,
+      watermarkText,
+      font: font,
+      x: 20,
+      y: image.height - 50,
+      color: watermarkColor,
+    );
+
+    // Set some metadata in EXIF if possible via image package
+    // The image package has limited EXIF support, but we can set some info
+    image.exif.imageIfd.software = 'Social App';
+
+    // 3. Save to temp file
+    final fileName = 'downloaded_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final filePath = '$tempDir/$fileName';
+
+    final encodedImage = img.encodeJpg(image, quality: 90);
+    await File(filePath).writeAsBytes(encodedImage);
+
+    return filePath;
   }
 
   @override
@@ -89,7 +110,10 @@ class ImagePreviewScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(CupertinoIcons.cloud_download, color: Colors.white),
+            icon: const Icon(
+              CupertinoIcons.cloud_download,
+              color: Colors.white,
+            ),
             onPressed: () => _downloadImage(context),
           ),
           IconButton(

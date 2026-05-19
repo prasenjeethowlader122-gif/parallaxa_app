@@ -81,7 +81,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/image-preview',
-        builder: (_, state) => ImagePreviewScreen(imageUrl: state.extra as String),
+        builder: (_, state) =>
+            ImagePreviewScreen(imageUrl: state.extra as String),
       ),
       GoRoute(path: '/admin', builder: (_, _) => const AdminDashboardScreen()),
       GoRoute(
