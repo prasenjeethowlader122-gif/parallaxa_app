@@ -72,7 +72,6 @@ dev_dependencies:
 
 flutter_native_splash:
   color: "#ffffff"
-  image: assets/images/icon.png
   android: true
   ios: true
 

@@ -26,6 +26,7 @@ import '../features/profile/presentation/edit_profile_screen.dart';
 import '../features/profile/presentation/bookmarks_screen.dart';
 import '../features/profile/presentation/account_verification_screen.dart';
 import '../features/profile/presentation/profile_options_screen.dart';
+import '../features/profile/presentation/settings_screen.dart';
 import '../features/auth/presentation/two_factor_setup_screen.dart';
 import '../features/auth/domain/user.dart';
 
@@ -111,6 +112,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/two-factor-setup',
         builder: (_, _) => const TwoFactorSetupScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (_, _) => const SettingsScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) =>
@@ -354,8 +359,11 @@ class _AppDrawer extends StatelessWidget {
                     icon: CupertinoIcons.settings,
                     activeIcon: CupertinoIcons.settings_solid,
                     label: 'Settings',
-                    isActive: false,
-                    onTap: () => Navigator.of(context).pop(),
+                    isActive: location == '/settings',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      context.push('/settings');
+                    },
                   ),
                   const SizedBox(height: 16),
                   Padding(
