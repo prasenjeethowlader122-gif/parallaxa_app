@@ -10,6 +10,7 @@ import '../../auth/data/auth_repository.dart';
 import '../../../core/api_client.dart';
 import '../../../core/processing_provider.dart';
 import '../../../core/app_colors.dart';
+import '../../../core/widgets/ad_banner_widget.dart';
 
 final userProfileProvider = FutureProvider.family<User, String>((ref, userId) {
   return ref.watch(profileRepositoryProvider).getUserProfile(userId);
@@ -175,14 +176,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 controller: _tab,
                 children: [
                   // Posts tab — grid
-                  _PostsGrid(postsAsync: postsAsync),
+                  _PostsGrid(postsAsync: postsAsync, isOwnProfile: isOwnProfile),
                   // Replies — placeholder
                   _EmptyTab(
                     icon: CupertinoIcons.chat_bubble,
                     message: 'No replies yet',
                   ),
                   // Media — grid filtered to posts with images
-                  _PostsGrid(postsAsync: postsAsync, mediaOnly: true),
+                  _PostsGrid(
+                    postsAsync: postsAsync,
+                    mediaOnly: true,
+                    isOwnProfile: isOwnProfile,
+                  ),
                   // Likes — placeholder
                   _EmptyTab(
                     icon: CupertinoIcons.heart,
@@ -579,8 +584,13 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
 class _PostsGrid extends StatelessWidget {
   final AsyncValue<PostPage> postsAsync;
   final bool mediaOnly;
+  final bool isOwnProfile;
 
-  const _PostsGrid({required this.postsAsync, this.mediaOnly = false});
+  const _PostsGrid({
+    required this.postsAsync,
+    this.mediaOnly = false,
+    required this.isOwnProfile,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -611,6 +621,8 @@ class _PostsGrid extends StatelessWidget {
           );
         }
 
+        final showAd = !isOwnProfile;
+
         return GridView.builder(
           padding: EdgeInsets.zero,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -618,8 +630,14 @@ class _PostsGrid extends StatelessWidget {
             crossAxisSpacing: 1,
             mainAxisSpacing: 1,
           ),
-          itemCount: posts.length,
-          itemBuilder: (_, i) => _GridTile(post: posts[i]),
+          itemCount: posts.length + (showAd ? 1 : 0),
+          itemBuilder: (_, i) {
+            if (showAd && i == 0) {
+              return const Center(child: AdBannerWidget());
+            }
+            final postIndex = showAd ? i - 1 : i;
+            return _GridTile(post: posts[postIndex]);
+          },
         );
       },
     );

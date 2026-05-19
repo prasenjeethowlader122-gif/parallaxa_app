@@ -5,6 +5,7 @@ import '../data/post_repository.dart';
 import '../../../core/app_colors.dart';
 import 'post_card.dart';
 import '../../stories/presentation/widgets/story_bar.dart';
+import '../../../core/widgets/ad_banner_widget.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -90,40 +91,6 @@ class _FeedList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (feedType == 'public') {
-      return Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: AppColors.muted,
-              border: Border(
-                bottom: BorderSide(color: AppColors.border, width: 0.5),
-              ),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Public Feed',
-                  style: TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                Text(
-                  'See what\'s happening around the world',
-                  style: TextStyle(fontSize: 14, color: AppColors.textMuted),
-                ),
-              ],
-            ),
-          ),
-          Expanded(child: _buildList(ref)),
-        ],
-      );
-    }
     return _buildList(ref);
   }
 
@@ -216,8 +183,18 @@ class _FeedList extends ConsumerWidget {
             ref.invalidate(trendingFeedProvider);
           },
           child: ListView.builder(
-            itemCount: posts.length,
-            itemBuilder: (_, i) => PostCard(post: posts[i]),
+            itemCount: posts.length + (posts.length / 5).floor(),
+            itemBuilder: (_, i) {
+              if (i > 0 && (i + 1) % 6 == 0) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: AdBannerWidget(),
+                );
+              }
+              final postIndex = i - (i / 6).floor();
+              if (postIndex >= posts.length) return const SizedBox.shrink();
+              return PostCard(post: posts[postIndex]);
+            },
           ),
         );
       },
