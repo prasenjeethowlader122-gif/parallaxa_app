@@ -2,10 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../data/story_repository.dart';
-import '../domain/story.dart';
-import '../../../core/app_colors.dart';
-import '../../profile/presentation/widgets/user_avatar.dart';
+import '../../data/story_repository.dart';
+import '../../domain/story.dart';
+import '../../../../core/app_colors.dart';
+import '../../../profile/presentation/widgets/user_avatar.dart';
 
 class StoryBar extends ConsumerWidget {
   const StoryBar({super.key});
