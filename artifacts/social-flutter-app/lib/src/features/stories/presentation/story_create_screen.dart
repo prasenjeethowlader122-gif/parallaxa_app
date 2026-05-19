@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../data/story_repository.dart';
-import '../../../core/app_colors.dart';
 
 class StoryCreateScreen extends ConsumerStatefulWidget {
   const StoryCreateScreen({super.key});

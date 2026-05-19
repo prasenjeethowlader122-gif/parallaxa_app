@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../data/story_repository.dart';
-import '../../../core/app_colors.dart';
 
 class StoryViewScreen extends ConsumerStatefulWidget {
   final String userId;
