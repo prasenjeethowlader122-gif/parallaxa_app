@@ -17,7 +17,9 @@ import '../features/notifications/presentation/notifications_screen.dart'
     as notifications;
 import '../features/messaging/presentation/conversations_screen.dart';
 import '../features/messaging/presentation/chat_screen.dart';
+import '../features/messaging/presentation/chat_starter_screen.dart';
 import '../features/feed/presentation/post_detail_screen.dart';
+import '../features/feed/presentation/image_preview_screen.dart';
 import '../features/admin/presentation/admin_dashboard_screen.dart';
 import '../features/admin/presentation/admin_users_screen.dart';
 import '../features/stories/presentation/story_view_screen.dart';
@@ -27,6 +29,7 @@ import '../features/profile/presentation/bookmarks_screen.dart';
 import '../features/profile/presentation/account_verification_screen.dart';
 import '../features/profile/presentation/profile_options_screen.dart';
 import '../features/profile/presentation/settings_screen.dart';
+import '../features/profile/presentation/about_screen.dart';
 import '../features/auth/presentation/two_factor_setup_screen.dart';
 import '../features/auth/domain/user.dart';
 
@@ -56,6 +59,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const ForgotPasswordScreen(),
       ),
       GoRoute(
+        path: '/messages/start',
+        builder: (_, state) => ChatStarterScreen(user: state.extra as User),
+      ),
+      GoRoute(
         path: '/messages/:conversationId',
         builder: (_, state) {
           final cid = state.pathParameters['conversationId']!;
@@ -71,6 +78,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/post/:postId',
         builder: (_, state) =>
             PostDetailScreen(postId: state.pathParameters['postId']!),
+      ),
+      GoRoute(
+        path: '/image-preview',
+        builder: (_, state) => ImagePreviewScreen(imageUrl: state.extra as String),
       ),
       GoRoute(path: '/admin', builder: (_, _) => const AdminDashboardScreen()),
       GoRoute(
@@ -109,6 +120,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const TwoFactorSetupScreen(),
       ),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+      GoRoute(path: '/about', builder: (_, _) => const AboutScreen()),
       ShellRoute(
         builder: (context, state, child) =>
             _MainShell(location: state.matchedLocation, child: child),
@@ -203,6 +215,10 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
         height: 26,
         width: 148,
         fit: BoxFit.contain,
+        colorFilter: const ColorFilter.mode(
+          Color(0xFF1877F2), // Facebook Blue
+          BlendMode.srcIn,
+        ),
       ),
       actions: [
         IconButton(
@@ -274,6 +290,10 @@ class _AppDrawer extends StatelessWidget {
                     height: 26,
                     width: 148,
                     fit: BoxFit.contain,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF1877F2), // Facebook Blue
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ],
               ),
@@ -355,6 +375,16 @@ class _AppDrawer extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).pop();
                       context.push('/settings');
+                    },
+                  ),
+                  _DrawerItem(
+                    icon: CupertinoIcons.info,
+                    activeIcon: CupertinoIcons.info_circle_fill,
+                    label: 'About',
+                    isActive: location == '/about',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      context.push('/about');
                     },
                   ),
                   const SizedBox(height: 16),

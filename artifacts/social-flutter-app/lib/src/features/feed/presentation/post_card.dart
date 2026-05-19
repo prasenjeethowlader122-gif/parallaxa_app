@@ -168,15 +168,21 @@ class _PostCardState extends ConsumerState<PostCard> {
                 borderRadius: BorderRadius.circular(12),
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
-                  child: CachedNetworkImage(
-                    imageUrl: post.imageUrl!,
-                    fit: BoxFit.cover,
+                  child: GestureDetector(
+                    onLongPress: () => context.push(
+                      '/image-preview',
+                      extra: post.imageUrl,
+                    ),
+                    child: CachedNetworkImage(
+                      imageUrl: post.imageUrl!,
+                      fit: BoxFit.cover,
                     placeholder: (_, __) => Container(color: AppColors.muted),
-                    errorWidget: (_, __, ___) => Container(
-                      color: AppColors.muted,
-                      child: const Icon(
-                        CupertinoIcons.photo,
-                        color: AppColors.mutedForeground,
+                      errorWidget: (_, __, ___) => Container(
+                        color: AppColors.muted,
+                        child: const Icon(
+                          CupertinoIcons.photo,
+                          color: AppColors.mutedForeground,
+                        ),
                       ),
                     ),
                   ),

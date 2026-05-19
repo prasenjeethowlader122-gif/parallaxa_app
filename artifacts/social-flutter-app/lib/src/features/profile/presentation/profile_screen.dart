@@ -344,46 +344,77 @@ class _ProfileHeader extends StatelessWidget {
                           ),
                         ),
                       )
-                    : isFollowLoading
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.primary,
-                        ),
-                      )
-                    : ElevatedButton(
-                        onPressed: onFollow,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isFollowing
-                              ? AppColors.background
-                              : AppColors.textPrimary,
-                          foregroundColor: isFollowing
-                              ? AppColors.textPrimary
-                              : Colors.white,
-                          side: isFollowing
-                              ? const BorderSide(
-                                  color: AppColors.border,
-                                  width: 1.2,
-                                )
-                              : BorderSide.none,
-                          elevation: 0,
-                          shape: const StadiumBorder(),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 8,
+                    : Row(
+                        children: [
+                          OutlinedButton(
+                            onPressed: () =>
+                                context.push('/messages/start', extra: user),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: AppColors.border,
+                                width: 1.2,
+                              ),
+                              shape: const StadiumBorder(),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              minimumSize: Size.zero,
+                            ),
+                            child: const Text(
+                              'Message',
+                              style: TextStyle(
+                                fontFamily: 'Sora',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
                           ),
-                          minimumSize: Size.zero,
-                        ),
-                        child: Text(
-                          isFollowing ? 'Following' : 'Follow',
-                          style: const TextStyle(
-                            fontFamily: 'Sora',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                          ),
-                        ),
+                          const SizedBox(width: 8),
+                          if (isFollowLoading)
+                            const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
+                            )
+                          else
+                            ElevatedButton(
+                              onPressed: onFollow,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isFollowing
+                                    ? AppColors.background
+                                    : AppColors.textPrimary,
+                                foregroundColor: isFollowing
+                                    ? AppColors.textPrimary
+                                    : Colors.white,
+                                side: isFollowing
+                                    ? const BorderSide(
+                                        color: AppColors.border,
+                                        width: 1.2,
+                                      )
+                                    : BorderSide.none,
+                                elevation: 0,
+                                shape: const StadiumBorder(),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 8,
+                                ),
+                                minimumSize: Size.zero,
+                              ),
+                              child: Text(
+                                isFollowing ? 'Following' : 'Follow',
+                                style: const TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
               ),
             ],
