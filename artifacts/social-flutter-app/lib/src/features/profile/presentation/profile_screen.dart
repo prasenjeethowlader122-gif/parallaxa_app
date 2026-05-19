@@ -176,7 +176,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 controller: _tab,
                 children: [
                   // Posts tab — grid
-                  _PostsGrid(postsAsync: postsAsync, isOwnProfile: isOwnProfile),
+                  _PostsGrid(
+                    postsAsync: postsAsync,
+                    isOwnProfile: isOwnProfile,
+                  ),
                   // Replies — placeholder
                   _EmptyTab(
                     icon: CupertinoIcons.chat_bubble,
