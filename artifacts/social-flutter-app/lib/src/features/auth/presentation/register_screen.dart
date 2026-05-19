@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../data/auth_repository.dart';
 import '../../../core/api_client.dart';
@@ -25,9 +27,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _dateOfBirthController = TextEditingController();
   final _passwordController = TextEditingController();
+  File? _faceImage;
+  final _picker = ImagePicker();
 
   int _step = 0;
-  final int _totalSteps = 5;
+  final int _totalSteps = 6;
   bool _isLoading = false;
   bool _showPassword = false;
   bool _acceptTerms = false;
@@ -46,6 +50,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     {"title": "Your birthday", "subtitle": "You must be at least 18 years old"},
     {"title": "Contact info", "subtitle": "Enter your email address"},
     {"title": "Secure it", "subtitle": "Create a strong password"},
+    {
+      "title": "Face Register",
+      "subtitle": "Secure your account with face recognition",
+    },
     {
       "title": "Username",
       "subtitle": "Pick a unique username for your profile",
@@ -108,6 +116,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         newErrors['password'] = "Password must be at least 6 characters";
       }
     } else if (_step == 4) {
+      if (_faceImage == null) {
+        newErrors['face'] = "Please register your face to continue";
+      }
+    } else if (_step == 5) {
       if (_usernameController.text.trim().isEmpty) {
         newErrors['username'] = "Username is required";
       } else if (_usernameController.text.trim().length < 3) {
@@ -206,6 +218,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         dateOfBirth: DateFormat(
           'yyyy-MM-dd',
         ).parse(_dateOfBirthController.text.trim()),
+        faceImagePath: _faceImage?.path,
       );
 
       if (response.token != null) {
@@ -231,6 +244,45 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } finally {
       ref.read(processingProvider.notifier).hide();
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _pickFaceImage() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(CupertinoIcons.camera),
+              title: const Text('Take a Photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(CupertinoIcons.photo),
+              title: const Text('Choose from Gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source != null) {
+      final pickedFile = await _picker.pickImage(
+        source: source,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _faceImage = File(pickedFile.path);
+          _errors.remove('face');
+        });
+      }
     }
   }
 
@@ -359,10 +411,87 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           constraints: const BoxConstraints(),
         ),
       );
-    } else {
-      // Step 4 — Username with live availability check (debounced)
+    } else if (_step == 4) {
       return Column(
         key: const ValueKey(4),
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: _isLoading ? null : _pickFaceImage,
+            child: Container(
+              width: 160,
+              height: 160,
+              decoration: BoxDecoration(
+                color: AppColors.slate100,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: _errors['face'] != null
+                      ? const Color(0xFFDC2626)
+                      : AppColors.slate200,
+                  width: 2,
+                ),
+                image: _faceImage != null
+                    ? DecorationImage(
+                        image: FileImage(_faceImage!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: _faceImage == null
+                  ? const Icon(
+                      CupertinoIcons.person_crop_circle_badge_plus,
+                      size: 60,
+                      color: AppColors.slate400,
+                    )
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 24),
+          if (_errors['face'] != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Text(
+                _errors['face']!,
+                style: const TextStyle(
+                  color: Color(0xFFDC2626),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Sora',
+                ),
+              ),
+            ),
+          ElevatedButton.icon(
+            onPressed: _isLoading ? null : _pickFaceImage,
+            icon: const Icon(CupertinoIcons.camera, size: 18),
+            label: Text(_faceImage == null ? "Capture Face" : "Retake Photo"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.slate100,
+              foregroundColor: AppColors.slate900,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              "Your face data will be used to protect your privacy and identify you in photos uploaded by others.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.slate500,
+                fontFamily: 'Sora',
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Step 5 — Username with live availability check (debounced)
+      return Column(
+        key: const ValueKey(5),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FloatingLabelInput(

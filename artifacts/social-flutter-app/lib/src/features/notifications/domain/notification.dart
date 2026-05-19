@@ -6,7 +6,7 @@ part 'notification.g.dart';
 @JsonSerializable()
 class NotificationItem {
   final String id;
-  final String type; // 'like', 'comment', 'follow', 'mention', 'reply'
+  final String type; // 'like', 'comment', 'follow', 'mention', 'reply', 'face_match'
   final UserSummary fromUser;
   final Post? post;
   final String? commentContent;

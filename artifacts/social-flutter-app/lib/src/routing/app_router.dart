@@ -156,8 +156,6 @@ class _MainShell extends StatelessWidget {
 
   const _MainShell({required this.location, required this.child});
 
-  bool get _showFab => location == '/feed';
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -165,19 +163,6 @@ class _MainShell extends StatelessWidget {
       appBar: _ParallaxaAppBar(location: location),
       drawer: _AppDrawer(location: location),
       body: child,
-      floatingActionButton: _showFab
-          ? FloatingActionButton(
-              onPressed: () => context.push('/create-post'),
-              backgroundColor: AppColors.primary,
-              elevation: 6,
-              shape: const CircleBorder(),
-              child: const Icon(
-                CupertinoIcons.add,
-                color: Colors.white,
-                size: 24,
-              ),
-            )
-          : null,
     );
   }
 }

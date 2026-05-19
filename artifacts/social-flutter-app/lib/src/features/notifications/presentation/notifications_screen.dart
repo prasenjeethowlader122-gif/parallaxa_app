@@ -26,6 +26,8 @@ class NotificationsScreen extends ConsumerWidget {
         return 'mentioned you';
       case 'reply':
         return 'replied to your post';
+      case 'face_match':
+        return 'was found in a photo uploaded by';
       default:
         return type;
     }
@@ -117,7 +119,7 @@ class NotificationsScreen extends ConsumerWidget {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _NotificationRow extends StatelessWidget {
+class _NotificationRow extends ConsumerWidget {
   final NotificationItem notification;
   final String actionText;
   final String time;
@@ -129,9 +131,10 @@ class _NotificationRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isUnread = !notification.isRead;
     final n = notification;
+    final isFaceMatch = n.type == 'face_match';
 
     return Container(
       color: isUnread ? AppColors.unreadBg : AppColors.background,
@@ -203,6 +206,87 @@ class _NotificationRow extends StatelessWidget {
                     color: AppColors.textMuted,
                   ),
                 ),
+
+                if (isFaceMatch) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () async {
+                          try {
+                            await ref
+                                .read(notificationRepositoryProvider)
+                                .deletePhoto(n.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Photo deleted')),
+                              );
+                              ref.invalidate(notificationsProvider);
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to delete: $e'),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFDC2626),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          textStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        child: const Text('Delete'),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton(
+                        onPressed: () async {
+                          try {
+                            await ref
+                                .read(notificationRepositoryProvider)
+                                .blurFace(n.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Face blurred')),
+                              );
+                              ref.invalidate(notificationsProvider);
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to blur: $e')),
+                              );
+                            }
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          textStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        child: const Text('Blur Face'),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
