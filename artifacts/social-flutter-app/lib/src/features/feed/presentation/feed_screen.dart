@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/post_repository.dart';
 import '../../../core/app_colors.dart';
 import 'post_card.dart';
+import '../../stories/presentation/widgets/story_bar.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -33,6 +34,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
   Widget build(BuildContext context) {
     return Column(
       children: [
+        const StoryBar(),
         // ── Tab bar ──────────────────────────────────────────────────
         Container(
           decoration: const BoxDecoration(
@@ -88,6 +90,47 @@ class _FeedList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (feedType == 'public') {
+      return Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: AppColors.muted,
+              border: Border(
+                bottom: BorderSide(color: AppColors.border, width: 0.5),
+              ),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Public Feed',
+                  style: TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  'See what\'s happening around the world',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(child: _buildList(ref)),
+        ],
+      );
+    }
+    return _buildList(ref);
+  }
+
+  Widget _buildList(WidgetRef ref) {
     final postsAsync = switch (feedType) {
       'following' => ref.watch(followingFeedProvider),
       'trending' => ref.watch(trendingFeedProvider),

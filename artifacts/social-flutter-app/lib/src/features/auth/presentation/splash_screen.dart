@@ -30,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
           Center(
             child: SvgPicture.asset(
               'assets/images/parallaxa-logo.svg',
-              height: 100,
+              height: 200,
               fit: BoxFit.contain,
             ),
           ),

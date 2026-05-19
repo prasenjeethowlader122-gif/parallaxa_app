@@ -44,6 +44,7 @@ class ProfileRepository {
     String? bio,
     String? website,
     String? avatarUrl,
+    String? coverUrl,
     bool? isPrivate,
   }) async {
     final response = await _dio.put(
@@ -53,6 +54,7 @@ class ProfileRepository {
         if (bio != null) 'bio': bio,
         if (website != null) 'website': website,
         if (avatarUrl != null) 'avatarUrl': avatarUrl,
+        if (coverUrl != null) 'coverUrl': coverUrl,
         if (isPrivate != null) 'isPrivate': isPrivate,
       },
     );
