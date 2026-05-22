@@ -20,7 +20,10 @@ class BookmarksScreen extends ConsumerWidget {
         title: const Text('Bookmarks'),
         centerTitle: true,
         leading: IconButton(
-          icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: AppColors.textPrimary),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),

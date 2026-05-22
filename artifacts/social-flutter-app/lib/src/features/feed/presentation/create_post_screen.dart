@@ -177,7 +177,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       builder: (context) => AlertDialog(
         title: const Text(
           'Add Location',
-          style: TextStyle( fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         content: TextField(
           controller: controller,
@@ -260,7 +260,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         leading: IconButton(
           icon: HugeIcon(
             icon: HugeIcons.strokeRoundedCancel01,
-            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : AppColors.textPrimary,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : AppColors.textPrimary,
             size: 24,
           ),
           onPressed: _isPosting ? null : () => context.pop(),
@@ -293,7 +295,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                   : const Text(
                       'Post',
                       style: TextStyle(
-
                         fontWeight: FontWeight.w800,
                         fontSize: 15,
                       ),
@@ -325,10 +326,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                               children: [
                                 Text(
                                   user?.displayName ?? 'You',
-                                    style: TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.w800,
                                     fontSize: 15,
-                                      color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF14171A),
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : const Color(0xFF14171A),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -343,7 +348,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                               style: TextStyle(
                                 fontSize: 18,
                                 height: 1.4,
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : AppColors.textPrimary,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
                               ),
                               decoration: const InputDecoration(
                                 hintText: "What's happening?!",
@@ -395,8 +404,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                             ),
                                             child: const HugeIcon(
                                               icon:
-                                                  HugeIcons
-                                                      .strokeRoundedEdit01,
+                                                  HugeIcons.strokeRoundedEdit01,
                                               color: Colors.white,
                                               size: 16,
                                             ),
@@ -404,10 +412,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                         ),
                                         const SizedBox(width: 8),
                                         GestureDetector(
-                                          onTap:
-                                              () => setState(
-                                                () => _selectedImage = null,
-                                              ),
+                                          onTap: () => setState(
+                                            () => _selectedImage = null,
+                                          ),
                                           child: Container(
                                             padding: const EdgeInsets.all(6),
                                             decoration: const BoxDecoration(
@@ -415,9 +422,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                               shape: BoxShape.circle,
                                             ),
                                             child: const HugeIcon(
-                                              icon:
-                                                  HugeIcons
-                                                      .strokeRoundedCancel01,
+                                              icon: HugeIcons
+                                                  .strokeRoundedCancel01,
                                               color: Colors.white,
                                               size: 16,
                                             ),

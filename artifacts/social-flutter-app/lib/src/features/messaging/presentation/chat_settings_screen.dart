@@ -12,14 +12,16 @@ class ChatSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = ref.watch(l10nProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.get('chat_settings')),
         leading: IconButton(
-          icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: AppColors.primary),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: AppColors.primary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -33,14 +35,23 @@ class ChatSettingsScreen extends ConsumerWidget {
                   radius: 40,
                   backgroundColor: AppColors.primary.withOpacity(0.1),
                   child: Text(
-                    participantName.isNotEmpty ? participantName[0].toUpperCase() : '?',
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
+                    participantName.isNotEmpty
+                        ? participantName[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   participantName,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -104,8 +115,18 @@ class _SettingsTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       leading: icon is IconData
-          ? Icon(icon as IconData, color: iconColor ?? Theme.of(context).iconTheme.color ?? Colors.grey, size: 22)
-          : HugeIcon(icon: icon, color: iconColor ?? Theme.of(context).iconTheme.color ?? Colors.grey, size: 22),
+          ? Icon(
+              icon as IconData,
+              color:
+                  iconColor ?? Theme.of(context).iconTheme.color ?? Colors.grey,
+              size: 22,
+            )
+          : HugeIcon(
+              icon: icon,
+              color:
+                  iconColor ?? Theme.of(context).iconTheme.color ?? Colors.grey,
+              size: 22,
+            ),
       title: Text(
         label,
         style: TextStyle(
@@ -114,7 +135,13 @@ class _SettingsTile extends StatelessWidget {
           color: labelColor,
         ),
       ),
-      trailing: trailing ?? const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 16, color: Colors.grey),
+      trailing:
+          trailing ??
+          const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowRight01,
+            size: 16,
+            color: Colors.grey,
+          ),
     );
   }
 }

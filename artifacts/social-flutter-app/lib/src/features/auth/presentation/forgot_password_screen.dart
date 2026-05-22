@@ -130,21 +130,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 const SizedBox(height: 24),
                 const Text(
                   'Password Reset Successfully',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
                 const Text(
                   'Your password has been reset. You can now login with your new password.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.slate500,
-
-                  ),
+                  style: TextStyle(color: AppColors.slate500),
                 ),
                 const SizedBox(height: 32),
                 SizedBox(
@@ -160,10 +153,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     ),
                     child: const Text(
                       'Back to Login',
-                      style: TextStyle(
-
-                        fontWeight: FontWeight.w800,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w800),
                     ),
                   ),
                 ),
@@ -200,7 +190,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppColors.slate900,
-
                 ),
               ),
               const SizedBox(height: 8),
@@ -208,11 +197,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 _showTokenInput
                     ? 'Enter the token you received and your new password.'
                     : 'Enter your email address and we will send you a reset token.',
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: AppColors.slate500,
-
-                ),
+                style: const TextStyle(fontSize: 15, color: AppColors.slate500),
               ),
               const SizedBox(height: 32),
 
@@ -233,7 +218,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       color: Color(0xFFDC2626),
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
-
                     ),
                   ),
                 ),
@@ -317,7 +301,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-
                           ),
                         ),
                 ),

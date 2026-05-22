@@ -241,7 +241,6 @@ class _OTAUpdateListenerState extends ConsumerState<OTAUpdateListener> {
         content: Text(
           message,
           style: const TextStyle(
-
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),

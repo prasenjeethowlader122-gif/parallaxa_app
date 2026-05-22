@@ -92,7 +92,6 @@ class ConversationsScreen extends ConsumerWidget {
                         const Text(
                           'No messages yet',
                           style: TextStyle(
-
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
                             color: AppColors.foreground,
@@ -188,7 +187,6 @@ class _ConversationTile extends StatelessWidget {
                         child: Text(
                           conv.participant.displayName,
                           style: TextStyle(
-
                             fontSize: 15,
                             fontWeight: hasUnread
                                 ? FontWeight.w700

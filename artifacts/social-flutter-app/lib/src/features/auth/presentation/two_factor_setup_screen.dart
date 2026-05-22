@@ -71,7 +71,10 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
       appBar: AppBar(
         title: const Text('Two-Factor Authentication'),
         leading: IconButton(
-          icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: AppColors.textPrimary),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),

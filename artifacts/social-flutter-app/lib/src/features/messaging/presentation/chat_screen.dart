@@ -118,14 +118,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         leading: IconButton(
           icon: HugeIcon(
             icon: HugeIcons.strokeRoundedArrowLeft01,
-            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : Colors.black,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           widget.participantName,
           style: TextStyle(
-            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : Colors.black,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
@@ -134,21 +138,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           IconButton(
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedCall,
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
             ),
             onPressed: () {},
           ),
           IconButton(
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedVideo02,
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
             ),
             onPressed: () {},
           ),
           IconButton(
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedSettings02,
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
             ),
             onPressed: () {
               // TODO: Implement chat settings
@@ -236,8 +246,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         color: Color(0xFF0095F6),
                         shape: BoxShape.circle,
                       ),
-                    child: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedSent,
+                      child: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedSent,
                         color: Colors.white,
                         size: 20,
                       ),

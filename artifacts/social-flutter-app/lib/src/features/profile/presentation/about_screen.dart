@@ -22,7 +22,6 @@ class AboutScreen extends StatelessWidget {
                   Text(
                     'Parallaxa',
                     style: TextStyle(
-
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
@@ -38,11 +37,7 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 40),
             const Text(
               'About the App',
-              style: TextStyle(
-
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
             const Text(
@@ -56,11 +51,7 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 32),
             const Text(
               'Developer',
-              style: TextStyle(
-
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
             _DeveloperInfoRow(

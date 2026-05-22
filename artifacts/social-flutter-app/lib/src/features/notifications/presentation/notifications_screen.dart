@@ -75,7 +75,6 @@ class NotificationsScreen extends ConsumerWidget {
                 const Text(
                   'No notifications yet',
                   style: TextStyle(
-
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                     color: AppColors.foreground,
@@ -138,7 +137,9 @@ class _NotificationRow extends ConsumerWidget {
     final isFaceMatch = n.type == 'face_match';
 
     return Container(
-      color: isUnread ? AppColors.unreadBg : Theme.of(context).scaffoldBackgroundColor,
+      color: isUnread
+          ? AppColors.unreadBg
+          : Theme.of(context).scaffoldBackgroundColor,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -17,7 +17,10 @@ class ProfileOptionsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Options'),
         leading: IconButton(
-          icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: AppColors.textPrimary),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),

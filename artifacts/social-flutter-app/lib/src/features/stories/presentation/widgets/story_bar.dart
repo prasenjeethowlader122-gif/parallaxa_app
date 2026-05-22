@@ -87,11 +87,7 @@ class _CreateStoryItem extends StatelessWidget {
             const SizedBox(height: 4),
             const Text(
               'Your Story',
-              style: TextStyle(
-                fontSize: 11,
-
-                color: AppColors.mutedForeground,
-              ),
+              style: TextStyle(fontSize: 11, color: AppColors.mutedForeground),
             ),
           ],
         ),

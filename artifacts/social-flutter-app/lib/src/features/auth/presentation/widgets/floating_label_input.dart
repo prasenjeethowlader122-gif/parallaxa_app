@@ -194,7 +194,9 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                         cursorColor: AppColors.primary,
                         style: TextStyle(
                           fontSize: 16,
-                          color: isFocused || _textController.text.isNotEmpty ? Theme.of(context).textTheme.bodyLarge?.color : AppColors.slate900,
+                          color: isFocused || _textController.text.isNotEmpty
+                              ? Theme.of(context).textTheme.bodyLarge?.color
+                              : AppColors.slate900,
                           fontWeight: FontWeight.w500,
                         ),
                         decoration: InputDecoration(
@@ -254,8 +256,8 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
             padding: const EdgeInsets.only(top: 6, left: 4),
             child: Row(
               children: [
-                const Icon(
-                  CupertinoIcons.info,
+                const HugeIcon(
+                  icon: HugeIcons.strokeRoundedAlertCircle,
                   color: Color(0xFFDC2626),
                   size: 14,
                 ),

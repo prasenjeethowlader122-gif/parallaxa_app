@@ -88,7 +88,10 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                       ? NetworkImage(user.avatarUrl!)
                       : null,
                   child: user.avatarUrl == null
-                      ? const HugeIcon(icon: HugeIcons.strokeRoundedUser, color: AppColors.mutedForeground)
+                      ? const HugeIcon(
+                          icon: HugeIcons.strokeRoundedUser,
+                          color: AppColors.mutedForeground,
+                        )
                       : null,
                 ),
                 title: Text(

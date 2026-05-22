@@ -42,7 +42,6 @@ class _SplashScreenState extends State<SplashScreen> {
               child: Text(
                 'Parallaxa',
                 style: TextStyle(
-
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[400],

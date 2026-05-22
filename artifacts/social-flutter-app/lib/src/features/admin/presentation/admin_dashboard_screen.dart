@@ -19,7 +19,10 @@ class AdminDashboardScreen extends ConsumerWidget {
         title: const Text('Admin Dashboard'),
         centerTitle: true,
         leading: IconButton(
-          icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: AppColors.textPrimary),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -52,11 +55,7 @@ class AdminDashboardScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               const Text(
                 'Management',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               ListTile(
@@ -66,7 +65,11 @@ class AdminDashboardScreen extends ConsumerWidget {
                 ),
                 title: const Text('User Management'),
                 subtitle: const Text('Verify, freeze, or delete users'),
-                trailing: const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 16, color: Colors.grey),
+                trailing: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowRight01,
+                  size: 16,
+                  color: Colors.grey,
+                ),
                 onTap: () => context.push('/admin/users'),
                 tileColor: AppColors.muted,
                 shape: RoundedRectangleBorder(
@@ -125,7 +128,6 @@ class _StatCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.mutedForeground,
-
                 ),
               ),
               Text(
@@ -133,7 +135,6 @@ class _StatCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-
                 ),
               ),
             ],

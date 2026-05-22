@@ -152,12 +152,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       controller: _tab,
                       tabs: _tabs.map((t) => Tab(text: t)).toList(),
                       labelStyle: const TextStyle(
-
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
                       ),
                       unselectedLabelStyle: const TextStyle(
-
                         fontWeight: FontWeight.w400,
                         fontSize: 14,
                       ),
@@ -242,7 +240,6 @@ class _ProfileHeader extends StatelessWidget {
                 child: Text(
                   user.displayName,
                   style: const TextStyle(
-
                     fontWeight: FontWeight.w800,
                     fontSize: 17,
                     color: AppColors.textPrimary,
@@ -345,7 +342,6 @@ class _ProfileHeader extends StatelessWidget {
                         child: const Text(
                           'Edit profile',
                           style: TextStyle(
-
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
                             color: AppColors.textPrimary,
@@ -372,7 +368,6 @@ class _ProfileHeader extends StatelessWidget {
                             child: const Text(
                               'Message',
                               style: TextStyle(
-
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14,
                                 color: AppColors.textPrimary,
@@ -416,7 +411,6 @@ class _ProfileHeader extends StatelessWidget {
                               child: Text(
                                 isFollowing ? 'Following' : 'Follow',
                                 style: const TextStyle(
-
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
                                 ),
@@ -440,7 +434,6 @@ class _ProfileHeader extends StatelessWidget {
                   Text(
                     user.displayName,
                     style: const TextStyle(
-
                       fontWeight: FontWeight.w800,
                       fontSize: 19,
                       color: AppColors.textPrimary,
@@ -534,7 +527,6 @@ class _StatChip extends StatelessWidget {
         Text(
           _fmt(count),
           style: const TextStyle(
-
             fontWeight: FontWeight.w700,
             fontSize: 15,
             color: AppColors.textPrimary,
@@ -708,7 +700,6 @@ class _EmptyTab extends StatelessWidget {
           Text(
             message,
             style: const TextStyle(
-
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.mutedForeground,

@@ -39,19 +39,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
         const StoryBar(),
         // ── Tab bar ──────────────────────────────────────────────────
         Container(
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-          ),
+          decoration: const BoxDecoration(color: AppColors.background),
           child: TabBar(
             controller: _tab,
             tabs: _tabs.map((t) => Tab(text: t)).toList(),
             labelStyle: const TextStyle(
-
               fontWeight: FontWeight.w700,
               fontSize: 15,
             ),
             unselectedLabelStyle: const TextStyle(
-
               fontWeight: FontWeight.w400,
               fontSize: 15,
             ),
@@ -123,7 +119,6 @@ class _FeedList extends ConsumerWidget {
                     ? 'Please log in to continue'
                     : 'Could not load posts',
                 style: const TextStyle(
-
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: AppColors.foreground,
@@ -161,7 +156,6 @@ class _FeedList extends ConsumerWidget {
                         ? 'Follow people to see their posts here'
                         : 'Nothing here yet',
                     style: const TextStyle(
-
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: AppColors.foreground,

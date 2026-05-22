@@ -241,7 +241,6 @@ class _SearchResults extends ConsumerWidget {
                 Text(
                   'No results for "$query"',
                   style: const TextStyle(
-
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                     color: AppColors.mutedForeground,
@@ -260,7 +259,6 @@ class _SearchResults extends ConsumerWidget {
                 child: Text(
                   'People',
                   style: TextStyle(
-
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
                     color: AppColors.textPrimary,
@@ -291,7 +289,6 @@ class _SearchResults extends ConsumerWidget {
                       Text(
                         user.displayName,
                         style: const TextStyle(
-
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                           color: AppColors.textPrimary,
@@ -324,7 +321,6 @@ class _SearchResults extends ConsumerWidget {
                 child: Text(
                   'Hashtags',
                   style: TextStyle(
-
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
                     color: AppColors.textPrimary,
@@ -357,7 +353,6 @@ class _SearchResults extends ConsumerWidget {
                   title: Text(
                     '#${tag.name}',
                     style: const TextStyle(
-
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
@@ -379,7 +374,6 @@ class _SearchResults extends ConsumerWidget {
                 child: Text(
                   'Posts',
                   style: TextStyle(
-
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
                     color: AppColors.textPrimary,
@@ -408,7 +402,6 @@ class _SearchResults extends ConsumerWidget {
                   title: Text(
                     post.author.displayName,
                     style: const TextStyle(
-
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
                       color: AppColors.textPrimary,

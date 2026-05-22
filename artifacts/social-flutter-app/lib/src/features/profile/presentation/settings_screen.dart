@@ -187,9 +187,9 @@ class SettingsScreen extends ConsumerWidget {
                   return CupertinoSwitch(
                     value: themeMode == ThemeMode.dark,
                     onChanged: (val) {
-                      ref.read(themeProvider.notifier).setThemeMode(
-                        val ? ThemeMode.dark : ThemeMode.light,
-                      );
+                      ref
+                          .read(themeProvider.notifier)
+                          .setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
                     },
                   );
                 },

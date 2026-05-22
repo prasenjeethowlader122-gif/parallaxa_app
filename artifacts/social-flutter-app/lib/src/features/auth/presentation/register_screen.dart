@@ -256,12 +256,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const HugeIcon(icon: HugeIcons.strokeRoundedCamera01, color: AppColors.textPrimary),
+              leading: const HugeIcon(
+                icon: HugeIcons.strokeRoundedCamera01,
+                color: AppColors.textPrimary,
+              ),
               title: const Text('Take a Photo'),
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
             ListTile(
-              leading: const HugeIcon(icon: HugeIcons.strokeRoundedImage01, color: AppColors.textPrimary),
+              leading: const HugeIcon(
+                icon: HugeIcons.strokeRoundedImage01,
+                color: AppColors.textPrimary,
+              ),
               title: const Text('Choose from Gallery'),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
@@ -402,7 +408,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         right: IconButton(
           onPressed: () => setState(() => _showPassword = !_showPassword),
           icon: HugeIcon(
-            icon: _showPassword ? HugeIcons.strokeRoundedViewOffSlash : HugeIcons.strokeRoundedView,
+            icon: _showPassword
+                ? HugeIcons.strokeRoundedViewOffSlash
+                : HugeIcons.strokeRoundedView,
             color: _errors['password'] != null
                 ? const Color(0xFFDC2626)
                 : AppColors.slate500,
@@ -458,13 +466,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   color: Color(0xFFDC2626),
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-
                 ),
               ),
             ),
           ElevatedButton.icon(
             onPressed: _isLoading ? null : _pickFaceImage,
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedCamera01, size: 18),
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedCamera01,
+              size: 18,
+            ),
             label: Text(_faceImage == null ? "Capture Face" : "Retake Photo"),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.slate100,
@@ -690,7 +700,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   fontWeight: FontWeight.w800,
                   color: AppColors.slate400,
                   letterSpacing: 1.4,
-
                 ),
               ),
               const SizedBox(height: 6),
@@ -743,7 +752,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             color: Color(0xFFDC2626),
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
-
                           ),
                         ),
                       ),
@@ -867,7 +875,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-
                               ),
                             ),
                             if (!isLastStep) ...[
@@ -901,7 +908,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1,
-
                           ),
                         ),
                       ),
@@ -931,7 +937,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           color: Color(0xFF0095F6),
                           fontWeight: FontWeight.w800,
                           fontSize: 14,
-
                         ),
                       ),
                     ),

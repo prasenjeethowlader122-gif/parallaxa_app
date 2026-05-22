@@ -101,7 +101,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         title: const Text('Post'),
         centerTitle: true,
         leading: IconButton(
-          icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: AppColors.textPrimary),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -435,7 +438,9 @@ class _ParentPostView extends StatelessWidget {
                   icon: post.isLiked
                       ? HugeIcons.strokeRoundedFavourite
                       : HugeIcons.strokeRoundedFavourite,
-                  color: post.isLiked ? AppColors.like : AppColors.mutedForeground,
+                  color: post.isLiked
+                      ? AppColors.like
+                      : AppColors.mutedForeground,
                 ),
                 onPressed: () {},
               ),
@@ -444,7 +449,9 @@ class _ParentPostView extends StatelessWidget {
                   icon: post.isSaved
                       ? HugeIcons.strokeRoundedBookmark01
                       : HugeIcons.strokeRoundedBookmark01,
-                  color: post.isSaved ? AppColors.saved : AppColors.mutedForeground,
+                  color: post.isSaved
+                      ? AppColors.saved
+                      : AppColors.mutedForeground,
                 ),
                 onPressed: () {},
               ),

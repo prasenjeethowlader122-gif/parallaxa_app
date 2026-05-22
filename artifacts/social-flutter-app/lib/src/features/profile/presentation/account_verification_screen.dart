@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
-import '../../auth/data/auth_repository.dart';
-import '../../auth/domain/user.dart';
 import '../../../core/app_colors.dart';
 
 class AccountVerificationScreen extends ConsumerStatefulWidget {
@@ -71,7 +69,10 @@ class _AccountVerificationScreenState
       appBar: AppBar(
         title: const Text('Verification'),
         leading: IconButton(
-          icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: AppColors.textPrimary),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),

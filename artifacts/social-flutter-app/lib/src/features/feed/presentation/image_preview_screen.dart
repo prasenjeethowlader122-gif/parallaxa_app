@@ -106,7 +106,10 @@ class ImagePreviewScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.black,
         leading: IconButton(
-          icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: Colors.white),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedCancel01,
+            color: Colors.white,
+          ),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -118,7 +121,10 @@ class ImagePreviewScreen extends StatelessWidget {
             onPressed: () => _downloadImage(context),
           ),
           IconButton(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedRepeat, color: Colors.white),
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedRepeat,
+              color: Colors.white,
+            ),
             onPressed: () {
               // Reuse/Repost logic
               context.pop();

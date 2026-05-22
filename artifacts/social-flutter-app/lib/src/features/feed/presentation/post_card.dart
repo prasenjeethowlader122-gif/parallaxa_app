@@ -104,9 +104,7 @@ class _PostCardState extends ConsumerState<PostCard> {
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: const BoxDecoration(
-          color: AppColors.background,
-        ),
+        decoration: const BoxDecoration(color: AppColors.background),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -159,7 +157,6 @@ class _PostCardState extends ConsumerState<PostCard> {
                               child: Text(
                                 post.author.displayName,
                                 style: const TextStyle(
-
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
                                   color: AppColors.foreground,
@@ -169,8 +166,8 @@ class _PostCardState extends ConsumerState<PostCard> {
                             ),
                             if (post.author.isVerified) ...[
                               const SizedBox(width: 4),
-                                  const HugeIcon(
-                                    icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                              const HugeIcon(
+                                icon: HugeIcons.strokeRoundedCheckmarkBadge01,
                                 size: 15,
                                 color: AppColors.verified,
                               ),
@@ -183,7 +180,6 @@ class _PostCardState extends ConsumerState<PostCard> {
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.mutedForeground,
-
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -221,8 +217,8 @@ class _PostCardState extends ConsumerState<PostCard> {
                       placeholder: (_, __) => Container(color: AppColors.muted),
                       errorWidget: (_, __, ___) => Container(
                         color: AppColors.muted,
-                        child: const Icon(
-                          CupertinoIcons.photo,
+                        child: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedImage01,
                           color: AppColors.mutedForeground,
                         ),
                       ),
@@ -304,7 +300,6 @@ class _ContentText extends StatelessWidget {
     return Text.rich(
       TextSpan(children: spans),
       style: const TextStyle(
-
         fontSize: 15,
         height: 1.4,
         color: AppColors.foreground,
@@ -342,14 +337,7 @@ class _ActionItem extends StatelessWidget {
                 : HugeIcon(icon: icon, size: 20, color: color),
             if (showCount && count > 0) ...[
               const SizedBox(width: 6),
-              Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: color,
-
-                ),
-              ),
+              Text('$count', style: TextStyle(fontSize: 13, color: color)),
             ],
           ],
         ),
