@@ -141,6 +141,18 @@ async function formatPost(
     .innerJoin(hashtagsTable, eq(postHashtagsTable.hashtagId, hashtagsTable.id))
     .where(eq(postHashtagsTable.postId, post.id));
 
+  let repostOf = null;
+  if (post.repostOfId) {
+    const [originalPost] = await db
+      .select()
+      .from(postsTable)
+      .where(eq(postsTable.id, post.repostOfId))
+      .limit(1);
+    if (originalPost) {
+      repostOf = await formatPost(originalPost, myId);
+    }
+  }
+
   return {
     id: post.id,
     author: {
@@ -157,8 +169,10 @@ async function formatPost(
     imageUrl: post.imageUrl,
     videoUrl: post.videoUrl,
     location: post.location,
+    repostOf,
     hashtags: hashtagRows.map((h) => h.name),
     likesCount: post.likesCount,
+    repostsCount: post.repostsCount,
     repliesCount: post.repliesCount,
     commentsCount: post.repliesCount,
     isLiked: !!liked,
@@ -401,6 +415,80 @@ router.get(
     }
   },
 );
+
+// Repost a post
+router.post("/posts/:postId/repost", authenticate, async (req: AuthRequest, res) => {
+  try {
+    const postId = req.params.postId as string;
+    const [originalPost] = await db
+      .select()
+      .from(postsTable)
+      .where(eq(postsTable.id, postId))
+      .limit(1);
+
+    if (!originalPost) {
+      res.status(404).json({ error: "Not Found", message: "Post not found" });
+      return;
+    }
+
+    // Check if user already reposted this specific post to avoid duplicates if desired,
+    // but usually multiple reposts are allowed or just one. Let's allow one for now.
+    const [existingRepost] = await db
+      .select()
+      .from(postsTable)
+      .where(
+        and(
+          eq(postsTable.userId, req.userId!),
+          eq(postsTable.repostOfId, postId)
+        )
+      )
+      .limit(1);
+
+    if (existingRepost) {
+      // If already reposted, we could treat this as "un-repost"
+      await db.delete(postsTable).where(eq(postsTable.id, existingRepost.id));
+      await db
+        .update(postsTable)
+        .set({ repostsCount: sql`GREATEST(${postsTable.repostsCount} - 1, 0)` })
+        .where(eq(postsTable.id, postId));
+
+      res.json({ message: "Repost removed" });
+      return;
+    }
+
+    const id = generateId();
+    const [repost] = await db
+      .insert(postsTable)
+      .values({
+        id,
+        userId: req.userId!,
+        repostOfId: postId,
+      })
+      .returning();
+
+    await db
+      .update(postsTable)
+      .set({ repostsCount: sql`${postsTable.repostsCount} + 1` })
+      .where(eq(postsTable.id, postId));
+
+    // Notify original author
+    if (originalPost.userId !== req.userId) {
+      await db.insert(notificationsTable).values({
+        id: generateId(),
+        userId: originalPost.userId,
+        fromUserId: req.userId!,
+        type: "repost",
+        postId: originalPost.id,
+      });
+    }
+
+    const formatted = await formatPost(repost, req.userId!);
+    res.status(201).json(formatted);
+  } catch (err) {
+    logger.error({ err }, "POST /posts/:postId/repost error");
+    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+  }
+});
 
 // Delete a post (or comment/reply)
 router.delete("/posts/:postId", authenticate, async (req: AuthRequest, res) => {

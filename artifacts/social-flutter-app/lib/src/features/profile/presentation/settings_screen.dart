@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import '../../../core/theme_provider.dart';
+import '../../../core/localization_provider.dart';
 import '../../../core/app_colors.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/api_client.dart';
@@ -53,12 +55,11 @@ class SettingsScreen extends ConsumerWidget {
         title: const Text('Settings'),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.arrow_left),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: AppColors.foreground,
+          ),
           onPressed: () => context.pop(),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(0.5),
-          child: Divider(height: 0.5),
         ),
       ),
       body: meAsync.when(
@@ -102,8 +103,8 @@ class SettingsScreen extends ConsumerWidget {
                                 ),
                                 if (me.isVerified) ...[
                                   const SizedBox(width: 6),
-                                  const Icon(
-                                    CupertinoIcons.checkmark_seal_fill,
+                                  const HugeIcon(
+                                    icon: HugeIcons.strokeRoundedTick01,
                                     size: 16,
                                     color: AppColors.verified,
                                   ),
@@ -120,8 +121,8 @@ class SettingsScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const Icon(
-                        CupertinoIcons.chevron_right,
+                      const HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowRight01,
                         size: 18,
                         color: AppColors.mutedForeground,
                       ),
@@ -170,6 +171,51 @@ class SettingsScreen extends ConsumerWidget {
                 value: me.isPrivate ?? false,
                 onChanged: (val) {
                   // TODO: Implement update privacy
+                },
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            _SectionHeader(title: 'App Settings'),
+            _SettingsTile(
+              icon: HugeIcons.strokeRoundedPaintBoard,
+              label: 'Dark Mode',
+              trailing: Consumer(
+                builder: (context, ref, _) {
+                  final themeMode = ref.watch(themeProvider);
+                  return CupertinoSwitch(
+                    value: themeMode == ThemeMode.dark,
+                    onChanged: (val) {
+                      ref.read(themeProvider.notifier).setThemeMode(
+                        val ? ThemeMode.dark : ThemeMode.light,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+            _SettingsTile(
+              icon: HugeIcons.strokeRoundedGlobal,
+              label: 'Language',
+              trailing: Consumer(
+                builder: (context, ref, _) {
+                  final locale = ref.watch(localeProvider);
+                  return DropdownButton<String>(
+                    value: locale.languageCode,
+                    underline: const SizedBox(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        ref
+                            .read(localeProvider.notifier)
+                            .setLocale(Locale(val));
+                      }
+                    },
+                    items: const [
+                      DropdownMenuItem(value: 'en', child: Text('English')),
+                      DropdownMenuItem(value: 'bn', child: Text('বাংলা')),
+                    ],
+                  );
                 },
               ),
             ),
@@ -291,8 +337,8 @@ class _SettingsTile extends StatelessWidget {
       ),
       trailing:
           trailing ??
-          const Icon(
-            CupertinoIcons.chevron_right,
+          const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowRight01,
             size: 16,
             color: AppColors.mutedForeground,
           ),

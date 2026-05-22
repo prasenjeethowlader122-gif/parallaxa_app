@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import '../data/notification_repository.dart';
@@ -65,8 +66,8 @@ class NotificationsScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  CupertinoIcons.bell,
+                const HugeIcon(
+                  icon: HugeIcons.strokeRoundedNotification01,
                   size: 52,
                   color: AppColors.mutedForeground,
                 ),
@@ -74,7 +75,7 @@ class NotificationsScreen extends ConsumerWidget {
                 const Text(
                   'No notifications yet',
                   style: TextStyle(
-                    fontFamily: 'Sora',
+
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                     color: AppColors.foreground,
@@ -137,7 +138,7 @@ class _NotificationRow extends ConsumerWidget {
     final isFaceMatch = n.type == 'face_match';
 
     return Container(
-      color: isUnread ? AppColors.unreadBg : AppColors.background,
+      color: isUnread ? AppColors.unreadBg : Theme.of(context).scaffoldBackgroundColor,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,8 +151,8 @@ class _NotificationRow extends ConsumerWidget {
                 ? CachedNetworkImageProvider(n.fromUser.avatarUrl!)
                 : null,
             child: n.fromUser.avatarUrl == null
-                ? const Icon(
-                    CupertinoIcons.person_fill,
+                ? const HugeIcon(
+                    icon: HugeIcons.strokeRoundedUser,
                     color: AppColors.mutedForeground,
                     size: 22,
                   )

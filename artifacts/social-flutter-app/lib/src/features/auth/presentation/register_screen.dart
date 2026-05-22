@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
@@ -255,12 +256,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(CupertinoIcons.camera),
+              leading: const HugeIcon(icon: HugeIcons.strokeRoundedCamera01, color: AppColors.textPrimary),
               title: const Text('Take a Photo'),
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
             ListTile(
-              leading: const Icon(CupertinoIcons.photo),
+              leading: const HugeIcon(icon: HugeIcons.strokeRoundedImage01, color: AppColors.textPrimary),
               title: const Text('Choose from Gallery'),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
@@ -318,7 +319,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return FloatingLabelInput(
         key: const ValueKey(0),
         label: "Full Name",
-        icon: CupertinoIcons.person,
+        icon: HugeIcons.strokeRoundedUser,
         controller: _displayNameController,
         error: _errors['displayName'],
         textCapitalization: TextCapitalization.words,
@@ -337,7 +338,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: AbsorbPointer(
               child: FloatingLabelInput(
                 label: "Birthday (tap to select)",
-                icon: CupertinoIcons.calendar,
+                icon: HugeIcons.strokeRoundedCalendar01,
                 controller: _dateOfBirthController,
                 error: _errors['dateOfBirth'],
                 keyboardType: TextInputType.none,
@@ -353,7 +354,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.slate400,
-                  fontFamily: 'Sora',
+
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -366,7 +367,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.slate400,
-                fontFamily: 'Sora',
+
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -377,7 +378,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return FloatingLabelInput(
         key: const ValueKey(2),
         label: "Email Address",
-        icon: CupertinoIcons.mail,
+        icon: HugeIcons.strokeRoundedMail01,
         controller: _emailController,
         error: _errors['email'],
         keyboardType: TextInputType.emailAddress,
@@ -390,7 +391,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return FloatingLabelInput(
         key: const ValueKey(3),
         label: "Password",
-        icon: CupertinoIcons.lock,
+        icon: HugeIcons.strokeRoundedLockPassword,
         controller: _passwordController,
         error: _errors['password'],
         secureTextEntry: !_showPassword,
@@ -400,8 +401,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         onFieldSubmitted: (_) => _goNext(),
         right: IconButton(
           onPressed: () => setState(() => _showPassword = !_showPassword),
-          icon: Icon(
-            _showPassword ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
+          icon: HugeIcon(
+            icon: _showPassword ? HugeIcons.strokeRoundedViewOffSlash : HugeIcons.strokeRoundedView,
             color: _errors['password'] != null
                 ? const Color(0xFFDC2626)
                 : AppColors.slate500,
@@ -439,8 +440,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     : null,
               ),
               child: _faceImage == null
-                  ? const Icon(
-                      CupertinoIcons.person_crop_circle_badge_plus,
+                  ? const HugeIcon(
+                      icon: HugeIcons.strokeRoundedUserAdd01,
                       size: 60,
                       color: AppColors.slate400,
                     )
@@ -457,13 +458,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   color: Color(0xFFDC2626),
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  fontFamily: 'Sora',
+
                 ),
               ),
             ),
           ElevatedButton.icon(
             onPressed: _isLoading ? null : _pickFaceImage,
-            icon: const Icon(CupertinoIcons.camera, size: 18),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedCamera01, size: 18),
             label: Text(_faceImage == null ? "Capture Face" : "Retake Photo"),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.slate100,
@@ -481,7 +482,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               style: TextStyle(
                 fontSize: 13,
                 color: AppColors.slate500,
-                fontFamily: 'Sora',
+
                 height: 1.5,
               ),
             ),
@@ -496,7 +497,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         children: [
           FloatingLabelInput(
             label: "Username",
-            icon: CupertinoIcons.at,
+            icon: HugeIcons.strokeRoundedUserCircle,
             controller: _usernameController,
             error: _errors['username'],
             textInputAction: TextInputAction.done,
@@ -514,10 +515,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   )
                 : _usernameAvailable == null
                 ? null
-                : Icon(
-                    _usernameAvailable!
-                        ? CupertinoIcons.check_mark_circled
-                        : CupertinoIcons.xmark_circle,
+                : HugeIcon(
+                    icon: _usernameAvailable!
+                        ? HugeIcons.strokeRoundedCheckmarkCircle01
+                        : HugeIcons.strokeRoundedCancel01,
                     color: _usernameAvailable!
                         ? Colors.green
                         : const Color(0xFFDC2626),
@@ -538,7 +539,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   color: _usernameAvailable!
                       ? Colors.green
                       : const Color(0xFFDC2626),
-                  fontFamily: 'Sora',
+
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -553,7 +554,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.slate500,
-                  fontFamily: 'Sora',
+
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -590,7 +591,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.slate700,
-                            fontFamily: 'Sora',
+
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -646,8 +647,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
-                        child: Icon(
-                          CupertinoIcons.arrow_left,
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedArrowLeft01,
                           color: Color(0xFF1F2937),
                           size: 20,
                         ),
@@ -689,7 +690,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   fontWeight: FontWeight.w800,
                   color: AppColors.slate400,
                   letterSpacing: 1.4,
-                  fontFamily: 'Sora',
+
                 ),
               ),
               const SizedBox(height: 6),
@@ -699,7 +700,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppColors.slate900,
-                  fontFamily: 'Sora',
+
                   letterSpacing: -0.5,
                 ),
               ),
@@ -709,7 +710,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 style: const TextStyle(
                   fontSize: 15,
                   color: AppColors.slate500,
-                  fontFamily: 'Sora',
+
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -729,8 +730,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        CupertinoIcons.exclamationmark_circle,
+                      const HugeIcon(
+                        icon: HugeIcons.strokeRoundedAlertCircle,
                         color: Color(0xFFDC2626),
                         size: 20,
                       ),
@@ -742,7 +743,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             color: Color(0xFFDC2626),
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
-                            fontFamily: 'Sora',
+
                           ),
                         ),
                       ),
@@ -785,8 +786,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                           child: _acceptTerms
                               ? const Center(
-                                  child: Icon(
-                                    CupertinoIcons.check_mark,
+                                  child: HugeIcon(
+                                    icon: HugeIcons.strokeRoundedTick01,
                                     color: Colors.white,
                                     size: 14,
                                   ),
@@ -821,7 +822,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               color: AppColors.slate600,
                               fontSize: 14,
                               height: 1.4,
-                              fontFamily: 'Sora',
+
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -866,13 +867,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                fontFamily: 'Sora',
+
                               ),
                             ),
                             if (!isLastStep) ...[
                               const SizedBox(width: 8),
-                              const Icon(
-                                CupertinoIcons.arrow_right,
+                              const HugeIcon(
+                                icon: HugeIcons.strokeRoundedArrowRight01,
                                 color: Colors.white,
                                 size: 18,
                               ),
@@ -900,7 +901,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1,
-                            fontFamily: 'Sora',
+
                           ),
                         ),
                       ),
@@ -918,7 +919,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       style: TextStyle(
                         color: AppColors.slate600,
                         fontSize: 14,
-                        fontFamily: 'Sora',
+
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -930,7 +931,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           color: Color(0xFF0095F6),
                           fontWeight: FontWeight.w800,
                           fontSize: 14,
-                          fontFamily: 'Sora',
+
                         ),
                       ),
                     ),
@@ -968,7 +969,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     color: AppColors.slate400,
                     fontSize: 12,
                     height: 1.5,
-                    fontFamily: 'Sora',
+
                     fontWeight: FontWeight.w500,
                   ),
                 ),

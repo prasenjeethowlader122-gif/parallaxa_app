@@ -14,10 +14,14 @@ Post _$PostFromJson(Map<String, dynamic> json) => Post(
   imageUrl: json['imageUrl'] as String?,
   videoUrl: json['videoUrl'] as String?,
   location: json['location'] as String?,
+  repostOf: json['repostOf'] == null
+      ? null
+      : Post.fromJson(json['repostOf'] as Map<String, dynamic>),
   hashtags: (json['hashtags'] as List<dynamic>)
       .map((e) => e as String)
       .toList(),
   likesCount: (json['likesCount'] as num).toInt(),
+  repostsCount: (json['repostsCount'] as num).toInt(),
   repliesCount: (json['repliesCount'] as num).toInt(),
   isLiked: json['isLiked'] as bool,
   isSaved: json['isSaved'] as bool,
@@ -32,8 +36,10 @@ Map<String, dynamic> _$PostToJson(Post instance) => <String, dynamic>{
   'imageUrl': instance.imageUrl,
   'videoUrl': instance.videoUrl,
   'location': instance.location,
+  'repostOf': instance.repostOf,
   'hashtags': instance.hashtags,
   'likesCount': instance.likesCount,
+  'repostsCount': instance.repostsCount,
   'repliesCount': instance.repliesCount,
   'isLiked': instance.isLiked,
   'isSaved': instance.isSaved,

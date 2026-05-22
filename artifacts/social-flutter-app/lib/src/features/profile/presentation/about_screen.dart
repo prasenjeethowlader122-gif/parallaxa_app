@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/app_colors.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -21,7 +22,7 @@ class AboutScreen extends StatelessWidget {
                   Text(
                     'Parallaxa',
                     style: TextStyle(
-                      fontFamily: 'Sora',
+
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
@@ -38,7 +39,7 @@ class AboutScreen extends StatelessWidget {
             const Text(
               'About the App',
               style: TextStyle(
-                fontFamily: 'Sora',
+
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
               ),
@@ -56,24 +57,24 @@ class AboutScreen extends StatelessWidget {
             const Text(
               'Developer',
               style: TextStyle(
-                fontFamily: 'Sora',
+
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 12),
             _DeveloperInfoRow(
-              icon: CupertinoIcons.person_alt,
+              icon: HugeIcons.strokeRoundedUser,
               label: 'Name',
               value: 'Prasenjeet Howlader',
             ),
             _DeveloperInfoRow(
-              icon: CupertinoIcons.mail_solid,
+              icon: HugeIcons.strokeRoundedMail01,
               label: 'Contact',
               value: 'contact@prasenjeet.dev',
             ),
             _DeveloperInfoRow(
-              icon: CupertinoIcons.globe,
+              icon: HugeIcons.strokeRoundedGlobe,
               label: 'Website',
               value: 'https://prasenjeet.dev',
             ),
@@ -92,7 +93,7 @@ class AboutScreen extends StatelessWidget {
 }
 
 class _DeveloperInfoRow extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final String label;
   final String value;
 
@@ -108,7 +109,9 @@ class _DeveloperInfoRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppColors.primary),
+          icon is IconData
+              ? Icon(icon as IconData, size: 20, color: AppColors.primary)
+              : HugeIcon(icon: icon, size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
           Text(
             '$label: ',

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
@@ -137,8 +138,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     color: AppColors.muted,
                     child: _newCoverUrl != null
                         ? Image.file(File(_newCoverUrl!), fit: BoxFit.cover)
-                        : const Icon(
-                            CupertinoIcons.camera,
+                        : const HugeIcon(
+                            icon: HugeIcons.strokeRoundedCamera01,
                             color: AppColors.mutedForeground,
                           ),
                   ),
@@ -146,8 +147,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     child: Container(
                       color: Colors.black.withOpacity(0.2),
                       child: const Center(
-                        child: Icon(
-                          CupertinoIcons.camera_fill,
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedCamera01,
                           color: Colors.white,
                           size: 30,
                         ),
@@ -188,8 +189,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         child:
                             _newAvatarUrl == null &&
                                 widget.user.avatarUrl == null
-                            ? const Icon(
-                                CupertinoIcons.person_fill,
+                            ? const HugeIcon(
+                                icon: HugeIcons.strokeRoundedUser,
                                 size: 50,
                                 color: AppColors.mutedForeground,
                               )
@@ -203,8 +204,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         color: Colors.black.withOpacity(0.3),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        CupertinoIcons.camera_fill,
+                      child: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedCamera01,
                         color: Colors.white,
                         size: 24,
                       ),
@@ -220,20 +221,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 children: [
                   FloatingLabelInput(
                     label: 'Display Name',
-                    icon: CupertinoIcons.person,
+                    icon: HugeIcons.strokeRoundedUser,
                     controller: _displayNameController,
                   ),
                   const SizedBox(height: 16),
                   FloatingLabelInput(
                     label: 'Bio',
-                    icon: CupertinoIcons.text_bubble,
+                    icon: HugeIcons.strokeRoundedChat01,
                     controller: _bioController,
                     maxLines: 3,
                   ),
                   const SizedBox(height: 16),
                   FloatingLabelInput(
                     label: 'Website',
-                    icon: CupertinoIcons.link,
+                    icon: HugeIcons.strokeRoundedLink01,
                     controller: _websiteController,
                   ),
                 ],

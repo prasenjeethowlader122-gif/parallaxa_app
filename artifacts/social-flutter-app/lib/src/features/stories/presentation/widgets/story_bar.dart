@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/story_repository.dart';
 import '../../domain/story.dart';
@@ -16,9 +17,8 @@ class StoryBar extends ConsumerWidget {
 
     return Container(
       height: 90,
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
       ),
       child: storiesAsync.when(
         data: (groups) {
@@ -38,7 +38,7 @@ class StoryBar extends ConsumerWidget {
         loading: () => const Center(child: CupertinoActivityIndicator()),
         error: (e, _) => Center(
           child: IconButton(
-            icon: const Icon(CupertinoIcons.refresh, size: 20),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedReload, size: 20),
             onPressed: () => ref.invalidate(storiesProvider),
           ),
         ),
@@ -75,8 +75,8 @@ class _CreateStoryItem extends StatelessWidget {
                       border: Border.all(color: AppColors.background, width: 2),
                     ),
                     padding: const EdgeInsets.all(2),
-                    child: const Icon(
-                      CupertinoIcons.add,
+                    child: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedAdd01,
                       size: 12,
                       color: Colors.white,
                     ),
@@ -89,7 +89,7 @@ class _CreateStoryItem extends StatelessWidget {
               'Your Story',
               style: TextStyle(
                 fontSize: 11,
-                fontFamily: 'Sora',
+
                 color: AppColors.mutedForeground,
               ),
             ),
@@ -126,7 +126,7 @@ class _StoryItem extends StatelessWidget {
                 group.user.displayName,
                 style: const TextStyle(
                   fontSize: 11,
-                  fontFamily: 'Sora',
+
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,

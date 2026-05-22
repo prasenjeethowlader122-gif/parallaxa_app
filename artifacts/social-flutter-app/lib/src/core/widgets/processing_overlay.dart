@@ -31,7 +31,7 @@ class ProcessingOverlay extends ConsumerWidget {
                     Text(
                       state.message!,
                       style: const TextStyle(
-                        fontFamily: 'Sora',
+
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: AppColors.slate900,

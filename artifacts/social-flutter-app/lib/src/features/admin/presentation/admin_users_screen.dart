@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../data/admin_repository.dart';
 import '../../../core/app_colors.dart';
 import '../../auth/domain/user.dart';
@@ -45,12 +46,30 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
           preferredSize: const Size.fromHeight(60),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: CupertinoSearchTextField(
-              controller: _searchController,
-              placeholder: 'Search users...',
-              onSubmitted: (val) {
-                // Future: search logic
-              },
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.muted,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Search users...',
+                  prefixIcon: Padding(
+                    padding: EdgeInsets.all(10),
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedSearch01,
+                      color: AppColors.mutedForeground,
+                      size: 20,
+                    ),
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 10),
+                ),
+              ),
             ),
           ),
         ),
@@ -69,7 +88,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                       ? NetworkImage(user.avatarUrl!)
                       : null,
                   child: user.avatarUrl == null
-                      ? const Icon(CupertinoIcons.person)
+                      ? const HugeIcon(icon: HugeIcons.strokeRoundedUser, color: AppColors.mutedForeground)
                       : null,
                 ),
                 title: Text(
@@ -81,23 +100,24 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (user.isVerified)
-                      const Icon(
-                        CupertinoIcons.checkmark_seal_fill,
+                      const HugeIcon(
+                        icon: HugeIcons.strokeRoundedCheckmarkBadge01,
                         color: AppColors.verified,
                         size: 20,
                       )
                     else
                       IconButton(
-                        icon: const Icon(
-                          CupertinoIcons.checkmark_seal,
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedCheckmarkBadge01,
                           size: 20,
                         ),
                         onPressed: () => _toggleVerify(user),
                       ),
                     PopupMenuButton(
-                      icon: const Icon(
-                        CupertinoIcons.ellipsis_vertical,
+                      icon: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedMoreVertical,
                         size: 20,
+                        color: AppColors.textPrimary,
                       ),
                       itemBuilder: (context) => [
                         PopupMenuItem(

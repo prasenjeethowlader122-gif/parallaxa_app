@@ -233,10 +233,6 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         const SizedBox(width: 4),
       ],
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(0.5),
-        child: Divider(height: 0.5, thickness: 0.5, color: AppColors.border),
-      ),
     );
   }
 }
@@ -390,7 +386,7 @@ class _AppDrawer extends StatelessWidget {
                       child: const Text(
                         'Post',
                         style: TextStyle(
-                          fontFamily: 'Sora',
+
                           fontWeight: FontWeight.w800,
                           fontSize: 18,
                           color: Colors.white,
@@ -441,7 +437,7 @@ class _DrawerItem extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontFamily: 'Sora',
+
                 fontSize: 20,
                 fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
                 color: AppColors.textPrimary,
