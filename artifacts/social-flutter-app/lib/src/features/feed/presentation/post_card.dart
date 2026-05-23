@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../data/post_repository.dart';
 import '../domain/post.dart';
@@ -22,7 +23,9 @@ class _PostCardState extends ConsumerState<PostCard> {
   late bool _isLiked;
   late int _likesCount;
   late bool _isSaved;
+  late int _repostCount;
   bool _isLiking = false;
+  bool _isReposting = false;
 
   @override
   void initState() {
@@ -30,6 +33,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     _isLiked = widget.post.isLiked;
     _likesCount = widget.post.likesCount;
     _isSaved = widget.post.isSaved;
+    _repostCount = widget.post.repostsCount;
   }
 
   String _timeAgo(DateTime dt) {
@@ -70,25 +74,63 @@ class _PostCardState extends ConsumerState<PostCard> {
     setState(() => _isSaved = !_isSaved);
   }
 
+  Future<void> _toggleRepost() async {
+    if (_isReposting) return;
+    setState(() {
+      _isReposting = true;
+      _repostCount += 1; // Optimistic
+    });
+    try {
+      await ref.read(postRepositoryProvider).repostPost(widget.post.id);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _repostCount -= 1);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to repost: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isReposting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final post = widget.post;
-    final repostCount = (_likesCount / 2.5).floor();
+    final post = widget.post.repostOf ?? widget.post;
+    final isRepost = widget.post.repostOf != null;
 
     return GestureDetector(
       onTap: widget.onTap ?? () => context.push('/post/${post.id}'),
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: const BoxDecoration(
-          color: AppColors.background,
-          border: Border(
-            bottom: BorderSide(color: AppColors.border, width: 0.5),
-          ),
-        ),
+        decoration: const BoxDecoration(color: AppColors.background),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (isRepost) ...[
+              Row(
+                children: [
+                  const SizedBox(width: 42),
+                  const HugeIcon(
+                    icon: HugeIcons.strokeRoundedRepeat,
+                    size: 14,
+                    color: AppColors.mutedForeground,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${widget.post.author.displayName} reposted',
+                    style: const TextStyle(
+                      fontFamily: 'Ubuntu',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
             // ── Author row ──
             Row(
               children: [
@@ -115,7 +157,6 @@ class _PostCardState extends ConsumerState<PostCard> {
                               child: Text(
                                 post.author.displayName,
                                 style: const TextStyle(
-                                  fontFamily: 'Sora',
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
                                   color: AppColors.foreground,
@@ -125,8 +166,8 @@ class _PostCardState extends ConsumerState<PostCard> {
                             ),
                             if (post.author.isVerified) ...[
                               const SizedBox(width: 4),
-                              const Icon(
-                                CupertinoIcons.checkmark_seal_fill,
+                              const HugeIcon(
+                                icon: HugeIcons.strokeRoundedCheckmarkBadge01,
                                 size: 15,
                                 color: AppColors.verified,
                               ),
@@ -139,7 +180,6 @@ class _PostCardState extends ConsumerState<PostCard> {
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.mutedForeground,
-                          fontFamily: 'Sora',
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -147,8 +187,8 @@ class _PostCardState extends ConsumerState<PostCard> {
                     ],
                   ),
                 ),
-                const Icon(
-                  CupertinoIcons.ellipsis,
+                const HugeIcon(
+                  icon: HugeIcons.strokeRoundedMoreHorizontal,
                   size: 20,
                   color: AppColors.mutedForeground,
                 ),
@@ -177,8 +217,8 @@ class _PostCardState extends ConsumerState<PostCard> {
                       placeholder: (_, __) => Container(color: AppColors.muted),
                       errorWidget: (_, __, ___) => Container(
                         color: AppColors.muted,
-                        child: const Icon(
-                          CupertinoIcons.photo,
+                        child: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedImage01,
                           color: AppColors.mutedForeground,
                         ),
                       ),
@@ -194,36 +234,32 @@ class _PostCardState extends ConsumerState<PostCard> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _ActionItem(
-                  icon: CupertinoIcons.chat_bubble,
+                  icon: HugeIcons.strokeRoundedChat01,
                   count: post.repliesCount,
                   color: AppColors.mutedForeground,
                   onTap: () {},
                 ),
                 _ActionItem(
-                  icon: CupertinoIcons.arrow_2_squarepath,
-                  count: repostCount,
+                  icon: HugeIcons.strokeRoundedRepeat,
+                  count: _repostCount,
                   color: AppColors.mutedForeground,
-                  onTap: () {},
+                  onTap: _toggleRepost,
                 ),
                 _ActionItem(
-                  icon: _isLiked
-                      ? CupertinoIcons.heart_fill
-                      : CupertinoIcons.heart,
+                  icon: HugeIcons.strokeRoundedFavourite,
                   count: _likesCount,
                   color: _isLiked ? AppColors.like : AppColors.mutedForeground,
                   onTap: _toggleLike,
                 ),
                 _ActionItem(
-                  icon: _isSaved
-                      ? CupertinoIcons.bookmark_fill
-                      : CupertinoIcons.bookmark,
+                  icon: HugeIcons.strokeRoundedBookmark01,
                   count: 0,
                   color: _isSaved ? AppColors.saved : AppColors.mutedForeground,
                   onTap: _toggleSave,
                   showCount: false,
                 ),
                 _ActionItem(
-                  icon: CupertinoIcons.share,
+                  icon: HugeIcons.strokeRoundedShare01,
                   count: 0,
                   color: AppColors.mutedForeground,
                   onTap: () {},
@@ -264,7 +300,6 @@ class _ContentText extends StatelessWidget {
     return Text.rich(
       TextSpan(children: spans),
       style: const TextStyle(
-        fontFamily: 'Sora',
         fontSize: 15,
         height: 1.4,
         color: AppColors.foreground,
@@ -274,7 +309,7 @@ class _ContentText extends StatelessWidget {
 }
 
 class _ActionItem extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final int count;
   final Color color;
   final VoidCallback onTap;
@@ -297,17 +332,12 @@ class _ActionItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: color),
+            icon is IconData
+                ? Icon(icon as IconData, size: 20, color: color)
+                : HugeIcon(icon: icon, size: 20, color: color),
             if (showCount && count > 0) ...[
               const SizedBox(width: 6),
-              Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: color,
-                  fontFamily: 'Sora',
-                ),
-              ),
+              Text('$count', style: TextStyle(fontSize: 13, color: color)),
             ],
           ],
         ),

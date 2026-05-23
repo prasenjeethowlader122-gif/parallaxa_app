@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
@@ -60,10 +61,13 @@ class ConversationsScreen extends ConsumerWidget {
                     color: AppColors.mutedForeground,
                     fontSize: 15,
                   ),
-                  prefixIcon: Icon(
-                    CupertinoIcons.search,
-                    color: AppColors.mutedForeground,
-                    size: 20,
+                  prefixIcon: Padding(
+                    padding: EdgeInsets.all(10),
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedSearch01,
+                      color: AppColors.mutedForeground,
+                      size: 20,
+                    ),
                   ),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 10),
@@ -79,8 +83,8 @@ class ConversationsScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          CupertinoIcons.chat_bubble,
+                        const HugeIcon(
+                          icon: HugeIcons.strokeRoundedChat01,
                           size: 52,
                           color: AppColors.mutedForeground,
                         ),
@@ -88,7 +92,6 @@ class ConversationsScreen extends ConsumerWidget {
                         const Text(
                           'No messages yet',
                           style: TextStyle(
-                            fontFamily: 'Sora',
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
                             color: AppColors.foreground,
@@ -162,8 +165,8 @@ class _ConversationTile extends StatelessWidget {
                       ? CachedNetworkImageProvider(conv.participant.avatarUrl!)
                       : null,
                   child: conv.participant.avatarUrl == null
-                      ? const Icon(
-                          CupertinoIcons.person_fill,
+                      ? const HugeIcon(
+                          icon: HugeIcons.strokeRoundedUser,
                           color: AppColors.mutedForeground,
                           size: 24,
                         )
@@ -184,7 +187,6 @@ class _ConversationTile extends StatelessWidget {
                         child: Text(
                           conv.participant.displayName,
                           style: TextStyle(
-                            fontFamily: 'Sora',
                             fontSize: 15,
                             fontWeight: hasUnread
                                 ? FontWeight.w700

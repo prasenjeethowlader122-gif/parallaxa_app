@@ -16,8 +16,12 @@ export const postsTable = pgTable("posts", {
   content: text("content"),
   imageUrl: text("image_url"),
   videoUrl: text("video_url"),
+  repostOfId: text("repost_of_id").references((): any => postsTable.id, {
+    onDelete: "cascade",
+  }),
   location: text("location"),
   likesCount: integer("likes_count").notNull().default(0),
+  repostsCount: integer("reposts_count").notNull().default(0),
   repliesCount: integer("replies_count").notNull().default(0),
   isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -26,6 +30,7 @@ export const postsTable = pgTable("posts", {
 
 export const insertPostSchema = createInsertSchema(postsTable).omit({
   likesCount: true,
+  repostsCount: true,
   repliesCount: true,
   isArchived: true,
   createdAt: true,

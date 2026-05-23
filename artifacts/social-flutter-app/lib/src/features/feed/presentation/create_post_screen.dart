@@ -1,8 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:typed_data';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:pro_image_editor/pro_image_editor.dart';
 import 'dart:io';
 import 'dart:math' as math;
 import '../data/post_repository.dart';
@@ -126,6 +129,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     );
     if (picked != null && mounted) {
       setState(() => _selectedImage = File(picked.path));
+      _editImage();
     }
   }
 
@@ -138,7 +142,32 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     );
     if (picked != null && mounted) {
       setState(() => _selectedImage = File(picked.path));
+      _editImage();
     }
+  }
+
+  Future<void> _editImage() async {
+    if (_selectedImage == null) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProImageEditor.file(
+          _selectedImage!,
+          callbacks: ProImageEditorCallbacks(
+            onImageEditingComplete: (Uint8List bytes) async {
+              final tempDir = Directory.systemTemp;
+              final file = await File(
+                '${tempDir.path}/edited_image_${DateTime.now().millisecondsSinceEpoch}.png',
+              ).create();
+              await file.writeAsBytes(bytes);
+              setState(() => _selectedImage = file);
+              if (mounted) Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _showLocationDialog() async {
@@ -148,7 +177,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       builder: (context) => AlertDialog(
         title: const Text(
           'Add Location',
-          style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         content: TextField(
           controller: controller,
@@ -229,9 +258,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            CupertinoIcons.xmark,
-            color: AppColors.textPrimary,
+          icon: HugeIcon(
+            icon: HugeIcons.strokeRoundedCancel01,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : AppColors.textPrimary,
             size: 24,
           ),
           onPressed: _isPosting ? null : () => context.pop(),
@@ -264,7 +295,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                   : const Text(
                       'Post',
                       style: TextStyle(
-                        fontFamily: 'Sora',
                         fontWeight: FontWeight.w800,
                         fontSize: 15,
                       ),
@@ -296,11 +326,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                               children: [
                                 Text(
                                   user?.displayName ?? 'You',
-                                  style: const TextStyle(
-                                    fontFamily: 'Sora',
+                                  style: TextStyle(
                                     fontWeight: FontWeight.w800,
                                     fontSize: 15,
-                                    color: Color(0xFF14171A),
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : const Color(0xFF14171A),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -312,11 +345,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                               maxLines: null,
                               minLines: 1,
                               autofocus: true,
-                              style: const TextStyle(
-                                fontFamily: 'Sora',
+                              style: TextStyle(
                                 fontSize: 18,
                                 height: 1.4,
-                                color: AppColors.textPrimary,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
                               ),
                               decoration: const InputDecoration(
                                 hintText: "What's happening?!",
@@ -356,6 +392,49 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                   Positioned(
                                     top: 10,
                                     right: 10,
+                                    child: Row(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: _editImage,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.black54,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const HugeIcon(
+                                              icon:
+                                                  HugeIcons.strokeRoundedEdit01,
+                                              color: Colors.white,
+                                              size: 16,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        GestureDetector(
+                                          onTap: () => setState(
+                                            () => _selectedImage = null,
+                                          ),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.black54,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const HugeIcon(
+                                              icon: HugeIcons
+                                                  .strokeRoundedCancel01,
+                                              color: Colors.white,
+                                              size: 16,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  /*Positioned(
+                                    top: 10,
+                                    right: 10,
                                     child: GestureDetector(
                                       onTap: () =>
                                           setState(() => _selectedImage = null),
@@ -365,14 +444,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                           color: Colors.black54,
                                           shape: BoxShape.circle,
                                         ),
-                                        child: const Icon(
-                                          CupertinoIcons.xmark,
+                                        child: const HugeIcon(
+                                          icon: HugeIcons.strokeRoundedCancel01,
                                           color: Colors.white,
                                           size: 16,
                                         ),
                                       ),
                                     ),
-                                  ),
+                                  ),*/
                                 ],
                               ),
                             ],
@@ -529,7 +608,11 @@ class _AudienceChip extends StatelessWidget {
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(CupertinoIcons.globe, color: Color(0xFF1D9BF0), size: 14),
+          HugeIcon(
+            icon: HugeIcons.strokeRoundedGlobe,
+            color: Color(0xFF1D9BF0),
+            size: 14,
+          ),
           SizedBox(width: 4),
           Text(
             'Everyone',
@@ -562,8 +645,8 @@ class _LocationTag extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            CupertinoIcons.location_solid,
+          const HugeIcon(
+            icon: HugeIcons.strokeRoundedLocation01,
             color: Color(0xFF1D9BF0),
             size: 14,
           ),
@@ -579,8 +662,8 @@ class _LocationTag extends StatelessWidget {
           const SizedBox(width: 5),
           GestureDetector(
             onTap: onRemove,
-            child: const Icon(
-              CupertinoIcons.xmark,
+            child: const HugeIcon(
+              icon: HugeIcons.strokeRoundedCancel01,
               color: Color(0xFF1D9BF0),
               size: 14,
             ),
@@ -625,32 +708,32 @@ class _Toolbar extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(
-              CupertinoIcons.photo,
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedImage01,
               color: Color(0xFF1D9BF0),
               size: 24,
             ),
             onPressed: onPickImage,
           ),
           IconButton(
-            icon: const Icon(
-              CupertinoIcons.videocam_circle,
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedVideoReplay,
               color: Color(0xFF1D9BF0),
               size: 24,
             ),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(
-              CupertinoIcons.list_bullet_indent,
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedListView,
               color: Color(0xFF1D9BF0),
               size: 24,
             ),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(
-              CupertinoIcons.smiley,
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedSent,
               color: Color(0xFF1D9BF0),
               size: 24,
             ),
@@ -659,8 +742,8 @@ class _Toolbar extends StatelessWidget {
           Stack(
             children: [
               IconButton(
-                icon: const Icon(
-                  CupertinoIcons.location,
+                icon: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedLocation01,
                   color: Color(0xFF1D9BF0),
                   size: 24,
                 ),
@@ -695,8 +778,8 @@ class _Toolbar extends StatelessWidget {
                 border: Border.all(color: const Color(0xFFE1E8ED)),
               ),
               child: const Center(
-                child: Icon(
-                  CupertinoIcons.calendar,
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedCalendar01,
                   color: Color(0xFF1D9BF0),
                   size: 16,
                 ),

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../data/post_repository.dart';
 import '../../../core/app_colors.dart';
 import 'post_card.dart';
@@ -38,22 +39,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
         const StoryBar(),
         // ── Tab bar ──────────────────────────────────────────────────
         Container(
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            border: Border(
-              bottom: BorderSide(color: AppColors.border, width: 0.5),
-            ),
-          ),
+          decoration: const BoxDecoration(color: AppColors.background),
           child: TabBar(
             controller: _tab,
             tabs: _tabs.map((t) => Tab(text: t)).toList(),
             labelStyle: const TextStyle(
-              fontFamily: 'Sora',
               fontWeight: FontWeight.w700,
               fontSize: 15,
             ),
             unselectedLabelStyle: const TextStyle(
-              fontFamily: 'Sora',
               fontWeight: FontWeight.w400,
               fontSize: 15,
             ),
@@ -114,8 +108,8 @@ class _FeedList extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                CupertinoIcons.wifi_exclamationmark,
+              const HugeIcon(
+                icon: HugeIcons.strokeRoundedWifi01,
                 size: 44,
                 color: AppColors.mutedForeground,
               ),
@@ -125,7 +119,6 @@ class _FeedList extends ConsumerWidget {
                     ? 'Please log in to continue'
                     : 'Could not load posts',
                 style: const TextStyle(
-                  fontFamily: 'Sora',
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: AppColors.foreground,
@@ -152,8 +145,8 @@ class _FeedList extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    CupertinoIcons.doc_text,
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedNote01,
                     size: 48,
                     color: AppColors.mutedForeground.withOpacity(0.5),
                   ),
@@ -163,7 +156,6 @@ class _FeedList extends ConsumerWidget {
                         ? 'Follow people to see their posts here'
                         : 'Nothing here yet',
                     style: const TextStyle(
-                      fontFamily: 'Sora',
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: AppColors.foreground,

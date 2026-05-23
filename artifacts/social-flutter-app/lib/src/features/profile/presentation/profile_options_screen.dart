@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/app_colors.dart';
 import '../../auth/domain/user.dart';
@@ -16,7 +17,10 @@ class ProfileOptionsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Options'),
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.arrow_left),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -28,13 +32,13 @@ class ProfileOptionsScreen extends ConsumerWidget {
             items: [
               _OptionItem(
                 label: 'Report @${user.username}',
-                icon: CupertinoIcons.flag,
+                icon: HugeIcons.strokeRoundedFlag01,
                 onTap: () {},
                 isDestructive: true,
               ),
               _OptionItem(
                 label: 'Block @${user.username}',
-                icon: CupertinoIcons.slash_circle,
+                icon: HugeIcons.strokeRoundedUserBlock01,
                 onTap: () {},
                 isDestructive: true,
               ),
@@ -46,12 +50,12 @@ class ProfileOptionsScreen extends ConsumerWidget {
             items: [
               _OptionItem(
                 label: 'Two-Factor Authentication',
-                icon: CupertinoIcons.shield,
+                icon: HugeIcons.strokeRoundedShield01,
                 onTap: () => context.push('/two-factor-setup'),
               ),
               _OptionItem(
                 label: 'Account Verification',
-                icon: CupertinoIcons.checkmark_seal,
+                icon: HugeIcons.strokeRoundedCheckmarkBadge01,
                 onTap: () => context.push('/account-verification'),
               ),
             ],
@@ -100,7 +104,7 @@ class _OptionSection extends StatelessWidget {
 
 class _OptionItem extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final dynamic icon;
   final VoidCallback onTap;
   final bool isDestructive;
 
@@ -116,7 +120,9 @@ class _OptionItem extends StatelessWidget {
     final color = isDestructive ? Colors.red : AppColors.textPrimary;
 
     return ListTile(
-      leading: Icon(icon, color: color, size: 22),
+      leading: icon is IconData
+          ? Icon(icon as IconData, color: color, size: 22)
+          : HugeIcon(icon: icon, color: color, size: 22),
       title: Text(
         label,
         style: TextStyle(
@@ -125,8 +131,8 @@ class _OptionItem extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
       ),
-      trailing: const Icon(
-        CupertinoIcons.chevron_right,
+      trailing: const HugeIcon(
+        icon: HugeIcons.strokeRoundedArrowRight01,
         size: 16,
         color: AppColors.mutedForeground,
       ),

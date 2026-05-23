@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/app_colors.dart';
 
 class UserAvatar extends StatelessWidget {
@@ -57,15 +58,15 @@ class UserAvatar extends StatelessWidget {
                     ),
                   ),
                 ),
-                errorWidget: (context, url, error) => Icon(
-                  CupertinoIcons.person_fill,
+                errorWidget: (context, url, error) => HugeIcon(
+                  icon: HugeIcons.strokeRoundedUser,
                   color: AppColors.slate400,
                   size: size * 0.6,
                 ),
               )
             : Center(
-                child: Icon(
-                  CupertinoIcons.person_fill,
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedUser,
                   color: AppColors.slate400,
                   size: size * 0.6,
                 ),

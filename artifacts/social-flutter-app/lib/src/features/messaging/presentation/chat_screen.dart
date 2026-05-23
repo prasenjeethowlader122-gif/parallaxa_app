@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import '../data/message_repository.dart';
 import '../domain/message.dart';
@@ -111,38 +112,65 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final currentUserId = storageService.getCurrentUserId() ?? '';
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         titleSpacing: 0,
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.arrow_left, color: Colors.black),
+          icon: HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : Colors.black,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           widget.participantName,
-          style: const TextStyle(
-            color: Colors.black,
-            fontFamily: 'Sora',
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : Colors.black,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(CupertinoIcons.phone, color: Colors.black),
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedCall,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
+            ),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(CupertinoIcons.videocam, color: Colors.black),
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedVideo02,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
+            ),
             onPressed: () {},
+          ),
+          IconButton(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedSettings02,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
+            ),
+            onPressed: () {
+              // TODO: Implement chat settings
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Chat settings coming soon')),
+              );
+            },
           ),
         ],
       ),
       body: Column(
         children: [
-          const Divider(height: 1),
           Expanded(
             child: messagesAsync.when(
               data: (page) {
@@ -218,8 +246,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         color: Color(0xFF0095F6),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        CupertinoIcons.arrow_up_circle_fill,
+                      child: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedSent,
                         color: Colors.white,
                         size: 20,
                       ),

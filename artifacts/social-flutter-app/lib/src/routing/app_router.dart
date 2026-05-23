@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../core/api_client.dart';
 import '../core/app_colors.dart';
 import '../features/auth/presentation/login_screen.dart';
@@ -188,8 +189,8 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: 0,
       leading: Builder(
         builder: (context) => IconButton(
-          icon: const Icon(
-            CupertinoIcons.line_horizontal_3,
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedMenu01,
             color: AppColors.textPrimary,
             size: 22,
           ),
@@ -208,24 +209,24 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         IconButton(
-          icon: const Icon(
-            CupertinoIcons.search,
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedSearch01,
             color: AppColors.textPrimary,
             size: 22,
           ),
           onPressed: () => context.go('/explore'),
         ),
         IconButton(
-          icon: const Icon(
-            CupertinoIcons.bell,
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedNotification01,
             color: AppColors.textPrimary,
             size: 22,
           ),
           onPressed: () => context.go('/notifications'),
         ),
         IconButton(
-          icon: const Icon(
-            CupertinoIcons.chat_bubble,
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedChat01,
             color: AppColors.textPrimary,
             size: 22,
           ),
@@ -233,10 +234,6 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         const SizedBox(width: 4),
       ],
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(0.5),
-        child: Divider(height: 0.5, thickness: 0.5, color: AppColors.border),
-      ),
     );
   }
 }
@@ -262,8 +259,8 @@ class _AppDrawer extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(
-                      CupertinoIcons.arrow_left,
+                    icon: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedArrowLeft01,
                       color: AppColors.textPrimary,
                       size: 22,
                     ),
@@ -293,8 +290,8 @@ class _AppDrawer extends StatelessWidget {
                 ),
                 children: [
                   _DrawerItem(
-                    icon: CupertinoIcons.house,
-                    activeIcon: CupertinoIcons.house_fill,
+                    icon: HugeIcons.strokeRoundedHome01,
+                    activeIcon: HugeIcons.strokeRoundedHome01,
                     label: 'Home',
                     isActive: location == '/feed',
                     onTap: () {
@@ -303,8 +300,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: CupertinoIcons.search,
-                    activeIcon: CupertinoIcons.search,
+                    icon: HugeIcons.strokeRoundedSearch01,
+                    activeIcon: HugeIcons.strokeRoundedSearch01,
                     label: 'Explore',
                     isActive: location == '/explore',
                     onTap: () {
@@ -313,8 +310,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: CupertinoIcons.bell,
-                    activeIcon: CupertinoIcons.bell_fill,
+                    icon: HugeIcons.strokeRoundedNotification01,
+                    activeIcon: HugeIcons.strokeRoundedNotification01,
                     label: 'Notifications',
                     isActive: location == '/notifications',
                     onTap: () {
@@ -323,8 +320,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: CupertinoIcons.chat_bubble,
-                    activeIcon: CupertinoIcons.chat_bubble_fill,
+                    icon: HugeIcons.strokeRoundedChat01,
+                    activeIcon: HugeIcons.strokeRoundedChat01,
                     label: 'Messages',
                     isActive: location == '/messages',
                     onTap: () {
@@ -333,8 +330,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: CupertinoIcons.person,
-                    activeIcon: CupertinoIcons.person_fill,
+                    icon: HugeIcons.strokeRoundedUser,
+                    activeIcon: HugeIcons.strokeRoundedUser,
                     label: 'Profile',
                     isActive: location == '/profile',
                     onTap: () {
@@ -344,8 +341,8 @@ class _AppDrawer extends StatelessWidget {
                   ),
                   const Divider(color: AppColors.border, height: 24),
                   _DrawerItem(
-                    icon: CupertinoIcons.bookmark,
-                    activeIcon: CupertinoIcons.bookmark_fill,
+                    icon: HugeIcons.strokeRoundedBookmark01,
+                    activeIcon: HugeIcons.strokeRoundedBookmark01,
                     label: 'Bookmarks',
                     isActive: location == '/bookmarks',
                     onTap: () {
@@ -354,8 +351,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: CupertinoIcons.settings,
-                    activeIcon: CupertinoIcons.settings_solid,
+                    icon: HugeIcons.strokeRoundedSettings01,
+                    activeIcon: HugeIcons.strokeRoundedSettings01,
                     label: 'Settings',
                     isActive: location == '/settings',
                     onTap: () {
@@ -364,8 +361,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: CupertinoIcons.info,
-                    activeIcon: CupertinoIcons.info_circle_fill,
+                    icon: HugeIcons.strokeRoundedInformationCircle,
+                    activeIcon: HugeIcons.strokeRoundedInformationCircle,
                     label: 'About',
                     isActive: location == '/about',
                     onTap: () {
@@ -390,7 +387,6 @@ class _AppDrawer extends StatelessWidget {
                       child: const Text(
                         'Post',
                         style: TextStyle(
-                          fontFamily: 'Sora',
                           fontWeight: FontWeight.w800,
                           fontSize: 18,
                           color: Colors.white,
@@ -409,8 +405,8 @@ class _AppDrawer extends StatelessWidget {
 }
 
 class _DrawerItem extends StatelessWidget {
-  final IconData icon;
-  final IconData activeIcon;
+  final dynamic icon;
+  final dynamic activeIcon;
   final String label;
   final bool isActive;
   final VoidCallback onTap;
@@ -432,8 +428,8 @@ class _DrawerItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: Row(
           children: [
-            Icon(
-              isActive ? activeIcon : icon,
+            HugeIcon(
+              icon: isActive ? activeIcon : icon,
               size: 26,
               color: AppColors.textPrimary,
             ),
@@ -441,7 +437,6 @@ class _DrawerItem extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontFamily: 'Sora',
                 fontSize: 20,
                 fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
                 color: AppColors.textPrimary,

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../data/search_repository.dart';
 import '../domain/search.dart';
 import '../../feed/domain/post.dart';
@@ -71,11 +72,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       children: [
         // ── Search bar ────────────────────────────────────────────────
         Container(
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            border: Border(
-              bottom: BorderSide(color: AppColors.border, width: 0.5),
-            ),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
           ),
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
           child: Container(
@@ -97,15 +95,18 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                   color: AppColors.mutedForeground,
                   fontSize: 14,
                 ),
-                prefixIcon: const Icon(
-                  CupertinoIcons.search,
-                  color: AppColors.mutedForeground,
-                  size: 20,
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedSearch01,
+                    color: AppColors.mutedForeground,
+                    size: 20,
+                  ),
                 ),
                 suffixIcon: _isSearching
                     ? IconButton(
-                        icon: const Icon(
-                          CupertinoIcons.xmark,
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedCancel01,
                           size: 18,
                           color: AppColors.mutedForeground,
                         ),
@@ -167,8 +168,8 @@ class _ExploreGrid extends ConsumerWidget {
                               Container(color: AppColors.muted),
                           errorWidget: (_, __, ___) => Container(
                             color: AppColors.muted,
-                            child: const Icon(
-                              CupertinoIcons.photo,
+                            child: const HugeIcon(
+                              icon: HugeIcons.strokeRoundedImage01,
                               color: AppColors.mutedForeground,
                               size: 20,
                             ),
@@ -231,8 +232,8 @@ class _SearchResults extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  CupertinoIcons.search,
+                const HugeIcon(
+                  icon: HugeIcons.strokeRoundedSearch01,
                   size: 44,
                   color: AppColors.mutedForeground,
                 ),
@@ -240,7 +241,6 @@ class _SearchResults extends ConsumerWidget {
                 Text(
                   'No results for "$query"',
                   style: const TextStyle(
-                    fontFamily: 'Sora',
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                     color: AppColors.mutedForeground,
@@ -259,7 +259,6 @@ class _SearchResults extends ConsumerWidget {
                 child: Text(
                   'People',
                   style: TextStyle(
-                    fontFamily: 'Sora',
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
                     color: AppColors.textPrimary,
@@ -279,8 +278,8 @@ class _SearchResults extends ConsumerWidget {
                         ? CachedNetworkImageProvider(user.avatarUrl!)
                         : null,
                     child: user.avatarUrl == null
-                        ? const Icon(
-                            CupertinoIcons.person_fill,
+                        ? const HugeIcon(
+                            icon: HugeIcons.strokeRoundedUser,
                             color: AppColors.mutedForeground,
                           )
                         : null,
@@ -290,7 +289,6 @@ class _SearchResults extends ConsumerWidget {
                       Text(
                         user.displayName,
                         style: const TextStyle(
-                          fontFamily: 'Sora',
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                           color: AppColors.textPrimary,
@@ -298,8 +296,8 @@ class _SearchResults extends ConsumerWidget {
                       ),
                       if (user.isVerified) ...[
                         const SizedBox(width: 3),
-                        const Icon(
-                          CupertinoIcons.checkmark_seal_fill,
+                        const HugeIcon(
+                          icon: HugeIcons.strokeRoundedCheckmarkBadge01,
                           size: 14,
                           color: AppColors.verified,
                         ),
@@ -323,7 +321,6 @@ class _SearchResults extends ConsumerWidget {
                 child: Text(
                   'Hashtags',
                   style: TextStyle(
-                    fontFamily: 'Sora',
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
                     color: AppColors.textPrimary,
@@ -356,7 +353,6 @@ class _SearchResults extends ConsumerWidget {
                   title: Text(
                     '#${tag.name}',
                     style: const TextStyle(
-                      fontFamily: 'Sora',
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
@@ -378,7 +374,6 @@ class _SearchResults extends ConsumerWidget {
                 child: Text(
                   'Posts',
                   style: TextStyle(
-                    fontFamily: 'Sora',
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
                     color: AppColors.textPrimary,
@@ -398,8 +393,8 @@ class _SearchResults extends ConsumerWidget {
                         ? CachedNetworkImageProvider(post.author.avatarUrl!)
                         : null,
                     child: post.author.avatarUrl == null
-                        ? const Icon(
-                            CupertinoIcons.person_fill,
+                        ? const HugeIcon(
+                            icon: HugeIcons.strokeRoundedUser,
                             color: AppColors.mutedForeground,
                           )
                         : null,
@@ -407,7 +402,6 @@ class _SearchResults extends ConsumerWidget {
                   title: Text(
                     post.author.displayName,
                     style: const TextStyle(
-                      fontFamily: 'Sora',
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
                       color: AppColors.textPrimary,

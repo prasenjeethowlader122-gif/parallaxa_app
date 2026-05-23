@@ -11,8 +11,10 @@ class Post {
   final String? imageUrl;
   final String? videoUrl;
   final String? location;
+  final Post? repostOf;
   final List<String> hashtags;
   final int likesCount;
+  final int repostsCount;
   final int repliesCount;
   final bool isLiked;
   final bool isSaved;
@@ -26,8 +28,10 @@ class Post {
     this.imageUrl,
     this.videoUrl,
     this.location,
+    this.repostOf,
     required this.hashtags,
     required this.likesCount,
+    required this.repostsCount,
     required this.repliesCount,
     required this.isLiked,
     required this.isSaved,

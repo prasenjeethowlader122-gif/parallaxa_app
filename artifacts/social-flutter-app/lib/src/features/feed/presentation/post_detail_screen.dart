@@ -101,12 +101,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         title: const Text('Post'),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.arrow_left),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(0.5),
-          child: Divider(height: 0.5),
         ),
       ),
       body: Column(
@@ -311,8 +310,8 @@ class _ParentPostView extends StatelessWidget {
                           ),
                           if (post.author.isVerified) ...[
                             const SizedBox(width: 4),
-                            const Icon(
-                              CupertinoIcons.checkmark_seal_fill,
+                            const HugeIcon(
+                              icon: HugeIcons.strokeRoundedCheckmarkBadge01,
                               size: 16,
                               color: AppColors.primary,
                             ),
@@ -330,8 +329,8 @@ class _ParentPostView extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(
-                CupertinoIcons.ellipsis,
+              const HugeIcon(
+                icon: HugeIcons.strokeRoundedMoreHorizontal,
                 size: 20,
                 color: AppColors.mutedForeground,
               ),
@@ -435,18 +434,24 @@ class _ParentPostView extends StatelessWidget {
                 onPressed: () {},
               ),
               IconButton(
-                icon: Icon(
-                  post.isLiked
-                      ? CupertinoIcons.heart_fill
-                      : CupertinoIcons.heart,
+                icon: HugeIcon(
+                  icon: post.isLiked
+                      ? HugeIcons.strokeRoundedFavourite
+                      : HugeIcons.strokeRoundedFavourite,
+                  color: post.isLiked
+                      ? AppColors.like
+                      : AppColors.mutedForeground,
                 ),
                 onPressed: () {},
               ),
               IconButton(
-                icon: Icon(
-                  post.isSaved
-                      ? CupertinoIcons.bookmark_fill
-                      : CupertinoIcons.bookmark,
+                icon: HugeIcon(
+                  icon: post.isSaved
+                      ? HugeIcons.strokeRoundedBookmark01
+                      : HugeIcons.strokeRoundedBookmark01,
+                  color: post.isSaved
+                      ? AppColors.saved
+                      : AppColors.mutedForeground,
                 ),
                 onPressed: () {},
               ),
@@ -552,8 +557,8 @@ class _CommentItemState extends State<_CommentItem> {
                           ),
                           if (post.author.isVerified) ...[
                             const SizedBox(width: 4),
-                            Icon(
-                              CupertinoIcons.checkmark_seal_fill,
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedCheckmarkBadge01,
                               size: widget.depth > 0 ? 12 : 14,
                               color: AppColors.primary,
                             ),
@@ -593,10 +598,8 @@ class _CommentItemState extends State<_CommentItem> {
                         ),
                         const SizedBox(width: 20),
                         _CommentAction(
-                          icon: Icon(
-                            post.isLiked
-                                ? CupertinoIcons.heart_fill
-                                : CupertinoIcons.heart,
+                          icon: HugeIcon(
+                            icon: HugeIcons.strokeRoundedFavourite,
                             size: widget.depth > 0 ? 14 : 16,
                             color: post.isLiked
                                 ? Colors.red

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/domain/user.dart';
 import '../../feed/domain/post.dart';
@@ -95,7 +96,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final postsAsync = ref.watch(userPostsProvider(effectiveUserId));
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: userAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(
@@ -107,8 +107,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                CupertinoIcons.exclamationmark_circle,
+              const HugeIcon(
+                icon: HugeIcons.strokeRoundedAlertCircle,
                 size: 40,
                 color: AppColors.mutedForeground,
               ),
@@ -152,12 +152,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       controller: _tab,
                       tabs: _tabs.map((t) => Tab(text: t)).toList(),
                       labelStyle: const TextStyle(
-                        fontFamily: 'Sora',
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
                       ),
                       unselectedLabelStyle: const TextStyle(
-                        fontFamily: 'Sora',
                         fontWeight: FontWeight.w400,
                         fontSize: 14,
                       ),
@@ -182,7 +180,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   ),
                   // Replies — placeholder
                   _EmptyTab(
-                    icon: CupertinoIcons.chat_bubble,
+                    icon: HugeIcons.strokeRoundedChat01,
                     message: 'No replies yet',
                   ),
                   // Media — grid filtered to posts with images
@@ -193,7 +191,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   ),
                   // Likes — placeholder
                   _EmptyTab(
-                    icon: CupertinoIcons.heart,
+                    icon: HugeIcons.strokeRoundedFavourite,
                     message: 'No liked posts yet',
                   ),
                 ],
@@ -242,7 +240,6 @@ class _ProfileHeader extends StatelessWidget {
                 child: Text(
                   user.displayName,
                   style: const TextStyle(
-                    fontFamily: 'Sora',
                     fontWeight: FontWeight.w800,
                     fontSize: 17,
                     color: AppColors.textPrimary,
@@ -253,8 +250,8 @@ class _ProfileHeader extends StatelessWidget {
               ),
               if (isOwnProfile)
                 IconButton(
-                  icon: const Icon(
-                    CupertinoIcons.square_arrow_right,
+                  icon: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedLogout01,
                     color: AppColors.textPrimary,
                     size: 22,
                   ),
@@ -262,8 +259,8 @@ class _ProfileHeader extends StatelessWidget {
                 )
               else
                 IconButton(
-                  icon: const Icon(
-                    CupertinoIcons.ellipsis,
+                  icon: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedMoreHorizontal,
                     color: AppColors.textPrimary,
                     size: 22,
                   ),
@@ -313,8 +310,8 @@ class _ProfileHeader extends StatelessWidget {
                         ? CachedNetworkImageProvider(user.avatarUrl!)
                         : null,
                     child: user.avatarUrl == null
-                        ? const Icon(
-                            CupertinoIcons.person_fill,
+                        ? const HugeIcon(
+                            icon: HugeIcons.strokeRoundedUser,
                             size: 38,
                             color: AppColors.mutedForeground,
                           )
@@ -345,7 +342,6 @@ class _ProfileHeader extends StatelessWidget {
                         child: const Text(
                           'Edit profile',
                           style: TextStyle(
-                            fontFamily: 'Sora',
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
                             color: AppColors.textPrimary,
@@ -372,7 +368,6 @@ class _ProfileHeader extends StatelessWidget {
                             child: const Text(
                               'Message',
                               style: TextStyle(
-                                fontFamily: 'Sora',
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14,
                                 color: AppColors.textPrimary,
@@ -416,7 +411,6 @@ class _ProfileHeader extends StatelessWidget {
                               child: Text(
                                 isFollowing ? 'Following' : 'Follow',
                                 style: const TextStyle(
-                                  fontFamily: 'Sora',
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
                                 ),
@@ -440,7 +434,6 @@ class _ProfileHeader extends StatelessWidget {
                   Text(
                     user.displayName,
                     style: const TextStyle(
-                      fontFamily: 'Sora',
                       fontWeight: FontWeight.w800,
                       fontSize: 19,
                       color: AppColors.textPrimary,
@@ -448,8 +441,8 @@ class _ProfileHeader extends StatelessWidget {
                   ),
                   if (user.isVerified) ...[
                     const SizedBox(width: 4),
-                    const Icon(
-                      CupertinoIcons.checkmark_seal_fill,
+                    const HugeIcon(
+                      icon: HugeIcons.strokeRoundedCheckmarkBadge01,
                       size: 18,
                       color: AppColors.verified,
                     ),
@@ -479,8 +472,8 @@ class _ProfileHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(
-                      CupertinoIcons.link,
+                    const HugeIcon(
+                      icon: HugeIcons.strokeRoundedLink01,
                       size: 14,
                       color: AppColors.primary,
                     ),
@@ -534,7 +527,6 @@ class _StatChip extends StatelessWidget {
         Text(
           _fmt(count),
           style: const TextStyle(
-            fontFamily: 'Sora',
             fontWeight: FontWeight.w700,
             fontSize: 15,
             color: AppColors.textPrimary,
@@ -570,9 +562,8 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
       ),
       child: tabBar,
     );
@@ -618,8 +609,8 @@ class _PostsGrid extends StatelessWidget {
         if (posts.isEmpty) {
           return _EmptyTab(
             icon: mediaOnly
-                ? CupertinoIcons.photo_on_rectangle
-                : CupertinoIcons.doc_text,
+                ? HugeIcons.strokeRoundedImage01
+                : HugeIcons.strokeRoundedNote01,
             message: mediaOnly ? 'No media yet' : 'No posts yet',
           );
         }
@@ -661,8 +652,8 @@ class _GridTile extends StatelessWidget {
             placeholder: (_, __) => Container(color: AppColors.muted),
             errorWidget: (_, __, ___) => Container(
               color: AppColors.muted,
-              child: const Icon(
-                CupertinoIcons.photo,
+              child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedImage01,
                 color: AppColors.mutedForeground,
                 size: 20,
               ),
@@ -683,7 +674,7 @@ class _GridTile extends StatelessWidget {
 }
 
 class _EmptyTab extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final String message;
 
   const _EmptyTab({required this.icon, required this.message});
@@ -694,16 +685,21 @@ class _EmptyTab extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 44,
-            color: AppColors.mutedForeground.withOpacity(0.5),
-          ),
+          icon is IconData
+              ? Icon(
+                  icon as IconData,
+                  size: 44,
+                  color: AppColors.mutedForeground.withOpacity(0.5),
+                )
+              : HugeIcon(
+                  icon: icon,
+                  size: 44,
+                  color: AppColors.mutedForeground.withOpacity(0.5),
+                ),
           const SizedBox(height: 14),
           Text(
             message,
             style: const TextStyle(
-              fontFamily: 'Sora',
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.mutedForeground,

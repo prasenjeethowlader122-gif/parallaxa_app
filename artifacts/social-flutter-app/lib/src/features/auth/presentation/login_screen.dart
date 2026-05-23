@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../data/auth_repository.dart';
 import '../../../core/api_client.dart';
 import '../../../core/app_colors.dart';
@@ -145,7 +146,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -173,7 +173,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppColors.slate900,
-                  fontFamily: 'Sora',
                   letterSpacing: -0.5,
                 ),
               ),
@@ -183,7 +182,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 style: TextStyle(
                   fontSize: 15,
                   color: AppColors.slate500,
-                  fontFamily: 'Sora',
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -203,8 +201,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        CupertinoIcons.exclamationmark_circle,
+                      const HugeIcon(
+                        icon: HugeIcons.strokeRoundedAlertCircle,
                         color: Color(0xFFDC2626),
                         size: 20,
                       ),
@@ -216,7 +214,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: Color(0xFFDC2626),
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
-                            fontFamily: 'Sora',
                           ),
                         ),
                       ),
@@ -231,7 +228,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 opacity: _showTotpInput ? 0.45 : 1.0,
                 child: FloatingLabelInput(
                   label: "Email Address",
-                  icon: CupertinoIcons.mail,
+                  icon: HugeIcons.strokeRoundedMail01,
                   controller: _emailController,
                   error: _errors['email'],
                   keyboardType: TextInputType.emailAddress,
@@ -246,7 +243,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 opacity: _showTotpInput ? 0.45 : 1.0,
                 child: FloatingLabelInput(
                   label: "Password",
-                  icon: CupertinoIcons.lock,
+                  icon: HugeIcons.strokeRoundedLockPassword,
                   controller: _passwordController,
                   error: _errors['password'],
                   secureTextEntry: !_showPassword,
@@ -261,10 +258,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   right: IconButton(
                     onPressed: () =>
                         setState(() => _showPassword = !_showPassword),
-                    icon: Icon(
-                      _showPassword
-                          ? CupertinoIcons.eye_slash
-                          : CupertinoIcons.eye,
+                    icon: HugeIcon(
+                      icon: _showPassword
+                          ? HugeIcons.strokeRoundedViewOffSlash
+                          : HugeIcons.strokeRoundedView,
                       color: _errors['password'] != null
                           ? const Color(0xFFDC2626)
                           : AppColors.slate500,
@@ -290,7 +287,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: Color(0xFF0095F6),
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
-                          fontFamily: 'Sora',
                         ),
                       ),
                     ),
@@ -301,7 +297,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (_showTotpInput) ...[
                 FloatingLabelInput(
                   label: "6-digit 2FA Code",
-                  icon: CupertinoIcons.shield,
+                  icon: HugeIcons.strokeRoundedShield01,
                   controller: _totpController,
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.done,
@@ -327,7 +323,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: Color(0xFF0095F6),
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
-                          fontFamily: 'Sora',
                         ),
                       ),
                     ),
@@ -364,7 +359,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            fontFamily: 'Sora',
                           ),
                         ),
                 ),
@@ -380,7 +374,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: TextStyle(
                       color: AppColors.slate600,
                       fontSize: 14,
-                      fontFamily: 'Sora',
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -392,7 +385,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         color: Color(0xFF0095F6),
                         fontWeight: FontWeight.w800,
                         fontSize: 14,
-                        fontFamily: 'Sora',
                       ),
                     ),
                   ),
@@ -427,7 +419,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   color: AppColors.slate400,
                   fontSize: 12,
                   height: 1.5,
-                  fontFamily: 'Sora',
                   fontWeight: FontWeight.w500,
                 ),
               ),

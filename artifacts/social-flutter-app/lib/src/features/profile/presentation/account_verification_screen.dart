@@ -1,9 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
-import '../../auth/data/auth_repository.dart';
-import '../../auth/domain/user.dart';
 import '../../../core/app_colors.dart';
 
 class AccountVerificationScreen extends ConsumerStatefulWidget {
@@ -70,7 +69,10 @@ class _AccountVerificationScreenState
       appBar: AppBar(
         title: const Text('Verification'),
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.arrow_left),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -124,8 +126,8 @@ class _AccountVerificationScreenState
               const Center(
                 child: Column(
                   children: [
-                    Icon(
-                      CupertinoIcons.info_circle,
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedInformationCircle,
                       size: 64,
                       color: AppColors.primary,
                     ),
@@ -150,14 +152,14 @@ class _AccountVerificationScreenState
               _VerificationOption(
                 title: 'Email Verification',
                 subtitle: 'Verify your email address',
-                icon: CupertinoIcons.mail,
+                icon: HugeIcons.strokeRoundedMail01,
                 onTap: () => setState(() => _verifyingType = 'email'),
               ),
               const SizedBox(height: 16),
               _VerificationOption(
                 title: 'Phone Verification',
                 subtitle: 'Connect your phone number',
-                icon: CupertinoIcons.phone,
+                icon: HugeIcons.strokeRoundedCall,
                 onTap: () => setState(() => _verifyingType = 'phone'),
               ),
               const SizedBox(height: 32),
@@ -192,7 +194,7 @@ class _AccountVerificationScreenState
 class _VerificationOption extends StatelessWidget {
   final String title;
   final String subtitle;
-  final IconData icon;
+  final dynamic icon;
   final VoidCallback onTap;
 
   const _VerificationOption({
@@ -221,7 +223,9 @@ class _VerificationOption extends StatelessWidget {
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: AppColors.primary),
+              child: icon is IconData
+                  ? Icon(icon as IconData, color: AppColors.primary)
+                  : HugeIcon(icon: icon, color: AppColors.primary),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -242,8 +246,8 @@ class _VerificationOption extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
-              CupertinoIcons.chevron_right,
+            const HugeIcon(
+              icon: HugeIcons.strokeRoundedArrowRight01,
               size: 16,
               color: AppColors.mutedForeground,
             ),

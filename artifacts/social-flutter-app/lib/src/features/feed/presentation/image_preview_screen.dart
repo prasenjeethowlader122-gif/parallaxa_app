@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
@@ -105,19 +106,25 @@ class ImagePreviewScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.black,
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.xmark, color: Colors.white),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedCancel01,
+            color: Colors.white,
+          ),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              CupertinoIcons.cloud_download,
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedCloudDownload,
               color: Colors.white,
             ),
             onPressed: () => _downloadImage(context),
           ),
           IconButton(
-            icon: const Icon(CupertinoIcons.repeat, color: Colors.white),
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedRepeat,
+              color: Colors.white,
+            ),
             onPressed: () {
               // Reuse/Repost logic
               context.pop();
@@ -134,8 +141,8 @@ class ImagePreviewScreen extends StatelessWidget {
             imageUrl: imageUrl,
             fit: BoxFit.contain,
             placeholder: (_, __) => const CircularProgressIndicator(),
-            errorWidget: (_, __, ___) => const Icon(
-              CupertinoIcons.exclamationmark_circle,
+            errorWidget: (_, __, ___) => const HugeIcon(
+              icon: HugeIcons.strokeRoundedAlertCircle,
               color: Colors.white,
             ),
           ),

@@ -98,6 +98,10 @@ class PostRepository {
     final response = await _dio.get('/posts/$postId/replies');
     return PostPage.fromJson(response.data);
   }
+
+  Future<void> repostPost(String postId) async {
+    await _dio.post('/posts/$postId/repost');
+  }
 }
 
 final postDetailProvider = FutureProvider.family<Post, String>((ref, id) {

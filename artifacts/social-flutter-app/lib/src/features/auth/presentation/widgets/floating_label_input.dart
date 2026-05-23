@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/app_colors.dart';
 
 class FloatingLabelInput extends StatefulWidget {
@@ -12,7 +13,7 @@ class FloatingLabelInput extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final VoidCallback? onEditingComplete;
   final ValueChanged<String>? onFieldSubmitted;
-  final IconData? icon;
+  final dynamic icon;
   final Widget? right;
   final bool editable;
   final FocusNode? focusNode;
@@ -133,8 +134,6 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
         ? AppColors.primary
         : AppColors.slate200;
 
-    // The label floats to top: -10 when fully animated.
-    // We add 12px of top space so it never overlaps the widget above.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -145,7 +144,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
             Container(
               constraints: const BoxConstraints(minHeight: 56),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: borderColor, width: 1.5),
               ),
@@ -154,15 +153,25 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                   if (widget.icon != null)
                     Padding(
                       padding: const EdgeInsets.only(left: 16),
-                      child: Icon(
-                        widget.icon!,
-                        color: isFocused
-                            ? AppColors.primary
-                            : hasError
-                            ? const Color(0xFFDC2626)
-                            : AppColors.slate500,
-                        size: 20,
-                      ),
+                      child: widget.icon is IconData
+                          ? Icon(
+                              widget.icon as IconData,
+                              color: isFocused
+                                  ? AppColors.primary
+                                  : hasError
+                                  ? const Color(0xFFDC2626)
+                                  : AppColors.slate500,
+                              size: 20,
+                            )
+                          : HugeIcon(
+                              icon: widget.icon,
+                              color: isFocused
+                                  ? AppColors.primary
+                                  : hasError
+                                  ? const Color(0xFFDC2626)
+                                  : AppColors.slate500,
+                              size: 20,
+                            ),
                     ),
                   Expanded(
                     child: Padding(
@@ -183,10 +192,11 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                         textCapitalization: widget.textCapitalization,
                         autocorrect: widget.autoCorrect,
                         cursorColor: AppColors.primary,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
-                          color: AppColors.slate900,
-                          fontFamily: 'Sora',
+                          color: isFocused || _textController.text.isNotEmpty
+                              ? Theme.of(context).textTheme.bodyLarge?.color
+                              : AppColors.slate900,
                           fontWeight: FontWeight.w500,
                         ),
                         decoration: InputDecoration(
@@ -220,7 +230,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                   top: 16 - (_animation.value * 26),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    color: Colors.white,
+                    color: Theme.of(context).scaffoldBackgroundColor,
                     child: Text(
                       widget.label,
                       style: TextStyle(
@@ -230,7 +240,6 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                             : isFocused
                             ? AppColors.primary
                             : AppColors.slate400,
-                        fontFamily: 'Sora',
                         fontWeight: _animation.value > 0
                             ? FontWeight.w600
                             : FontWeight.w500,
@@ -247,8 +256,8 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
             padding: const EdgeInsets.only(top: 6, left: 4),
             child: Row(
               children: [
-                const Icon(
-                  CupertinoIcons.info,
+                const HugeIcon(
+                  icon: HugeIcons.strokeRoundedAlertCircle,
                   color: Color(0xFFDC2626),
                   size: 14,
                 ),
@@ -260,7 +269,6 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                       color: Color(0xFFDC2626),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      fontFamily: 'Sora',
                     ),
                   ),
                 ),

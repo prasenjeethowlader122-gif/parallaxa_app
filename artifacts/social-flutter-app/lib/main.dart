@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'src/routing/app_router.dart';
 import 'src/core/api_client.dart';
@@ -9,6 +10,8 @@ import 'src/core/storage_service.dart';
 import 'src/core/app_colors.dart';
 import 'src/core/widgets/processing_overlay.dart';
 import 'src/core/ota_provider.dart';
+import 'src/core/theme_provider.dart';
+import 'src/core/localization_provider.dart';
 
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
@@ -42,145 +45,157 @@ class MainApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeProvider);
+    final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: scaffoldMessengerKey,
       routerConfig: router,
+      themeMode: themeMode,
+      locale: locale,
       builder: (context, child) {
         return OTAUpdateListener(child: ProcessingOverlay(child: child!));
       },
-      theme: ThemeData(
-        fontFamily: 'Sora',
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          brightness: Brightness.light,
-          surface: AppColors.background,
-        ),
-        scaffoldBackgroundColor: AppColors.background,
+      theme: _buildTheme(Brightness.light),
+      darkTheme: _buildTheme(Brightness.dark),
+    );
+  }
 
-        // AppBar
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.background,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          surfaceTintColor: Colors.transparent,
-          titleTextStyle: TextStyle(
-            fontFamily: 'Sora',
-            fontWeight: FontWeight.w800,
-            fontSize: 20,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.3,
-          ),
-          iconTheme: IconThemeData(color: AppColors.textPrimary),
-        ),
+  ThemeData _buildTheme(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    final baseColor = isDark ? Colors.white : AppColors.textPrimary;
+    final bgColor = isDark ? const Color(0xFF0F172A) : AppColors.background;
+    final cardColor = isDark ? const Color(0xFF1E293B) : AppColors.card;
+    final borderColor = isDark ? const Color(0xFF334155) : AppColors.border;
 
-        // Elevated button defaults
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: const StadiumBorder(),
-            textStyle: const TextStyle(
-              fontFamily: 'Sora',
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
-            ),
-          ),
-        ),
+    return ThemeData(
+      useMaterial3: true,
+      brightness: brightness,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: AppColors.primary,
+        brightness: brightness,
+        surface: bgColor,
+      ),
+      scaffoldBackgroundColor: bgColor,
+      textTheme: GoogleFonts.ubuntuTextTheme().apply(
+        bodyColor: baseColor,
+        displayColor: baseColor,
+      ),
 
-        // Outlined button
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.textPrimary,
-            side: const BorderSide(color: AppColors.border),
-            shape: const StadiumBorder(),
-            textStyle: const TextStyle(
-              fontFamily: 'Sora',
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-            ),
-          ),
+      // AppBar
+      appBarTheme: AppBarTheme(
+        backgroundColor: bgColor,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: GoogleFonts.ubuntu(
+          fontWeight: FontWeight.w700,
+          fontSize: 20,
+          color: baseColor,
         ),
+        iconTheme: IconThemeData(color: baseColor),
+      ),
 
-        // Text button
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            textStyle: const TextStyle(
-              fontFamily: 'Sora',
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-            ),
-          ),
-        ),
-
-        // Input decoration
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: AppColors.muted,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-          ),
-          hintStyle: const TextStyle(
-            color: AppColors.mutedForeground,
-            fontSize: 15,
-          ),
-          labelStyle: const TextStyle(
-            color: AppColors.mutedForeground,
-            fontSize: 14,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
-        ),
-
-        // Divider
-        dividerColor: AppColors.border,
-        dividerTheme: const DividerThemeData(
-          color: AppColors.border,
-          thickness: 0.5,
-          space: 0.5,
-        ),
-
-        // FAB
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      // Elevated button defaults
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          elevation: 6,
-          shape: CircleBorder(),
-        ),
-
-        // Tabs
-        tabBarTheme: const TabBarThemeData(
-          labelColor: AppColors.foreground,
-          unselectedLabelColor: AppColors.mutedForeground,
-          indicatorColor: AppColors.foreground,
-          indicatorSize: TabBarIndicatorSize.label,
-          dividerColor: Colors.transparent,
-          labelStyle: TextStyle(
-            fontFamily: 'Sora',
+          elevation: 0,
+          shape: const StadiumBorder(),
+          textStyle: GoogleFonts.ubuntu(
             fontWeight: FontWeight.w700,
             fontSize: 15,
           ),
-          unselectedLabelStyle: TextStyle(
-            fontFamily: 'Sora',
-            fontWeight: FontWeight.w400,
-            fontSize: 15,
+        ),
+      ),
+
+      // Outlined button
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: baseColor,
+          side: BorderSide(color: borderColor),
+          shape: const StadiumBorder(),
+          textStyle: GoogleFonts.ubuntu(
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
           ),
+        ),
+      ),
+
+      // Text button
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          textStyle: GoogleFonts.ubuntu(
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+          ),
+        ),
+      ),
+
+      // Input decoration
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: isDark ? const Color(0xFF1E293B) : AppColors.muted,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+        hintStyle: TextStyle(
+          color: isDark ? Colors.grey : AppColors.mutedForeground,
+          fontSize: 15,
+        ),
+        labelStyle: TextStyle(
+          color: isDark ? Colors.grey : AppColors.mutedForeground,
+          fontSize: 14,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+      ),
+
+      // Divider
+      dividerColor: borderColor,
+      dividerTheme: DividerThemeData(
+        color: borderColor,
+        thickness: 0.5,
+        space: 0.5,
+      ),
+
+      // FAB
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 6,
+        shape: CircleBorder(),
+      ),
+
+      // Tabs
+      tabBarTheme: TabBarThemeData(
+        labelColor: baseColor,
+        unselectedLabelColor: isDark ? Colors.grey : AppColors.mutedForeground,
+        indicatorColor: baseColor,
+        indicatorSize: TabBarIndicatorSize.label,
+        dividerColor: Colors.transparent,
+        labelStyle: GoogleFonts.ubuntu(
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+        ),
+        unselectedLabelStyle: GoogleFonts.ubuntu(
+          fontWeight: FontWeight.w400,
+          fontSize: 15,
         ),
       ),
     );
@@ -226,7 +241,6 @@ class _OTAUpdateListenerState extends ConsumerState<OTAUpdateListener> {
         content: Text(
           message,
           style: const TextStyle(
-            fontFamily: 'Sora',
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),

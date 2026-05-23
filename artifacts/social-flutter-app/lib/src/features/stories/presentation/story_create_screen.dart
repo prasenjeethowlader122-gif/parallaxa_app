@@ -2,10 +2,10 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../data/story_repository.dart';
-import '../../../core/app_colors.dart';
 
 class StoryCreateScreen extends ConsumerStatefulWidget {
   const StoryCreateScreen({super.key});
@@ -61,7 +61,10 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.xmark, color: Colors.white),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedCancel01,
+            color: Colors.white,
+          ),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -85,8 +88,8 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    CupertinoIcons.camera_fill,
+                  const HugeIcon(
+                    icon: HugeIcons.strokeRoundedCamera01,
                     color: Colors.white,
                     size: 64,
                   ),
