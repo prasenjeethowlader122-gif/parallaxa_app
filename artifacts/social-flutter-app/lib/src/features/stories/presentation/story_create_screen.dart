@@ -31,20 +31,17 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
 
     setState(() => _isUploading = true);
     try {
-      // In a real app, you'd upload the image to S3/Firebase and get a URL
-      // For now, we'll simulate it by calling the repository with a placeholder URL
-      await ref
-          .read(storyRepositoryProvider)
-          .createStory(
-            mediaUrl: 'https://via.placeholder.com/1080x1920',
-            mediaType: 'image',
-          );
+      final repo = ref.read(storyRepositoryProvider);
+      final url = await repo.uploadFile(_image!.path);
+
+      await repo.createStory(mediaUrl: url, mediaType: 'image');
       if (mounted) context.pop();
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }

@@ -11,6 +11,7 @@ import messagesRouter from "./messages";
 import searchRouter from "./search";
 import savedRouter from "./saved";
 import adminRouter from "./admin";
+import uploadRouter from "./upload";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(messagesRouter);
 router.use(searchRouter);
 router.use(savedRouter);
 router.use(adminRouter);
+router.use(uploadRouter);
 
 export default router;

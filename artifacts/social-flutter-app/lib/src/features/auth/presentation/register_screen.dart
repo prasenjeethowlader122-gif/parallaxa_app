@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -13,6 +12,7 @@ import '../data/auth_repository.dart';
 import '../../../core/api_client.dart';
 import '../../../core/app_colors.dart';
 import '../../../core/processing_provider.dart';
+import '../../../core/localization_provider.dart';
 import 'widgets/floating_label_input.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -74,6 +74,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   bool _validateStep() {
     final Map<String, String> newErrors = {};
+    // Note: L10n could be used here for dynamic error messages if added to L10n class
 
     if (_step == 0) {
       if (_displayNameController.text.trim().isEmpty) {
@@ -207,7 +208,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_validateStep()) return;
 
-    ref.read(processingProvider.notifier).show("Creating account...");
+    final l10n = ref.read(l10nProvider);
+    ref.read(processingProvider.notifier).show(l10n.get('create_account'));
     setState(() => _isLoading = true);
     try {
       final authRepo = ref.read(authRepositoryProvider);
@@ -234,7 +236,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (mounted) {
         String errorMessage = "Registration failed. Please try again.";
         if (e is DioException) {
-          errorMessage = e.response?.data['message'] ?? errorMessage;
+          errorMessage =
+              e.response?.data['message'] ??
+              e.response?.data['error'] ??
+              errorMessage;
         } else if (e.toString().contains('409')) {
           errorMessage = "Username or email already taken";
         }
@@ -320,11 +325,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 
-  Widget _renderStep() {
+  Widget _renderStep(L10n l10n) {
     if (_step == 0) {
       return FloatingLabelInput(
         key: const ValueKey(0),
-        label: "Full Name",
+        label: l10n.get('display_name'),
         icon: HugeIcons.strokeRoundedUser,
         controller: _displayNameController,
         error: _errors['displayName'],
@@ -343,7 +348,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             onTap: _isLoading ? null : _pickDateOfBirth,
             child: AbsorbPointer(
               child: FloatingLabelInput(
-                label: "Birthday (tap to select)",
+                label: l10n.get('birthday'),
                 icon: HugeIcons.strokeRoundedCalendar01,
                 controller: _dateOfBirthController,
                 error: _errors['dateOfBirth'],
@@ -383,7 +388,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } else if (_step == 2) {
       return FloatingLabelInput(
         key: const ValueKey(2),
-        label: "Email Address",
+        label: l10n.get('email'),
         icon: HugeIcons.strokeRoundedMail01,
         controller: _emailController,
         error: _errors['email'],
@@ -396,7 +401,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } else if (_step == 3) {
       return FloatingLabelInput(
         key: const ValueKey(3),
-        label: "Password",
+        label: l10n.get('password'),
         icon: HugeIcons.strokeRoundedLockPassword,
         controller: _passwordController,
         error: _errors['password'],
@@ -506,7 +511,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FloatingLabelInput(
-            label: "Username",
+            label: l10n.get('username'),
             icon: HugeIcons.strokeRoundedUserCircle,
             controller: _usernameController,
             error: _errors['username'],
@@ -619,6 +624,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = ref.watch(l10nProvider);
     final isLastStep = _step == _totalSteps - 1;
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -762,7 +768,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ],
 
               // Step content
-              _renderStep(),
+              _renderStep(l10n),
 
               // Spacing before action area
               const SizedBox(height: 8),
@@ -871,7 +877,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              isLastStep ? "Create account" : "Continue",
+                              isLastStep
+                                  ? l10n.get('create_account')
+                                  : l10n.get('continue'),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
@@ -920,9 +928,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      "Already have an account? ",
-                      style: TextStyle(
+                    Text(
+                      "${l10n.get('already_have_account')} ",
+                      style: const TextStyle(
                         color: AppColors.slate600,
                         fontSize: 14,
 
@@ -931,9 +939,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     GestureDetector(
                       onTap: () => context.pop(),
-                      child: const Text(
-                        'Sign in',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.get('sign_in'),
+                        style: const TextStyle(
                           color: Color(0xFF0095F6),
                           fontWeight: FontWeight.w800,
                           fontSize: 14,

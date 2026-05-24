@@ -1,17 +1,18 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/domain/user.dart';
 import '../../feed/domain/post.dart';
+import '../../feed/presentation/post_card.dart';
 import '../data/profile_repository.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/api_client.dart';
 import '../../../core/processing_provider.dart';
+import '../../../core/localization_provider.dart';
 import '../../../core/app_colors.dart';
 import '../../../core/widgets/ad_banner_widget.dart';
+import 'widgets/user_avatar.dart';
 
 final userProfileProvider = FutureProvider.family<User, String>((ref, userId) {
   return ref.watch(profileRepositoryProvider).getUserProfile(userId);
@@ -38,7 +39,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   bool? _isFollowing;
   bool _isFollowLoading = false;
   late final TabController _tab;
-  static const _tabs = ['Posts', 'Replies', 'Media', 'Likes'];
 
   String get effectiveUserId => widget.userId;
 
@@ -51,7 +51,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: _tabs.length, vsync: this);
+    _tab = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -92,6 +92,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = ref.watch(l10nProvider);
+    final tabs = [
+      l10n.get('posts'),
+      l10n.get('replies'),
+      l10n.get('media'),
+      l10n.get('likes'),
+    ];
     final userAsync = ref.watch(userProfileProvider(effectiveUserId));
     final postsAsync = ref.watch(userPostsProvider(effectiveUserId));
 
@@ -103,7 +110,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             strokeWidth: 2,
           ),
         ),
-        error: (_, __) => Center(
+        error: (context, error) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -143,6 +150,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     isFollowLoading: _isFollowLoading,
                     onFollow: () => _toggleFollow(user),
                     onLogout: _logout,
+                    l10n: l10n,
                   ),
                 ),
                 SliverPersistentHeader(
@@ -150,7 +158,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   delegate: _TabBarDelegate(
                     TabBar(
                       controller: _tab,
-                      tabs: _tabs.map((t) => Tab(text: t)).toList(),
+                      tabs: tabs.map((t) => Tab(text: t)).toList(),
                       labelStyle: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
@@ -173,8 +181,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               body: TabBarView(
                 controller: _tab,
                 children: [
-                  // Posts tab — grid
-                  _PostsGrid(
+                  // Posts tab — list
+                  _PostsList(
                     postsAsync: postsAsync,
                     isOwnProfile: isOwnProfile,
                   ),
@@ -183,11 +191,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     icon: HugeIcons.strokeRoundedChat01,
                     message: 'No replies yet',
                   ),
-                  // Media — grid filtered to posts with images
-                  _PostsGrid(
+                  // Media — list filtered to posts with images
+                  _PostsList(
                     postsAsync: postsAsync,
                     mediaOnly: true,
                     isOwnProfile: isOwnProfile,
+                    l10n: l10n,
                   ),
                   // Likes — placeholder
                   _EmptyTab(
@@ -213,6 +222,7 @@ class _ProfileHeader extends StatelessWidget {
   final bool isFollowLoading;
   final VoidCallback onFollow;
   final VoidCallback onLogout;
+  final L10n l10n;
 
   const _ProfileHeader({
     required this.user,
@@ -221,6 +231,7 @@ class _ProfileHeader extends StatelessWidget {
     required this.isFollowLoading,
     required this.onFollow,
     required this.onLogout,
+    required this.l10n,
   });
 
   @override
@@ -303,19 +314,11 @@ class _ProfileHeader extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.background, width: 3),
                   ),
-                  child: CircleAvatar(
-                    radius: 38,
-                    backgroundColor: AppColors.muted,
-                    backgroundImage: user.avatarUrl != null
-                        ? CachedNetworkImageProvider(user.avatarUrl!)
-                        : null,
-                    child: user.avatarUrl == null
-                        ? const HugeIcon(
-                            icon: HugeIcons.strokeRoundedUser,
-                            size: 38,
-                            color: AppColors.mutedForeground,
-                          )
-                        : null,
+                  child: UserAvatar(
+                    uri: user.avatarUrl,
+                    size: 76,
+                    hasStory: user.hasStory,
+                    hasUnviewedStory: user.hasUnviewedStory,
                   ),
                 ),
               ),
@@ -339,9 +342,9 @@ class _ProfileHeader extends StatelessWidget {
                           ),
                           minimumSize: Size.zero,
                         ),
-                        child: const Text(
-                          'Edit profile',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.get('edit_profile'),
+                          style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
                             color: AppColors.textPrimary,
@@ -365,9 +368,9 @@ class _ProfileHeader extends StatelessWidget {
                               ),
                               minimumSize: Size.zero,
                             ),
-                            child: const Text(
-                              'Message',
-                              style: TextStyle(
+                            child: Text(
+                              l10n.get('message'),
+                              style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14,
                                 color: AppColors.textPrimary,
@@ -409,7 +412,9 @@ class _ProfileHeader extends StatelessWidget {
                                 minimumSize: Size.zero,
                               ),
                               child: Text(
-                                isFollowing ? 'Following' : 'Follow',
+                                isFollowing
+                                    ? l10n.get('following')
+                                    : l10n.get('follow'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
@@ -493,9 +498,15 @@ class _ProfileHeader extends StatelessWidget {
               // ── Stats row (Following X · Followers X) ────────────
               Row(
                 children: [
-                  _StatChip(count: user.followingCount, label: 'Following'),
+                  _StatChip(
+                    count: user.followingCount,
+                    label: l10n.get('following'),
+                  ),
                   const SizedBox(width: 16),
-                  _StatChip(count: user.followersCount, label: 'Followers'),
+                  _StatChip(
+                    count: user.followersCount,
+                    label: l10n.get('followers'),
+                  ),
                 ],
               ),
               const SizedBox(height: 14),
@@ -573,17 +584,19 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(_TabBarDelegate oldDelegate) => false;
 }
 
-// ─── Posts grid ───────────────────────────────────────────────────────────────
+// ─── Posts List ───────────────────────────────────────────────────────────────
 
-class _PostsGrid extends StatelessWidget {
+class _PostsList extends StatelessWidget {
   final AsyncValue<PostPage> postsAsync;
   final bool mediaOnly;
   final bool isOwnProfile;
+  final L10n? l10n;
 
-  const _PostsGrid({
+  const _PostsList({
     required this.postsAsync,
     this.mediaOnly = false,
     required this.isOwnProfile,
+    this.l10n,
   });
 
   @override
@@ -595,7 +608,7 @@ class _PostsGrid extends StatelessWidget {
           strokeWidth: 2,
         ),
       ),
-      error: (_, __) => const Center(
+      error: (context, error) => const Center(
         child: Text(
           'Could not load posts',
           style: TextStyle(color: AppColors.mutedForeground),
@@ -617,59 +630,27 @@ class _PostsGrid extends StatelessWidget {
 
         final showAd = !isOwnProfile;
 
-        return GridView.builder(
+        return ListView.separated(
           padding: EdgeInsets.zero,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 1,
-            mainAxisSpacing: 1,
-          ),
           itemCount: posts.length + (showAd ? 1 : 0),
-          itemBuilder: (_, i) {
+          separatorBuilder: (context, index) => const Divider(
+            height: 0.5,
+            thickness: 0.5,
+            color: AppColors.border,
+          ),
+          itemBuilder: (context, i) {
             if (showAd && i == 0) {
-              return const Center(child: AdBannerWidget());
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Center(child: AdBannerWidget()),
+              );
             }
             final postIndex = showAd ? i - 1 : i;
-            return _GridTile(post: posts[postIndex]);
+            return PostCard(post: posts[postIndex]);
           },
         );
       },
     );
-  }
-}
-
-class _GridTile extends StatelessWidget {
-  final Post post;
-
-  const _GridTile({required this.post});
-
-  @override
-  Widget build(BuildContext context) {
-    return post.imageUrl != null
-        ? CachedNetworkImage(
-            imageUrl: post.imageUrl!,
-            fit: BoxFit.cover,
-            placeholder: (_, __) => Container(color: AppColors.muted),
-            errorWidget: (_, __, ___) => Container(
-              color: AppColors.muted,
-              child: const HugeIcon(
-                icon: HugeIcons.strokeRoundedImage01,
-                color: AppColors.mutedForeground,
-                size: 20,
-              ),
-            ),
-          )
-        : Container(
-            color: AppColors.muted,
-            alignment: Alignment.center,
-            padding: const EdgeInsets.all(8),
-            child: Text(
-              post.content ?? '',
-              style: const TextStyle(fontSize: 11, color: AppColors.foreground),
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-            ),
-          );
   }
 }
 
@@ -689,12 +670,12 @@ class _EmptyTab extends StatelessWidget {
               ? Icon(
                   icon as IconData,
                   size: 44,
-                  color: AppColors.mutedForeground.withOpacity(0.5),
+                  color: AppColors.mutedForeground.withValues(alpha: 0.5),
                 )
               : HugeIcon(
                   icon: icon,
                   size: 44,
-                  color: AppColors.mutedForeground.withOpacity(0.5),
+                  color: AppColors.mutedForeground.withValues(alpha: 0.5),
                 ),
           const SizedBox(height: 14),
           Text(

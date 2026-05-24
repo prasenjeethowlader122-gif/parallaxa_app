@@ -50,6 +50,8 @@ class UserSummary {
   final String? avatarUrl;
   final bool isVerified;
   final bool isFollowing;
+  final bool hasStory;
+  final bool hasUnviewedStory;
 
   UserSummary({
     required this.id,
@@ -58,6 +60,8 @@ class UserSummary {
     this.avatarUrl,
     required this.isVerified,
     required this.isFollowing,
+    this.hasStory = false,
+    this.hasUnviewedStory = false,
   });
 
   factory UserSummary.fromJson(Map<String, dynamic> json) =>

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../data/post_repository.dart';
 import '../domain/post.dart';
 import '../../../core/app_colors.dart';
+import '../../../core/localization_provider.dart';
 import '../../profile/presentation/widgets/user_avatar.dart';
 
 class PostCard extends ConsumerStatefulWidget {
@@ -96,6 +96,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = ref.watch(l10nProvider);
     final post = widget.post.repostOf ?? widget.post;
     final isRepost = widget.post.repostOf != null;
 
@@ -119,7 +120,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '${widget.post.author.displayName} reposted',
+                    '${widget.post.author.displayName} ${l10n.get('reposted')}',
                     style: const TextStyle(
                       fontFamily: 'Ubuntu',
                       fontSize: 13,
@@ -139,9 +140,8 @@ class _PostCardState extends ConsumerState<PostCard> {
                   child: UserAvatar(
                     uri: post.author.avatarUrl,
                     size: 40,
-                    hasStory:
-                        false, // In a real app, this would come from a story state
-                    hasUnviewedStory: false,
+                    hasStory: post.author.hasStory,
+                    hasUnviewedStory: post.author.hasUnviewedStory,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -214,8 +214,9 @@ class _PostCardState extends ConsumerState<PostCard> {
                     child: CachedNetworkImage(
                       imageUrl: post.imageUrl!,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(color: AppColors.muted),
-                      errorWidget: (_, __, ___) => Container(
+                      placeholder: (context, url) =>
+                          Container(color: AppColors.muted),
+                      errorWidget: (context, url, error) => Container(
                         color: AppColors.muted,
                         child: const HugeIcon(
                           icon: HugeIcons.strokeRoundedImage01,

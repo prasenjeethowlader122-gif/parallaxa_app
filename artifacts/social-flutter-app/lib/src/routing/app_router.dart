@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -202,10 +201,7 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
         height: 26,
         width: 148,
         fit: BoxFit.contain,
-        colorFilter: const ColorFilter.mode(
-          Color(0xFF1877F2), // Facebook Blue
-          BlendMode.srcIn,
-        ),
+        colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
       ),
       actions: [
         IconButton(
@@ -274,7 +270,7 @@ class _AppDrawer extends StatelessWidget {
                     width: 148,
                     fit: BoxFit.contain,
                     colorFilter: const ColorFilter.mode(
-                      Color(0xFF1877F2), // Facebook Blue
+                      Colors.black,
                       BlendMode.srcIn,
                     ),
                   ),

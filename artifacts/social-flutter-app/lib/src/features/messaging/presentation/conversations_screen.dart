@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -36,7 +35,7 @@ class ConversationsScreen extends ConsumerWidget {
           strokeWidth: 2,
         ),
       ),
-      error: (_, __) => const Center(
+      error: (context, error) => const Center(
         child: Text(
           'Could not load messages',
           style: TextStyle(color: AppColors.mutedForeground),

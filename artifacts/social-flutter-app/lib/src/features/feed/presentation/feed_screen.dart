@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -148,7 +147,7 @@ class _FeedList extends ConsumerWidget {
                   HugeIcon(
                     icon: HugeIcons.strokeRoundedNote01,
                     size: 48,
-                    color: AppColors.mutedForeground.withOpacity(0.5),
+                    color: AppColors.mutedForeground.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -176,7 +175,7 @@ class _FeedList extends ConsumerWidget {
           },
           child: ListView.builder(
             itemCount: posts.length + (posts.length / 5).floor(),
-            itemBuilder: (_, i) {
+            itemBuilder: (context, i) {
               if (i > 0 && (i + 1) % 6 == 0) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),

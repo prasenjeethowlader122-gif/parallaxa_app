@@ -27,6 +27,8 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
       ? null
       : DateTime.parse(json['dateOfBirth'] as String),
   createdAt: DateTime.parse(json['createdAt'] as String),
+  hasStory: json['hasStory'] as bool? ?? false,
+  hasUnviewedStory: json['hasUnviewedStory'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
@@ -48,6 +50,8 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
   'postsCount': instance.postsCount,
   'dateOfBirth': instance.dateOfBirth?.toIso8601String(),
   'createdAt': instance.createdAt.toIso8601String(),
+  'hasStory': instance.hasStory,
+  'hasUnviewedStory': instance.hasUnviewedStory,
 };
 
 AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) => AuthResponse(
