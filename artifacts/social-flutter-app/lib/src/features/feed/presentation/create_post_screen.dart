@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:typed_data';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
 import 'dart:io';
@@ -154,6 +155,26 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       MaterialPageRoute(
         builder: (context) => ProImageEditor.file(
           _selectedImage!,
+          configs: ProImageEditorConfigs(
+            designMode: platformDesignMode,
+            imageEditorTheme: const ImageEditorTheme(
+              uiOverlayStyle: SystemUiOverlayStyle.light,
+              backgroundColor: Colors.black,
+              appBarBackgroundColor: Colors.black,
+              appBarForegroundColor: Colors.white,
+              bottomBarBackgroundColor: Colors.black,
+              bottomBarForegroundColor: Colors.white,
+            ),
+            cropRotateEditorConfigs: const CropRotateEditorConfigs(
+              enabled: true,
+            ),
+            filterEditorConfigs: FilterEditorConfigs(
+              enabled: true,
+            ),
+            blurEditorConfigs: const BlurEditorConfigs(
+              enabled: true,
+            ),
+          ),
           callbacks: ProImageEditorCallbacks(
             onImageEditingComplete: (Uint8List bytes) async {
               final tempDir = Directory.systemTemp;

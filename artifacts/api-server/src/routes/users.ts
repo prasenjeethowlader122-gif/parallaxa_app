@@ -405,6 +405,7 @@ router.get(
           location: p.location,
           hashtags: [],
           likesCount: p.likesCount,
+          repostsCount: p.repostsCount,
           commentsCount: p.repliesCount, // repliesCount is the DB field
           repliesCount: p.repliesCount,
           isLiked: false,

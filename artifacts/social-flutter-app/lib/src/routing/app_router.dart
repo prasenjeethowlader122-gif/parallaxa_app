@@ -203,7 +203,7 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
         width: 148,
         fit: BoxFit.contain,
         colorFilter: const ColorFilter.mode(
-          Color(0xFF1877F2), // Facebook Blue
+          Colors.black,
           BlendMode.srcIn,
         ),
       ),
@@ -274,7 +274,7 @@ class _AppDrawer extends StatelessWidget {
                     width: 148,
                     fit: BoxFit.contain,
                     colorFilter: const ColorFilter.mode(
-                      Color(0xFF1877F2), // Facebook Blue
+                      Colors.black,
                       BlendMode.srcIn,
                     ),
                   ),

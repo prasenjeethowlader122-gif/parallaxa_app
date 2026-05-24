@@ -34,12 +34,27 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   bool _isSubmitting = false;
   String? _replyTargetId;
   String? _replyTargetUsername;
+  bool _isTranslating = false;
+  String? _translatedContent;
 
   @override
   void dispose() {
     _commentController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _translatePost(String content) async {
+    if (_isTranslating) return;
+    setState(() => _isTranslating = true);
+    // Simulate translation with a delay
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) {
+      setState(() {
+        _translatedContent = "This is a simulated translation of the post: $content";
+        _isTranslating = false;
+      });
+    }
   }
 
   Future<void> _submitComment() async {
@@ -123,6 +138,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     data: (post) => _ParentPostView(
                       post: post,
                       onReply: () => _onReply(post.id, post.author.username),
+                      onTranslate: () => _translatePost(post.content ?? ""),
+                      isTranslating: _isTranslating,
+                      translatedContent: _translatedContent,
                       formatDate: _formatFullDate,
                       fmtCount: _fmtCount,
                     ),
@@ -265,12 +283,18 @@ class _CommentNode {
 class _ParentPostView extends StatelessWidget {
   final Post post;
   final VoidCallback onReply;
+  final VoidCallback onTranslate;
+  final bool isTranslating;
+  final String? translatedContent;
   final String Function(DateTime) formatDate;
   final String Function(int) fmtCount;
 
   const _ParentPostView({
     required this.post,
     required this.onReply,
+    required this.onTranslate,
+    required this.isTranslating,
+    this.translatedContent,
     required this.formatDate,
     required this.fmtCount,
   });
@@ -342,9 +366,50 @@ class _ParentPostView extends StatelessWidget {
         if (post.content != null && post.content!.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Text(
-              post.content!,
-              style: const TextStyle(fontSize: 18, height: 1.4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  post.content!,
+                  style: const TextStyle(fontSize: 18, height: 1.4),
+                ),
+                if (translatedContent != null) ...[
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  Text(
+                    translatedContent!,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      height: 1.4,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: onTranslate,
+                  child: Row(
+                    children: [
+                      const HugeIcon(
+                        icon: HugeIcons.strokeRoundedTranslate,
+                        size: 14,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        isTranslating ? 'Translating...' : 'Translate Post',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
 

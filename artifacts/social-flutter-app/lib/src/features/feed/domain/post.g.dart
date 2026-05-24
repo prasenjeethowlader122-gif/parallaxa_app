@@ -53,6 +53,8 @@ UserSummary _$UserSummaryFromJson(Map<String, dynamic> json) => UserSummary(
   avatarUrl: json['avatarUrl'] as String?,
   isVerified: json['isVerified'] as bool,
   isFollowing: json['isFollowing'] as bool,
+  hasStory: json['hasStory'] as bool? ?? false,
+  hasUnviewedStory: json['hasUnviewedStory'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$UserSummaryToJson(UserSummary instance) =>
@@ -63,6 +65,8 @@ Map<String, dynamic> _$UserSummaryToJson(UserSummary instance) =>
       'avatarUrl': instance.avatarUrl,
       'isVerified': instance.isVerified,
       'isFollowing': instance.isFollowing,
+      'hasStory': instance.hasStory,
+      'hasUnviewedStory': instance.hasUnviewedStory,
     };
 
 PostPage _$PostPageFromJson(Map<String, dynamic> json) => PostPage(

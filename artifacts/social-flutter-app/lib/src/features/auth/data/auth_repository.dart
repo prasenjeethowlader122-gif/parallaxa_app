@@ -44,7 +44,11 @@ class AuthRepository {
       formData.files.add(
         MapEntry(
           'faceImage',
-          await MultipartFile.fromFile(faceImagePath, filename: 'face.jpg'),
+          await MultipartFile.fromFile(
+            faceImagePath,
+            filename: 'face.jpg',
+            contentType: DioMediaType('image', 'jpeg'),
+          ),
         ),
       );
     }

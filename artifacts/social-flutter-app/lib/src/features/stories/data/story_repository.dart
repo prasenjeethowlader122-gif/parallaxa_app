@@ -34,6 +34,14 @@ class StoryRepository {
     await _dio.post('/stories/$storyId/react', data: {'emoji': emoji});
   }
 
+  Future<String> uploadFile(String path) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(path),
+    });
+    final response = await _dio.post('/upload', data: formData);
+    return response.data['url'] as String;
+  }
+
   Future<List<Story>> getUserStories(String userId) async {
     final response = await _dio.get('/users/$userId/stories');
     return (response.data as List).map((e) => Story.fromJson(e)).toList();
