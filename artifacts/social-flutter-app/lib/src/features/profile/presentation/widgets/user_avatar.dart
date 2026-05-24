@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -103,10 +102,10 @@ class DashedCirclePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    const int dashCount = 12;
-    const double dashArc =
+    final int dashCount = 12;
+    final double dashArc =
         (2 * math.pi - (dashCount * gap * math.pi / 180)) / dashCount;
-    const double gapArc = gap * math.pi / 180;
+    final double gapArc = gap * math.pi / 180;
 
     for (int i = 0; i < dashCount; i++) {
       final double startAngle = i * (dashArc + gapArc) - math.pi / 2;

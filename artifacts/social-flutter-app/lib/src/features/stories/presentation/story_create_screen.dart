@@ -37,10 +37,11 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
       await repo.createStory(mediaUrl: url, mediaType: 'image');
       if (mounted) context.pop();
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }

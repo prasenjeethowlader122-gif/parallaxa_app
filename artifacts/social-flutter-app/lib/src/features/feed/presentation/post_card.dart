@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -215,8 +214,9 @@ class _PostCardState extends ConsumerState<PostCard> {
                     child: CachedNetworkImage(
                       imageUrl: post.imageUrl!,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(color: AppColors.muted),
-                      errorWidget: (_, __, ___) => Container(
+                      placeholder: (context, url) =>
+                          Container(color: AppColors.muted),
+                      errorWidget: (context, url, error) => Container(
                         color: AppColors.muted,
                         child: const HugeIcon(
                           icon: HugeIcons.strokeRoundedImage01,

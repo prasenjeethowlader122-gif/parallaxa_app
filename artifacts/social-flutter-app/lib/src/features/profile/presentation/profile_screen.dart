@@ -1,7 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/domain/user.dart';
@@ -14,6 +12,7 @@ import '../../../core/processing_provider.dart';
 import '../../../core/localization_provider.dart';
 import '../../../core/app_colors.dart';
 import '../../../core/widgets/ad_banner_widget.dart';
+import 'widgets/user_avatar.dart';
 
 final userProfileProvider = FutureProvider.family<User, String>((ref, userId) {
   return ref.watch(profileRepositoryProvider).getUserProfile(userId);
