@@ -202,10 +202,7 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
         height: 26,
         width: 148,
         fit: BoxFit.contain,
-        colorFilter: const ColorFilter.mode(
-          Colors.black,
-          BlendMode.srcIn,
-        ),
+        colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
       ),
       actions: [
         IconButton(

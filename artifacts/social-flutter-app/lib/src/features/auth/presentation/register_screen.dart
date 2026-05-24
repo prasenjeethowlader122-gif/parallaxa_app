@@ -237,7 +237,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (mounted) {
         String errorMessage = "Registration failed. Please try again.";
         if (e is DioException) {
-          errorMessage = e.response?.data['message'] ??
+          errorMessage =
+              e.response?.data['message'] ??
               e.response?.data['error'] ??
               errorMessage;
         } else if (e.toString().contains('409')) {
@@ -877,7 +878,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              isLastStep ? l10n.get('create_account') : l10n.get('continue'),
+                              isLastStep
+                                  ? l10n.get('create_account')
+                                  : l10n.get('continue'),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,

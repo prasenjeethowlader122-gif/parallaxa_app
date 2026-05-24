@@ -41,41 +41,42 @@ class UserAvatar extends StatelessWidget {
             ),
           ),
         Container(
-        width: size,
-        height: size,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.muted,
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: uri != null && uri!.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: uri!,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => const Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.primary,
+          width: size,
+          height: size,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.muted,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: uri != null && uri!.isNotEmpty
+              ? CachedNetworkImage(
+                  imageUrl: uri!,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
+                  errorWidget: (context, url, error) => HugeIcon(
+                    icon: HugeIcons.strokeRoundedUser,
+                    color: AppColors.slate400,
+                    size: size * 0.6,
+                  ),
+                )
+              : Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedUser,
+                    color: AppColors.slate400,
+                    size: size * 0.6,
+                  ),
                 ),
-                errorWidget: (context, url, error) => HugeIcon(
-                  icon: HugeIcons.strokeRoundedUser,
-                  color: AppColors.slate400,
-                  size: size * 0.6,
-                ),
-              )
-            : Center(
-                child: HugeIcon(
-                  icon: HugeIcons.strokeRoundedUser,
-                  color: AppColors.slate400,
-                  size: size * 0.6,
-                ),
-              ),
-      ),
+        ),
+      ],
     );
   }
 }
@@ -103,7 +104,8 @@ class DashedCirclePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     const int dashCount = 12;
-    const double dashArc = (2 * math.pi - (dashCount * gap * math.pi / 180)) / dashCount;
+    const double dashArc =
+        (2 * math.pi - (dashCount * gap * math.pi / 180)) / dashCount;
     const double gapArc = gap * math.pi / 180;
 
     for (int i = 0; i < dashCount; i++) {

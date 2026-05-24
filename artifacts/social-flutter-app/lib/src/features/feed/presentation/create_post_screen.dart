@@ -168,12 +168,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             cropRotateEditorConfigs: const CropRotateEditorConfigs(
               enabled: true,
             ),
-            filterEditorConfigs: FilterEditorConfigs(
-              enabled: true,
-            ),
-            blurEditorConfigs: const BlurEditorConfigs(
-              enabled: true,
-            ),
+            filterEditorConfigs: FilterEditorConfigs(enabled: true),
+            blurEditorConfigs: const BlurEditorConfigs(enabled: true),
           ),
           callbacks: ProImageEditorCallbacks(
             onImageEditingComplete: (Uint8List bytes) async {

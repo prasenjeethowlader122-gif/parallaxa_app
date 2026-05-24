@@ -51,7 +51,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     await Future.delayed(const Duration(seconds: 1));
     if (mounted) {
       setState(() {
-        _translatedContent = "This is a simulated translation of the post: $content";
+        _translatedContent =
+            "This is a simulated translation of the post: $content";
         _isTranslating = false;
       });
     }

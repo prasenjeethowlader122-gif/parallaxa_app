@@ -98,7 +98,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       l10n.get('posts'),
       l10n.get('replies'),
       l10n.get('media'),
-      l10n.get('likes')
+      l10n.get('likes'),
     ];
     final userAsync = ref.watch(userProfileProvider(effectiveUserId));
     final postsAsync = ref.watch(userPostsProvider(effectiveUserId));
@@ -413,7 +413,9 @@ class _ProfileHeader extends StatelessWidget {
                                 minimumSize: Size.zero,
                               ),
                               child: Text(
-                                isFollowing ? l10n.get('following') : l10n.get('follow'),
+                                isFollowing
+                                    ? l10n.get('following')
+                                    : l10n.get('follow'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
@@ -497,9 +499,15 @@ class _ProfileHeader extends StatelessWidget {
               // ── Stats row (Following X · Followers X) ────────────
               Row(
                 children: [
-                  _StatChip(count: user.followingCount, label: l10n.get('following')),
+                  _StatChip(
+                    count: user.followingCount,
+                    label: l10n.get('following'),
+                  ),
                   const SizedBox(width: 16),
-                  _StatChip(count: user.followersCount, label: l10n.get('followers')),
+                  _StatChip(
+                    count: user.followersCount,
+                    label: l10n.get('followers'),
+                  ),
                 ],
               ),
               const SizedBox(height: 14),
