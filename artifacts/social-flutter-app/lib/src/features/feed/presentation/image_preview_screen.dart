@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -140,7 +139,7 @@ class ImagePreviewScreen extends StatelessWidget {
           child: CachedNetworkImage(
             imageUrl: imageUrl,
             fit: BoxFit.contain,
-            placeholder: (_, __) => const CircularProgressIndicator(),
+            placeholder: (context, error) => const CircularProgressIndicator(),
             errorWidget: (_, __, ___) => const HugeIcon(
               icon: HugeIcons.strokeRoundedAlertCircle,
               color: Colors.white,

@@ -161,7 +161,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               ).create();
               await file.writeAsBytes(bytes);
               setState(() => _selectedImage = file);
-              if (mounted) Navigator.pop(context);
+              if (context.mounted) Navigator.pop(context);
             },
           ),
         ),
@@ -526,7 +526,7 @@ class _MentionSuggestions extends ConsumerWidget {
             border: Border.all(color: const Color(0xFFE1E8ED)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -536,7 +536,7 @@ class _MentionSuggestions extends ConsumerWidget {
             shrinkWrap: true,
             padding: EdgeInsets.zero,
             itemCount: users.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (context, index) =>
                 const Divider(height: 1, color: Color(0xFFF2F2F2)),
             itemBuilder: (context, index) {
               final user = users[index];
@@ -587,7 +587,7 @@ class _MentionSuggestions extends ConsumerWidget {
         ),
         child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (context, error) => const SizedBox.shrink(),
     );
   }
 }

@@ -33,7 +33,7 @@ class ChatSettingsScreen extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                   child: Text(
                     participantName.isNotEmpty
                         ? participantName[0].toUpperCase()

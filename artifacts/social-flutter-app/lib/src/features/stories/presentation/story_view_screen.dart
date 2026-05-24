@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -59,7 +58,8 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen> {
                     child: CachedNetworkImage(
                       imageUrl: story.mediaUrl,
                       fit: BoxFit.contain,
-                      placeholder: (_, __) => const CircularProgressIndicator(),
+                      placeholder: (context, error) =>
+                          const CircularProgressIndicator(),
                     ),
                   );
                 },
@@ -82,7 +82,7 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen> {
                               decoration: BoxDecoration(
                                 color: index <= _currentIndex
                                     ? Colors.white
-                                    : Colors.white.withOpacity(0.3),
+                                    : Colors.white.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -79,7 +78,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
           onRefresh: () => ref.refresh(adminUsersProvider.future),
           child: ListView.separated(
             itemCount: users.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (context, error) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final user = users[index];
               return ListTile(

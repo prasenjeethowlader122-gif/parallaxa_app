@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -198,7 +197,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => const Center(
+              error: (context, error) => const Center(
                 child: Text(
                   'Could not load messages',
                   style: TextStyle(color: Colors.grey),

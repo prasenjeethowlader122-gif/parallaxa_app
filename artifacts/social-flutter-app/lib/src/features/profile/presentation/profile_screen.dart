@@ -110,7 +110,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             strokeWidth: 2,
           ),
         ),
-        error: (_, __) => Center(
+        error: (context, error) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -608,7 +608,7 @@ class _PostsList extends StatelessWidget {
           strokeWidth: 2,
         ),
       ),
-      error: (_, __) => const Center(
+      error: (context, error) => const Center(
         child: Text(
           'Could not load posts',
           style: TextStyle(color: AppColors.mutedForeground),
@@ -638,7 +638,7 @@ class _PostsList extends StatelessWidget {
             thickness: 0.5,
             color: AppColors.border,
           ),
-          itemBuilder: (_, i) {
+          itemBuilder: (context, i) {
             if (showAd && i == 0) {
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
@@ -670,12 +670,12 @@ class _EmptyTab extends StatelessWidget {
               ? Icon(
                   icon as IconData,
                   size: 44,
-                  color: AppColors.mutedForeground.withOpacity(0.5),
+                  color: AppColors.mutedForeground.withValues(alpha: 0.5),
                 )
               : HugeIcon(
                   icon: icon,
                   size: 44,
-                  color: AppColors.mutedForeground.withOpacity(0.5),
+                  color: AppColors.mutedForeground.withValues(alpha: 0.5),
                 ),
           const SizedBox(height: 14),
           Text(

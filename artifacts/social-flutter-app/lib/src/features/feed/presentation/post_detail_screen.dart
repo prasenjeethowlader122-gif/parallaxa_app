@@ -161,7 +161,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.05),
+                        color: AppColors.primary.withValues(alpha: 0.05),
                         border: const Border(
                           bottom: BorderSide(
                             color: AppColors.border,
