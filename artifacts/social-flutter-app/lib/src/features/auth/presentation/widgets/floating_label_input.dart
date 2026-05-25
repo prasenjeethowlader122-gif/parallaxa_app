@@ -1,46 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/app_colors.dart';
+import "package:material_symbols_icons/material_symbols_icons.dart";
 
 class FloatingLabelInput extends StatefulWidget {
   final String label;
-  final String? error;
-  final TextEditingController? controller;
-  final bool secureTextEntry;
-  final TextInputType? keyboardType;
-  final TextInputAction? textInputAction;
-  final ValueChanged<String>? onChanged;
-  final VoidCallback? onEditingComplete;
-  final ValueChanged<String>? onFieldSubmitted;
   final dynamic icon;
-  final Widget? right;
-  final bool editable;
-  final FocusNode? focusNode;
-  final int? maxLength;
-  final bool autoFocus;
-  final TextCapitalization textCapitalization;
-  final bool autoCorrect;
+  final TextEditingController controller;
+  final bool isPassword;
+  final TextInputType keyboardType;
+  final String? errorText;
   final int? maxLines;
 
   const FloatingLabelInput({
     super.key,
     required this.label,
-    this.error,
-    this.controller,
-    this.secureTextEntry = false,
-    this.keyboardType,
-    this.textInputAction,
-    this.onChanged,
-    this.onEditingComplete,
-    this.onFieldSubmitted,
     this.icon,
-    this.right,
-    this.editable = true,
-    this.focusNode,
-    this.maxLength,
-    this.autoFocus = false,
-    this.textCapitalization = TextCapitalization.none,
-    this.autoCorrect = true,
+    required this.controller,
+    this.isPassword = false,
+    this.keyboardType = TextInputType.text,
+    this.errorText,
     this.maxLines = 1,
   });
 
@@ -48,233 +26,153 @@ class FloatingLabelInput extends StatefulWidget {
   State<FloatingLabelInput> createState() => _FloatingLabelInputState();
 }
 
-class _FloatingLabelInputState extends State<FloatingLabelInput>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animController;
-  late Animation<double> _animation;
-
-  late FocusNode _focusNode;
-  late TextEditingController _textController;
-  bool _ownsTextController = false;
-  bool _ownsFocusNode = false;
+class _FloatingLabelInputState extends State<FloatingLabelInput> {
+  bool _obscureText = true;
+  final FocusNode _focusNode = FocusNode();
+  bool _isFocused = false;
 
   @override
   void initState() {
     super.initState();
-
-    if (widget.focusNode == null) {
-      _focusNode = FocusNode();
-      _ownsFocusNode = true;
-    } else {
-      _focusNode = widget.focusNode!;
-    }
-
-    if (widget.controller == null) {
-      _textController = TextEditingController();
-      _ownsTextController = true;
-    } else {
-      _textController = widget.controller!;
-    }
-
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
-    _animation = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOut,
-    );
-
-    if (_textController.text.isNotEmpty || _focusNode.hasFocus) {
-      _animController.value = 1.0;
-    }
-
-    _focusNode.addListener(_handleFocusChange);
-    _textController.addListener(_handleTextChange);
-  }
-
-  void _handleFocusChange() {
-    if (!mounted) return;
-    if (_focusNode.hasFocus || _textController.text.isNotEmpty) {
-      _animController.forward();
-    } else {
-      _animController.reverse();
-    }
-    setState(() {});
-  }
-
-  void _handleTextChange() {
-    if (!mounted) return;
-    if (_focusNode.hasFocus || _textController.text.isNotEmpty) {
-      _animController.forward();
-    } else {
-      _animController.reverse();
-    }
+    _focusNode.addListener(() {
+      setState(() {
+        _isFocused = _focusNode.hasFocus;
+      });
+    });
   }
 
   @override
   void dispose() {
-    _focusNode.removeListener(_handleFocusChange);
-    _textController.removeListener(_handleTextChange);
-    if (_ownsFocusNode) _focusNode.dispose();
-    if (_ownsTextController) _textController.dispose();
-    _animController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isFocused = _focusNode.hasFocus;
-    final hasError = widget.error != null;
-
-    final Color borderColor = hasError
-        ? const Color(0xFFFCA5A5)
-        : isFocused
-        ? AppColors.primary
-        : AppColors.slate200;
+    final hasError = widget.errorText != null;
+    final isFocused = _isFocused;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 12),
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              constraints: const BoxConstraints(minHeight: 56),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: borderColor, width: 1.5),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: isFocused ? Colors.white : AppColors.slate50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: hasError
+                  ? const Color(0xFFDC2626)
+                  : isFocused
+                  ? AppColors.primary
+                  : AppColors.slate200,
+              width: isFocused ? 2 : 1,
+            ),
+            boxShadow: isFocused
+                ? [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              )
+            ]
+                : [],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Text(
+                  widget.label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: hasError
+                        ? const Color(0xFFDC2626)
+                        : isFocused
+                        ? AppColors.primary
+                        : AppColors.slate500,
+                  ),
+                ),
               ),
-              child: Row(
+              Row(
                 children: [
                   if (widget.icon != null)
                     Padding(
                       padding: const EdgeInsets.only(left: 16),
-                      child: widget.icon is IconData
-                          ? Icon(
-                              widget.icon as IconData,
-                              color: isFocused
-                                  ? AppColors.primary
-                                  : hasError
-                                  ? const Color(0xFFDC2626)
-                                  : AppColors.slate500,
-                              size: 20,
-                            )
-                          : HugeIcon(
-                              icon: widget.icon,
-                              color: isFocused
-                                  ? AppColors.primary
-                                  : hasError
-                                  ? const Color(0xFFDC2626)
-                                  : AppColors.slate500,
-                              size: 20,
-                            ),
+                      child: Icon(
+                        widget.icon is IconData ? widget.icon as IconData : Symbols.help,
+                        color: isFocused
+                            ? AppColors.primary
+                            : hasError
+                            ? const Color(0xFFDC2626)
+                            : AppColors.slate500,
+                        size: 20,
+                      ),
                     ),
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: TextField(
-                        controller: _textController,
-                        focusNode: _focusNode,
-                        obscureText: widget.secureTextEntry,
-                        keyboardType: widget.keyboardType,
-                        maxLines: widget.maxLines,
-                        textInputAction: widget.textInputAction,
-                        onChanged: widget.onChanged,
-                        onEditingComplete: widget.onEditingComplete,
-                        onSubmitted: widget.onFieldSubmitted,
-                        enabled: widget.editable,
-                        autofocus: widget.autoFocus,
-                        maxLength: widget.maxLength,
-                        textCapitalization: widget.textCapitalization,
-                        autocorrect: widget.autoCorrect,
-                        cursorColor: AppColors.primary,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: isFocused || _textController.text.isNotEmpty
-                              ? Theme.of(context).textTheme.bodyLarge?.color
-                              : AppColors.slate900,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        decoration: InputDecoration(
-                          isDense: true,
-                          contentPadding: EdgeInsets.only(
-                            left: widget.icon != null ? 12 : 16,
-                            right: 16,
-                            bottom: 10,
-                          ),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          counterText: '',
-                        ),
+                    child: TextField(
+                      controller: widget.controller,
+                      focusNode: _focusNode,
+                      obscureText: widget.isPassword && _obscureText,
+                      keyboardType: widget.keyboardType,
+                      maxLines: widget.maxLines,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.slate900,
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.fromLTRB(12, 8, 16, 12),
+                        isDense: true,
+                        filled: false,
                       ),
                     ),
                   ),
-                  if (widget.right != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: widget.right,
+                  if (widget.isPassword)
+                    IconButton(
+                      icon: Icon(
+                        _obscureText ? Symbols.visibility : Symbols.visibility_off,
+                        color: AppColors.slate400,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureText = !_obscureText;
+                        });
+                      },
                     ),
                 ],
               ),
-            ),
-            AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) {
-                return Positioned(
-                  left: widget.icon != null ? 44 : 16,
-                  top: 16 - (_animation.value * 26),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    child: Text(
-                      widget.label,
-                      style: TextStyle(
-                        fontSize: 16 - (_animation.value * 4),
-                        color: hasError
-                            ? const Color(0xFFDC2626)
-                            : isFocused
-                            ? AppColors.primary
-                            : AppColors.slate400,
-                        fontWeight: _animation.value > 0
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
+            ],
+          ),
         ),
         if (hasError)
           Padding(
             padding: const EdgeInsets.only(top: 6, left: 4),
             child: Row(
               children: [
-                const HugeIcon(
-                  icon: HugeIcons.strokeRoundedAlertCircle,
+                const Icon(
+                  Symbols.error,
                   color: Color(0xFFDC2626),
                   size: 14,
                 ),
                 const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    widget.error!,
-                    style: const TextStyle(
-                      color: Color(0xFFDC2626),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+                Text(
+                  widget.errorText!,
+                  style: const TextStyle(
+                    color: Color(0xFFDC2626),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
-        const SizedBox(height: 8),
       ],
     );
   }

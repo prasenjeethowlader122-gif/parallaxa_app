@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hugeicons/hugeicons.dart';
+import "package:material_symbols_icons/material_symbols_icons.dart";
 import '../core/api_client.dart';
 import '../core/app_colors.dart';
 import '../features/auth/presentation/login_screen.dart';
@@ -149,14 +149,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-// ─── Main Shell ──────────────────────────────────────────────────────────────
-
 class _MainShell extends StatelessWidget {
   final String location;
   final Widget child;
-
   const _MainShell({required this.location, required this.child});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -168,16 +164,11 @@ class _MainShell extends StatelessWidget {
   }
 }
 
-// ─── App Bar ─────────────────────────────────────────────────────────────────
-
 class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String location;
-
   const _ParallaxaAppBar({required this.location});
-
   @override
   Size get preferredSize => const Size.fromHeight(56);
-
   @override
   Widget build(BuildContext context) {
     return AppBar(
@@ -188,11 +179,7 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: 0,
       leading: Builder(
         builder: (context) => IconButton(
-          icon: const HugeIcon(
-            icon: HugeIcons.strokeRoundedMenu01,
-            color: AppColors.textPrimary,
-            size: 22,
-          ),
+          icon: const Icon(Symbols.menu, color: AppColors.textPrimary, size: 22),
           onPressed: () => Scaffold.of(context).openDrawer(),
         ),
       ),
@@ -205,27 +192,15 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         IconButton(
-          icon: const HugeIcon(
-            icon: HugeIcons.strokeRoundedSearch01,
-            color: AppColors.textPrimary,
-            size: 22,
-          ),
+          icon: const Icon(Symbols.search, color: AppColors.textPrimary, size: 22),
           onPressed: () => context.go('/explore'),
         ),
         IconButton(
-          icon: const HugeIcon(
-            icon: HugeIcons.strokeRoundedNotification01,
-            color: AppColors.textPrimary,
-            size: 22,
-          ),
+          icon: const Icon(Symbols.notifications, color: AppColors.textPrimary, size: 22),
           onPressed: () => context.go('/notifications'),
         ),
         IconButton(
-          icon: const HugeIcon(
-            icon: HugeIcons.strokeRoundedChat01,
-            color: AppColors.textPrimary,
-            size: 22,
-          ),
+          icon: const Icon(Symbols.chat_bubble, color: AppColors.textPrimary, size: 22),
           onPressed: () => context.go('/messages'),
         ),
         const SizedBox(width: 4),
@@ -234,13 +209,9 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-// ─── Drawer ───────────────────────────────────────────────────────────────────
-
 class _AppDrawer extends StatelessWidget {
   final String location;
-
   const _AppDrawer({required this.location});
-
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -255,11 +226,7 @@ class _AppDrawer extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedArrowLeft01,
-                      color: AppColors.textPrimary,
-                      size: 22,
-                    ),
+                    icon: const Icon(Symbols.arrow_back, color: AppColors.textPrimary, size: 22),
                     onPressed: () => Navigator.of(context).pop(),
                     padding: EdgeInsets.zero,
                   ),
@@ -269,10 +236,7 @@ class _AppDrawer extends StatelessWidget {
                     height: 26,
                     width: 148,
                     fit: BoxFit.contain,
-                    colorFilter: const ColorFilter.mode(
-                      Colors.black,
-                      BlendMode.srcIn,
-                    ),
+                    colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
                   ),
                 ],
               ),
@@ -280,14 +244,11 @@ class _AppDrawer extends StatelessWidget {
             const Divider(color: AppColors.border, height: 1),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 children: [
                   _DrawerItem(
-                    icon: HugeIcons.strokeRoundedHome01,
-                    activeIcon: HugeIcons.strokeRoundedHome01,
+                    icon: Symbols.home,
+                    activeIcon: Symbols.home,
                     label: 'Home',
                     isActive: location == '/feed',
                     onTap: () {
@@ -296,8 +257,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: HugeIcons.strokeRoundedSearch01,
-                    activeIcon: HugeIcons.strokeRoundedSearch01,
+                    icon: Symbols.search,
+                    activeIcon: Symbols.search,
                     label: 'Explore',
                     isActive: location == '/explore',
                     onTap: () {
@@ -306,8 +267,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: HugeIcons.strokeRoundedNotification01,
-                    activeIcon: HugeIcons.strokeRoundedNotification01,
+                    icon: Symbols.notifications,
+                    activeIcon: Symbols.notifications,
                     label: 'Notifications',
                     isActive: location == '/notifications',
                     onTap: () {
@@ -316,8 +277,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: HugeIcons.strokeRoundedChat01,
-                    activeIcon: HugeIcons.strokeRoundedChat01,
+                    icon: Symbols.chat_bubble,
+                    activeIcon: Symbols.chat_bubble,
                     label: 'Messages',
                     isActive: location == '/messages',
                     onTap: () {
@@ -326,8 +287,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: HugeIcons.strokeRoundedUser,
-                    activeIcon: HugeIcons.strokeRoundedUser,
+                    icon: Symbols.person,
+                    activeIcon: Symbols.person,
                     label: 'Profile',
                     isActive: location == '/profile',
                     onTap: () {
@@ -337,8 +298,8 @@ class _AppDrawer extends StatelessWidget {
                   ),
                   const Divider(color: AppColors.border, height: 24),
                   _DrawerItem(
-                    icon: HugeIcons.strokeRoundedBookmark01,
-                    activeIcon: HugeIcons.strokeRoundedBookmark01,
+                    icon: Symbols.bookmark,
+                    activeIcon: Symbols.bookmark,
                     label: 'Bookmarks',
                     isActive: location == '/bookmarks',
                     onTap: () {
@@ -347,8 +308,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: HugeIcons.strokeRoundedSettings01,
-                    activeIcon: HugeIcons.strokeRoundedSettings01,
+                    icon: Symbols.settings,
+                    activeIcon: Symbols.settings,
                     label: 'Settings',
                     isActive: location == '/settings',
                     onTap: () {
@@ -357,8 +318,8 @@ class _AppDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: HugeIcons.strokeRoundedInformationCircle,
-                    activeIcon: HugeIcons.strokeRoundedInformationCircle,
+                    icon: Symbols.info,
+                    activeIcon: Symbols.info,
                     label: 'About',
                     isActive: location == '/about',
                     onTap: () {
@@ -401,8 +362,8 @@ class _AppDrawer extends StatelessWidget {
 }
 
 class _DrawerItem extends StatelessWidget {
-  final dynamic icon;
-  final dynamic activeIcon;
+  final IconData icon;
+  final IconData activeIcon;
   final String label;
   final bool isActive;
   final VoidCallback onTap;
@@ -424,8 +385,8 @@ class _DrawerItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: Row(
           children: [
-            HugeIcon(
-              icon: isActive ? activeIcon : icon,
+            Icon(
+              isActive ? activeIcon : icon,
               size: 26,
               color: AppColors.textPrimary,
             ),

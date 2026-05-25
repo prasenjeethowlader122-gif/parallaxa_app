@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hugeicons/hugeicons.dart';
+import "package:material_symbols_icons/material_symbols_icons.dart";
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
@@ -62,8 +62,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           File(image.path),
           callbacks: ProImageEditorCallbacks(
             onImageEditingComplete: (Uint8List bytes) async {
-              // In a real app, upload bytes to storage and get URL
-              // Here we mock it by using the local path for preview
               setState(() {
                 if (isAvatar) {
                   _newAvatarUrl = image.path;
@@ -137,24 +135,29 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               child: Stack(
                 children: [
                   Container(
-                    height: 160,
+                    height: 180,
                     width: double.infinity,
                     color: AppColors.muted,
                     child: _newCoverUrl != null
                         ? Image.file(File(_newCoverUrl!), fit: BoxFit.cover)
-                        : const HugeIcon(
-                            icon: HugeIcons.strokeRoundedCamera01,
-                            color: AppColors.mutedForeground,
-                          ),
+                        : (widget.user.coverUrl != null
+                            ? CachedNetworkImage(
+                                imageUrl: widget.user.coverUrl!,
+                                fit: BoxFit.cover,
+                              )
+                            : const Icon(
+                                Symbols.photo_camera,
+                                color: AppColors.mutedForeground,
+                              )),
                   ),
                   Positioned.fill(
                     child: Container(
-                      color: Colors.black.withValues(alpha: 0.2),
+                      color: Colors.black.withOpacity(0.4),
                       child: const Center(
-                        child: HugeIcon(
-                          icon: HugeIcons.strokeRoundedCamera01,
+                        child: Icon(
+                          Symbols.photo_camera,
                           color: Colors.white,
-                          size: 30,
+                          size: 32,
                         ),
                       ),
                     ),
@@ -165,7 +168,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
             // ── Avatar Edit ──────────────────────────────────────────
             Transform.translate(
-              offset: const Offset(0, -40),
+              offset: const Offset(0, -50),
               child: GestureDetector(
                 onTap: () => _pickAndEditImage(isAvatar: true),
                 child: Stack(
@@ -176,42 +179,47 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: AppColors.background,
-                          width: 4,
+                          width: 5,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
                       ),
                       child: CircleAvatar(
-                        radius: 50,
+                        radius: 60,
                         backgroundColor: AppColors.muted,
                         backgroundImage: _newAvatarUrl != null
                             ? FileImage(File(_newAvatarUrl!))
                             : (widget.user.avatarUrl != null
-                                      ? CachedNetworkImageProvider(
-                                          widget.user.avatarUrl!,
-                                        )
-                                      : null)
-                                  as ImageProvider?,
-                        child:
-                            _newAvatarUrl == null &&
+                                ? CachedNetworkImageProvider(
+                                    widget.user.avatarUrl!,
+                                  )
+                                : null) as ImageProvider?,
+                        child: _newAvatarUrl == null &&
                                 widget.user.avatarUrl == null
-                            ? const HugeIcon(
-                                icon: HugeIcons.strokeRoundedUser,
-                                size: 50,
+                            ? const Icon(
+                                Symbols.person,
+                                size: 60,
                                 color: AppColors.mutedForeground,
                               )
                             : null,
                       ),
                     ),
                     Container(
-                      width: 100,
-                      height: 100,
+                      width: 120,
+                      height: 120,
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.3),
+                        color: Colors.black.withOpacity(0.4),
                         shape: BoxShape.circle,
                       ),
-                      child: const HugeIcon(
-                        icon: HugeIcons.strokeRoundedCamera01,
+                      child: const Icon(
+                        Symbols.photo_camera,
                         color: Colors.white,
-                        size: 24,
+                        size: 28,
                       ),
                     ),
                   ],
@@ -220,25 +228,25 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ),
 
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Column(
                 children: [
                   FloatingLabelInput(
                     label: 'Display Name',
-                    icon: HugeIcons.strokeRoundedUser,
+                    icon: Symbols.person,
                     controller: _displayNameController,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   FloatingLabelInput(
                     label: 'Bio',
-                    icon: HugeIcons.strokeRoundedChat01,
+                    icon: Symbols.chat_bubble,
                     controller: _bioController,
-                    maxLines: 3,
+                    maxLines: 4,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   FloatingLabelInput(
                     label: 'Website',
-                    icon: HugeIcons.strokeRoundedLink01,
+                    icon: Symbols.link,
                     controller: _websiteController,
                   ),
                 ],

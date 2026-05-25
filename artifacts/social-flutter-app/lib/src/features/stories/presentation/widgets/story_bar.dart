@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hugeicons/hugeicons.dart';
+import "package:material_symbols_icons/material_symbols_icons.dart";
 import 'package:go_router/go_router.dart';
 import '../../data/story_repository.dart';
 import '../../domain/story.dart';
@@ -43,7 +43,7 @@ class StoryBar extends ConsumerWidget {
         ),
         error: (e, _) => Center(
           child: IconButton(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedReload, size: 20),
+            icon: const Icon(Symbols.refresh, size: 20),
             onPressed: () => ref.invalidate(storiesProvider),
           ),
         ),
@@ -80,8 +80,8 @@ class _CreateStoryItem extends StatelessWidget {
                       border: Border.all(color: AppColors.background, width: 2),
                     ),
                     padding: const EdgeInsets.all(2),
-                    child: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedAdd01,
+                    child: const Icon(
+                      Symbols.add,
                       size: 12,
                       color: Colors.white,
                     ),

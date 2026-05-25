@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:hugeicons/hugeicons.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:intl/intl.dart';
+import 'call_screen.dart';
 import '../data/message_repository.dart';
 import '../domain/message.dart';
 import '../../../core/api_client.dart';
@@ -115,8 +116,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         elevation: 0,
         titleSpacing: 0,
         leading: IconButton(
-          icon: HugeIcon(
-            icon: HugeIcons.strokeRoundedArrowLeft01,
+          icon: Icon(
+            Symbols.arrow_back,
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.white
                 : Colors.black,
@@ -135,26 +136,43 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
         actions: [
           IconButton(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedCall,
+            icon: Icon(
+              Symbols.call,
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.white
                   : Colors.black,
             ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CallScreen(name: widget.participantName),
+                ),
+              );
+            },
           ),
           IconButton(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedVideo02,
+            icon: Icon(
+              Symbols.videocam,
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.white
                   : Colors.black,
             ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CallScreen(
+                    name: widget.participantName,
+                    isVideo: true,
+                  ),
+                ),
+              );
+            },
           ),
           IconButton(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedSettings02,
+            icon: Icon(
+              Symbols.settings,
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.white
                   : Colors.black,
@@ -245,8 +263,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         color: Color(0xFF0095F6),
                         shape: BoxShape.circle,
                       ),
-                      child: const HugeIcon(
-                        icon: HugeIcons.strokeRoundedSent,
+                      child: const Icon(
+                        Symbols.send,
                         color: Colors.white,
                         size: 20,
                       ),
