@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import "package:material_symbols_icons/material_symbols_icons.dart";
+import 'package:hugeicons/hugeicons.dart';
 import '../data/search_repository.dart';
 import '../domain/search.dart';
 import '../../feed/domain/post.dart';
@@ -96,16 +96,16 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 ),
                 prefixIcon: const Padding(
                   padding: EdgeInsets.all(10),
-                  child: Icon(
-                    Symbols.search,
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedSearch01,
                     color: AppColors.mutedForeground,
                     size: 20,
                   ),
                 ),
                 suffixIcon: _isSearching
                     ? IconButton(
-                        icon: const Icon(
-                          Symbols.cancel,
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedCancel01,
                           size: 18,
                           color: AppColors.mutedForeground,
                         ),
@@ -167,8 +167,8 @@ class _ExploreGrid extends ConsumerWidget {
                               Container(color: AppColors.muted),
                           errorWidget: (_, __, ___) => Container(
                             color: AppColors.muted,
-                            child: const Icon(
-                              Symbols.image,
+                            child: const HugeIcon(
+                              icon: HugeIcons.strokeRoundedImage01,
                               color: AppColors.mutedForeground,
                               size: 20,
                             ),
@@ -231,8 +231,8 @@ class _SearchResults extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Symbols.search,
+                const HugeIcon(
+                  icon: HugeIcons.strokeRoundedSearch01,
                   size: 44,
                   color: AppColors.mutedForeground,
                 ),
@@ -277,8 +277,8 @@ class _SearchResults extends ConsumerWidget {
                         ? CachedNetworkImageProvider(user.avatarUrl!)
                         : null,
                     child: user.avatarUrl == null
-                        ? const Icon(
-                            Symbols.person,
+                        ? const HugeIcon(
+                            icon: HugeIcons.strokeRoundedUser,
                             color: AppColors.mutedForeground,
                           )
                         : null,
@@ -295,8 +295,8 @@ class _SearchResults extends ConsumerWidget {
                       ),
                       if (user.isVerified) ...[
                         const SizedBox(width: 3),
-                        const Icon(
-                          Symbols.verified,
+                        const HugeIcon(
+                          icon: HugeIcons.strokeRoundedCheckmarkBadge01,
                           size: 14,
                           color: AppColors.verified,
                         ),
@@ -392,8 +392,8 @@ class _SearchResults extends ConsumerWidget {
                         ? CachedNetworkImageProvider(post.author.avatarUrl!)
                         : null,
                     child: post.author.avatarUrl == null
-                        ? const Icon(
-                            Symbols.person,
+                        ? const HugeIcon(
+                            icon: HugeIcons.strokeRoundedUser,
                             color: AppColors.mutedForeground,
                           )
                         : null,

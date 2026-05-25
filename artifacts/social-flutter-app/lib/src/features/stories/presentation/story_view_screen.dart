@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import "package:material_symbols_icons/material_symbols_icons.dart";
+import 'package:hugeicons/hugeicons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../data/story_repository.dart';
@@ -95,8 +95,8 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen> {
                         children: [
                           const Spacer(),
                           IconButton(
-                            icon: const Icon(
-                              Symbols.cancel,
+                            icon: const HugeIcon(
+                              icon: HugeIcons.strokeRoundedCancel01,
                               color: Colors.white,
                             ),
                             onPressed: () => context.pop(),

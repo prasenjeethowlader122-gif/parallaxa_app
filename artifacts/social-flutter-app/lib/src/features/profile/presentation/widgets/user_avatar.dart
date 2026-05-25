@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import "package:material_symbols_icons/material_symbols_icons.dart";
+import 'package:hugeicons/hugeicons.dart';
 import 'dart:math' as math;
 import '../../../../core/app_colors.dart';
 
@@ -61,15 +61,15 @@ class UserAvatar extends StatelessWidget {
                       ),
                     ),
                   ),
-                  errorWidget: (context, url, error) => Icon(
-                    Symbols.person,
+                  errorWidget: (context, url, error) => HugeIcon(
+                    icon: HugeIcons.strokeRoundedUser,
                     color: AppColors.slate400,
                     size: size * 0.6,
                   ),
                 )
               : Center(
-                  child: Icon(
-                    Symbols.person,
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedUser,
                     color: AppColors.slate400,
                     size: size * 0.6,
                   ),

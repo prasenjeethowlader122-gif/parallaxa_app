@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import "package:material_symbols_icons/material_symbols_icons.dart";
+import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import '../data/admin_repository.dart';
 import '../../../core/app_colors.dart';
@@ -18,8 +18,8 @@ class AdminDashboardScreen extends ConsumerWidget {
         title: const Text('Admin Dashboard'),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(
-            Symbols.arrow_back,
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
             color: AppColors.textPrimary,
           ),
           onPressed: () => context.pop(),
@@ -34,21 +34,21 @@ class AdminDashboardScreen extends ConsumerWidget {
               _StatCard(
                 title: 'Total Users',
                 value: stats.totalUsers.toString(),
-                icon: Symbols.group,
+                icon: HugeIcons.strokeRoundedUserGroup,
                 color: Colors.blue,
               ),
               const SizedBox(height: 16),
               _StatCard(
                 title: 'Total Posts',
                 value: stats.totalPosts.toString(),
-                icon: Symbols.notes,
+                icon: HugeIcons.strokeRoundedNote01,
                 color: Colors.green,
               ),
               const SizedBox(height: 16),
               _StatCard(
                 title: 'Total Stories',
                 value: stats.totalStories.toString(),
-                icon: Symbols.playlist_play,
+                icon: HugeIcons.strokeRoundedPlayList,
                 color: Colors.orange,
               ),
               const SizedBox(height: 24),
@@ -58,14 +58,14 @@ class AdminDashboardScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               ListTile(
-                leading: const Icon(
-                  Symbols.badge,
+                leading: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedUserIdVerification,
                   color: AppColors.textPrimary,
                 ),
                 title: const Text('User Management'),
                 subtitle: const Text('Verify, freeze, or delete users'),
-                trailing: const Icon(
-                  Symbols.arrow_forward,
+                trailing: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowRight01,
                   size: 16,
                   color: Colors.grey,
                 ),
@@ -88,7 +88,7 @@ class AdminDashboardScreen extends ConsumerWidget {
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;
-  final IconData icon;
+  final dynamic icon;
   final Color color;
 
   const _StatCard({
@@ -111,10 +111,12 @@ class _StatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 28),
+            child: icon is IconData
+                ? Icon(icon as IconData, color: color, size: 28)
+                : HugeIcon(icon: icon, color: color, size: 28),
           ),
           const SizedBox(width: 20),
           Column(

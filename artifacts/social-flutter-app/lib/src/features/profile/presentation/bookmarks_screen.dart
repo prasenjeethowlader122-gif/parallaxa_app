@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import "package:material_symbols_icons/material_symbols_icons.dart";
+import 'package:hugeicons/hugeicons.dart';
 import '../../feed/data/post_repository.dart';
 import '../../feed/presentation/post_card.dart';
 import '../../../core/app_colors.dart';
@@ -19,8 +19,8 @@ class BookmarksScreen extends ConsumerWidget {
         title: const Text('Bookmarks'),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(
-            Symbols.arrow_back,
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
             color: AppColors.textPrimary,
           ),
           onPressed: () => Navigator.of(context).pop(),
@@ -33,8 +33,8 @@ class BookmarksScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Symbols.bookmark,
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedBookmark01,
                     size: 64,
                     color: AppColors.mutedForeground.withValues(alpha: 0.5),
                   ),

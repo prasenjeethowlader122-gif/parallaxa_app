@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import "package:material_symbols_icons/material_symbols_icons.dart";
+import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
@@ -62,8 +62,8 @@ class ConversationsScreen extends ConsumerWidget {
                   ),
                   prefixIcon: Padding(
                     padding: EdgeInsets.all(10),
-                    child: Icon(
-                      Symbols.search,
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedSearch01,
                       color: AppColors.mutedForeground,
                       size: 20,
                     ),
@@ -82,8 +82,8 @@ class ConversationsScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          Symbols.chat_bubble,
+                        const HugeIcon(
+                          icon: HugeIcons.strokeRoundedChat01,
                           size: 52,
                           color: AppColors.mutedForeground,
                         ),
@@ -164,8 +164,8 @@ class _ConversationTile extends StatelessWidget {
                       ? CachedNetworkImageProvider(conv.participant.avatarUrl!)
                       : null,
                   child: conv.participant.avatarUrl == null
-                      ? const Icon(
-                          Symbols.person,
+                      ? const HugeIcon(
+                          icon: HugeIcons.strokeRoundedUser,
                           color: AppColors.mutedForeground,
                           size: 24,
                         )
