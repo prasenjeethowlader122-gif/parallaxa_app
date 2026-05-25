@@ -257,19 +257,13 @@ class _ProfileHeader extends StatelessWidget {
               ),
               if (isOwnProfile)
                 IconButton(
-                  icon: const Icon(
-                    MaterialSymbols.logout,
-                    size: 22,
-                  ),
+                  icon: const Icon(MaterialSymbols.logout, size: 22),
                   onPressed: onLogout,
                   color: theme.colorScheme.onSurface,
                 )
               else
                 IconButton(
-                  icon: const Icon(
-                    MaterialSymbols.more_horiz,
-                    size: 22,
-                  ),
+                  icon: const Icon(MaterialSymbols.more_horiz, size: 22),
                   onPressed: () =>
                       context.push('/profile/options', extra: user),
                   color: theme.colorScheme.onSurface,
@@ -307,7 +301,10 @@ class _ProfileHeader extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: theme.scaffoldBackgroundColor, width: 3),
+                    border: Border.all(
+                      color: theme.scaffoldBackgroundColor,
+                      width: 3,
+                    ),
                   ),
                   child: UserAvatar(
                     uri: user.avatarUrl,
@@ -541,7 +538,10 @@ class _StatChip extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+          style: TextStyle(
+            fontSize: 14,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -613,9 +613,7 @@ class _PostsList extends StatelessWidget {
 
         if (posts.isEmpty) {
           return _EmptyTab(
-            icon: mediaOnly
-                ? MaterialSymbols.image
-                : MaterialSymbols.notes,
+            icon: mediaOnly ? MaterialSymbols.image : MaterialSymbols.notes,
             message: mediaOnly ? 'No media yet' : 'No posts yet',
           );
         }
@@ -625,10 +623,8 @@ class _PostsList extends StatelessWidget {
         return ListView.separated(
           padding: EdgeInsets.zero,
           itemCount: posts.length + (showAd ? 1 : 0),
-          separatorBuilder: (context, index) => const Divider(
-            height: 0.5,
-            thickness: 0.5,
-          ),
+          separatorBuilder: (context, index) =>
+              const Divider(height: 0.5, thickness: 0.5),
           itemBuilder: (context, i) {
             if (showAd && i == 0) {
               return const Padding(

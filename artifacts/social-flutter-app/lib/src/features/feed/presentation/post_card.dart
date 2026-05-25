@@ -97,8 +97,9 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   String? _extractUrl(String text) {
     final urlRegExp = RegExp(
-        r'((https?|ftp)://[^\s/$.?#].[^\s]*)',
-        caseSensitive: false);
+      r'((https?|ftp)://[^\s/$.?#].[^\s]*)',
+      caseSensitive: false,
+    );
     final match = urlRegExp.firstMatch(text);
     return match?.group(0);
   }
@@ -172,7 +173,9 @@ class _PostCardState extends ConsumerState<PostCard> {
                         children: [
                           Flexible(
                             child: GestureDetector(
-                              onTap: () => context.push('/user/${displayPost.author.id}'),
+                              onTap: () => context.push(
+                                '/user/${displayPost.author.id}',
+                              ),
                               child: Text(
                                 displayPost.author.displayName,
                                 style: const TextStyle(
@@ -225,7 +228,8 @@ class _PostCardState extends ConsumerState<PostCard> {
             const SizedBox(height: 8),
 
             // Content
-            if (displayPost.content != null && displayPost.content!.isNotEmpty) ...[
+            if (displayPost.content != null &&
+                displayPost.content!.isNotEmpty) ...[
               _ContentText(content: displayPost.content!),
               const SizedBox(height: 8),
             ],
@@ -236,13 +240,16 @@ class _PostCardState extends ConsumerState<PostCard> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: GestureDetector(
-                  onLongPress: () =>
-                      context.push('/image-preview', extra: displayPost.imageUrl),
+                  onLongPress: () => context.push(
+                    '/image-preview',
+                    extra: displayPost.imageUrl,
+                  ),
                   child: CachedNetworkImage(
                     imageUrl: displayPost.imageUrl!,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) =>
-                        Container(color: theme.colorScheme.surfaceContainerHighest),
+                    placeholder: (context, url) => Container(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                    ),
                     errorWidget: (context, url, error) => Container(
                       color: theme.colorScheme.surfaceContainerHighest,
                       child: const Icon(MaterialSymbols.image),
@@ -349,7 +356,10 @@ class _ContentText extends StatelessWidget {
         spans.add(
           TextSpan(
             text: part,
-            style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         );
       } else {
@@ -396,12 +406,7 @@ class _ActionItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: iconColor,
-              fill: isFilled ? 1 : 0,
-            ),
+            Icon(icon, size: 20, color: iconColor, fill: isFilled ? 1 : 0),
             if (showCount && count > 0) ...[
               const SizedBox(width: 6),
               Text(

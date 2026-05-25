@@ -478,10 +478,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
           ElevatedButton.icon(
             onPressed: _isLoading ? null : _pickFaceImage,
-            icon: const Icon(
-              MaterialSymbols.photo_camera,
-              size: 18,
-            ),
+            icon: const Icon(MaterialSymbols.photo_camera, size: 18),
             label: Text(_faceImage == null ? "Capture Face" : "Retake Photo"),
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.surfaceContainer,
@@ -739,7 +736,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   decoration: BoxDecoration(
                     color: theme.colorScheme.errorContainer.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: theme.colorScheme.error.withOpacity(0.5)),
+                    border: Border.all(
+                      color: theme.colorScheme.error.withOpacity(0.5),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -904,7 +903,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         child: Text(
                           'OR',
                           style: TextStyle(
-                            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withOpacity(0.5),
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1,

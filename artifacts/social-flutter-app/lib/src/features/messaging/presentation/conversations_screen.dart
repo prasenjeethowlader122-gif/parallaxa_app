@@ -54,7 +54,10 @@ class ConversationsScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
-                style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface),
+                style: TextStyle(
+                  fontSize: 15,
+                  color: theme.colorScheme.onSurface,
+                ),
                 decoration: InputDecoration(
                   hintText: 'Search messages',
                   hintStyle: TextStyle(
@@ -86,7 +89,9 @@ class ConversationsScreen extends ConsumerWidget {
                         Icon(
                           MaterialSymbols.chat,
                           size: 52,
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                          color: theme.colorScheme.onSurfaceVariant.withOpacity(
+                            0.5,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(

@@ -71,8 +71,9 @@ class MainApp extends ConsumerWidget {
     final cardColor = isDark ? AppColors.darkCard : AppColors.card;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.border;
     final mutedColor = isDark ? AppColors.darkMuted : AppColors.muted;
-    final mutedForeground =
-        isDark ? AppColors.darkMutedForeground : AppColors.mutedForeground;
+    final mutedForeground = isDark
+        ? AppColors.darkMutedForeground
+        : AppColors.mutedForeground;
 
     return ThemeData(
       useMaterial3: true,
@@ -94,18 +95,11 @@ class MainApp extends ConsumerWidget {
       ),
 
       // Icon Theme
-      iconTheme: IconThemeData(
-        color: baseColor,
-        size: 24,
-      ),
+      iconTheme: IconThemeData(color: baseColor, size: 24),
 
       // Default Material Symbols settings
       extensions: [
-        const MaterialSymbolsStyle(
-          weight: 100,
-          grade: 0,
-          opticalSize: 24,
-        ),
+        const MaterialSymbolsStyle(weight: 100, grade: 0, opticalSize: 24),
       ],
 
       // AppBar
@@ -192,14 +186,8 @@ class MainApp extends ConsumerWidget {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
-        hintStyle: TextStyle(
-          color: mutedForeground,
-          fontSize: 15,
-        ),
-        labelStyle: TextStyle(
-          color: mutedForeground,
-          fontSize: 14,
-        ),
+        hintStyle: TextStyle(color: mutedForeground, fontSize: 15),
+        labelStyle: TextStyle(color: mutedForeground, fontSize: 14),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
