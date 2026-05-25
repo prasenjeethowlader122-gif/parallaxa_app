@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hugeicons/hugeicons.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../data/post_repository.dart';
 import '../../../core/app_colors.dart';
 import 'post_card.dart';
@@ -33,12 +33,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       children: [
         const StoryBar(),
         // ── Tab bar ──────────────────────────────────────────────────
         Container(
-          decoration: const BoxDecoration(color: AppColors.background),
+          decoration: BoxDecoration(color: theme.scaffoldBackgroundColor),
           child: TabBar(
             controller: _tab,
             tabs: _tabs.map((t) => Tab(text: t)).toList(),
@@ -50,23 +52,24 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
               fontWeight: FontWeight.w400,
               fontSize: 15,
             ),
-            labelColor: AppColors.foreground,
-            unselectedLabelColor: AppColors.mutedForeground,
-            indicatorColor: AppColors.foreground,
+            labelColor: theme.colorScheme.onSurface,
+            unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+            indicatorColor: theme.colorScheme.primary,
             indicatorWeight: 3,
             indicatorSize: TabBarIndicatorSize.label,
             splashFactory: NoSplash.splashFactory,
             overlayColor: WidgetStateProperty.all(Colors.transparent),
+            dividerColor: Colors.transparent,
           ),
         ),
         // ── Tab views ─────────────────────────────────────────────────
         Expanded(
           child: TabBarView(
             controller: _tab,
-            children: [
-              const _FeedList(feedType: 'public'),
-              const _FeedList(feedType: 'following'),
-              const _FeedList(feedType: 'trending'),
+            children: const [
+              _FeedList(feedType: 'public'),
+              _FeedList(feedType: 'following'),
+              _FeedList(feedType: 'trending'),
             ],
           ),
         ),
@@ -84,10 +87,11 @@ class _FeedList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return _buildList(ref);
+    return _buildList(ref, context);
   }
 
-  Widget _buildList(WidgetRef ref) {
+  Widget _buildList(WidgetRef ref, BuildContext context) {
+    final theme = Theme.of(context);
     final postsAsync = switch (feedType) {
       'following' => ref.watch(followingFeedProvider),
       'trending' => ref.watch(trendingFeedProvider),
@@ -95,9 +99,9 @@ class _FeedList extends ConsumerWidget {
     };
 
     return postsAsync.when(
-      loading: () => const Center(
+      loading: () => Center(
         child: CircularProgressIndicator(
-          color: AppColors.primary,
+          color: theme.colorScheme.primary,
           strokeWidth: 2,
         ),
       ),
@@ -107,29 +111,29 @@ class _FeedList extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const HugeIcon(
-                icon: HugeIcons.strokeRoundedWifi01,
+              Icon(
+                MaterialSymbols.wifi_off,
                 size: 44,
-                color: AppColors.mutedForeground,
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
               ),
               const SizedBox(height: 16),
               Text(
                 e.toString().contains('401')
                     ? 'Please log in to continue'
                     : 'Could not load posts',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.foreground,
+                  color: theme.colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 'Pull down to retry',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.mutedForeground,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -144,20 +148,20 @@ class _FeedList extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedNote01,
+                  Icon(
+                    MaterialSymbols.notes,
                     size: 48,
-                    color: AppColors.mutedForeground.withValues(alpha: 0.5),
+                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     feedType == 'following'
                         ? 'Follow people to see their posts here'
                         : 'Nothing here yet',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.foreground,
+                      color: theme.colorScheme.onSurface,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -167,7 +171,7 @@ class _FeedList extends ConsumerWidget {
           );
         }
         return RefreshIndicator(
-          color: AppColors.primary,
+          color: theme.colorScheme.primary,
           onRefresh: () async {
             ref.invalidate(publicFeedProvider);
             ref.invalidate(followingFeedProvider);

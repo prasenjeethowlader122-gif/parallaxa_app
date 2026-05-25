@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hugeicons/hugeicons.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/domain/user.dart';
 import '../../feed/domain/post.dart';
@@ -93,6 +93,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = ref.watch(l10nProvider);
+    final theme = Theme.of(context);
     final tabs = [
       l10n.get('posts'),
       l10n.get('replies'),
@@ -104,9 +105,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     return Scaffold(
       body: userAsync.when(
-        loading: () => const Center(
+        loading: () => Center(
           child: CircularProgressIndicator(
-            color: AppColors.primary,
+            color: theme.colorScheme.primary,
             strokeWidth: 2,
           ),
         ),
@@ -114,15 +115,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const HugeIcon(
-                icon: HugeIcons.strokeRoundedAlertCircle,
+              Icon(
+                MaterialSymbols.error,
                 size: 40,
-                color: AppColors.mutedForeground,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Could not load profile',
-                style: TextStyle(color: AppColors.mutedForeground),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
@@ -135,7 +136,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         ),
         data: (user) {
           return RefreshIndicator(
-            color: AppColors.primary,
+            color: theme.colorScheme.primary,
             onRefresh: () async {
               ref.invalidate(userProfileProvider(effectiveUserId));
               ref.invalidate(userPostsProvider(effectiveUserId));
@@ -167,13 +168,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         fontWeight: FontWeight.w400,
                         fontSize: 14,
                       ),
-                      labelColor: AppColors.textPrimary,
-                      unselectedLabelColor: AppColors.mutedForeground,
-                      indicatorColor: AppColors.primary,
+                      labelColor: theme.colorScheme.onSurface,
+                      unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                      indicatorColor: theme.colorScheme.primary,
                       indicatorWeight: 3,
                       indicatorSize: TabBarIndicatorSize.label,
                       splashFactory: NoSplash.splashFactory,
                       overlayColor: WidgetStateProperty.all(Colors.transparent),
+                      dividerColor: Colors.transparent,
                     ),
                   ),
                 ),
@@ -181,26 +183,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               body: TabBarView(
                 controller: _tab,
                 children: [
-                  // Posts tab — list
                   _PostsList(
                     postsAsync: postsAsync,
                     isOwnProfile: isOwnProfile,
                   ),
-                  // Replies — placeholder
-                  _EmptyTab(
-                    icon: HugeIcons.strokeRoundedChat01,
+                  const _EmptyTab(
+                    icon: MaterialSymbols.chat,
                     message: 'No replies yet',
                   ),
-                  // Media — list filtered to posts with images
                   _PostsList(
                     postsAsync: postsAsync,
                     mediaOnly: true,
                     isOwnProfile: isOwnProfile,
                     l10n: l10n,
                   ),
-                  // Likes — placeholder
-                  _EmptyTab(
-                    icon: HugeIcons.strokeRoundedFavourite,
+                  const _EmptyTab(
+                    icon: MaterialSymbols.favorite,
                     message: 'No liked posts yet',
                   ),
                 ],
@@ -212,8 +210,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 }
-
-// ─── Profile Header ───────────────────────────────────────────────────────────
 
 class _ProfileHeader extends StatelessWidget {
   final User user;
@@ -236,24 +232,24 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Action row (settings / logout) ─────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // back button (when opened as a sub-route)
               const SizedBox(width: 48),
               Expanded(
                 child: Text(
                   user.displayName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 17,
-                    color: AppColors.textPrimary,
+                    color: theme.colorScheme.onSurface,
                   ),
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
@@ -261,58 +257,54 @@ class _ProfileHeader extends StatelessWidget {
               ),
               if (isOwnProfile)
                 IconButton(
-                  icon: const HugeIcon(
-                    icon: HugeIcons.strokeRoundedLogout01,
-                    color: AppColors.textPrimary,
-                    size: 22,
-                  ),
+                  icon: const Icon(MaterialSymbols.logout, size: 22),
                   onPressed: onLogout,
+                  color: theme.colorScheme.onSurface,
                 )
               else
                 IconButton(
-                  icon: const HugeIcon(
-                    icon: HugeIcons.strokeRoundedMoreHorizontal,
-                    color: AppColors.textPrimary,
-                    size: 22,
-                  ),
+                  icon: const Icon(MaterialSymbols.more_horiz, size: 22),
                   onPressed: () =>
                       context.push('/profile/options', extra: user),
+                  color: theme.colorScheme.onSurface,
                 ),
             ],
           ),
         ),
 
-        // ── Cover banner (158px) ─────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Container(
               height: 158,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFFCFD9DE), Color(0xFF9DB8C4)],
+                  colors: theme.brightness == Brightness.dark
+                      ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                      : [const Color(0xFFCFD9DE), const Color(0xFF9DB8C4)],
                 ),
               ),
             ),
           ),
         ),
 
-        // ── Avatar overlapping cover ─────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              // Avatar — overlaps by 38px
               Transform.translate(
                 offset: const Offset(0, -38),
                 child: Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.background, width: 3),
+                    border: Border.all(
+                      color: theme.scaffoldBackgroundColor,
+                      width: 3,
+                    ),
                   ),
                   child: UserAvatar(
                     uri: user.avatarUrl,
@@ -323,7 +315,6 @@ class _ProfileHeader extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              // Edit / Follow button
               Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: isOwnProfile
@@ -331,8 +322,8 @@ class _ProfileHeader extends StatelessWidget {
                         onPressed: () =>
                             context.push('/profile/edit', extra: user),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(
-                            color: AppColors.border,
+                          side: BorderSide(
+                            color: theme.dividerColor,
                             width: 1.2,
                           ),
                           shape: const StadiumBorder(),
@@ -341,13 +332,13 @@ class _ProfileHeader extends StatelessWidget {
                             vertical: 8,
                           ),
                           minimumSize: Size.zero,
+                          foregroundColor: theme.colorScheme.onSurface,
                         ),
                         child: Text(
                           l10n.get('edit_profile'),
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
-                            color: AppColors.textPrimary,
                           ),
                         ),
                       )
@@ -357,8 +348,8 @@ class _ProfileHeader extends StatelessWidget {
                             onPressed: () =>
                                 context.push('/messages/start', extra: user),
                             style: OutlinedButton.styleFrom(
-                              side: const BorderSide(
-                                color: AppColors.border,
+                              side: BorderSide(
+                                color: theme.dividerColor,
                                 width: 1.2,
                               ),
                               shape: const StadiumBorder(),
@@ -367,24 +358,24 @@ class _ProfileHeader extends StatelessWidget {
                                 vertical: 8,
                               ),
                               minimumSize: Size.zero,
+                              foregroundColor: theme.colorScheme.onSurface,
                             ),
                             child: Text(
                               l10n.get('message'),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14,
-                                color: AppColors.textPrimary,
                               ),
                             ),
                           ),
                           const SizedBox(width: 8),
                           if (isFollowLoading)
-                            const SizedBox(
+                            SizedBox(
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: AppColors.primary,
+                                color: theme.colorScheme.primary,
                               ),
                             )
                           else
@@ -392,14 +383,14 @@ class _ProfileHeader extends StatelessWidget {
                               onPressed: onFollow,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: isFollowing
-                                    ? AppColors.background
-                                    : AppColors.textPrimary,
+                                    ? theme.scaffoldBackgroundColor
+                                    : theme.colorScheme.onSurface,
                                 foregroundColor: isFollowing
-                                    ? AppColors.textPrimary
-                                    : Colors.white,
+                                    ? theme.colorScheme.onSurface
+                                    : theme.colorScheme.surface,
                                 side: isFollowing
-                                    ? const BorderSide(
-                                        color: AppColors.border,
+                                    ? BorderSide(
+                                        color: theme.dividerColor,
                                         width: 1.2,
                                       )
                                     : BorderSide.none,
@@ -428,7 +419,6 @@ class _ProfileHeader extends StatelessWidget {
           ),
         ),
 
-        // ── Name, username, bio ────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
           child: Column(
@@ -438,18 +428,19 @@ class _ProfileHeader extends StatelessWidget {
                 children: [
                   Text(
                     user.displayName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 19,
-                      color: AppColors.textPrimary,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   if (user.isVerified) ...[
                     const SizedBox(width: 4),
-                    const HugeIcon(
-                      icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                    const Icon(
+                      MaterialSymbols.verified,
                       size: 18,
                       color: AppColors.verified,
+                      fill: 1,
                     ),
                   ],
                 ],
@@ -457,18 +448,18 @@ class _ProfileHeader extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 '@${user.username}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.textMuted,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               if (user.bio != null && user.bio!.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(
                   user.bio!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
-                    color: AppColors.foreground,
+                    color: theme.colorScheme.onSurface,
                     height: 1.4,
                   ),
                 ),
@@ -477,17 +468,18 @@ class _ProfileHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const HugeIcon(
-                      icon: HugeIcons.strokeRoundedLink01,
-                      size: 14,
-                      color: AppColors.primary,
+                    Icon(
+                      MaterialSymbols.link,
+                      size: 16,
+                      color: theme.colorScheme.primary,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       user.website!,
-                      style: const TextStyle(
-                        color: AppColors.primary,
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
                         fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -495,7 +487,6 @@ class _ProfileHeader extends StatelessWidget {
               ],
               const SizedBox(height: 14),
 
-              // ── Stats row (Following X · Followers X) ────────────
               Row(
                 children: [
                   _StatChip(
@@ -532,28 +523,30 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           _fmt(count),
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 15,
-            color: AppColors.textPrimary,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         const SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 14, color: AppColors.textMuted),
+          style: TextStyle(
+            fontSize: 14,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
   }
 }
-
-// ─── Tab bar persistent header ────────────────────────────────────────────────
 
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
@@ -584,8 +577,6 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(_TabBarDelegate oldDelegate) => false;
 }
 
-// ─── Posts List ───────────────────────────────────────────────────────────────
-
 class _PostsList extends StatelessWidget {
   final AsyncValue<PostPage> postsAsync;
   final bool mediaOnly;
@@ -601,17 +592,18 @@ class _PostsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return postsAsync.when(
-      loading: () => const Center(
+      loading: () => Center(
         child: CircularProgressIndicator(
-          color: AppColors.primary,
+          color: theme.colorScheme.primary,
           strokeWidth: 2,
         ),
       ),
-      error: (context, error) => const Center(
+      error: (context, error) => Center(
         child: Text(
           'Could not load posts',
-          style: TextStyle(color: AppColors.mutedForeground),
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       ),
       data: (page) {
@@ -621,9 +613,7 @@ class _PostsList extends StatelessWidget {
 
         if (posts.isEmpty) {
           return _EmptyTab(
-            icon: mediaOnly
-                ? HugeIcons.strokeRoundedImage01
-                : HugeIcons.strokeRoundedNote01,
+            icon: mediaOnly ? MaterialSymbols.image : MaterialSymbols.notes,
             message: mediaOnly ? 'No media yet' : 'No posts yet',
           );
         }
@@ -633,11 +623,8 @@ class _PostsList extends StatelessWidget {
         return ListView.separated(
           padding: EdgeInsets.zero,
           itemCount: posts.length + (showAd ? 1 : 0),
-          separatorBuilder: (context, index) => const Divider(
-            height: 0.5,
-            thickness: 0.5,
-            color: AppColors.border,
-          ),
+          separatorBuilder: (context, index) =>
+              const Divider(height: 0.5, thickness: 0.5),
           itemBuilder: (context, i) {
             if (showAd && i == 0) {
               return const Padding(
@@ -655,35 +642,30 @@ class _PostsList extends StatelessWidget {
 }
 
 class _EmptyTab extends StatelessWidget {
-  final dynamic icon;
+  final IconData icon;
   final String message;
 
   const _EmptyTab({required this.icon, required this.message});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          icon is IconData
-              ? Icon(
-                  icon as IconData,
-                  size: 44,
-                  color: AppColors.mutedForeground.withValues(alpha: 0.5),
-                )
-              : HugeIcon(
-                  icon: icon,
-                  size: 44,
-                  color: AppColors.mutedForeground.withValues(alpha: 0.5),
-                ),
+          Icon(
+            icon,
+            size: 44,
+            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+          ),
           const SizedBox(height: 14),
           Text(
             message,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppColors.mutedForeground,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
