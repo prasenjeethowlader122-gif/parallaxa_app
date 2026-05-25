@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hugeicons/hugeicons.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
@@ -27,18 +27,19 @@ class ConversationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final convAsync = ref.watch(conversationsProvider);
+    final theme = Theme.of(context);
 
     return convAsync.when(
-      loading: () => const Center(
+      loading: () => Center(
         child: CircularProgressIndicator(
-          color: AppColors.primary,
+          color: theme.colorScheme.primary,
           strokeWidth: 2,
         ),
       ),
-      error: (context, error) => const Center(
+      error: (context, error) => Center(
         child: Text(
           'Could not load messages',
-          style: TextStyle(color: AppColors.mutedForeground),
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       ),
       data: (conversations) => Column(
@@ -49,27 +50,27 @@ class ConversationsScreen extends ConsumerWidget {
             child: Container(
               height: 40,
               decoration: BoxDecoration(
-                color: AppColors.muted,
+                color: theme.colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const TextField(
-                style: TextStyle(fontSize: 15, color: AppColors.foreground),
+              child: TextField(
+                style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface),
                 decoration: InputDecoration(
                   hintText: 'Search messages',
                   hintStyle: TextStyle(
-                    color: AppColors.mutedForeground,
+                    color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 15,
                   ),
-                  prefixIcon: Padding(
-                    padding: EdgeInsets.all(10),
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedSearch01,
-                      color: AppColors.mutedForeground,
-                      size: 20,
-                    ),
+                  prefixIcon: Icon(
+                    MaterialSymbols.search,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    size: 20,
                   ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 10),
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                  fillColor: Colors.transparent,
                 ),
               ),
             ),
@@ -82,33 +83,33 @@ class ConversationsScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const HugeIcon(
-                          icon: HugeIcons.strokeRoundedChat01,
+                        Icon(
+                          MaterialSymbols.chat,
                           size: 52,
-                          color: AppColors.mutedForeground,
+                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
                         ),
                         const SizedBox(height: 16),
-                        const Text(
+                        Text(
                           'No messages yet',
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.foreground,
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 6),
-                        const Text(
+                        Text(
                           'Start a conversation',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.mutedForeground,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
                     ),
                   )
                 : RefreshIndicator(
-                    color: AppColors.primary,
+                    color: theme.colorScheme.primary,
                     onRefresh: () => ref.refresh(conversationsProvider.future),
                     child: ListView.builder(
                       itemCount: conversations.length,
@@ -147,7 +148,9 @@ class _ConversationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final hasUnread = conv.unreadCount > 0;
+
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -159,14 +162,14 @@ class _ConversationTile extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 23,
-                  backgroundColor: AppColors.muted,
+                  backgroundColor: theme.colorScheme.surfaceContainer,
                   backgroundImage: conv.participant.avatarUrl != null
                       ? CachedNetworkImageProvider(conv.participant.avatarUrl!)
                       : null,
                   child: conv.participant.avatarUrl == null
-                      ? const HugeIcon(
-                          icon: HugeIcons.strokeRoundedUser,
-                          color: AppColors.mutedForeground,
+                      ? Icon(
+                          MaterialSymbols.person,
+                          color: theme.colorScheme.onSurfaceVariant,
                           size: 24,
                         )
                       : null,
@@ -190,7 +193,7 @@ class _ConversationTile extends StatelessWidget {
                             fontWeight: hasUnread
                                 ? FontWeight.w700
                                 : FontWeight.w500,
-                            color: AppColors.textPrimary,
+                            color: theme.colorScheme.onSurface,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -200,8 +203,8 @@ class _ConversationTile extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           color: hasUnread
-                              ? AppColors.primary
-                              : AppColors.textMuted,
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
                           fontWeight: hasUnread
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -218,8 +221,8 @@ class _ConversationTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 13,
                             color: hasUnread
-                                ? AppColors.foreground
-                                : AppColors.textMuted,
+                                ? theme.colorScheme.onSurface
+                                : theme.colorScheme.onSurfaceVariant,
                             fontWeight: hasUnread
                                 ? FontWeight.w500
                                 : FontWeight.normal,
@@ -236,7 +239,7 @@ class _ConversationTile extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: theme.colorScheme.primary,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(

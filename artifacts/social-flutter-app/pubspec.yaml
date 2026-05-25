@@ -59,6 +59,8 @@ dependencies:
   http: ^1.6.0
   gal: ^2.3.2
   google_fonts: ^8.1.0
+  any_link_preview: ^3.0.3
+  material_symbols_icons: ^4.2928.1
 
 dev_dependencies:
   flutter_test:
