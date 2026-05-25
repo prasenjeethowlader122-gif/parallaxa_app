@@ -10,6 +10,7 @@ class User {
   final String displayName;
   final String? bio;
   final String? avatarUrl;
+  final String? coverUrl;
   final String? website;
   final bool isVerified;
   final String? verificationStatus;
@@ -32,6 +33,7 @@ class User {
     required this.displayName,
     this.bio,
     this.avatarUrl,
+    this.coverUrl,
     this.website,
     required this.isVerified,
     this.verificationStatus,

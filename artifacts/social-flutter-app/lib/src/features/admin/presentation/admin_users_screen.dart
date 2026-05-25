@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hugeicons/hugeicons.dart';
+import "package:material_symbols_icons/material_symbols_icons.dart";
 import '../data/admin_repository.dart';
 import '../../../core/app_colors.dart';
 import '../../auth/domain/user.dart';
@@ -57,8 +57,8 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                   hintText: 'Search users...',
                   prefixIcon: Padding(
                     padding: EdgeInsets.all(10),
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedSearch01,
+                    child: Icon(
+                      Symbols.search,
                       color: AppColors.mutedForeground,
                       size: 20,
                     ),
@@ -87,8 +87,8 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                       ? NetworkImage(user.avatarUrl!)
                       : null,
                   child: user.avatarUrl == null
-                      ? const HugeIcon(
-                          icon: HugeIcons.strokeRoundedUser,
+                      ? const Icon(
+                          Symbols.person,
                           color: AppColors.mutedForeground,
                         )
                       : null,
@@ -102,22 +102,22 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (user.isVerified)
-                      const HugeIcon(
-                        icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                      const Icon(
+                        Symbols.verified,
                         color: AppColors.verified,
                         size: 20,
                       )
                     else
                       IconButton(
-                        icon: const HugeIcon(
-                          icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                        icon: const Icon(
+                          Symbols.verified,
                           size: 20,
                         ),
                         onPressed: () => _toggleVerify(user),
                       ),
                     PopupMenuButton(
-                      icon: const HugeIcon(
-                        icon: HugeIcons.strokeRoundedMoreVertical,
+                      icon: const Icon(
+                        Symbols.more_vert,
                         size: 20,
                         color: AppColors.textPrimary,
                       ),

@@ -1,26 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:material_symbols_icons/material_symbols_icons.dart";
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:hugeicons/hugeicons.dart';
-import '../../auth/data/auth_repository.dart';
 import '../data/post_repository.dart';
 import '../domain/post.dart';
 import '../../../core/app_colors.dart';
+import 'post_card.dart';
 import '../../profile/presentation/widgets/user_avatar.dart';
-import 'package:intl/intl.dart';
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-const double parentAvatarSize = 38;
-const double replyAvatarSize = 28;
-const double gutterWidth = parentAvatarSize;
-const double gutterGap = 10;
-const double curveSvgHeight = 32;
-const double replyRowTopPad = curveSvgHeight - (replyAvatarSize / 2); // 18
 
 class PostDetailScreen extends ConsumerStatefulWidget {
   final String postId;
-
   const PostDetailScreen({super.key, required this.postId});
 
   @override
@@ -29,80 +19,28 @@ class PostDetailScreen extends ConsumerStatefulWidget {
 
 class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   final _commentController = TextEditingController();
-  final _focusNode = FocusNode();
-  bool _isSubmitting = false;
-  String? _replyTargetId;
-  String? _replyTargetUsername;
-  bool _isTranslating = false;
-  String? _translatedContent;
+  bool _isReplying = false;
 
   @override
   void dispose() {
     _commentController.dispose();
-    _focusNode.dispose();
     super.dispose();
   }
 
-  Future<void> _translatePost(String content) async {
-    if (_isTranslating) return;
-    setState(() => _isTranslating = true);
-    // Simulate translation with a delay
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() {
-        _translatedContent =
-            "This is a simulated translation of the post: $content";
-        _isTranslating = false;
-      });
-    }
-  }
-
-  Future<void> _submitComment() async {
-    final content = _commentController.text.trim();
-    if (content.isEmpty) return;
-
-    setState(() => _isSubmitting = true);
+  Future<void> _submitReply() async {
+    final text = _commentController.text.trim();
+    if (text.isEmpty) return;
+    setState(() => _isReplying = true);
     try {
-      await ref
-          .read(postRepositoryProvider)
-          .createPost(
-            content: content,
-            parentPostId: _replyTargetId ?? widget.postId,
-          );
+      await ref.read(postRepositoryProvider).createPost(content: text, parentPostId: widget.postId);
       _commentController.clear();
-      setState(() {
-        _replyTargetId = null;
-        _replyTargetUsername = null;
-      });
       ref.invalidate(postRepliesProvider(widget.postId));
       ref.invalidate(postDetailProvider(widget.postId));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to post comment')));
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted) setState(() => _isReplying = false);
     }
-  }
-
-  void _onReply(String commentId, String username) {
-    setState(() {
-      _replyTargetId = commentId;
-      _replyTargetUsername = username;
-    });
-    _focusNode.requestFocus();
-  }
-
-  String _formatFullDate(DateTime dt) {
-    return DateFormat('h:mm a · MMM d, y').format(dt);
-  }
-
-  String _fmtCount(int n) {
-    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}K';
-    return '$n';
   }
 
   @override
@@ -114,785 +52,120 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Post'),
-        centerTitle: true,
         leading: IconButton(
-          icon: const HugeIcon(
-            icon: HugeIcons.strokeRoundedArrowLeft01,
-            color: AppColors.textPrimary,
-          ),
+          icon: const Icon(Symbols.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                ref.invalidate(postDetailProvider(widget.postId));
-                ref.invalidate(postRepliesProvider(widget.postId));
-              },
-              child: ListView(
-                children: [
-                  // Parent Post
-                  postAsync.when(
-                    data: (post) => _ParentPostView(
-                      post: post,
-                      onReply: () => _onReply(post.id, post.author.username),
-                      onTranslate: () => _translatePost(post.content ?? ""),
-                      isTranslating: _isTranslating,
-                      translatedContent: _translatedContent,
-                      formatDate: _formatFullDate,
-                      fmtCount: _fmtCount,
+      body: postAsync.when(
+        data: (post) => Column(
+          children: [
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(postDetailProvider(widget.postId));
+                  ref.invalidate(postRepliesProvider(widget.postId));
+                },
+                child: ListView(
+                  children: [
+                    PostCard(post: post, onTap: () {}),
+                    const Divider(),
+                    repliesAsync.when(
+                      data: (page) => Column(
+                        children: page.posts.map((reply) => _CommentItem(comment: reply)).toList(),
+                      ),
+                      loading: () => const Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                      error: (e, _) => Center(child: Text('Error loading replies: $e')),
                     ),
-                    loading: () => const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
-                    error: (e, _) => Center(child: Text('Error: $e')),
-                  ),
-
-                  // Replying to banner
-                  if (_replyTargetUsername != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.05),
-                        border: const Border(
-                          bottom: BorderSide(
-                            color: AppColors.border,
-                            width: 0.5,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text.rich(
-                            TextSpan(
-                              text: 'Replying to ',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: AppColors.mutedForeground,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text: '@$_replyTargetUsername',
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => setState(() {
-                              _replyTargetId = null;
-                              _replyTargetUsername = null;
-                            }),
-                            child: const Text(
-                              'Cancel',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  // Replies
-                  repliesAsync.when(
-                    data: (page) {
-                      final tree = _buildCommentTree(page.posts);
-                      return Column(
-                        children: tree
-                            .map(
-                              (comment) => _CommentItem(
-                                comment: comment,
-                                onReply: _onReply,
-                                depth: 0,
-                              ),
-                            )
-                            .toList(),
-                      );
-                    },
-                    loading: () => const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
-                    error: (e, _) => Center(child: Text('Error: $e')),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          _CommentInput(
-            controller: _commentController,
-            focusNode: _focusNode,
-            isSubmitting: _isSubmitting,
-            onSend: _submitComment,
-            replyTargetUsername: _replyTargetUsername,
-          ),
-        ],
+            _ReplyBar(
+              controller: _commentController,
+              isReplying: _isReplying,
+              onSubmit: _submitReply,
+            ),
+          ],
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
       ),
     );
   }
-
-  List<_CommentNode> _buildCommentTree(List<Post> flat) {
-    final map = <String, _CommentNode>{};
-    final roots = <_CommentNode>[];
-
-    final sorted = [...flat]
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
-    for (var p in sorted) {
-      map[p.id] = _CommentNode(p);
-    }
-
-    for (var p in sorted) {
-      final node = map[p.id]!;
-      if (p.parentPostId != null &&
-          p.parentPostId != widget.postId &&
-          map.containsKey(p.parentPostId)) {
-        map[p.parentPostId]!.replies.add(node);
-      } else {
-        roots.add(node);
-      }
-    }
-    return roots;
-  }
 }
 
-class _CommentNode {
-  final Post post;
-  final List<_CommentNode> replies = [];
-  _CommentNode(this.post);
-}
-
-// ── Parent Post View ───────────────────────────────────────────────────────────
-
-class _ParentPostView extends StatelessWidget {
-  final Post post;
-  final VoidCallback onReply;
-  final VoidCallback onTranslate;
-  final bool isTranslating;
-  final String? translatedContent;
-  final String Function(DateTime) formatDate;
-  final String Function(int) fmtCount;
-
-  const _ParentPostView({
-    required this.post,
-    required this.onReply,
-    required this.onTranslate,
-    required this.isTranslating,
-    this.translatedContent,
-    required this.formatDate,
-    required this.fmtCount,
-  });
+class _CommentItem extends StatelessWidget {
+  final Post comment;
+  const _CommentItem({required this.comment});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Author Row
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: () => context.push('/user/${post.author.id}'),
-                child: UserAvatar(uri: post.author.avatarUrl, size: 44),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => context.push('/user/${post.author.id}'),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              post.author.displayName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (post.author.isVerified) ...[
-                            const SizedBox(width: 4),
-                            const HugeIcon(
-                              icon: HugeIcons.strokeRoundedCheckmarkBadge01,
-                              size: 16,
-                              color: AppColors.primary,
-                            ),
-                          ],
-                        ],
-                      ),
-                      Text(
-                        '@${post.author.username}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.mutedForeground,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const HugeIcon(
-                icon: HugeIcons.strokeRoundedMoreHorizontal,
-                size: 20,
-                color: AppColors.mutedForeground,
-              ),
-            ],
-          ),
-        ),
-
-        // Content
-        if (post.content != null && post.content!.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          UserAvatar(uri: comment.author.avatarUrl, size: 32),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  post.content!,
-                  style: const TextStyle(fontSize: 18, height: 1.4),
+                Row(
+                  children: [
+                    Text(comment.author.displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 4),
+                    Text('@${comment.author.username}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  ],
                 ),
-                if (translatedContent != null) ...[
-                  const SizedBox(height: 12),
-                  const Divider(height: 1),
-                  const SizedBox(height: 12),
-                  Text(
-                    translatedContent!,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      height: 1.4,
-                      fontStyle: FontStyle.italic,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: onTranslate,
-                  child: Row(
-                    children: [
-                      const HugeIcon(
-                        icon: HugeIcons.strokeRoundedTranslate,
-                        size: 14,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        isTranslating ? 'Translating...' : 'Translate Post',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                const SizedBox(height: 4),
+                Text(comment.content ?? ''),
               ],
             ),
           ),
-
-        // Image
-        if (post.imageUrl != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: CachedNetworkImage(
-                  imageUrl: post.imageUrl!,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
-
-        // Timestamp
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Text(
-            formatDate(post.createdAt),
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.mutedForeground,
-            ),
-          ),
-        ),
-
-        const Divider(height: 1),
-
-        // Stats
-        if (post.likesCount > 0 || post.repliesCount > 0)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                if (post.repliesCount > 0) ...[
-                  Text(
-                    fmtCount(post.repliesCount),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const Text(
-                    ' Replies',
-                    style: TextStyle(color: AppColors.mutedForeground),
-                  ),
-                  const SizedBox(width: 16),
-                ],
-                if (post.likesCount > 0) ...[
-                  Text(
-                    fmtCount(post.likesCount),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    post.likesCount == 1 ? ' Like' : ' Likes',
-                    style: const TextStyle(color: AppColors.mutedForeground),
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-        if (post.likesCount > 0 || post.repliesCount > 0)
-          const Divider(height: 1),
-
-        // Actions
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              IconButton(
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedAiChat01,
-                  color: AppColors.mutedForeground,
-                ),
-                onPressed: onReply,
-              ),
-              IconButton(
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedArrowUp01,
-                  color: AppColors.mutedForeground,
-                ),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: HugeIcon(
-                  icon: post.isLiked
-                      ? HugeIcons.strokeRoundedFavourite
-                      : HugeIcons.strokeRoundedFavourite,
-                  color: post.isLiked
-                      ? AppColors.like
-                      : AppColors.mutedForeground,
-                ),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: HugeIcon(
-                  icon: post.isSaved
-                      ? HugeIcons.strokeRoundedBookmark01
-                      : HugeIcons.strokeRoundedBookmark01,
-                  color: post.isSaved
-                      ? AppColors.saved
-                      : AppColors.mutedForeground,
-                ),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedShare01,
-                  color: AppColors.mutedForeground,
-                ),
-                onPressed: () {},
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-      ],
-    );
-  }
-}
-
-// ── Comment Item ───────────────────────────────────────────────────────────────
-
-class _CommentItem extends StatefulWidget {
-  final _CommentNode comment;
-  final Function(String, String) onReply;
-  final int depth;
-
-  const _CommentItem({
-    required this.comment,
-    required this.onReply,
-    required this.depth,
-  });
-
-  @override
-  State<_CommentItem> createState() => _CommentItemState();
-}
-
-class _CommentItemState extends State<_CommentItem> {
-  bool _isExpanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final post = widget.comment.post;
-    final hasReplies = widget.comment.replies.isNotEmpty;
-    final avatarSize = widget.depth > 0 ? replyAvatarSize : parentAvatarSize;
-
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.fromLTRB(
-            14,
-            widget.depth > 0 ? replyRowTopPad : 12,
-            14,
-            0,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Gutter
-              SizedBox(
-                width: gutterWidth,
-                child: Column(
-                  children: [
-                    GestureDetector(
-                      onTap: () => context.push('/user/${post.author.id}'),
-                      child: UserAvatar(
-                        uri: post.author.avatarUrl,
-                        size: avatarSize,
-                      ),
-                    ),
-                    if (hasReplies && _isExpanded)
-                      Container(
-                        width: 2,
-                        height: 20, // Simple straight line
-                        margin: const EdgeInsets.only(top: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.border,
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: gutterGap),
-
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                      onTap: () => context.push('/user/${post.author.id}'),
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              post.author.displayName,
-                              style: TextStyle(
-                                fontSize: widget.depth > 0 ? 13 : 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (post.author.isVerified) ...[
-                            const SizedBox(width: 4),
-                            HugeIcon(
-                              icon: HugeIcons.strokeRoundedCheckmarkBadge01,
-                              size: widget.depth > 0 ? 12 : 14,
-                              color: AppColors.primary,
-                            ),
-                          ],
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              '@${post.author.username} · ${_timeAgo(post.createdAt)}',
-                              style: TextStyle(
-                                fontSize: widget.depth > 0 ? 12 : 13,
-                                color: AppColors.mutedForeground,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      post.content ?? '',
-                      style: TextStyle(fontSize: widget.depth > 0 ? 13 : 14),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        _CommentAction(
-                          icon: HugeIcon(
-                            icon: HugeIcons.strokeRoundedAiChat01,
-                            color: AppColors.mutedForeground,
-                            size: widget.depth > 0 ? 14 : 16,
-                          ),
-                          count: post.repliesCount,
-                          onTap: () =>
-                              widget.onReply(post.id, post.author.username),
-                          size: widget.depth > 0 ? 14 : 16,
-                        ),
-                        const SizedBox(width: 20),
-                        _CommentAction(
-                          icon: HugeIcon(
-                            icon: HugeIcons.strokeRoundedFavourite,
-                            size: widget.depth > 0 ? 14 : 16,
-                            color: post.isLiked
-                                ? Colors.red
-                                : AppColors.mutedForeground,
-                          ),
-                          count: post.likesCount,
-                          onTap: () {},
-                          size: widget.depth > 0 ? 14 : 16,
-                          color: post.isLiked ? Colors.red : null,
-                        ),
-                        const SizedBox(width: 20),
-                        _CommentAction(
-                          icon: HugeIcon(
-                            icon: HugeIcons.strokeRoundedShare01,
-                            color: AppColors.mutedForeground,
-                            size: widget.depth > 0 ? 14 : 16,
-                          ),
-                          count: 0,
-                          onTap: () {},
-                          size: widget.depth > 0 ? 14 : 16,
-                        ),
-                      ],
-                    ),
-                    if (hasReplies && !_isExpanded)
-                      GestureDetector(
-                        onTap: () => setState(() => _isExpanded = true),
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 10, bottom: 10),
-                          child: Text(
-                            widget.comment.replies.length > 1
-                                ? 'View ${widget.comment.replies.length} replies'
-                                : 'View reply',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Nested Replies
-        if (_isExpanded && hasReplies)
-          Column(
-            children: widget.comment.replies.map((reply) {
-              return Stack(
-                children: [
-                  // Curved Line
-                  Positioned(
-                    left: 14,
-                    top: 0,
-                    child: SizedBox(
-                      width: gutterWidth,
-                      height: curveSvgHeight,
-                      child: CustomPaint(
-                        painter: _CurvePainter(color: AppColors.border),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: gutterWidth + 4),
-                    child: _CommentItem(
-                      comment: reply,
-                      onReply: widget.onReply,
-                      depth: widget.depth + 1,
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-        if (!_isExpanded || !hasReplies) const Divider(height: 1),
-      ],
-    );
-  }
-
-  String _timeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inSeconds < 60) return 'now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
-    if (diff.inHours < 24) return '${diff.inHours}h';
-    return '${diff.inDays}d';
-  }
-}
-
-class _CommentAction extends StatelessWidget {
-  final Widget icon;
-  final int count;
-  final VoidCallback onTap;
-  final double size;
-  final Color? color;
-
-  const _CommentAction({
-    required this.icon,
-    required this.count,
-    required this.onTap,
-    this.size = 16,
-    this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Row(
-        children: [
-          icon,
-          if (count > 0) ...[
-            const SizedBox(width: 4),
-            Text(
-              '$count',
-              style: TextStyle(
-                fontSize: size * 0.75,
-                color: color ?? AppColors.mutedForeground,
-              ),
-            ),
-          ],
         ],
       ),
     );
   }
 }
 
-class _CurvePainter extends CustomPainter {
-  final Color color;
-  _CurvePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path();
-    path.moveTo(size.width / 2, 0);
-    path.lineTo(size.width / 2, 18);
-    path.quadraticBezierTo(size.width / 2, 32, size.width, 32);
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// ── Comment Input ─────────────────────────────────────────────────────────────
-
-class _CommentInput extends ConsumerWidget {
+class _ReplyBar extends StatelessWidget {
   final TextEditingController controller;
-  final FocusNode focusNode;
-  final bool isSubmitting;
-  final VoidCallback onSend;
-  final String? replyTargetUsername;
+  final bool isReplying;
+  final VoidCallback onSubmit;
 
-  const _CommentInput({
-    required this.controller,
-    required this.focusNode,
-    required this.isSubmitting,
-    required this.onSend,
-    this.replyTargetUsername,
-  });
+  const _ReplyBar({required this.controller, required this.isReplying, required this.onSubmit});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final me = ref.watch(currentUserProvider).value;
-
+  Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(
-        left: 14,
-        right: 14,
-        top: 10,
-        bottom: MediaQuery.of(context).padding.bottom + 10,
+        left: 16, right: 16, top: 8,
+        bottom: MediaQuery.of(context).padding.bottom + 8,
       ),
       decoration: const BoxDecoration(
-        color: AppColors.background,
         border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          UserAvatar(uri: me?.avatarUrl, size: 36),
-          const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: controller,
-              focusNode: focusNode,
-              decoration: InputDecoration(
-                hintText: replyTargetUsername != null
-                    ? 'Reply to @$replyTargetUsername…'
-                    : 'Post your reply',
+              decoration: const InputDecoration(
+                hintText: 'Post your reply',
                 border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
                 filled: false,
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
               ),
-              maxLines: 5,
-              minLines: 1,
-              style: const TextStyle(fontSize: 15),
             ),
           ),
-          const SizedBox(width: 10),
-          if (isSubmitting)
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          else
-            ElevatedButton(
-              onPressed: onSend,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(68, 36),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
-              child: const Text('Reply'),
-            ),
+          IconButton(
+            icon: isReplying ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Symbols.send, color: AppColors.primary),
+            onPressed: isReplying ? null : onSubmit,
+          ),
         ],
       ),
     );

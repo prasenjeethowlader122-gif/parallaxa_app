@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:hugeicons/hugeicons.dart';
+import "package:material_symbols_icons/material_symbols_icons.dart";
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
@@ -105,23 +105,23 @@ class ImagePreviewScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.black,
         leading: IconButton(
-          icon: const HugeIcon(
-            icon: HugeIcons.strokeRoundedCancel01,
+          icon: const Icon(
+            Symbols.cancel,
             color: Colors.white,
           ),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: const HugeIcon(
-              icon: HugeIcons.strokeRoundedCloudDownload,
+            icon: const Icon(
+              Symbols.cloud_download,
               color: Colors.white,
             ),
             onPressed: () => _downloadImage(context),
           ),
           IconButton(
-            icon: const HugeIcon(
-              icon: HugeIcons.strokeRoundedRepeat,
+            icon: const Icon(
+              Symbols.repeat,
               color: Colors.white,
             ),
             onPressed: () {
@@ -140,8 +140,8 @@ class ImagePreviewScreen extends StatelessWidget {
             imageUrl: imageUrl,
             fit: BoxFit.contain,
             placeholder: (context, error) => const CircularProgressIndicator(),
-            errorWidget: (_, __, ___) => const HugeIcon(
-              icon: HugeIcons.strokeRoundedAlertCircle,
+            errorWidget: (_, __, ___) => const Icon(
+              Symbols.error,
               color: Colors.white,
             ),
           ),

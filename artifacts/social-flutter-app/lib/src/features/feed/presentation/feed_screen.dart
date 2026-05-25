@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hugeicons/hugeicons.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../data/post_repository.dart';
 import '../../../core/app_colors.dart';
 import 'post_card.dart';
@@ -107,8 +107,8 @@ class _FeedList extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const HugeIcon(
-                icon: HugeIcons.strokeRoundedWifi01,
+              const Icon(
+                Symbols.wifi_off,
                 size: 44,
                 color: AppColors.mutedForeground,
               ),
@@ -144,8 +144,8 @@ class _FeedList extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedNote01,
+                  Icon(
+                    Symbols.notes,
                     size: 48,
                     color: AppColors.mutedForeground.withValues(alpha: 0.5),
                   ),

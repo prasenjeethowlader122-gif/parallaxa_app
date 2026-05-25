@@ -59,6 +59,8 @@ dependencies:
   http: ^1.6.0
   gal: ^2.3.2
   google_fonts: ^8.1.0
+  material_symbols_icons: ^4.2928.1
+  any_link_preview: ^3.0.3
 
 dev_dependencies:
   flutter_test:
@@ -107,18 +109,14 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Sora
+    - family: Google Sans
       fonts:
         - asset: assets/fonts/MirandaSans-Regular.ttf
           weight: 400
         - asset: assets/fonts/MirandaSans-Medium.ttf
           weight: 500
-        - asset: assets/fonts/MirandaSans-Medium.ttf
-          weight: 600
         - asset: assets/fonts/MirandaSans-Bold.ttf
           weight: 700
-        - asset: assets/fonts/MirandaSans-Bold.ttf
-          weight: 800
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

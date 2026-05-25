@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hugeicons/hugeicons.dart';
+import "package:material_symbols_icons/material_symbols_icons.dart";
 import '../../../core/app_colors.dart';
 import '../../../core/localization_provider.dart';
 
@@ -18,8 +18,8 @@ class ChatSettingsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.get('chat_settings')),
         leading: IconButton(
-          icon: const HugeIcon(
-            icon: HugeIcons.strokeRoundedArrowLeft01,
+          icon: const Icon(
+            Symbols.arrow_back,
             color: AppColors.primary,
           ),
           onPressed: () => context.pop(),
@@ -58,30 +58,30 @@ class ChatSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 32),
           _SettingsTile(
-            icon: HugeIcons.strokeRoundedNotification01,
+            Symbols.notifications,
             label: l10n.get('mute'),
             trailing: Switch(value: false, onChanged: (v) {}),
           ),
           _SettingsTile(
-            icon: HugeIcons.strokeRoundedSearch01,
+            Symbols.search,
             label: 'Search',
             onTap: () {},
           ),
           _SettingsTile(
-            icon: HugeIcons.strokeRoundedShield01,
+            Symbols.shield,
             label: 'Privacy & Safety',
             onTap: () {},
           ),
           const Divider(),
           _SettingsTile(
-            icon: HugeIcons.strokeRoundedUserBlock01,
+            Symbols.block,
             label: l10n.get('block'),
             labelColor: AppColors.destructive,
             iconColor: AppColors.destructive,
             onTap: () {},
           ),
           _SettingsTile(
-            icon: HugeIcons.strokeRoundedDelete01,
+            Symbols.delete,
             label: l10n.get('delete_chat'),
             labelColor: AppColors.destructive,
             iconColor: AppColors.destructive,
@@ -121,7 +121,7 @@ class _SettingsTile extends StatelessWidget {
                   iconColor ?? Theme.of(context).iconTheme.color ?? Colors.grey,
               size: 22,
             )
-          : HugeIcon(
+          : Icon(
               icon: icon,
               color:
                   iconColor ?? Theme.of(context).iconTheme.color ?? Colors.grey,
@@ -137,8 +137,8 @@ class _SettingsTile extends StatelessWidget {
       ),
       trailing:
           trailing ??
-          const HugeIcon(
-            icon: HugeIcons.strokeRoundedArrowRight01,
+          const Icon(
+            Symbols.arrow_forward,
             size: 16,
             color: Colors.grey,
           ),
