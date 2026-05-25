@@ -1,12 +1,18 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
-import "package:material_symbols_icons/material_symbols_icons.dart";
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import '../data/auth_repository.dart';
+import '../../../core/api_client.dart';
 import '../../../core/app_colors.dart';
 import '../../../core/processing_provider.dart';
+import '../../../core/localization_provider.dart';
 import 'widgets/floating_label_input.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -17,326 +23,975 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _pageController = PageController();
-  int _currentStep = 0;
-
-  // Step 0: Name
   final _displayNameController = TextEditingController();
-  // Step 1: Birthday
-  DateTime? _birthday;
-  // Step 2: Contact
-  final _emailController = TextEditingController();
-  // Step 3: Password
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  // Step 4: Face Capture
-  File? _faceImage;
-  // Step 5: Username & Terms
   final _usernameController = TextEditingController();
-  bool _acceptedTerms = false;
+  final _emailController = TextEditingController();
+  final _dateOfBirthController = TextEditingController();
+  final _passwordController = TextEditingController();
+  File? _faceImage;
+  final _picker = ImagePicker();
 
-  String? _error;
+  int _step = 0;
+  final int _totalSteps = 6;
+  bool _isLoading = false;
+  bool _showPassword = false;
+  bool _acceptTerms = false;
+
+  bool? _usernameAvailable;
+  bool _checkingUsername = false;
+  List<String> _usernameSuggestions = [];
+
+  // Debounce timer to avoid firing a check on every keystroke
+  Timer? _usernameDebounce;
+
+  Map<String, String> _errors = {};
+
+  final List<Map<String, String>> _stepInfo = [
+    {"title": "Who are you?", "subtitle": "Let's start with your full name"},
+    {"title": "Your birthday", "subtitle": "You must be at least 18 years old"},
+    {"title": "Contact info", "subtitle": "Enter your email address"},
+    {"title": "Secure it", "subtitle": "Create a strong password"},
+    {
+      "title": "Face Register",
+      "subtitle": "Secure your account with face recognition",
+    },
+    {
+      "title": "Username",
+      "subtitle": "Pick a unique username for your profile",
+    },
+  ];
 
   @override
   void dispose() {
-    _pageController.dispose();
     _displayNameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
     _usernameController.dispose();
+    _emailController.dispose();
+    _dateOfBirthController.dispose();
+    _passwordController.dispose();
+    _usernameDebounce?.cancel();
     super.dispose();
   }
 
-  void _nextStep() {
-    if (_currentStep < 5) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+  bool _validateStep() {
+    final Map<String, String> newErrors = {};
+    // Note: L10n could be used here for dynamic error messages if added to L10n class
+
+    if (_step == 0) {
+      if (_displayNameController.text.trim().isEmpty) {
+        newErrors['displayName'] = "Full name is required";
+      } else if (_displayNameController.text.trim().length < 2) {
+        newErrors['displayName'] = "Name must be at least 2 characters";
+      }
+    } else if (_step == 1) {
+      if (_dateOfBirthController.text.trim().isEmpty) {
+        newErrors['dateOfBirth'] = "Date of birth is required";
+      } else {
+        try {
+          final dob = DateFormat(
+            'yyyy-MM-dd',
+          ).parse(_dateOfBirthController.text.trim());
+          final now = DateTime.now();
+          int age = now.year - dob.year;
+          if (now.month < dob.month ||
+              (now.month == dob.month && now.day < dob.day)) {
+            age--;
+          }
+          if (age < 18) {
+            newErrors['dateOfBirth'] = "You must be at least 18 years old";
+          }
+        } catch (_) {
+          newErrors['dateOfBirth'] = "Invalid date format";
+        }
+      }
+    } else if (_step == 2) {
+      if (_emailController.text.trim().isEmpty) {
+        newErrors['email'] = "Email address is required";
+      } else if (!RegExp(
+        r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+      ).hasMatch(_emailController.text.trim())) {
+        newErrors['email'] = "Please enter a valid email address";
+      }
+    } else if (_step == 3) {
+      if (_passwordController.text.isEmpty) {
+        newErrors['password'] = "Password is required";
+      } else if (_passwordController.text.length < 6) {
+        newErrors['password'] = "Password must be at least 6 characters";
+      }
+    } else if (_step == 4) {
+      if (_faceImage == null) {
+        newErrors['face'] = "Please register your face to continue";
+      }
+    } else if (_step == 5) {
+      if (_usernameController.text.trim().isEmpty) {
+        newErrors['username'] = "Username is required";
+      } else if (_usernameController.text.trim().length < 3) {
+        newErrors['username'] = "Username must be at least 3 characters";
+      } else if (_usernameAvailable == false) {
+        newErrors['username'] = "This username is not available";
+      }
+      if (!_acceptTerms) {
+        newErrors['general'] = "You must accept the terms to continue";
+      }
+    }
+
+    setState(() => _errors = newErrors);
+    return newErrors.isEmpty;
+  }
+
+  void _goNext() {
+    if (!_validateStep()) return;
+    if (_step < _totalSteps - 1) {
+      setState(() {
+        _step++;
+        _errors = {};
+      });
     }
   }
 
-  void _prevStep() {
-    if (_currentStep > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+  void _goBack() {
+    if (_step > 0) {
+      setState(() {
+        _step--;
+        _errors = {};
+      });
+    } else {
+      context.pop();
     }
   }
 
-  Future<void> _pickImage(ImageSource source) async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: source, preferredCameraDevice: CameraDevice.front);
-    if (picked != null) {
-      setState(() => _faceImage = File(picked.path));
+  // Debounced username availability check — waits 500ms after last keystroke
+  void _onUsernameChanged(String value) {
+    setState(() {
+      _errors.remove('username');
+      _usernameAvailable = null;
+      _usernameSuggestions = [];
+    });
+
+    _usernameDebounce?.cancel();
+    if (value.trim().length < 3) return;
+
+    _usernameDebounce = Timer(const Duration(milliseconds: 500), () {
+      _checkUsernameAvailability(value);
+    });
+  }
+
+  Future<void> _checkUsernameAvailability(String username) async {
+    if (!mounted) return;
+    setState(() {
+      _checkingUsername = true;
+      _usernameAvailable = null;
+      _usernameSuggestions = [];
+    });
+
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      final available = await authRepo.checkUsername(
+        username.trim().toLowerCase(),
+      );
+      if (!mounted) return;
+
+      setState(() => _usernameAvailable = available);
+
+      if (!available) {
+        final suggestions = await authRepo.suggestUsernames(
+          username.trim().toLowerCase(),
+        );
+        if (mounted) setState(() => _usernameSuggestions = suggestions);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _usernameAvailable = null);
+    } finally {
+      if (mounted) setState(() => _checkingUsername = false);
     }
   }
 
   Future<void> _handleRegister() async {
-    setState(() => _error = null);
-    ref.read(processingProvider.notifier).show("Processing...");
+    if (!_validateStep()) return;
 
+    final l10n = ref.read(l10nProvider);
+    ref.read(processingProvider.notifier).show(l10n.get('create_account'));
+    setState(() => _isLoading = true);
     try {
-      await ref.read(authRepositoryProvider).register(
-        username: _usernameController.text,
-        email: _emailController.text,
+      final authRepo = ref.read(authRepositoryProvider);
+      final response = await authRepo.register(
+        username: _usernameController.text.trim().toLowerCase(),
+        displayName: _displayNameController.text.trim(),
+        email: _emailController.text.trim().toLowerCase(),
         password: _passwordController.text,
-        displayName: _displayNameController.text,
-        dateOfBirth: _birthday ?? DateTime.now(),
+        dateOfBirth: DateFormat(
+          'yyyy-MM-dd',
+        ).parse(_dateOfBirthController.text.trim()),
         faceImagePath: _faceImage?.path,
       );
-      if (mounted) context.go('/feed');
+
+      if (response.token != null) {
+        final storage = ref.read(storageServiceProvider);
+        await storage.setAuthToken(response.token!);
+        if (response.user != null) {
+          await storage.setCurrentUserId(response.user!.id);
+        }
+        if (mounted) context.go('/feed');
+      }
     } catch (e) {
-      setState(() => _error = e.toString());
+      if (mounted) {
+        String errorMessage = "Registration failed. Please try again.";
+        if (e is DioException) {
+          errorMessage =
+              e.response?.data['message'] ??
+              e.response?.data['error'] ??
+              errorMessage;
+        } else if (e.toString().contains('409')) {
+          errorMessage = "Username or email already taken";
+        }
+        setState(() {
+          _errors = {'general': errorMessage};
+        });
+      }
     } finally {
       ref.read(processingProvider.notifier).hide();
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _pickFaceImage() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const HugeIcon(
+                icon: HugeIcons.strokeRoundedCamera01,
+                color: AppColors.textPrimary,
+              ),
+              title: const Text('Take a Photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const HugeIcon(
+                icon: HugeIcons.strokeRoundedImage01,
+                color: AppColors.textPrimary,
+              ),
+              title: const Text('Choose from Gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source != null) {
+      final pickedFile = await _picker.pickImage(
+        source: source,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _faceImage = File(pickedFile.path);
+          _errors.remove('face');
+        });
+      }
+    }
+  }
+
+  Future<void> _pickDateOfBirth() async {
+    final now = DateTime.now();
+    final eighteenYearsAgo = DateTime(now.year - 18, now.month, now.day);
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: eighteenYearsAgo,
+      firstDate: DateTime(1900),
+      lastDate: eighteenYearsAgo,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(primary: Colors.black),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && mounted) {
+      setState(() {
+        _dateOfBirthController.text = DateFormat('yyyy-MM-dd').format(picked);
+        _errors.remove('dateOfBirth');
+      });
+    }
+  }
+
+  Widget _renderStep(L10n l10n) {
+    if (_step == 0) {
+      return FloatingLabelInput(
+        key: const ValueKey(0),
+        label: l10n.get('display_name'),
+        icon: HugeIcons.strokeRoundedUser,
+        controller: _displayNameController,
+        error: _errors['displayName'],
+        textCapitalization: TextCapitalization.words,
+        textInputAction: TextInputAction.next,
+        editable: !_isLoading,
+        onChanged: (_) => setState(() => _errors.remove('displayName')),
+        onFieldSubmitted: (_) => _goNext(),
+      );
+    } else if (_step == 1) {
+      return Column(
+        key: const ValueKey(1),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: _isLoading ? null : _pickDateOfBirth,
+            child: AbsorbPointer(
+              child: FloatingLabelInput(
+                label: l10n.get('birthday'),
+                icon: HugeIcons.strokeRoundedCalendar01,
+                controller: _dateOfBirthController,
+                error: _errors['dateOfBirth'],
+                keyboardType: TextInputType.none,
+                editable: false,
+              ),
+            ),
+          ),
+          if (_dateOfBirthController.text.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 4),
+              child: Text(
+                "Tap the field above to open the date picker",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.slate400,
+
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              "This will not be shown publicly. You must be at least 18.",
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.slate400,
+
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      );
+    } else if (_step == 2) {
+      return FloatingLabelInput(
+        key: const ValueKey(2),
+        label: l10n.get('email'),
+        icon: HugeIcons.strokeRoundedMail01,
+        controller: _emailController,
+        error: _errors['email'],
+        keyboardType: TextInputType.emailAddress,
+        textInputAction: TextInputAction.next,
+        editable: !_isLoading,
+        onChanged: (_) => setState(() => _errors.remove('email')),
+        onFieldSubmitted: (_) => _goNext(),
+      );
+    } else if (_step == 3) {
+      return FloatingLabelInput(
+        key: const ValueKey(3),
+        label: l10n.get('password'),
+        icon: HugeIcons.strokeRoundedLockPassword,
+        controller: _passwordController,
+        error: _errors['password'],
+        secureTextEntry: !_showPassword,
+        textInputAction: TextInputAction.next,
+        editable: !_isLoading,
+        onChanged: (_) => setState(() => _errors.remove('password')),
+        onFieldSubmitted: (_) => _goNext(),
+        right: IconButton(
+          onPressed: () => setState(() => _showPassword = !_showPassword),
+          icon: HugeIcon(
+            icon: _showPassword
+                ? HugeIcons.strokeRoundedViewOffSlash
+                : HugeIcons.strokeRoundedView,
+            color: _errors['password'] != null
+                ? const Color(0xFFDC2626)
+                : AppColors.slate500,
+            size: 18,
+          ),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+      );
+    } else if (_step == 4) {
+      return Column(
+        key: const ValueKey(4),
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: _isLoading ? null : _pickFaceImage,
+            child: Container(
+              width: 160,
+              height: 160,
+              decoration: BoxDecoration(
+                color: AppColors.slate100,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: _errors['face'] != null
+                      ? const Color(0xFFDC2626)
+                      : AppColors.slate200,
+                  width: 2,
+                ),
+                image: _faceImage != null
+                    ? DecorationImage(
+                        image: FileImage(_faceImage!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: _faceImage == null
+                  ? const HugeIcon(
+                      icon: HugeIcons.strokeRoundedUserAdd01,
+                      size: 60,
+                      color: AppColors.slate400,
+                    )
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 24),
+          if (_errors['face'] != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Text(
+                _errors['face']!,
+                style: const TextStyle(
+                  color: Color(0xFFDC2626),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ElevatedButton.icon(
+            onPressed: _isLoading ? null : _pickFaceImage,
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedCamera01,
+              size: 18,
+            ),
+            label: Text(_faceImage == null ? "Capture Face" : "Retake Photo"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.slate100,
+              foregroundColor: AppColors.slate900,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              "Your face data will be used to protect your privacy and identify you in photos uploaded by others.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.slate500,
+
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Step 5 — Username with live availability check (debounced)
+      return Column(
+        key: const ValueKey(5),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FloatingLabelInput(
+            label: l10n.get('username'),
+            icon: HugeIcons.strokeRoundedUserCircle,
+            controller: _usernameController,
+            error: _errors['username'],
+            textInputAction: TextInputAction.done,
+            editable: !_isLoading,
+            onChanged: _onUsernameChanged,
+            onFieldSubmitted: (_) => _handleRegister(),
+            right: _checkingUsername
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.slate400,
+                    ),
+                  )
+                : _usernameAvailable == null
+                ? null
+                : HugeIcon(
+                    icon: _usernameAvailable!
+                        ? HugeIcons.strokeRoundedCheckmarkCircle01
+                        : HugeIcons.strokeRoundedCancel01,
+                    color: _usernameAvailable!
+                        ? Colors.green
+                        : const Color(0xFFDC2626),
+                    size: 20,
+                  ),
+          ),
+
+          // Availability badge
+          if (_usernameAvailable != null && !_checkingUsername)
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 8),
+              child: Text(
+                _usernameAvailable!
+                    ? "✓ Username is available"
+                    : "✗ Username is taken",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: _usernameAvailable!
+                      ? Colors.green
+                      : const Color(0xFFDC2626),
+
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+
+          // Suggestions when taken
+          if (_usernameSuggestions.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.only(left: 4, bottom: 8),
+              child: Text(
+                "Try one of these instead:",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.slate500,
+
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _usernameSuggestions
+                  .map(
+                    (s) => GestureDetector(
+                      onTap: () {
+                        _usernameController.text = s;
+                        _usernameDebounce?.cancel();
+                        setState(() {
+                          _usernameAvailable = true;
+                          _usernameSuggestions = [];
+                          _errors.remove('username');
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: AppColors.slate200,
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          s,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.slate700,
+
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ],
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = ref.watch(l10nProvider);
+    final isLastStep = _step == _totalSteps - 1;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        leading: _currentStep > 0
-            ? IconButton(
-                icon: const Icon(Symbols.arrow_back),
-                onPressed: _prevStep,
-              )
-            : IconButton(
-                icon: const Icon(Symbols.cancel),
-                onPressed: () => context.pop(),
-              ),
-        title: Text('Step ${_currentStep + 1} of 6'),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          LinearProgressIndicator(
-            value: (_currentStep + 1) / 6,
-            backgroundColor: AppColors.muted,
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-          ),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              onPageChanged: (i) => setState(() => _currentStep = i),
-              children: [
-                _buildNameStep(),
-                _buildBirthdayStep(),
-                _buildContactStep(),
-                _buildPasswordStep(),
-                _buildFaceStep(),
-                _buildUsernameStep(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNameStep() {
-    return _StepLayout(
-      title: "What's your name?",
-      subtitle: "This is how you'll appear on Parallaxa.",
-      content: FloatingLabelInput(
-        label: 'Full Name',
-        icon: Symbols.person,
-        controller: _displayNameController,
-      ),
-      onNext: _displayNameController.text.isNotEmpty ? _nextStep : null,
-    );
-  }
-
-  Widget _buildBirthdayStep() {
-    return _StepLayout(
-      title: "When's your birthday?",
-      subtitle: "You must be at least 13 years old.",
-      content: InkWell(
-        onTap: () async {
-          final picked = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
-            firstDate: DateTime(1900),
-            lastDate: DateTime.now(),
-          );
-          if (picked != null) setState(() => _birthday = picked);
-        },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.muted,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(Symbols.calendar_today, color: AppColors.primary),
-              const SizedBox(width: 12),
-              Text(
-                _birthday == null
-                    ? 'Select Birthday'
-                    : "${_birthday!.day}/${_birthday!.month}/${_birthday!.year}",
-                style: const TextStyle(fontSize: 16),
+              const SizedBox(height: 16),
+
+              // Logo
+              Center(
+                child: SvgPicture.asset(
+                  'assets/images/parallaxa-logo.svg',
+                  width: (screenWidth - 120).clamp(100.0, 160.0),
+                  height: 48,
+                  fit: BoxFit.contain,
+                ),
               ),
+              const SizedBox(height: 24),
+
+              // Top Bar — back button + progress dots
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: _goBack,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.slate100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedArrowLeft01,
+                          color: Color(0xFF1F2937),
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_totalSteps, (index) {
+                        final isActive = index == _step;
+                        final isDone = index < _step;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeInOut,
+                          width: isActive ? 24 : 8,
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            color: isDone || isActive
+                                ? Colors.black
+                                : AppColors.slate200,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                  const SizedBox(width: 40),
+                ],
+              ),
+              const SizedBox(height: 32),
+
+              // Step heading
+              Text(
+                'Step ${_step + 1} of $_totalSteps',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.slate400,
+                  letterSpacing: 1.4,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _stepInfo[_step]['title']!,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.slate900,
+
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _stepInfo[_step]['subtitle']!,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: AppColors.slate500,
+
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // General error alert
+              if (_errors['general'] != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFCA5A5)),
+                  ),
+                  child: Row(
+                    children: [
+                      const HugeIcon(
+                        icon: HugeIcons.strokeRoundedAlertCircle,
+                        color: Color(0xFFDC2626),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _errors['general']!,
+                          style: const TextStyle(
+                            color: Color(0xFFDC2626),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Step content
+              _renderStep(l10n),
+
+              // Spacing before action area
+              const SizedBox(height: 8),
+
+              // Terms checkbox (last step only)
+              if (isLastStep) ...[
+                GestureDetector(
+                  onTap: () => setState(() => _acceptTerms = !_acceptTerms),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: _acceptTerms
+                                ? Colors.black
+                                : Colors.transparent,
+                            border: Border.all(
+                              color: _acceptTerms
+                                  ? Colors.black
+                                  : AppColors.slate300,
+                              width: 1.5,
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: _acceptTerms
+                              ? const Center(
+                                  child: HugeIcon(
+                                    icon: HugeIcons.strokeRoundedTick01,
+                                    color: Colors.white,
+                                    size: 14,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text.rich(
+                            TextSpan(
+                              text: 'I agree to the ',
+                              children: [
+                                TextSpan(
+                                  text: 'Terms of Service',
+                                  style: TextStyle(
+                                    color: Color(0xFF0095F6),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                TextSpan(text: ' and '),
+                                TextSpan(
+                                  text: 'Privacy Policy',
+                                  style: TextStyle(
+                                    color: Color(0xFF0095F6),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                TextSpan(text: '.'),
+                              ],
+                            ),
+                            style: TextStyle(
+                              color: AppColors.slate600,
+                              fontSize: 14,
+                              height: 1.4,
+
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+
+              // CTA Button
+              SizedBox(
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: (_isLoading || (isLastStep && !_acceptTerms))
+                      ? null
+                      : (isLastStep ? _handleRegister : _goNext),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(27),
+                    ),
+                    elevation: 0,
+                    disabledBackgroundColor: AppColors.slate200,
+                    disabledForegroundColor: AppColors.slate400,
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              isLastStep
+                                  ? l10n.get('create_account')
+                                  : l10n.get('continue'),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            if (!isLastStep) ...[
+                              const SizedBox(width: 8),
+                              const HugeIcon(
+                                icon: HugeIcons.strokeRoundedArrowRight01,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ],
+                          ],
+                        ),
+                ),
+              ),
+
+              // "Already have an account?" — step 0 only
+              if (_step == 0) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(height: 1, color: AppColors.slate200),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          'OR',
+                          style: TextStyle(
+                            color: AppColors.slate400,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(height: 1, color: AppColors.slate200),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "${l10n.get('already_have_account')} ",
+                      style: const TextStyle(
+                        color: AppColors.slate600,
+                        fontSize: 14,
+
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => context.pop(),
+                      child: Text(
+                        l10n.get('sign_in'),
+                        style: const TextStyle(
+                          color: Color(0xFF0095F6),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              // Final disclaimer (last step only)
+              if (isLastStep) ...[
+                const SizedBox(height: 20),
+                const Text.rich(
+                  TextSpan(
+                    text: 'By creating an account, you agree to our ',
+                    children: [
+                      TextSpan(
+                        text: 'Terms of Service',
+                        style: TextStyle(
+                          color: Color(0xFF0095F6),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      TextSpan(text: ' and '),
+                      TextSpan(
+                        text: 'Privacy Policy',
+                        style: TextStyle(
+                          color: Color(0xFF0095F6),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      TextSpan(text: '.'),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.slate400,
+                    fontSize: 12,
+                    height: 1.5,
+
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 32),
             ],
           ),
         ),
-      ),
-      onNext: _birthday != null ? _nextStep : null,
-    );
-  }
-
-  Widget _buildContactStep() {
-    return _StepLayout(
-      title: "What's your email?",
-      subtitle: "We'll send you a verification code.",
-      content: FloatingLabelInput(
-        label: 'Email',
-        icon: Symbols.mail,
-        controller: _emailController,
-        keyboardType: TextInputType.emailAddress,
-      ),
-      onNext: _emailController.text.contains('@') ? _nextStep : null,
-    );
-  }
-
-  Widget _buildPasswordStep() {
-    return _StepLayout(
-      title: "Create a password",
-      subtitle: "Make sure it's at least 8 characters.",
-      content: Column(
-        children: [
-          FloatingLabelInput(
-            label: 'Password',
-            icon: Symbols.lock,
-            controller: _passwordController,
-            isPassword: true,
-          ),
-          const SizedBox(height: 16),
-          FloatingLabelInput(
-            label: 'Confirm Password',
-            icon: Symbols.lock,
-            controller: _confirmPasswordController,
-            isPassword: true,
-          ),
-        ],
-      ),
-      onNext: (_passwordController.text.length >= 8 &&
-               _passwordController.text == _confirmPasswordController.text) ? _nextStep : null,
-    );
-  }
-
-  Widget _buildFaceStep() {
-    return _StepLayout(
-      title: "Face Verification",
-      subtitle: "Please upload a clear photo of your face for account verification.",
-      content: Column(
-        children: [
-          if (_faceImage != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(100),
-              child: Image.file(_faceImage!, width: 150, height: 150, fit: BoxFit.cover),
-            )
-          else
-            Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                color: AppColors.muted,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Symbols.account_circle, size: 80, color: Colors.grey),
-            ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => _pickImage(ImageSource.camera),
-                icon: const Icon(Symbols.photo_camera),
-                label: const Text('Take Photo'),
-              ),
-              const SizedBox(width: 12),
-              OutlinedButton.icon(
-                onPressed: () => _pickImage(ImageSource.gallery),
-                icon: const Icon(Symbols.image),
-                label: const Text('Gallery'),
-              ),
-            ],
-          ),
-        ],
-      ),
-      onNext: _faceImage != null ? _nextStep : null,
-    );
-  }
-
-  Widget _buildUsernameStep() {
-    return _StepLayout(
-      title: "Choose a username",
-      subtitle: "You can always change this later.",
-      content: Column(
-        children: [
-          FloatingLabelInput(
-            label: 'Username',
-            icon: Symbols.person,
-            controller: _usernameController,
-          ),
-          const SizedBox(height: 24),
-          CheckboxListTile(
-            value: _acceptedTerms,
-            onChanged: (v) => setState(() => _acceptedTerms = v ?? false),
-            title: const Text('I accept the Terms and Conditions'),
-            controlAffinity: ListTileControlAffinity.leading,
-          ),
-        ],
-      ),
-      onNext: (_usernameController.text.isNotEmpty && _acceptedTerms) ? _handleRegister : null,
-      nextLabel: 'Create Account',
-    );
-  }
-}
-
-class _StepLayout extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Widget content;
-  final VoidCallback? onNext;
-  final String nextLabel;
-
-  const _StepLayout({
-    required this.title,
-    required this.subtitle,
-    required this.content,
-    this.onNext,
-    this.nextLabel = 'Next',
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text(subtitle, style: const TextStyle(fontSize: 16, color: AppColors.mutedForeground)),
-          const SizedBox(height: 40),
-          content,
-          const Spacer(),
-          ElevatedButton(
-            onPressed: onNext,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text(nextLabel, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-        ],
       ),
     );
   }

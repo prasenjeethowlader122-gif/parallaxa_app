@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import "package:material_symbols_icons/material_symbols_icons.dart";
+import 'package:hugeicons/hugeicons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import '../data/notification_repository.dart';
@@ -65,8 +65,8 @@ class NotificationsScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Symbols.notifications,
+                const HugeIcon(
+                  icon: HugeIcons.strokeRoundedNotification01,
                   size: 52,
                   color: AppColors.mutedForeground,
                 ),
@@ -151,8 +151,8 @@ class _NotificationRow extends ConsumerWidget {
                 ? CachedNetworkImageProvider(n.fromUser.avatarUrl!)
                 : null,
             child: n.fromUser.avatarUrl == null
-                ? const Icon(
-                    Symbols.person,
+                ? const HugeIcon(
+                    icon: HugeIcons.strokeRoundedUser,
                     color: AppColors.mutedForeground,
                     size: 22,
                   )

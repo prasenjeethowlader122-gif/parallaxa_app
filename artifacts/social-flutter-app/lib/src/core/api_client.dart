@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'storage_service.dart';
-import 'error_provider.dart';
 
 final storageServiceProvider = Provider<StorageService>((ref) {
   throw UnimplementedError('StorageService must be initialized in main()');
@@ -36,26 +35,6 @@ final dioProvider = Provider<Dio>((ref) {
         return handler.next(options);
       },
       onError: (e, handler) async {
-        String errorMessage = 'An unexpected error occurred';
-
-        if (e.type == DioExceptionType.connectionTimeout ||
-            e.type == DioExceptionType.receiveTimeout) {
-          errorMessage = 'Connection timed out. Please check your internet.';
-        } else if (e.type == DioExceptionType.badResponse) {
-          final data = e.response?.data;
-          if (data is Map && data.containsKey('message')) {
-            errorMessage = data['message'];
-          } else if (data is Map && data.containsKey('error')) {
-            errorMessage = data['error'];
-          } else {
-            errorMessage = 'Server error: ${e.response?.statusCode}';
-          }
-        } else if (e.type == DioExceptionType.connectionError) {
-          errorMessage = 'No internet connection';
-        }
-
-        ref.read(errorProvider.notifier).showError(errorMessage);
-
         if (e.response?.statusCode == 401) {
           await storageService.clearAll();
         }

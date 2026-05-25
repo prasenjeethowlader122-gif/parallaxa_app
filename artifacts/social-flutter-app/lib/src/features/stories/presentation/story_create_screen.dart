@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import "package:material_symbols_icons/material_symbols_icons.dart";
+import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../data/story_repository.dart';
@@ -58,8 +58,8 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
-          icon: const Icon(
-            Symbols.cancel,
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedCancel01,
             color: Colors.white,
           ),
           onPressed: () => context.pop(),
@@ -85,8 +85,8 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Symbols.photo_camera,
+                  const HugeIcon(
+                    icon: HugeIcons.strokeRoundedCamera01,
                     color: Colors.white,
                     size: 64,
                   ),

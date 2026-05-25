@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import "package:material_symbols_icons/material_symbols_icons.dart";
+import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
-import '../../auth/domain/user.dart';
 import '../../../core/app_colors.dart';
+import '../../auth/domain/user.dart';
 
 class ProfileOptionsScreen extends ConsumerWidget {
   final User user;
@@ -14,30 +14,50 @@ class ProfileOptionsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('@${user.username}'),
+        title: const Text('Options'),
         leading: IconButton(
-          icon: const Icon(Symbols.arrow_back),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
       body: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 16),
         children: [
-          _OptionItem(
-            icon: Symbols.flag,
-            title: 'Report User',
-            onTap: () {},
+          _OptionSection(
+            title: 'User Actions',
+            items: [
+              _OptionItem(
+                label: 'Report @${user.username}',
+                icon: HugeIcons.strokeRoundedFlag01,
+                onTap: () {},
+                isDestructive: true,
+              ),
+              _OptionItem(
+                label: 'Block @${user.username}',
+                icon: HugeIcons.strokeRoundedUserBlock01,
+                onTap: () {},
+                isDestructive: true,
+              ),
+            ],
           ),
-          _OptionItem(
-            icon: Symbols.block,
-            title: 'Block User',
-            color: Colors.redAccent,
-            onTap: () {},
-          ),
-          const Divider(),
-          _OptionItem(
-            icon: Symbols.share,
-            title: 'Share Profile',
-            onTap: () {},
+          const SizedBox(height: 24),
+          _OptionSection(
+            title: 'Security',
+            items: [
+              _OptionItem(
+                label: 'Two-Factor Authentication',
+                icon: HugeIcons.strokeRoundedShield01,
+                onTap: () => context.push('/two-factor-setup'),
+              ),
+              _OptionItem(
+                label: 'Account Verification',
+                icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                onTap: () => context.push('/account-verification'),
+              ),
+            ],
           ),
         ],
       ),
@@ -45,32 +65,78 @@ class ProfileOptionsScreen extends ConsumerWidget {
   }
 }
 
-class _OptionItem extends StatelessWidget {
-  final IconData icon;
+class _OptionSection extends StatelessWidget {
   final String title;
+  final List<_OptionItem> items;
+
+  const _OptionSection({required this.title, required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: AppColors.mutedForeground,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: AppColors.muted,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(children: items),
+        ),
+      ],
+    );
+  }
+}
+
+class _OptionItem extends StatelessWidget {
+  final String label;
+  final dynamic icon;
   final VoidCallback onTap;
-  final Color? color;
+  final bool isDestructive;
 
   const _OptionItem({
+    required this.label,
     required this.icon,
-    required this.title,
     required this.onTap,
-    this.color,
+    this.isDestructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = isDestructive ? Colors.red : AppColors.textPrimary;
+
     return ListTile(
-      leading: Icon(icon, color: color ?? AppColors.textPrimary, size: 22),
+      leading: icon is IconData
+          ? Icon(icon as IconData, color: color, size: 22)
+          : HugeIcon(icon: icon, color: color, size: 22),
       title: Text(
-        title,
+        label,
         style: TextStyle(
-          color: color ?? AppColors.textPrimary,
+          color: color,
           fontSize: 16,
           fontWeight: FontWeight.w500,
         ),
       ),
+      trailing: const HugeIcon(
+        icon: HugeIcons.strokeRoundedArrowRight01,
+        size: 16,
+        color: AppColors.mutedForeground,
+      ),
       onTap: onTap,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     );
   }
 }

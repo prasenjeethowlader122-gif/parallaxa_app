@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'src/routing/app_router.dart';
@@ -13,7 +12,6 @@ import 'src/core/widgets/processing_overlay.dart';
 import 'src/core/ota_provider.dart';
 import 'src/core/theme_provider.dart';
 import 'src/core/localization_provider.dart';
-import 'src/core/error_provider.dart';
 
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
@@ -58,9 +56,7 @@ class MainApp extends ConsumerWidget {
       themeMode: themeMode,
       locale: locale,
       builder: (context, child) {
-        return ErrorListener(
-          child: OTAUpdateListener(child: ProcessingOverlay(child: child!)),
-        );
+        return OTAUpdateListener(child: ProcessingOverlay(child: child!));
       },
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.dark),
@@ -68,13 +64,6 @@ class MainApp extends ConsumerWidget {
   }
 
   ThemeData _buildTheme(Brightness brightness) {
-    const iconVariation = IconThemeData(
-      fill: 0,
-      weight: 100,
-      grade: 0,
-      opticalSize: 48,
-    );
-
     final isDark = brightness == Brightness.dark;
     final baseColor = isDark ? Colors.white : AppColors.textPrimary;
     final bgColor = isDark ? const Color(0xFF0F172A) : AppColors.background;
@@ -90,11 +79,9 @@ class MainApp extends ConsumerWidget {
         surface: bgColor,
       ),
       scaffoldBackgroundColor: bgColor,
-      fontFamily: 'Google Sans',
-      textTheme: const TextTheme().apply(
+      textTheme: GoogleFonts.ubuntuTextTheme().apply(
         bodyColor: baseColor,
         displayColor: baseColor,
-        fontFamily: 'Google Sans',
       ),
 
       // AppBar
@@ -103,16 +90,13 @@ class MainApp extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: TextStyle(
-          fontFamily: 'Google Sans',
+        titleTextStyle: GoogleFonts.ubuntu(
           fontWeight: FontWeight.w700,
           fontSize: 20,
-          color: brightness == Brightness.dark ? Colors.white : AppColors.textPrimary,
+          color: baseColor,
         ),
-        iconTheme: IconThemeData(color: baseColor).merge(iconVariation),
+        iconTheme: IconThemeData(color: baseColor),
       ),
-
-      iconTheme: IconThemeData(color: baseColor).merge(iconVariation),
 
       // Elevated button defaults
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -121,8 +105,7 @@ class MainApp extends ConsumerWidget {
           foregroundColor: Colors.white,
           elevation: 0,
           shape: const StadiumBorder(),
-          textStyle: const TextStyle(
-            fontFamily: 'Google Sans',
+          textStyle: GoogleFonts.ubuntu(
             fontWeight: FontWeight.w700,
             fontSize: 15,
           ),
@@ -135,8 +118,7 @@ class MainApp extends ConsumerWidget {
           foregroundColor: baseColor,
           side: BorderSide(color: borderColor),
           shape: const StadiumBorder(),
-          textStyle: const TextStyle(
-            fontFamily: 'Google Sans',
+          textStyle: GoogleFonts.ubuntu(
             fontWeight: FontWeight.w700,
             fontSize: 14,
           ),
@@ -147,8 +129,7 @@ class MainApp extends ConsumerWidget {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          textStyle: const TextStyle(
-            fontFamily: 'Google Sans',
+          textStyle: GoogleFonts.ubuntu(
             fontWeight: FontWeight.w500,
             fontSize: 14,
           ),
@@ -208,13 +189,11 @@ class MainApp extends ConsumerWidget {
         indicatorColor: baseColor,
         indicatorSize: TabBarIndicatorSize.label,
         dividerColor: Colors.transparent,
-        labelStyle: const TextStyle(
-          fontFamily: 'Google Sans',
+        labelStyle: GoogleFonts.ubuntu(
           fontWeight: FontWeight.w700,
           fontSize: 15,
         ),
-        unselectedLabelStyle: const TextStyle(
-          fontFamily: 'Google Sans',
+        unselectedLabelStyle: GoogleFonts.ubuntu(
           fontWeight: FontWeight.w400,
           fontSize: 15,
         ),
@@ -229,34 +208,6 @@ class OTAUpdateListener extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<OTAUpdateListener> createState() => _OTAUpdateListenerState();
-}
-
-class ErrorListener extends ConsumerWidget {
-  final Widget child;
-  const ErrorListener({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(errorProvider, (previous, next) {
-      if (next != null) {
-        scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          SnackBar(
-            content: Text(
-              next,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    });
-    return child;
-  }
 }
 
 class _OTAUpdateListenerState extends ConsumerState<OTAUpdateListener> {

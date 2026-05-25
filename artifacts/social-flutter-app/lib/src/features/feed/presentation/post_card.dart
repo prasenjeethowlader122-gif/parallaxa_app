@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import "package:material_symbols_icons/material_symbols_icons.dart";
+import 'package:hugeicons/hugeicons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:any_link_preview/any_link_preview.dart';
 import '../data/post_repository.dart';
 import '../domain/post.dart';
 import '../../../core/app_colors.dart';
@@ -114,8 +113,8 @@ class _PostCardState extends ConsumerState<PostCard> {
               Row(
                 children: [
                   const SizedBox(width: 42),
-                  const Icon(
-                    Symbols.repeat,
+                  const HugeIcon(
+                    icon: HugeIcons.strokeRoundedRepeat,
                     size: 14,
                     color: AppColors.mutedForeground,
                   ),
@@ -123,6 +122,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                   Text(
                     '${widget.post.author.displayName} ${l10n.get('reposted')}',
                     style: const TextStyle(
+                      fontFamily: 'Ubuntu',
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppColors.mutedForeground,
@@ -132,180 +132,135 @@ class _PostCardState extends ConsumerState<PostCard> {
               ),
               const SizedBox(height: 8),
             ],
-
-            // Main Post Content or Reposted Content Wrapped in a Card
-            Container(
-              padding: isRepost ? const EdgeInsets.all(12) : EdgeInsets.zero,
-              decoration: isRepost
-                  ? BoxDecoration(
-                      color: Colors.grey.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.grey.withOpacity(0.3),
-                        width: 0.5,
-                      ),
-                    )
-                  : null,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Author row ──
-                  Row(
+            // ── Author row ──
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => context.push('/user/${post.author.id}'),
+                  child: UserAvatar(
+                    uri: post.author.avatarUrl,
+                    size: 40,
+                    hasStory: post.author.hasStory,
+                    hasUnviewedStory: post.author.hasUnviewedStory,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       GestureDetector(
                         onTap: () => context.push('/user/${post.author.id}'),
-                        child: UserAvatar(
-                          uri: post.author.avatarUrl,
-                          size: isRepost ? 32 : 40,
-                          hasStory: post.author.hasStory,
-                          hasUnviewedStory: post.author.hasUnviewedStory,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
                           children: [
-                            GestureDetector(
-                              onTap:
-                                  () => context.push('/user/${post.author.id}'),
-                              child: Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      post.author.displayName,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: isRepost ? 14 : 15,
-                                        color: AppColors.foreground,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  if (post.author.isVerified) ...[
-                                    const SizedBox(width: 4),
-                                    const Icon(
-                                      Symbols.verified,
-                                      size: 15,
-                                      color: AppColors.verified,
-                                    ),
-                                  ],
-                                ],
+                            Flexible(
+                              child: Text(
+                                post.author.displayName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: AppColors.foreground,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            Text(
-                              '@${post.author.username} · ${_timeAgo(post.createdAt)}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.mutedForeground,
+                            if (post.author.isVerified) ...[
+                              const SizedBox(width: 4),
+                              const HugeIcon(
+                                icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                                size: 15,
+                                color: AppColors.verified,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            ],
                           ],
                         ),
                       ),
-                      if (!isRepost)
-                        const Icon(
-                          Symbols.more_horiz,
-                          size: 20,
+                      Text(
+                        '@${post.author.username} · ${_timeAgo(post.createdAt)}',
+                        style: const TextStyle(
+                          fontSize: 13,
                           color: AppColors.mutedForeground,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                ),
+                const HugeIcon(
+                  icon: HugeIcons.strokeRoundedMoreHorizontal,
+                  size: 20,
+                  color: AppColors.mutedForeground,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
 
-                  // Content
-                  if (post.content != null && post.content!.isNotEmpty) ...[
-                    _ContentText(content: post.content!, isRepost: isRepost),
-                    const SizedBox(height: 14),
-                  ],
+            // Content
+            if (post.content != null && post.content!.isNotEmpty) ...[
+              _ContentText(content: post.content!),
+              const SizedBox(height: 14),
+            ],
 
-                  // Link Preview
-                  if (post.content != null &&
-                      RegExp(r'https?://[^\s]+').hasMatch(post.content!)) ...[
-                    const SizedBox(height: 12),
-                    AnyLinkPreview(
-                      link: RegExp(
-                        r'https?://[^\s]+',
-                      ).firstMatch(post.content!)!.group(0)!,
-                      bodyMaxLines: 3,
-                      placeholderWidget: Container(
-                        height: 100,
+            // Image
+            if (post.imageUrl != null) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: GestureDetector(
+                    onLongPress: () =>
+                        context.push('/image-preview', extra: post.imageUrl),
+                    child: CachedNetworkImage(
+                      imageUrl: post.imageUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) =>
+                          Container(color: AppColors.muted),
+                      errorWidget: (context, url, error) => Container(
                         color: AppColors.muted,
-                      ),
-                      errorWidget: const SizedBox.shrink(),
-                      borderRadius: 12,
-                      removeElevation: true,
-                      backgroundColor: Colors.white,
-                    ),
-                  ],
-
-                  // Image
-                  if (post.imageUrl != null) ...[
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: GestureDetector(
-                          onLongPress: () => context.push(
-                            '/image-preview',
-                            extra: post.imageUrl,
-                          ),
-                          child: CachedNetworkImage(
-                            imageUrl: post.imageUrl!,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) =>
-                                Container(color: AppColors.muted),
-                            errorWidget: (context, url, error) => Container(
-                              color: AppColors.muted,
-                              child: const Icon(
-                                Symbols.image,
-                                color: AppColors.mutedForeground,
-                              ),
-                            ),
-                          ),
+                        child: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedImage01,
+                          color: AppColors.mutedForeground,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 14),
-                  ],
-                ],
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 14),
+            ],
 
             // ── Action row ──
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _ActionItem(
-                  icon: Symbols.chat_bubble,
+                  icon: HugeIcons.strokeRoundedChat01,
                   count: post.repliesCount,
                   color: AppColors.mutedForeground,
                   onTap: () {},
                 ),
                 _ActionItem(
-                  icon: Symbols.repeat,
+                  icon: HugeIcons.strokeRoundedRepeat,
                   count: _repostCount,
                   color: AppColors.mutedForeground,
                   onTap: _toggleRepost,
                 ),
                 _ActionItem(
-                  icon: Symbols.favorite,
+                  icon: HugeIcons.strokeRoundedFavourite,
                   count: _likesCount,
                   color: _isLiked ? AppColors.like : AppColors.mutedForeground,
                   onTap: _toggleLike,
                 ),
                 _ActionItem(
-                  icon: Symbols.bookmark,
+                  icon: HugeIcons.strokeRoundedBookmark01,
                   count: 0,
                   color: _isSaved ? AppColors.saved : AppColors.mutedForeground,
                   onTap: _toggleSave,
                   showCount: false,
                 ),
                 _ActionItem(
-                  icon: Symbols.share,
+                  icon: HugeIcons.strokeRoundedShare01,
                   count: 0,
                   color: AppColors.mutedForeground,
                   onTap: () {},
@@ -322,9 +277,8 @@ class _PostCardState extends ConsumerState<PostCard> {
 
 class _ContentText extends StatelessWidget {
   final String content;
-  final bool isRepost;
 
-  const _ContentText({required this.content, this.isRepost = false});
+  const _ContentText({required this.content});
 
   @override
   Widget build(BuildContext context) {
@@ -346,8 +300,8 @@ class _ContentText extends StatelessWidget {
     }
     return Text.rich(
       TextSpan(children: spans),
-      style: TextStyle(
-        fontSize: isRepost ? 14 : 15,
+      style: const TextStyle(
+        fontSize: 15,
         height: 1.4,
         color: AppColors.foreground,
       ),
@@ -356,7 +310,7 @@ class _ContentText extends StatelessWidget {
 }
 
 class _ActionItem extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final int count;
   final Color color;
   final VoidCallback onTap;
@@ -379,7 +333,9 @@ class _ActionItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: color),
+            icon is IconData
+                ? Icon(icon as IconData, size: 20, color: color)
+                : HugeIcon(icon: icon, size: 20, color: color),
             if (showCount && count > 0) ...[
               const SizedBox(width: 6),
               Text('$count', style: TextStyle(fontSize: 13, color: color)),

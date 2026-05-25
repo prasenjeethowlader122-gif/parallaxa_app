@@ -108,20 +108,6 @@ class L10n {
     'likes': 'পছন্দ',
     'message': 'বার্তা',
     'follow': 'অনুসরণ করুন',
-    'share': 'শেয়ার',
-    'call': 'কল',
-    'video_call': 'ভিডিও কল',
-    'repost': 'রিপোস্ট',
-    'search': 'অনুসন্ধান',
-    'explore': 'এক্সপ্লোর',
-    'notifications': 'নোটিফিকেশন',
-    'home': 'হোম',
-    'bookmarks': 'বুকমার্ক',
-    'about': 'সম্পর্কে',
-    'save': 'সংরক্ষণ করুন',
-    'cancel': 'বাতিল করুন',
-    'everyone': 'সবাই',
-    'what_is_happening': 'কি হচ্ছে?!',
   };
 
   String get(String key) {
