@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' hide Animation;
+import 'package:flutter/material.dart';
 import 'package:rive/rive.dart' hide LinearGradient;
 import 'package:go_router/go_router.dart';
 import 'dart:ui';
@@ -117,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen>
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const SizedBox(
+                              SizedBox(
                                 height: 150,
                                 width: 150,
                                 child: RiveAnimation.asset(
