@@ -1,8 +1,18 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, postsTable, hashtagsTable, likesTable, savedPostsTable } from "@workspace/db";
-import { like, sql } from "drizzle-orm";
-import { authenticate, optionalAuthenticate, type AuthRequest } from "../middleware/authenticate";
+import {
+  usersTable,
+  postsTable,
+  hashtagsTable,
+  likesTable,
+  savedPostsTable,
+} from "@workspace/db";
+import { like, sql, desc, or } from "drizzle-orm";
+import {
+  authenticate,
+  optionalAuthenticate,
+  type AuthRequest,
+} from "../middleware/authenticate";
 import type { UserSummary, Post, Hashtag } from "@workspace/api-zod";
 
 const router = Router();
@@ -25,8 +35,15 @@ router.get("/search", optionalAuthenticate, async (req: AuthRequest, res) => {
       const rows = await db
         .select()
         .from(usersTable)
-        .where(sql`${usersTable.username} ILIKE ${pattern} OR ${usersTable.displayName} ILIKE ${pattern}`)
-        .limit(10);
+        .where(
+          or(
+            sql`${usersTable.username} ILIKE ${pattern}`,
+            sql`${usersTable.displayName} ILIKE ${pattern}`,
+          ),
+        )
+        .orderBy(desc(usersTable.isVerified), desc(usersTable.followersCount))
+        .limit(15);
+
       users = rows.map((u) => ({
         id: u.id,
         username: u.username,
@@ -42,35 +59,73 @@ router.get("/search", optionalAuthenticate, async (req: AuthRequest, res) => {
         .select()
         .from(postsTable)
         .where(sql`${postsTable.content} ILIKE ${pattern}`)
-        .limit(10);
-      posts = await Promise.all(rows.map(async (p) => {
-        const [author] = await db.select().from(usersTable).where(sql`${usersTable.id} = ${p.userId}`).limit(1);
-        const liked = req.userId ? (await db.select().from(likesTable).where(sql`${likesTable.userId} = ${req.userId} AND ${likesTable.postId} = ${p.id}`).limit(1))[0] : null;
-        const saved = req.userId ? (await db.select().from(savedPostsTable).where(sql`${savedPostsTable.userId} = ${req.userId} AND ${savedPostsTable.postId} = ${p.id}`).limit(1))[0] : null;
+        .orderBy(desc(postsTable.likesCount), desc(postsTable.createdAt))
+        .limit(15);
 
-        const formattedAuthor: UserSummary = author ? {
-          id: author.id,
-          username: author.username,
-          displayName: author.displayName ?? author.username,
-          avatarUrl: author.avatarUrl,
-          isVerified: author.isVerified,
-          isFollowing: false
-        } : {
-          id: p.userId,
-          username: "deleted_user",
-          displayName: "Deleted User",
-          isVerified: false,
-          isFollowing: false
-        };
+      posts = await Promise.all(
+        rows.map(async (p) => {
+          const [author] = await db
+            .select()
+            .from(usersTable)
+            .where(sql`${usersTable.id} = ${p.userId}`)
+            .limit(1);
+          const liked = req.userId
+            ? (
+                await db
+                  .select()
+                  .from(likesTable)
+                  .where(
+                    sql`${likesTable.userId} = ${req.userId} AND ${likesTable.postId} = ${p.id}`,
+                  )
+                  .limit(1)
+              )[0]
+            : null;
+          const saved = req.userId
+            ? (
+                await db
+                  .select()
+                  .from(savedPostsTable)
+                  .where(
+                    sql`${savedPostsTable.userId} = ${req.userId} AND ${savedPostsTable.postId} = ${p.id}`,
+                  )
+                  .limit(1)
+              )[0]
+            : null;
 
-        return {
-          id: p.id,
-          author: formattedAuthor,
-          content: p.content, imageUrl: p.imageUrl, videoUrl: p.videoUrl, location: p.location,
-          hashtags: [], likesCount: p.likesCount, commentsCount: p.repliesCount, repliesCount: p.repliesCount,
-          isLiked: !!liked, isSaved: !!saved, createdAt: p.createdAt,
-        };
-      }));
+          const formattedAuthor: UserSummary = author
+            ? {
+                id: author.id,
+                username: author.username,
+                displayName: author.displayName ?? author.username,
+                avatarUrl: author.avatarUrl,
+                isVerified: author.isVerified,
+                isFollowing: false,
+              }
+            : {
+                id: p.userId,
+                username: "deleted_user",
+                displayName: "Deleted User",
+                isVerified: false,
+                isFollowing: false,
+              };
+
+          return {
+            id: p.id,
+            author: formattedAuthor,
+            content: p.content,
+            imageUrl: p.imageUrl,
+            videoUrl: p.videoUrl,
+            location: p.location,
+            hashtags: [],
+            likesCount: p.likesCount,
+            commentsCount: p.repliesCount,
+            repliesCount: p.repliesCount,
+            isLiked: !!liked,
+            isSaved: !!saved,
+            createdAt: p.createdAt,
+          };
+        }),
+      );
     }
 
     if (type === "all" || type === "hashtags") {
@@ -78,13 +133,16 @@ router.get("/search", optionalAuthenticate, async (req: AuthRequest, res) => {
         .select()
         .from(hashtagsTable)
         .where(like(hashtagsTable.name, `%${q.replace(/^#/, "")}%`))
+        .orderBy(desc(hashtagsTable.postCount))
         .limit(10);
       hashtags = rows.map((h) => ({ name: h.name, postCount: h.postCount }));
     }
 
     res.json({ users, posts, hashtags });
   } catch (err) {
-    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", message: String(err) });
   }
 });
 

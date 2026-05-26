@@ -68,6 +68,8 @@ router.get("/stories", authenticate, async (req: AuthRequest, res) => {
         userId: s.userId,
         mediaUrl: s.mediaUrl,
         mediaType: s.mediaType,
+        content: s.content,
+        backgroundColor: s.backgroundColor,
         duration: s.duration,
         viewsCount: s.viewsCount,
         reactions: s.reactions,
@@ -81,32 +83,47 @@ router.get("/stories", authenticate, async (req: AuthRequest, res) => {
 
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: "Internal Server Error", message: String(err) });
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", message: String(err) });
   }
 });
 
 router.post("/stories", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { mediaUrl, mediaType, duration } = req.body;
-    if (!mediaUrl || !mediaType) {
-      res.status(400).json({ error: "Bad Request", message: "mediaUrl and mediaType are required" });
+    const { mediaUrl, mediaType, duration, content, backgroundColor } =
+      req.body;
+    if (!mediaUrl && !content) {
+      res
+        .status(400)
+        .json({
+          error: "Bad Request",
+          message: "mediaUrl or content is required",
+        });
       return;
     }
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const id = generateId();
-    const [story] = await db.insert(storiesTable).values({
-      id,
-      userId: req.userId!,
-      mediaUrl,
-      mediaType,
-      duration: duration ?? 5,
-      expiresAt,
-    }).returning();
+    const [story] = await db
+      .insert(storiesTable)
+      .values({
+        id,
+        userId: req.userId!,
+        mediaUrl: mediaUrl ?? null,
+        mediaType: mediaType ?? "text",
+        content: content ?? null,
+        backgroundColor: backgroundColor ?? null,
+        duration: duration ?? 5,
+        expiresAt,
+      })
+      .returning();
     res.status(201).json({
       id: story.id,
       userId: story.userId,
       mediaUrl: story.mediaUrl,
       mediaType: story.mediaType,
+      content: story.content,
+      backgroundColor: story.backgroundColor,
       duration: story.duration,
       viewsCount: story.viewsCount,
       isViewed: false,

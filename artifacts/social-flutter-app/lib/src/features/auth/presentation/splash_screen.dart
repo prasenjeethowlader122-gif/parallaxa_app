@@ -69,84 +69,48 @@ class _SplashScreenState extends State<SplashScreen>
                 end: Alignment.bottomRight,
                 colors: isDark
                     ? [const Color(0xFF0F172A), const Color(0xFF1E293B)]
-                    : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+                    : [const Color(0xFFFFFFFF), const Color(0xFFF1F5F9)],
               ),
             ),
           ),
 
-          // Blurred background element for glassmorphism effect
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
-              ),
-            ),
-          ),
-
-          // Glassmorphic Center Card
+          // Logo and App Name
           Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  padding: const EdgeInsets.all(40),
-                  decoration: BoxDecoration(
-                    color: (isDark ? Colors.white : Colors.black).withOpacity(
-                      0.05,
-                    ),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: (isDark ? Colors.white : Colors.black).withOpacity(
-                        0.1,
-                      ),
-                    ),
-                  ),
-                  child: AnimatedBuilder(
-                    animation: _controller,
-                    builder: (context, child) {
-                      return FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: ScaleTransition(
-                          scale: _scaleAnimation,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                height: 150,
-                                width: 150,
-                                child: RiveAnimation.asset(
-                                  'assets/rive/splash.riv',
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              Text(
-                                'Parallaxa',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 2,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                    ),
-                              ),
-                            ],
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: 180,
+                          width: 180,
+                          child: RiveAnimation.asset(
+                            'assets/rive/splash.riv',
+                            fit: BoxFit.contain,
                           ),
                         ),
-                      );
-                    },
+                        const SizedBox(height: 24),
+                        Text(
+                          'Parallaxa',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 3,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
 
@@ -162,11 +126,11 @@ class _SplashScreenState extends State<SplashScreen>
                   'v1.0.0',
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color: Theme.of(
                       context,
                     ).colorScheme.onSurface.withOpacity(0.4),
-                    letterSpacing: 1.5,
+                    letterSpacing: 2,
                   ),
                 ),
               ),
