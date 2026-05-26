@@ -402,7 +402,7 @@ class _LikeAction extends StatelessWidget {
               width: 24,
               height: 24,
               child: isLiked
-                  ? const RiveAnimation.asset(
+                  ? RiveAnimation.asset(
                       'assets/rive/emoji.riv',
                       animations: ['look_up'],
                     )
