@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:rive/rive.dart';
+import 'package:rive/rive.dart' hide Animation;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:any_link_preview/any_link_preview.dart';
 import '../data/post_repository.dart';
@@ -389,7 +389,9 @@ class _LikeAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final iconColor = isLiked ? AppColors.like : theme.colorScheme.onSurfaceVariant;
+    final iconColor = isLiked
+        ? AppColors.like
+        : theme.colorScheme.onSurfaceVariant;
 
     return GestureDetector(
       onTap: onTap,
@@ -406,12 +408,7 @@ class _LikeAction extends StatelessWidget {
                       'assets/rive/emoji.riv',
                       animations: ['look_up'],
                     )
-                  : Icon(
-                      Symbols.favorite,
-                      size: 20,
-                      color: iconColor,
-                      fill: 0,
-                    ),
+                  : Icon(Symbols.favorite, size: 20, color: iconColor, fill: 0),
             ),
             if (count > 0) ...[
               const SizedBox(width: 6),

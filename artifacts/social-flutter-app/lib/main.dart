@@ -99,8 +99,7 @@ class MainApp extends ConsumerWidget {
       iconTheme: IconThemeData(color: baseColor, size: 24),
 
       // Default Material Symbols settings
-      extensions: [
-      ],
+      extensions: [],
 
       // AppBar
       appBarTheme: AppBarTheme(

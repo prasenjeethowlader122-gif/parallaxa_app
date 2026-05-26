@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rive/rive.dart' hide LinearGradient;
+import 'package:rive/rive.dart' hide LinearGradient, Animation;
 import 'package:go_router/go_router.dart';
 import 'dart:ui';
 import 'dart:async';

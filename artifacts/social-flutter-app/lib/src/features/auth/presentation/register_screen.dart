@@ -267,10 +267,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
             ListTile(
-              leading: Icon(
-                Symbols.image,
-                color: theme.colorScheme.onSurface,
-              ),
+              leading: Icon(Symbols.image, color: theme.colorScheme.onSurface),
               title: const Text('Choose from Gallery'),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
@@ -415,9 +412,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         right: IconButton(
           onPressed: () => setState(() => _showPassword = !_showPassword),
           icon: Icon(
-            _showPassword
-                ? Symbols.visibility_off
-                : Symbols.visibility,
+            _showPassword ? Symbols.visibility_off : Symbols.visibility,
             color: _errors['password'] != null
                 ? theme.colorScheme.error
                 : theme.colorScheme.onSurfaceVariant,
@@ -528,9 +523,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 : _usernameAvailable == null
                 ? null
                 : Icon(
-                    _usernameAvailable!
-                        ? Symbols.check_circle
-                        : Symbols.cancel,
+                    _usernameAvailable! ? Symbols.check_circle : Symbols.cancel,
                     color: _usernameAvailable!
                         ? Colors.green
                         : theme.colorScheme.error,
@@ -880,10 +873,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                             if (!isLastStep) ...[
                               const SizedBox(width: 8),
-                              const Icon(
-                                Symbols.arrow_forward,
-                                size: 18,
-                              ),
+                              const Icon(Symbols.arrow_forward, size: 18),
                             ],
                           ],
                         ),
