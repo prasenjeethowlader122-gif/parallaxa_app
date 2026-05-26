@@ -97,9 +97,7 @@ class _SplashScreenState extends State<SplashScreen>
                         const SizedBox(height: 24),
                         Text(
                           'Parallaxa',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
+                          style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 3,

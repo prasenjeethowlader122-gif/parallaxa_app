@@ -84,13 +84,13 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen> {
                   }
                   return Center(
                     child: story.mediaUrl != null
-                    ? CachedNetworkImage(
-                      imageUrl: story.mediaUrl!,
-                      fit: BoxFit.contain,
-                      placeholder: (context, url) =>
-                          const CircularProgressIndicator(),
-                    )
-                    : const SizedBox.shrink(),
+                        ? CachedNetworkImage(
+                            imageUrl: story.mediaUrl!,
+                            fit: BoxFit.contain,
+                            placeholder: (context, url) =>
+                                const CircularProgressIndicator(),
+                          )
+                        : const SizedBox.shrink(),
                   );
                 },
               ),

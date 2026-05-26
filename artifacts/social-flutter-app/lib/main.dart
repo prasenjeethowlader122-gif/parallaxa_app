@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:rive/rive.dart';
 import 'src/routing/app_router.dart';
 import 'src/core/api_client.dart';
 import 'src/core/storage_service.dart';
@@ -109,8 +108,7 @@ class MainApp extends ConsumerWidget {
       iconTheme: IconThemeData(color: baseColor, size: 24),
 
       // Default Material Symbols settings
-      extensions: [
-      ],
+      extensions: const [],
 
       // AppBar
       appBarTheme: AppBarTheme(
@@ -119,11 +117,12 @@ class MainApp extends ConsumerWidget {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         centerTitle: false,
-        titleTextStyle: (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
-          fontWeight: FontWeight.w700,
-          fontSize: 20,
-          color: baseColor,
-        ),
+        titleTextStyle:
+            (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
+              fontWeight: FontWeight.w700,
+              fontSize: 20,
+              color: baseColor,
+            ),
         iconTheme: IconThemeData(color: baseColor),
       ),
 
@@ -231,10 +230,9 @@ class MainApp extends ConsumerWidget {
           fontWeight: FontWeight.w700,
           fontSize: 15,
         ),
-        unselectedLabelStyle: (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
-          fontWeight: FontWeight.w400,
-          fontSize: 15,
-        ),
+        unselectedLabelStyle: (isBangla
+            ? GoogleFonts.hindSiliguri
+            : GoogleFonts.ubuntu)(fontWeight: FontWeight.w400, fontSize: 15),
       ),
 
       // Bottom Navigation Bar

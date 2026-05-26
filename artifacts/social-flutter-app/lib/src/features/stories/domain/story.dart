@@ -7,8 +7,10 @@ part 'story.g.dart';
 class Story {
   final String id;
   final String userId;
-  final String mediaUrl;
-  final String mediaType; // 'image' or 'video'
+  final String? mediaUrl;
+  final String mediaType; // 'image', 'video', or 'text'
+  final String? content;
+  final String? backgroundColor;
   final int duration;
   final int viewsCount;
   final bool isViewed;
@@ -20,8 +22,10 @@ class Story {
   Story({
     required this.id,
     required this.userId,
-    required this.mediaUrl,
+    this.mediaUrl,
     required this.mediaType,
+    this.content,
+    this.backgroundColor,
     required this.duration,
     required this.viewsCount,
     required this.isViewed,

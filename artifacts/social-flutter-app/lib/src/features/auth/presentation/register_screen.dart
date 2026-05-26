@@ -10,7 +10,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../data/auth_repository.dart';
 import '../../../core/api_client.dart';
-import '../../../core/app_colors.dart';
 import '../../../core/processing_provider.dart';
 import '../../../core/localization_provider.dart';
 import 'widgets/floating_label_input.dart';
@@ -267,10 +266,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
             ListTile(
-              leading: Icon(
-                Symbols.image,
-                color: theme.colorScheme.onSurface,
-              ),
+              leading: Icon(Symbols.image, color: theme.colorScheme.onSurface),
               title: const Text('Choose from Gallery'),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
@@ -415,9 +411,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         right: IconButton(
           onPressed: () => setState(() => _showPassword = !_showPassword),
           icon: Icon(
-            _showPassword
-                ? Symbols.visibility_off
-                : Symbols.visibility,
+            _showPassword ? Symbols.visibility_off : Symbols.visibility,
             color: _errors['password'] != null
                 ? theme.colorScheme.error
                 : theme.colorScheme.onSurfaceVariant,
@@ -528,16 +522,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 : _usernameAvailable == null
                 ? null
                 : Icon(
-                    _usernameAvailable!
-                        ? Symbols.check_circle
-                        : Symbols.cancel,
+                    _usernameAvailable! ? Symbols.check_circle : Symbols.cancel,
                     color: _usernameAvailable!
                         ? Colors.green
                         : theme.colorScheme.error,
                     size: 20,
                   ),
           ),
-
           if (_usernameAvailable != null && !_checkingUsername)
             Padding(
               padding: const EdgeInsets.only(left: 4, bottom: 8),
@@ -554,7 +545,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
               ),
             ),
-
           if (_usernameSuggestions.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.only(left: 4, bottom: 8),
@@ -595,11 +585,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          s,
+                          '@$s',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: theme.colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -880,10 +870,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                             if (!isLastStep) ...[
                               const SizedBox(width: 8),
-                              const Icon(
-                                Symbols.arrow_forward,
-                                size: 18,
-                              ),
+                              const Icon(Symbols.arrow_forward, size: 18),
                             ],
                           ],
                         ),

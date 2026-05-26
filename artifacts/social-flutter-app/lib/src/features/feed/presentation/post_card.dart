@@ -389,8 +389,9 @@ class _LikeAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final iconColor =
-        isLiked ? AppColors.like : theme.colorScheme.onSurfaceVariant;
+    final iconColor = isLiked
+        ? AppColors.like
+        : theme.colorScheme.onSurfaceVariant;
 
     return GestureDetector(
       onTap: onTap,
@@ -407,12 +408,7 @@ class _LikeAction extends StatelessWidget {
                       'assets/rive/emoji.riv',
                       animations: ['look_up'],
                     )
-                  : Icon(
-                      Symbols.favorite,
-                      size: 22,
-                      color: iconColor,
-                      fill: 0,
-                    ),
+                  : Icon(Symbols.favorite, size: 22, color: iconColor, fill: 0),
             ),
             if (count > 0) ...[
               const SizedBox(width: 4),

@@ -63,7 +63,8 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
         await repo.createStory(
           content: _textController.text.trim(),
           mediaType: 'text',
-          backgroundColor: '#${_selectedColor.value.toRadixString(16).padLeft(8, '0')}',
+          backgroundColor:
+              '#${_selectedColor.value.toRadixString(16).padLeft(8, '0')}',
         );
       }
 
@@ -88,7 +89,10 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
         elevation: 0,
         title: Text(
           _isTextStory ? 'Text Story' : 'Add to Story',
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Symbols.close, color: Colors.white),
@@ -154,35 +158,36 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
                     ),
                   )
                 : (_image == null
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Symbols.photo_camera,
-                            color: Colors.white,
-                            size: 80,
-                            weight: 100,
-                          ),
-                          const SizedBox(height: 32),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _OptionButton(
-                                icon: Symbols.image,
-                                label: 'Gallery',
-                                onTap: _pickImage,
-                              ),
-                              const SizedBox(width: 40),
-                              _OptionButton(
-                                icon: Symbols.text_fields,
-                                label: 'Text',
-                                onTap: () => setState(() => _isTextStory = true),
-                              ),
-                            ],
-                          ),
-                        ],
-                      )
-                    : Image.file(_image!, fit: BoxFit.contain)),
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Symbols.photo_camera,
+                              color: Colors.white,
+                              size: 80,
+                              weight: 100,
+                            ),
+                            const SizedBox(height: 32),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _OptionButton(
+                                  icon: Symbols.image,
+                                  label: 'Gallery',
+                                  onTap: _pickImage,
+                                ),
+                                const SizedBox(width: 40),
+                                _OptionButton(
+                                  icon: Symbols.text_fields,
+                                  label: 'Text',
+                                  onTap: () =>
+                                      setState(() => _isTextStory = true),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      : Image.file(_image!, fit: BoxFit.contain)),
           ),
           if (_isTextStory)
             Positioned(
@@ -197,7 +202,8 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
                   itemCount: _colors.length,
                   itemBuilder: (context, index) {
                     return GestureDetector(
-                      onTap: () => setState(() => _selectedColor = _colors[index]),
+                      onTap: () =>
+                          setState(() => _selectedColor = _colors[index]),
                       child: Container(
                         width: 40,
                         height: 40,
