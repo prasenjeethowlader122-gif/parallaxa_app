@@ -4,7 +4,6 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'src/routing/app_router.dart';
 import 'src/core/api_client.dart';
 import 'src/core/storage_service.dart';
