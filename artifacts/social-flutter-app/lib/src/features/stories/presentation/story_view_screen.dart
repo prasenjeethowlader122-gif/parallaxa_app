@@ -111,7 +111,7 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen> {
                               decoration: BoxDecoration(
                                 color: index <= _currentIndex
                                     ? Colors.white
-                                    : Colors.white.withOpacity(0.3),
+                                    : Colors.white.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),

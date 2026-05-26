@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart' hide LinearGradient;
 import 'package:go_router/go_router.dart';
-import 'dart:ui';
 import 'dart:async';
 
 class SplashScreen extends StatefulWidget {
@@ -127,7 +126,7 @@ class _SplashScreenState extends State<SplashScreen>
                     fontWeight: FontWeight.w600,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.4),
+                    ).colorScheme.onSurface.withValues(alpha: 0.4),
                     letterSpacing: 2,
                   ),
                 ),

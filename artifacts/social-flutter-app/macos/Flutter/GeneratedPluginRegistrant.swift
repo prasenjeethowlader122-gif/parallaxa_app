@@ -13,7 +13,7 @@ import firebase_remote_config
 import gal
 import google_sign_in_ios
 import pro_image_editor
-import rive_common
+import rive_native
 import shared_preferences_foundation
 import sqflite_darwin
 import url_launcher_macos
@@ -28,7 +28,7 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   GalPlugin.register(with: registry.registrar(forPlugin: "GalPlugin"))
   FLTGoogleSignInPlugin.register(with: registry.registrar(forPlugin: "FLTGoogleSignInPlugin"))
   ProImageEditorPlugin.register(with: registry.registrar(forPlugin: "ProImageEditorPlugin"))
-  RivePlugin.register(with: registry.registrar(forPlugin: "RivePlugin"))
+  RiveNativePlugin.register(with: registry.registrar(forPlugin: "RiveNativePlugin"))
   SharedPreferencesPlugin.register(with: registry.registrar(forPlugin: "SharedPreferencesPlugin"))
   SqflitePlugin.register(with: registry.registrar(forPlugin: "SqflitePlugin"))
   UrlLauncherPlugin.register(with: registry.registrar(forPlugin: "UrlLauncherPlugin"))
