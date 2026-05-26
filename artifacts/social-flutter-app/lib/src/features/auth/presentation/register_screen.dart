@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
@@ -260,7 +260,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           children: [
             ListTile(
               leading: Icon(
-                MaterialSymbols.photo_camera,
+                Symbols.photo_camera,
                 color: theme.colorScheme.onSurface,
               ),
               title: const Text('Take a Photo'),
@@ -268,7 +268,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             ListTile(
               leading: Icon(
-                MaterialSymbols.image,
+                Symbols.image,
                 color: theme.colorScheme.onSurface,
               ),
               title: const Text('Choose from Gallery'),
@@ -334,7 +334,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return FloatingLabelInput(
         key: const ValueKey(0),
         label: l10n.get('display_name'),
-        icon: MaterialSymbols.person,
+        icon: Symbols.person,
         controller: _displayNameController,
         error: _errors['displayName'],
         textCapitalization: TextCapitalization.words,
@@ -353,7 +353,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: AbsorbPointer(
               child: FloatingLabelInput(
                 label: l10n.get('birthday'),
-                icon: MaterialSymbols.calendar_today,
+                icon: Symbols.calendar_today,
                 controller: _dateOfBirthController,
                 error: _errors['dateOfBirth'],
                 keyboardType: TextInputType.none,
@@ -391,7 +391,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return FloatingLabelInput(
         key: const ValueKey(2),
         label: l10n.get('email'),
-        icon: MaterialSymbols.mail,
+        icon: Symbols.mail,
         controller: _emailController,
         error: _errors['email'],
         keyboardType: TextInputType.emailAddress,
@@ -404,7 +404,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return FloatingLabelInput(
         key: const ValueKey(3),
         label: l10n.get('password'),
-        icon: MaterialSymbols.lock,
+        icon: Symbols.lock,
         controller: _passwordController,
         error: _errors['password'],
         secureTextEntry: !_showPassword,
@@ -416,8 +416,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           onPressed: () => setState(() => _showPassword = !_showPassword),
           icon: Icon(
             _showPassword
-                ? MaterialSymbols.visibility_off
-                : MaterialSymbols.visibility,
+                ? Symbols.visibility_off
+                : Symbols.visibility,
             color: _errors['password'] != null
                 ? theme.colorScheme.error
                 : theme.colorScheme.onSurfaceVariant,
@@ -456,7 +456,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               child: _faceImage == null
                   ? Icon(
-                      MaterialSymbols.person_add,
+                      Symbols.person_add,
                       size: 60,
                       color: theme.colorScheme.onSurfaceVariant,
                     )
@@ -478,7 +478,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
           ElevatedButton.icon(
             onPressed: _isLoading ? null : _pickFaceImage,
-            icon: const Icon(MaterialSymbols.photo_camera, size: 18),
+            icon: const Icon(Symbols.photo_camera, size: 18),
             label: Text(_faceImage == null ? "Capture Face" : "Retake Photo"),
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.surfaceContainer,
@@ -509,7 +509,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         children: [
           FloatingLabelInput(
             label: l10n.get('username'),
-            icon: MaterialSymbols.account_circle,
+            icon: Symbols.account_circle,
             controller: _usernameController,
             error: _errors['username'],
             textInputAction: TextInputAction.done,
@@ -529,8 +529,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ? null
                 : Icon(
                     _usernameAvailable!
-                        ? MaterialSymbols.check_circle
-                        : MaterialSymbols.cancel,
+                        ? Symbols.check_circle
+                        : Symbols.cancel,
                     color: _usernameAvailable!
                         ? Colors.green
                         : theme.colorScheme.error,
@@ -661,7 +661,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                       child: Center(
                         child: Icon(
-                          MaterialSymbols.arrow_back,
+                          Symbols.arrow_back,
                           color: theme.colorScheme.onSurface,
                           size: 20,
                         ),
@@ -743,7 +743,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: Row(
                     children: [
                       Icon(
-                        MaterialSymbols.error,
+                        Symbols.error,
                         color: theme.colorScheme.error,
                         size: 20,
                       ),
@@ -797,7 +797,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           child: _acceptTerms
                               ? Center(
                                   child: Icon(
-                                    MaterialSymbols.check,
+                                    Symbols.check,
                                     color: theme.colorScheme.surface,
                                     size: 14,
                                   ),
@@ -881,7 +881,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             if (!isLastStep) ...[
                               const SizedBox(width: 8),
                               const Icon(
-                                MaterialSymbols.arrow_forward,
+                                Symbols.arrow_forward,
                                 size: 18,
                               ),
                             ],

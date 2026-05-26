@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/domain/user.dart';
 import '../../feed/domain/post.dart';
@@ -116,7 +116,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                MaterialSymbols.error,
+                Symbols.error,
                 size: 40,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -188,7 +188,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     isOwnProfile: isOwnProfile,
                   ),
                   const _EmptyTab(
-                    icon: MaterialSymbols.chat,
+                    icon: Symbols.chat,
                     message: 'No replies yet',
                   ),
                   _PostsList(
@@ -198,7 +198,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     l10n: l10n,
                   ),
                   const _EmptyTab(
-                    icon: MaterialSymbols.favorite,
+                    icon: Symbols.favorite,
                     message: 'No liked posts yet',
                   ),
                 ],
@@ -257,13 +257,13 @@ class _ProfileHeader extends StatelessWidget {
               ),
               if (isOwnProfile)
                 IconButton(
-                  icon: const Icon(MaterialSymbols.logout, size: 22),
+                  icon: const Icon(Symbols.logout, size: 22),
                   onPressed: onLogout,
                   color: theme.colorScheme.onSurface,
                 )
               else
                 IconButton(
-                  icon: const Icon(MaterialSymbols.more_horiz, size: 22),
+                  icon: const Icon(Symbols.more_horiz, size: 22),
                   onPressed: () =>
                       context.push('/profile/options', extra: user),
                   color: theme.colorScheme.onSurface,
@@ -437,7 +437,7 @@ class _ProfileHeader extends StatelessWidget {
                   if (user.isVerified) ...[
                     const SizedBox(width: 4),
                     const Icon(
-                      MaterialSymbols.verified,
+                      Symbols.verified,
                       size: 18,
                       color: AppColors.verified,
                       fill: 1,
@@ -469,7 +469,7 @@ class _ProfileHeader extends StatelessWidget {
                 Row(
                   children: [
                     Icon(
-                      MaterialSymbols.link,
+                      Symbols.link,
                       size: 16,
                       color: theme.colorScheme.primary,
                     ),
@@ -613,7 +613,7 @@ class _PostsList extends StatelessWidget {
 
         if (posts.isEmpty) {
           return _EmptyTab(
-            icon: mediaOnly ? MaterialSymbols.image : MaterialSymbols.notes,
+            icon: mediaOnly ? Symbols.image : Symbols.notes,
             message: mediaOnly ? 'No media yet' : 'No posts yet',
           );
         }

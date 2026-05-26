@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'package:rive/rive.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:any_link_preview/any_link_preview.dart';
 import '../data/post_repository.dart';
@@ -132,7 +133,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                 child: Row(
                   children: [
                     Icon(
-                      MaterialSymbols.repeat,
+                      Symbols.repeat,
                       size: 14,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -189,7 +190,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                           if (displayPost.author.isVerified) ...[
                             const SizedBox(width: 4),
                             const Icon(
-                              MaterialSymbols.verified,
+                              Symbols.verified,
                               size: 16,
                               color: AppColors.verified,
                               fill: 1,
@@ -216,7 +217,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(MaterialSymbols.more_horiz, size: 20),
+                  icon: const Icon(Symbols.more_horiz, size: 20),
                   onPressed: () {},
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -252,7 +253,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                     ),
                     errorWidget: (context, url, error) => Container(
                       color: theme.colorScheme.surfaceContainerHighest,
-                      child: const Icon(MaterialSymbols.image),
+                      child: const Icon(Symbols.image),
                     ),
                   ),
                 ),
@@ -269,7 +270,6 @@ class _PostCardState extends ConsumerState<PostCard> {
                         borderRadius: BorderRadius.circular(12),
                         child: AnyLinkPreview(
                           link: url,
-                          displayDirection: UIDisplayDirection.horizontal,
                           cache: const Duration(days: 7),
                           backgroundColor: theme.colorScheme.surfaceContainer,
                           errorWidget: const SizedBox.shrink(),
@@ -299,24 +299,22 @@ class _PostCardState extends ConsumerState<PostCard> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _ActionItem(
-                    icon: MaterialSymbols.chat,
+                    icon: Symbols.chat,
                     count: displayPost.repliesCount,
                     onTap: () {},
                   ),
                   _ActionItem(
-                    icon: MaterialSymbols.repeat,
+                    icon: Symbols.repeat,
                     count: _repostCount,
                     onTap: _toggleRepost,
                   ),
-                  _ActionItem(
-                    icon: MaterialSymbols.favorite,
+                  _LikeAction(
+                    isLiked: _isLiked,
                     count: _likesCount,
-                    color: _isLiked ? AppColors.like : null,
                     onTap: _toggleLike,
-                    isFilled: _isLiked,
                   ),
                   _ActionItem(
-                    icon: MaterialSymbols.bookmark,
+                    icon: Symbols.bookmark,
                     count: 0,
                     color: _isSaved ? AppColors.saved : null,
                     onTap: _toggleSave,
@@ -324,7 +322,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                     isFilled: _isSaved,
                   ),
                   _ActionItem(
-                    icon: MaterialSymbols.share,
+                    icon: Symbols.share,
                     count: 0,
                     onTap: () {},
                     showCount: false,
@@ -372,6 +370,62 @@ class _ContentText extends StatelessWidget {
         fontSize: 15,
         height: 1.4,
         color: theme.colorScheme.onSurface,
+      ),
+    );
+  }
+}
+
+class _LikeAction extends StatelessWidget {
+  final bool isLiked;
+  final int count;
+  final VoidCallback onTap;
+
+  const _LikeAction({
+    required this.isLiked,
+    required this.count,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final iconColor = isLiked ? AppColors.like : theme.colorScheme.onSurfaceVariant;
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: isLiked
+                  ? const RiveAnimation.asset(
+                      'assets/rive/emoji.riv',
+                      animations: ['look_up'],
+                    )
+                  : Icon(
+                      Symbols.favorite,
+                      size: 20,
+                      color: iconColor,
+                      fill: 0,
+                    ),
+            ),
+            if (count > 0) ...[
+              const SizedBox(width: 6),
+              Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: iconColor,
+                  fontWeight: isLiked ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

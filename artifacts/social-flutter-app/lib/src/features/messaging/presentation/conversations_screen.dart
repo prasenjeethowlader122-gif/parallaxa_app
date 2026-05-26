@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
@@ -65,7 +65,7 @@ class ConversationsScreen extends ConsumerWidget {
                     fontSize: 15,
                   ),
                   prefixIcon: Icon(
-                    MaterialSymbols.search,
+                    Symbols.search,
                     color: theme.colorScheme.onSurfaceVariant,
                     size: 20,
                   ),
@@ -87,7 +87,7 @@ class ConversationsScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          MaterialSymbols.chat,
+                          Symbols.chat,
                           size: 52,
                           color: theme.colorScheme.onSurfaceVariant.withOpacity(
                             0.5,
@@ -173,7 +173,7 @@ class _ConversationTile extends StatelessWidget {
                       : null,
                   child: conv.participant.avatarUrl == null
                       ? Icon(
-                          MaterialSymbols.person,
+                          Symbols.person,
                           color: theme.colorScheme.onSurfaceVariant,
                           size: 24,
                         )
