@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../data/post_repository.dart';
 import '../../../core/app_colors.dart';
 import 'post_card.dart';
@@ -112,7 +112,7 @@ class _FeedList extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                MaterialSymbols.wifi_off,
+                Symbols.wifi_off,
                 size: 44,
                 color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
               ),
@@ -149,7 +149,7 @@ class _FeedList extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    MaterialSymbols.notes,
+                    Symbols.notes,
                     size: 48,
                     color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
                   ),

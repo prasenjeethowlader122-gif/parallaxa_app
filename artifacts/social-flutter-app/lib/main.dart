@@ -4,7 +4,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'package:rive/rive.dart';
 import 'src/routing/app_router.dart';
 import 'src/core/api_client.dart';
 import 'src/core/storage_service.dart';
@@ -19,6 +20,7 @@ final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MobileAds.instance.initialize();
+  await RiveNative.init();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -99,7 +101,6 @@ class MainApp extends ConsumerWidget {
 
       // Default Material Symbols settings
       extensions: [
-        const MaterialSymbolsStyle(weight: 100, grade: 0, opticalSize: 24),
       ],
 
       // AppBar
@@ -118,7 +119,7 @@ class MainApp extends ConsumerWidget {
       ),
 
       // Card
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: cardColor,
         elevation: 0,
         shape: RoundedRectangleBorder(

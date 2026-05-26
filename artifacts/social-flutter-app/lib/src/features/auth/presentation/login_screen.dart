@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../data/auth_repository.dart';
 import '../../../core/api_client.dart';
 import '../../../core/app_colors.dart';
@@ -208,7 +208,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Row(
                     children: [
                       Icon(
-                        MaterialSymbols.error,
+                        Symbols.error,
                         color: theme.colorScheme.error,
                         size: 20,
                       ),
@@ -234,7 +234,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 opacity: _showTotpInput ? 0.45 : 1.0,
                 child: FloatingLabelInput(
                   label: "Email Address",
-                  icon: MaterialSymbols.mail,
+                  icon: Symbols.mail,
                   controller: _emailController,
                   error: _errors['email'],
                   keyboardType: TextInputType.emailAddress,
@@ -249,7 +249,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 opacity: _showTotpInput ? 0.45 : 1.0,
                 child: FloatingLabelInput(
                   label: "Password",
-                  icon: MaterialSymbols.lock,
+                  icon: Symbols.lock,
                   controller: _passwordController,
                   error: _errors['password'],
                   secureTextEntry: !_showPassword,
@@ -266,8 +266,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         setState(() => _showPassword = !_showPassword),
                     icon: Icon(
                       _showPassword
-                          ? MaterialSymbols.visibility_off
-                          : MaterialSymbols.visibility,
+                          ? Symbols.visibility_off
+                          : Symbols.visibility,
                       color: _errors['password'] != null
                           ? theme.colorScheme.error
                           : theme.colorScheme.onSurfaceVariant,
@@ -303,7 +303,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (_showTotpInput) ...[
                 FloatingLabelInput(
                   label: "6-digit 2FA Code",
-                  icon: MaterialSymbols.shield,
+                  icon: Symbols.shield,
                   controller: _totpController,
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.done,

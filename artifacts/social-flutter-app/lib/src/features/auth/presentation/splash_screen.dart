@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/material.dart' hide Animation;
+import 'package:rive/rive.dart' hide LinearGradient;
 import 'package:go_router/go_router.dart';
 import 'dart:ui';
 import 'dart:async';
@@ -117,12 +117,12 @@ class _SplashScreenState extends State<SplashScreen>
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              SvgPicture.asset(
-                                'assets/images/parallaxa-logo.svg',
-                                height: 100,
-                                colorFilter: ColorFilter.mode(
-                                  Theme.of(context).primaryColor,
-                                  BlendMode.srcIn,
+                              const SizedBox(
+                                height: 150,
+                                width: 150,
+                                child: RiveAnimation.asset(
+                                  'assets/rive/splash.riv',
+                                  fit: BoxFit.contain,
                                 ),
                               ),
                               const SizedBox(height: 24),
