@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../data/post_repository.dart';
-import '../../../core/app_colors.dart';
 import 'post_card.dart';
 import '../../stories/presentation/widgets/story_bar.dart';
 import '../../../core/widgets/ad_banner_widget.dart';

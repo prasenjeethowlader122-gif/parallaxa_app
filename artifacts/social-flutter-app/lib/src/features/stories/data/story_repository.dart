@@ -48,15 +48,19 @@ class StoryRepository {
   }
 
   Future<Story> createStory({
-    required String mediaUrl,
-    required String mediaType,
+    String? mediaUrl,
+    String? mediaType,
+    String? content,
+    String? backgroundColor,
     int? duration,
   }) async {
     final response = await _dio.post(
       '/stories',
       data: {
-        'mediaUrl': mediaUrl,
-        'mediaType': mediaType,
+        if (mediaUrl != null) 'mediaUrl': mediaUrl,
+        if (mediaType != null) 'mediaType': mediaType,
+        if (content != null) 'content': content,
+        if (backgroundColor != null) 'backgroundColor': backgroundColor,
         if (duration != null) 'duration': duration,
       },
     );

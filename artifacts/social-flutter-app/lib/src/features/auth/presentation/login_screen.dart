@@ -6,7 +6,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../data/auth_repository.dart';
 import '../../../core/api_client.dart';
-import '../../../core/app_colors.dart';
 import '../../../core/processing_provider.dart';
 import 'widgets/floating_label_input.dart';
 

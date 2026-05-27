@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hugeicons/hugeicons.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../data/story_repository.dart';
@@ -30,6 +30,16 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen> {
     super.dispose();
   }
 
+  Color _parseColor(String? colorStr) {
+    if (colorStr == null) return Colors.black;
+    try {
+      if (colorStr.startsWith('#')) {
+        return Color(int.parse(colorStr.substring(1), radix: 16));
+      }
+    } catch (_) {}
+    return Colors.deepPurple;
+  }
+
   @override
   Widget build(BuildContext context) {
     final storiesAsync = ref.watch(userStoriesProvider(widget.userId));
@@ -54,13 +64,32 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen> {
                 onPageChanged: (idx) => setState(() => _currentIndex = idx),
                 itemBuilder: (context, index) {
                   final story = stories[index];
+                  if (story.mediaType == 'text') {
+                    return Container(
+                      color: _parseColor(story.backgroundColor),
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Center(
+                        child: Text(
+                          story.content ?? '',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
                   return Center(
-                    child: CachedNetworkImage(
-                      imageUrl: story.mediaUrl,
-                      fit: BoxFit.contain,
-                      placeholder: (context, error) =>
-                          const CircularProgressIndicator(),
-                    ),
+                    child: story.mediaUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: story.mediaUrl!,
+                            fit: BoxFit.contain,
+                            placeholder: (context, url) =>
+                                const CircularProgressIndicator(),
+                          )
+                        : const SizedBox.shrink(),
                   );
                 },
               ),
@@ -95,9 +124,10 @@ class _StoryViewScreenState extends ConsumerState<StoryViewScreen> {
                         children: [
                           const Spacer(),
                           IconButton(
-                            icon: const HugeIcon(
-                              icon: HugeIcons.strokeRoundedCancel01,
+                            icon: const Icon(
+                              Symbols.close,
                               color: Colors.white,
+                              size: 28,
                             ),
                             onPressed: () => context.pop(),
                           ),

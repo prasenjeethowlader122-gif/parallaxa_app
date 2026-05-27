@@ -6,7 +6,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import '../data/message_repository.dart';
 import '../domain/message.dart';
-import '../../../core/app_colors.dart';
 
 final conversationsProvider = FutureProvider<List<Conversation>>((ref) {
   return ref.watch(messageRepositoryProvider).getConversations();

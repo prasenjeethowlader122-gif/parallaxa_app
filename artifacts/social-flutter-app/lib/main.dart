@@ -4,8 +4,6 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:material_symbols_icons/symbols.dart';
-import 'package:rive/rive.dart';
 import 'src/routing/app_router.dart';
 import 'src/core/api_client.dart';
 import 'src/core/storage_service.dart';
@@ -60,12 +58,12 @@ class MainApp extends ConsumerWidget {
       builder: (context, child) {
         return OTAUpdateListener(child: ProcessingOverlay(child: child!));
       },
-      theme: _buildTheme(Brightness.light),
-      darkTheme: _buildTheme(Brightness.dark),
+      theme: _buildTheme(Brightness.light, locale: locale),
+      darkTheme: _buildTheme(Brightness.dark, locale: locale),
     );
   }
 
-  ThemeData _buildTheme(Brightness brightness) {
+  ThemeData _buildTheme(Brightness brightness, {Locale? locale}) {
     final isDark = brightness == Brightness.dark;
     final baseColor = isDark ? Colors.white : AppColors.foreground;
     final bgColor = isDark ? AppColors.darkBackground : AppColors.background;
@@ -76,10 +74,23 @@ class MainApp extends ConsumerWidget {
         ? AppColors.darkMutedForeground
         : AppColors.mutedForeground;
 
+    final isBangla = locale?.languageCode == 'bn';
+    final textTheme = isBangla
+        ? GoogleFonts.hindSiliguriTextTheme().apply(
+            bodyColor: baseColor,
+            displayColor: baseColor,
+          )
+        : GoogleFonts.ubuntuTextTheme().apply(
+            bodyColor: baseColor,
+            displayColor: baseColor,
+          );
+
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      fontFamily: GoogleFonts.ubuntu().fontFamily,
+      fontFamily: isBangla
+          ? GoogleFonts.hindSiliguri().fontFamily
+          : GoogleFonts.ubuntu().fontFamily,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         brightness: brightness,
@@ -90,17 +101,13 @@ class MainApp extends ConsumerWidget {
         surfaceContainer: cardColor,
       ),
       scaffoldBackgroundColor: bgColor,
-      textTheme: GoogleFonts.ubuntuTextTheme().apply(
-        bodyColor: baseColor,
-        displayColor: baseColor,
-      ),
+      textTheme: textTheme,
 
       // Icon Theme
       iconTheme: IconThemeData(color: baseColor, size: 24),
 
       // Default Material Symbols settings
-      extensions: [
-      ],
+      extensions: const [],
 
       // AppBar
       appBarTheme: AppBarTheme(
@@ -109,11 +116,12 @@ class MainApp extends ConsumerWidget {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.ubuntu(
-          fontWeight: FontWeight.w700,
-          fontSize: 20,
-          color: baseColor,
-        ),
+        titleTextStyle:
+            (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
+              fontWeight: FontWeight.w700,
+              fontSize: 20,
+              color: baseColor,
+            ),
         iconTheme: IconThemeData(color: baseColor),
       ),
 
@@ -137,7 +145,7 @@ class MainApp extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: GoogleFonts.ubuntu(
+          textStyle: (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
             fontWeight: FontWeight.w700,
             fontSize: 16,
           ),
@@ -152,7 +160,7 @@ class MainApp extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: GoogleFonts.ubuntu(
+          textStyle: (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
             fontWeight: FontWeight.w700,
             fontSize: 14,
           ),
@@ -163,7 +171,7 @@ class MainApp extends ConsumerWidget {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          textStyle: GoogleFonts.ubuntu(
+          textStyle: (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
@@ -217,14 +225,13 @@ class MainApp extends ConsumerWidget {
         indicatorColor: AppColors.primary,
         indicatorSize: TabBarIndicatorSize.label,
         dividerColor: Colors.transparent,
-        labelStyle: GoogleFonts.ubuntu(
+        labelStyle: (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
           fontWeight: FontWeight.w700,
           fontSize: 15,
         ),
-        unselectedLabelStyle: GoogleFonts.ubuntu(
-          fontWeight: FontWeight.w400,
-          fontSize: 15,
-        ),
+        unselectedLabelStyle: (isBangla
+            ? GoogleFonts.hindSiliguri
+            : GoogleFonts.ubuntu)(fontWeight: FontWeight.w400, fontSize: 15),
       ),
 
       // Bottom Navigation Bar
