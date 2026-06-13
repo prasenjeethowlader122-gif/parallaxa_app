@@ -21,15 +21,17 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.java
     container_name: socialapp_api
     ports:
       - "8080:8080"
+      - "9092:9092"
     environment:
       PORT: 8080
-      DATABASE_URL: postgres://socialapp:socialapp_secret@postgres:5432/socialapp
-      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
-      NODE_ENV: production
+      DATABASE_URL: jdbc:postgresql://postgres:5432/socialapp
+      DATABASE_USER: socialapp
+      DATABASE_PASSWORD: socialapp_secret
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
     depends_on:
       postgres:
         condition: service_healthy
