@@ -28,7 +28,7 @@ services:
       - "9092:9092"
     environment:
       PORT: 8080
-      DATABASE_URL: jdbc:postgresql://postgres:5432/socialapp
+      DATABASE_URL: postgresql://socialapp:socialapp_secret@postgres:5432/socialapp
       DATABASE_USER: socialapp
       DATABASE_PASSWORD: socialapp_secret
       JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}

@@ -20,10 +20,13 @@ public class DatabaseConfig {
     @Bean
     @Primary
     @ConditionalOnProperty(name = "DATABASE_URL")
-    public DataSource dataSource(@Value("${DATABASE_URL}") String databaseUrl) throws URISyntaxException {
+    public DataSource dataSource(
+            @Value("${DATABASE_URL}") String databaseUrl,
+            @Value("${DATABASE_USER:#{null}}") String dbUser,
+            @Value("${DATABASE_PASSWORD:#{null}}") String dbPassword) throws URISyntaxException {
         String url = databaseUrl;
-        String username = null;
-        String password = null;
+        String username = dbUser;
+        String password = dbPassword;
 
         if (url.startsWith("postgres://") || url.startsWith("postgresql://")) {
             URI dbUri = new URI(url);
