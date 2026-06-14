@@ -16,7 +16,7 @@ class DatabaseConfigTest {
     @Test
     void testPostgresUrlConversion() throws URISyntaxException {
         String databaseUrl = "postgres://user:pass@host:5432/db";
-        DataSource dataSource = databaseConfig.dataSource(databaseUrl);
+        DataSource dataSource = databaseConfig.dataSource(databaseUrl, null, null);
 
         assertTrue(dataSource instanceof HikariDataSource);
         HikariDataSource hikari = (HikariDataSource) dataSource;
@@ -30,7 +30,7 @@ class DatabaseConfigTest {
     @Test
     void testPostgresqlUrlConversion() throws URISyntaxException {
         String databaseUrl = "postgresql://user:pass@host:5432/db?sslmode=require";
-        DataSource dataSource = databaseConfig.dataSource(databaseUrl);
+        DataSource dataSource = databaseConfig.dataSource(databaseUrl, null, null);
 
         assertTrue(dataSource instanceof HikariDataSource);
         HikariDataSource hikari = (HikariDataSource) dataSource;
@@ -43,11 +43,26 @@ class DatabaseConfigTest {
     @Test
     void testStandardJdbcUrl() throws URISyntaxException {
         String databaseUrl = "jdbc:postgresql://host:5432/db";
-        DataSource dataSource = databaseConfig.dataSource(databaseUrl);
+        DataSource dataSource = databaseConfig.dataSource(databaseUrl, null, null);
 
         assertTrue(dataSource instanceof HikariDataSource);
         HikariDataSource hikari = (HikariDataSource) dataSource;
 
         assertEquals("jdbc:postgresql://host:5432/db", hikari.getJdbcUrl());
+    }
+
+    @Test
+    void testSplitConfig() throws URISyntaxException {
+        String databaseUrl = "jdbc:postgresql://host:5432/db";
+        String user = "env_user";
+        String pass = "env_pass";
+        DataSource dataSource = databaseConfig.dataSource(databaseUrl, user, pass);
+
+        assertTrue(dataSource instanceof HikariDataSource);
+        HikariDataSource hikari = (HikariDataSource) dataSource;
+
+        assertEquals("jdbc:postgresql://host:5432/db", hikari.getJdbcUrl());
+        assertEquals("env_user", hikari.getUsername());
+        assertEquals("env_pass", hikari.getPassword());
     }
 }
