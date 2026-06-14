@@ -57,11 +57,11 @@ class StoryRepository {
     final response = await _dio.post(
       '/stories',
       data: {
-        if (mediaUrl != null) 'mediaUrl': mediaUrl,
-        if (mediaType != null) 'mediaType': mediaType,
-        if (content != null) 'content': content,
-        if (backgroundColor != null) 'backgroundColor': backgroundColor,
-        if (duration != null) 'duration': duration,
+        'mediaUrl': ?mediaUrl,
+        'mediaType': ?mediaType,
+        'content': ?content,
+        'backgroundColor': ?backgroundColor,
+        'duration': ?duration,
       },
     );
     return Story.fromJson(response.data);

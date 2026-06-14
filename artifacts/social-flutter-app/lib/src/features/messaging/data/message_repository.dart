@@ -26,7 +26,7 @@ class MessageRepository {
   }) async {
     final response = await _dio.get(
       '/conversations/$conversationId/messages',
-      queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
+      queryParameters: {'cursor': ?cursor, 'limit': limit},
     );
     return MessagePage.fromJson(response.data);
   }
@@ -38,10 +38,7 @@ class MessageRepository {
   }) async {
     final response = await _dio.post(
       '/conversations/$conversationId/messages',
-      data: {
-        if (content != null) 'content': content,
-        if (mediaUrl != null) 'mediaUrl': mediaUrl,
-      },
+      data: {'content': ?content, 'mediaUrl': ?mediaUrl},
     );
     return Message.fromJson(response.data);
   }

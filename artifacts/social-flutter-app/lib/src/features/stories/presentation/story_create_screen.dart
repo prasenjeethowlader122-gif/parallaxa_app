@@ -63,7 +63,7 @@ class _StoryCreateScreenState extends ConsumerState<StoryCreateScreen> {
           content: _textController.text.trim(),
           mediaType: 'text',
           backgroundColor:
-              '#${_selectedColor.value.toRadixString(16).padLeft(8, '0')}',
+              '#${_selectedColor.toARGB32().toRadixString(16).padLeft(8, '0')}',
         );
       }
 

@@ -198,10 +198,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.errorContainer.withOpacity(0.2),
+                    color: theme.colorScheme.errorContainer.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: theme.colorScheme.error.withOpacity(0.5),
+                      color: theme.colorScheme.error.withValues(alpha: 0.5),
                     ),
                   ),
                   child: Row(
@@ -419,7 +419,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                   fontSize: 12,
                   height: 1.5,
                   fontWeight: FontWeight.w500,

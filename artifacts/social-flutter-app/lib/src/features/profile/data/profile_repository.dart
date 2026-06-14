@@ -26,7 +26,7 @@ class ProfileRepository {
   }) async {
     final response = await _dio.get(
       '/users/$userId/posts',
-      queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
+      queryParameters: {'cursor': ?cursor, 'limit': limit},
     );
     return PostPage.fromJson(response.data);
   }
@@ -50,12 +50,12 @@ class ProfileRepository {
     final response = await _dio.put(
       '/users/me',
       data: {
-        if (displayName != null) 'displayName': displayName,
-        if (bio != null) 'bio': bio,
-        if (website != null) 'website': website,
-        if (avatarUrl != null) 'avatarUrl': avatarUrl,
-        if (coverUrl != null) 'coverUrl': coverUrl,
-        if (isPrivate != null) 'isPrivate': isPrivate,
+        'displayName': ?displayName,
+        'bio': ?bio,
+        'website': ?website,
+        'avatarUrl': ?avatarUrl,
+        'coverUrl': ?coverUrl,
+        'isPrivate': ?isPrivate,
       },
     );
     return User.fromJson(response.data);

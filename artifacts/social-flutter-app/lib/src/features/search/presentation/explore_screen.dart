@@ -165,7 +165,7 @@ class _ExploreGrid extends ConsumerWidget {
                           fit: BoxFit.cover,
                           placeholder: (context, error) =>
                               Container(color: AppColors.muted),
-                          errorWidget: (_, __, ___) => Container(
+                          errorWidget: (_, _, _) => Container(
                             color: AppColors.muted,
                             child: const HugeIcon(
                               icon: HugeIcons.strokeRoundedImage01,

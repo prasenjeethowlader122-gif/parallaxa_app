@@ -26,10 +26,11 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       await ref.read(adminRepositoryProvider).verifyUser(user.id);
       ref.invalidate(adminUsersProvider);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 
