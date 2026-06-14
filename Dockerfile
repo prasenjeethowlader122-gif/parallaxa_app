@@ -1,12 +1,15 @@
-# -- Build Expo web --
-FROM node:22-slim AS expo-builder
-RUN npm install -g pnpm@10
+# -- Build Flutter web --
+FROM debian:bookworm-slim AS flutter-builder
+RUN apt-get update && apt-get install -y curl git unzip xz-utils zip libglu1-mesa
+RUN git clone https://github.com/flutter/flutter.git -b stable /flutter
+ENV PATH="/flutter/bin:/flutter/bin/cache/dart-sdk/bin:${PATH}"
+RUN flutter doctor
 WORKDIR /app
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
-COPY lib/ ./lib/
-COPY artifacts/social-app/ ./artifacts/social-app/
-RUN pnpm install --no-frozen-lockfile
-RUN pnpm --filter @workspace/social-app exec expo export --platform web --output-dir web-export
+COPY . .
+WORKDIR /app/artifacts/social-flutter-app
+RUN flutter pub get
+RUN dart run build_runner build --delete-conflicting-outputs
+RUN flutter build web --release --base-href /
 
 # -- Build Java API --
 FROM maven:3.9.9-eclipse-temurin-21-alpine AS api-builder
@@ -25,8 +28,8 @@ RUN mkdir -p /app/uploads /app/public
 # Copy the built jar
 COPY --from=api-builder /app/target/*.jar app.jar
 
-# Copy Expo web build to public folder served by Spring Boot
-COPY --from=expo-builder /app/artifacts/social-app/web-export /app/public
+# Copy Flutter web build to public folder served by Spring Boot
+COPY --from=flutter-builder /app/artifacts/social-flutter-app/build/web /app/public
 
 # Environment variables
 ENV PORT=8080
