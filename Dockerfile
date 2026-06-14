@@ -16,7 +16,7 @@ COPY artifacts/api-server-java/src ./src
 RUN mvn clean package -DskipTests
 
 # -- Production image --
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # Create necessary directories
