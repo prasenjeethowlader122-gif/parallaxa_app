@@ -93,7 +93,6 @@ async function formatPost(
   myId?: string,
   authorData?: typeof usersTable.$inferSelect,
   storyStatus?: { hasStory: boolean; hasUnviewedStory: boolean },
-  followingSet?: Set<string>,
 ) {
   const author =
     authorData ||
@@ -108,23 +107,6 @@ async function formatPost(
   const status =
     storyStatus ||
     (await getUsersStoryStatus([post.userId], myId))[post.userId];
-
-  const isFollowing = myId
-    ? followingSet
-      ? followingSet.has(post.userId)
-      : (
-          await db
-            .select({ id: followsTable.id })
-            .from(followsTable)
-            .where(
-              and(
-                eq(followsTable.followerId, myId),
-                eq(followsTable.followingId, post.userId),
-              ),
-            )
-            .limit(1)
-        ).length > 0
-    : false;
 
   const liked = myId
     ? (

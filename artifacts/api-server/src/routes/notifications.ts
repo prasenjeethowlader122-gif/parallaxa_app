@@ -1,16 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import {
-  notificationsTable,
-  usersTable,
-  postsTable,
-  likesTable,
-  savedPostsTable,
-  postHashtagsTable,
-  hashtagsTable,
-  followsTable,
-} from "@workspace/db";
-import { eq, desc, sql, and, inArray } from "drizzle-orm";
+import { notificationsTable, usersTable, postsTable, likesTable, savedPostsTable } from "@workspace/db";
+import { eq, desc, sql } from "drizzle-orm";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 
 const router = Router();

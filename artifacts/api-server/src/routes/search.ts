@@ -4,12 +4,10 @@ import {
   usersTable,
   postsTable,
   hashtagsTable,
-  postHashtagsTable,
   likesTable,
   savedPostsTable,
-  followsTable,
 } from "@workspace/db";
-import { like, sql, desc, or, and, eq, inArray } from "drizzle-orm";
+import { like, sql, desc, or } from "drizzle-orm";
 import {
   authenticate,
   optionalAuthenticate,
