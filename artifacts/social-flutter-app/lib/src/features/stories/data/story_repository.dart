@@ -20,30 +20,30 @@ class StoryRepository {
   StoryRepository(this._dio);
 
   Future<List<StoryGroup>> getStories() async {
-    final response = await _dio.get('/stories');
+    final response = await _dio.get('stories');
     return (response.data as List)
         .map((e) => StoryGroup.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<void> viewStory(String storyId) async {
-    await _dio.post('/stories/$storyId/view');
+    await _dio.post('stories/$storyId/view');
   }
 
   Future<void> reactToStory(String storyId, String emoji) async {
-    await _dio.post('/stories/$storyId/react', data: {'emoji': emoji});
+    await _dio.post('stories/$storyId/react', data: {'emoji': emoji});
   }
 
   Future<String> uploadFile(String path) async {
     final formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(path),
     });
-    final response = await _dio.post('/upload', data: formData);
+    final response = await _dio.post('upload', data: formData);
     return response.data['url'] as String;
   }
 
   Future<List<Story>> getUserStories(String userId) async {
-    final response = await _dio.get('/users/$userId/stories');
+    final response = await _dio.get('users/$userId/stories');
     return (response.data as List).map((e) => Story.fromJson(e)).toList();
   }
 
@@ -55,7 +55,7 @@ class StoryRepository {
     int? duration,
   }) async {
     final response = await _dio.post(
-      '/stories',
+      'stories',
       data: {
         'mediaUrl': ?mediaUrl,
         'mediaType': ?mediaType,

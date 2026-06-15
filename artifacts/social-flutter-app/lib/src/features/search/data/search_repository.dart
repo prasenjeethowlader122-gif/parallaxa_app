@@ -15,7 +15,7 @@ class SearchRepository {
 
   Future<SearchResults> search(String query, {String type = 'all'}) async {
     final response = await _dio.get(
-      '/search',
+      'search',
       queryParameters: {'q': query, 'type': type},
     );
     return SearchResults.fromJson(response.data);
@@ -23,7 +23,7 @@ class SearchRepository {
 
   Future<PostPage> getExplorePosts({String? cursor, int limit = 20}) async {
     final response = await _dio.get(
-      '/explore',
+      'explore',
       queryParameters: {'cursor': ?cursor, 'limit': limit},
     );
     return PostPage.fromJson(response.data);
