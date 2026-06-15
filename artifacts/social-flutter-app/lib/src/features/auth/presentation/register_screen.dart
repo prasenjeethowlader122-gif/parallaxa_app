@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../data/auth_repository.dart';
 import '../../../core/api_client.dart';
@@ -27,7 +25,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _dateOfBirthController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _picker = ImagePicker();
 
   int _step = 0;
   final int _totalSteps = 5;
@@ -754,7 +751,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                 ),
               ),
-
 
               if (_step == 0) ...[
                 Padding(
