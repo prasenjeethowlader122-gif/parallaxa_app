@@ -38,7 +38,13 @@ public class SecurityConfiguration {
                                 "/public/**",
                                 "/",
                                 "/index.html",
-                                "/static/**"
+                                "/static/**",
+                                "/manifest.json",
+                                "/favicon.png",
+                                "/icons/**",
+                                "/assets/**",
+                                "/*.js",
+                                "/*.css"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
