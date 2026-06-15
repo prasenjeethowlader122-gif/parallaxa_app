@@ -41,7 +41,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .setCacheControl(CacheControl.noCache().mustRevalidate());
 
         // Entry points that should not be cached
-        registry.addResourceHandler("/index.html", "/manifest.json", "/flutter_bootstrap.js")
+        registry.addResourceHandler("/index.html", "/manifest.json", "/flutter_bootstrap.js", "/flutter_service_worker.js", "/version.json")
                 .addResourceLocations("classpath:/public/", "file:/app/public/")
                 .setCacheControl(CacheControl.noStore().mustRevalidate());
 
