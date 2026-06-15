@@ -51,7 +51,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     {"title": "Secure it", "subtitle": "Create a strong password"},
     {
       "title": "Face Register",
-      "subtitle": "Secure your account with face recognition",
+      "subtitle": "Optional — add a photo or skip this step",
     },
     {
       "title": "Username",
@@ -113,10 +113,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         newErrors['password'] = "Password is required";
       } else if (_passwordController.text.length < 6) {
         newErrors['password'] = "Password must be at least 6 characters";
-      }
-    } else if (_step == 4) {
-      if (_faceImage == null) {
-        newErrors['face'] = "Please register your face to continue";
       }
     } else if (_step == 5) {
       if (_usernameController.text.trim().isEmpty) {
@@ -457,19 +453,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   : null,
             ),
           ),
-          const SizedBox(height: 24),
-          if (_errors['face'] != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(
-                _errors['face']!,
-                style: TextStyle(
-                  color: theme.colorScheme.error,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.tertiaryContainer.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              "Optional — you can skip this step",
+              style: TextStyle(
+                fontSize: 12,
+                color: theme.colorScheme.onTertiaryContainer,
+                fontWeight: FontWeight.w600,
               ),
             ),
+          ),
+          const SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: _isLoading ? null : _pickFaceImage,
             icon: const Icon(Symbols.photo_camera, size: 18),
@@ -481,11 +481,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
           ),
+          if (_faceImage != null) ...[
+            const SizedBox(height: 10),
+            TextButton.icon(
+              onPressed: _isLoading
+                  ? null
+                  : () => setState(() => _faceImage = null),
+              icon: Icon(Symbols.delete, size: 16,
+                  color: theme.colorScheme.error),
+              label: Text("Remove photo",
+                  style: TextStyle(color: theme.colorScheme.error)),
+            ),
+          ],
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              "Your face data will be used to protect your privacy and identify you in photos uploaded by others.",
+              "Your face data helps protect your privacy and identify you in photos uploaded by others.",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
@@ -882,6 +894,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                 ),
               ),
+
+              // Skip button — only visible on the face registration step
+              if (_step == 4) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            setState(() {
+                              _faceImage = null;
+                              _errors.remove('face');
+                              _step++;
+                            });
+                          },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(
+                      'Skip for now',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
 
               if (_step == 0) ...[
                 Padding(
