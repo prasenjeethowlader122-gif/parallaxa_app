@@ -41,11 +41,14 @@ public class AuthController {
         try {
             AuthResponse response = authService.register(
                     username, email, password, displayName, dateOfBirth, faceImage);
+            log.info("Registration successful for username: {}", username);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
+            log.warn("Registration conflict for username: {}: {}", username, e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "Conflict", "message", e.getMessage()));
         } catch (Exception e) {
+            log.error("Registration failed for username: {}", username, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "InternalServerError",
                             "message", "Registration failed. Please try again."));
@@ -54,12 +57,17 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        log.info("Login attempt for email: {}", request.getEmail());
         try {
-            return ResponseEntity.ok(authService.login(request));
+            AuthResponse response = authService.login(request);
+            log.info("Login successful for email: {}", request.getEmail());
+            return ResponseEntity.ok(response);
         } catch (IllegalStateException e) {
+            log.warn("Login forbidden for email: {}: {}", request.getEmail(), e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Forbidden", "message", e.getMessage()));
         } catch (Exception e) {
+            log.warn("Login failed for email: {}: {}", request.getEmail(), e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Unauthorized", "message", "Invalid credentials"));
         }
@@ -67,6 +75,26 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getMe(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(authService.getMe(userDetails.getUsername()));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+        authService.forgotPassword(body.get("email"));
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+        authService.resetPassword(body.get("token"), body.get("password"));
         return ResponseEntity.ok().build();
     }
 

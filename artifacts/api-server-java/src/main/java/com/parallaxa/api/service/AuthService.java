@@ -232,6 +232,20 @@ public class AuthService {
                 .build();
     }
 
+    public UserDto getMe(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return mapToDto(user);
+    }
+
+    public void forgotPassword(String email) {
+        // Mock implementation
+    }
+
+    public void resetPassword(String token, String password) {
+        // Mock implementation
+    }
+
     public UserDto mapToDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
