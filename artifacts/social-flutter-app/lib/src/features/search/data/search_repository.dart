@@ -24,10 +24,7 @@ class SearchRepository {
   Future<PostPage> getExplorePosts({String? cursor, int limit = 20}) async {
     final response = await _dio.get(
       'explore',
-      queryParameters: {
-        'cursor': ?cursor,
-        'limit': limit,
-      },
+      queryParameters: {'cursor': ?cursor, 'limit': limit},
     );
     return PostPage.fromJson(response.data);
   }

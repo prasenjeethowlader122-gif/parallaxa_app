@@ -26,10 +26,7 @@ class ProfileRepository {
   }) async {
     final response = await _dio.get(
       'users/$userId/posts',
-      queryParameters: {
-        'cursor': ?cursor,
-        'limit': limit,
-      },
+      queryParameters: {'cursor': ?cursor, 'limit': limit},
     );
     return PostPage.fromJson(response.data);
   }
