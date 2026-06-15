@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { conversationsTable, messagesTable, usersTable } from "@workspace/db";
-import { eq, or, and, desc, sql } from "drizzle-orm";
+import { conversationsTable, messagesTable, usersTable, followsTable } from "@workspace/db";
+import { eq, or, and, desc, sql, inArray } from "drizzle-orm";
 import { authenticate, type AuthRequest } from "../middleware/authenticate";
 import { generateId } from "../lib/auth";
 import { io } from "../index";

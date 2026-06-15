@@ -6,6 +6,11 @@ import {
   followsTable,
   storiesTable,
   storyViewsTable,
+  likesTable,
+  savedPostsTable,
+  postHashtagsTable,
+  hashtagsTable,
+  notificationsTable,
 } from "@workspace/db";
 import { eq, and, desc, isNull, sql, gt, inArray } from "drizzle-orm";
 import {
