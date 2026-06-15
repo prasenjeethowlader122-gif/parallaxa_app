@@ -1,41 +1,82 @@
 version: "3.9"
 
+# ──────────────────────────────────────────────────────────────
+# Parallaxa — split deployment
+#
+# Services:
+#   postgres   — managed PostgreSQL database
+#   backend    — Node.js API server  (Dockerfile.backend)
+#   frontend   — React/Vite + Nginx  (Dockerfile.frontend)
+#
+# Quick start:
+#   cp .env.example .env   # fill in JWT_SECRET etc.
+#   docker compose up --build
+#
+# Deploy separately:
+#   docker compose up --build backend
+#   docker compose up --build frontend
+# ──────────────────────────────────────────────────────────────
+
 services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
-    container_name: socialapp_db
+    container_name: parallaxa_db
     environment:
-      POSTGRES_USER: socialapp
-      POSTGRES_PASSWORD: socialapp_secret
-      POSTGRES_DB: socialapp
+      POSTGRES_USER:     ${POSTGRES_USER:-parallaxa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-parallaxa_secret}
+      POSTGRES_DB:       ${POSTGRES_DB:-parallaxa}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U socialapp -d socialapp"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-parallaxa} -d ${POSTGRES_DB:-parallaxa}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-  api:
+  # ── Backend (Node.js API) ───────────────────────────────────
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile.java
-    container_name: socialapp_api
+      dockerfile: Dockerfile.backend
+    container_name: parallaxa_backend
     ports:
-      - "8080:8080"
-      - "9092:9092"
+      - "3000:3000"
     environment:
-      PORT: 8080
-      DATABASE_URL: postgresql://socialapp:socialapp_secret@postgres:5432/socialapp
-      DATABASE_USER: socialapp
-      DATABASE_PASSWORD: socialapp_secret
-      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      NODE_ENV:  production
+      PORT:      3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-parallaxa}:${POSTGRES_PASSWORD:-parallaxa_secret}@postgres:5432/${POSTGRES_DB:-parallaxa}
+      JWT_SECRET:   ${JWT_SECRET}
+      FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT:-}
     depends_on:
       postgres:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ── Frontend (React/Vite → Nginx) ───────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: parallaxa_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
         condition: service_healthy
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  uploads_data:
