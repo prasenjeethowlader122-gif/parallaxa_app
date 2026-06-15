@@ -19,7 +19,19 @@ public class DatabaseConfig {
     @Bean
     @Primary
     public DataSource dataSource(
-            @Value("${DATABASE_URL}") String databaseUrl) throws URISyntaxException {
+            @Value("${DATABASE_URL:}") String databaseUrl,
+            @Value("${spring.datasource.url:}") String springUrl,
+            @Value("${spring.datasource.username:}") String springUser,
+            @Value("${spring.datasource.password:}") String springPass) throws URISyntaxException {
+
+        if ((databaseUrl == null || databaseUrl.isEmpty()) && !springUrl.isEmpty()) {
+            return DataSourceBuilder.create()
+                    .url(springUrl)
+                    .username(springUser)
+                    .password(springPass)
+                    .build();
+        }
+
         String url = databaseUrl;
         String username = null;
         String password = null;

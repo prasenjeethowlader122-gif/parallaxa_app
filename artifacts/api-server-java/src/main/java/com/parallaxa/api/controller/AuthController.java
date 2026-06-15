@@ -31,11 +31,11 @@ public class AuthController {
      */
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> register(
-            @RequestParam("username") String username,
-            @RequestParam("email") String email,
-            @RequestParam("password") String password,
-            @RequestParam("displayName") String displayName,
-            @RequestParam(value = "dateOfBirth", required = false) String dateOfBirth,
+            @RequestPart("username") String username,
+            @RequestPart("email") String email,
+            @RequestPart("password") String password,
+            @RequestPart("displayName") String displayName,
+            @RequestPart(value = "dateOfBirth", required = false) String dateOfBirth,
             @RequestPart(value = "faceImage", required = false) MultipartFile faceImage
     ) {
         log.info("Registration attempt for username: {}, email: {}", username, email);

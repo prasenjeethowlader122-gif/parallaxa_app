@@ -25,7 +25,7 @@ WORKDIR /app
 COPY artifacts/social-flutter-app/ .
 
 # Accept build arg so Render can inject the backend URL at build time
-ARG API_BASE_URL=https://parallaxa-app-t5p2.onrender.com/api
+ARG API_BASE_URL=https://parallaxa-backend.onrender.com/api/
 
 RUN flutter pub get
 RUN dart run build_runner build --delete-conflicting-outputs || true

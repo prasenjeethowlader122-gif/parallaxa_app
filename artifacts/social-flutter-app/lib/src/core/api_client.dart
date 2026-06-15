@@ -10,7 +10,7 @@ class AppConfig {
   static const String appName = 'Parallaxa';
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://parallaxa-app-t5p2.onrender.com/api/',
+    defaultValue: 'https://parallaxa-backend.onrender.com/api/',
   );
 }
 
