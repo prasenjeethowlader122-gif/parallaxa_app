@@ -5,8 +5,8 @@ version: "3.9"
 #
 # Services:
 #   postgres   — managed PostgreSQL database
-#   backend    — Node.js API server  (Dockerfile.backend,  port 3000)
-#   frontend   — Flutter Web + Nginx (Dockerfile.frontend, port 80)
+#   backend    — Spring Boot API server (Dockerfile.backend, port 8080)
+#   frontend   — Flutter Web + Nginx   (Dockerfile.frontend, port 80)
 #
 # Quick start:
 #   cp .env.example .env   # fill in JWT_SECRET & API_BASE_URL
@@ -38,20 +38,21 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # ── Backend (Node.js API) ───────────────────────────────────
+  # ── Backend (Spring Boot / Java 21) ────────────────────────
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
     container_name: parallaxa_backend
     ports:
-      - "3000:3000"
+      - "8080:8080"
+      - "9092:9092"
     environment:
-      NODE_ENV:  production
-      PORT:      3000
+      PORT:        8080
       DATABASE_URL: postgresql://${POSTGRES_USER:-parallaxa}:${POSTGRES_PASSWORD:-parallaxa_secret}@postgres:5432/${POSTGRES_DB:-parallaxa}
-      JWT_SECRET:   ${JWT_SECRET}
+      JWT_SECRET:  ${JWT_SECRET}
       FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT:-}
+      SPRING_PROFILES_ACTIVE: prod
     depends_on:
       postgres:
         condition: service_healthy
@@ -59,10 +60,11 @@ services:
       - uploads_data:/app/uploads
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/healthz || exit 1"]
-      interval: 15s
-      timeout: 5s
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/healthz || exit 1"]
+      interval: 20s
+      timeout: 10s
       retries: 5
+      start_period: 40s
 
   # ── Frontend (Flutter Web → Nginx) ──────────────────────────
   frontend:
@@ -70,8 +72,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       args:
-        # Flutter bakes the API URL at build time via --dart-define
-        API_BASE_URL: ${API_BASE_URL:-http://localhost:3000/api}
+        API_BASE_URL: ${API_BASE_URL:-http://localhost:8080/api}
     container_name: parallaxa_frontend
     ports:
       - "80:80"

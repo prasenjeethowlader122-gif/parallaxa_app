@@ -2,35 +2,35 @@
 # render.yaml — Parallaxa deploy config for Render.com
 #
 # Deploys two separate services:
-#   1. parallaxa-backend  — Node.js API (Docker)
-#   2. parallaxa-frontend — Flutter Web  (Docker)
+#   1. parallaxa-backend  — Spring Boot API (Docker, port 8080)
+#   2. parallaxa-frontend — Flutter Web     (Docker, port 80)
 #
 # Docs: https://render.com/docs/infrastructure-as-code
 # ============================================================
 
 services:
 
-  # ── Backend: Node.js API ─────────────────────────────────────
+  # ── Backend: Spring Boot API ─────────────────────────────────
   - type: web
     name: parallaxa-backend
     runtime: docker
     dockerfilePath: ./Dockerfile.backend
     dockerContext: .
-    plan: free                # change to 'starter' or higher for production
+    plan: free
     healthCheckPath: /api/healthz
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: PORT
-        value: "3000"
+        value: "8080"
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
       - key: DATABASE_URL
         fromDatabase:
           name: parallaxa-db
           property: connectionString
       - key: JWT_SECRET
-        generateValue: true   # Render auto-generates a secure random value
+        generateValue: true
       - key: FIREBASE_SERVICE_ACCOUNT
-        value: ""             # paste your Firebase JSON here if using Google Sign-In
+        value: ""
 
   # ── Frontend: Flutter Web ────────────────────────────────────
   - type: web
@@ -47,6 +47,6 @@ services:
   # ── Managed PostgreSQL ───────────────────────────────────────
 databases:
   - name: parallaxa-db
-    plan: free                # 'starter' recommended for production (free tier expires 90 days)
+    plan: free
     databaseName: parallaxa
     user: parallaxa
