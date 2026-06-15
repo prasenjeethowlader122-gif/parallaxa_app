@@ -180877,7 +180877,7 @@ A.bQO.prototype={
 $1(a){throw A.i(A.eG("StorageService must be initialized in main()"))},
 $S:1051}
 A.bOj.prototype={
-$1(a){var s,r=a.cJ($.om(),t.Y7),q=A.cfM("https://parallaxa-app-t5p2.onrender.com/api",B.HI,B.HI),p=new A.ak7(A.d([B.a7t],t.i6))
+$1(a){var s,r=a.cJ($.om(),t.Y7),q=A.cfM("https://parallaxa-app-t5p2.onrender.com/api/",B.HI,B.HI),p=new A.ak7(A.d([B.a7t],t.i6))
 p.L(p,B.dPo)
 s=new A.ah1($,p,$,new A.aWT(51200),!1)
 s.i_$=q
@@ -181102,7 +181102,7 @@ A.Kt.prototype={
 OU(){var s=0,r=A.x(t.__),q,p=this,o,n,m
 var $async$OU=A.t(function(a,b){if(a===1)return A.u(b,r)
 for(;;)switch(s){case 0:s=3
-return A.q(p.a.uU("/admin/stats",t.z),$async$OU)
+return A.q(p.a.uU("admin/stats",t.z),$async$OU)
 case 3:n=b.a
 m=A.lo(n.i(0,"users"))
 if(m==null)m=0
@@ -181120,7 +181120,7 @@ for(;;)switch(s){case 0:o=J
 n=t._
 m=J
 s=3
-return A.q(p.a.uU("/admin/users",t.z),$async$P1)
+return A.q(p.a.uU("admin/users",t.z),$async$P1)
 case 3:q=o.eJ(n.a(m.E(b.a,"users")),new A.aKl(),t.ui).de(0)
 s=1
 break
@@ -181130,7 +181130,7 @@ Z4(a){return this.bEN(a)},
 bEN(a){var s=0,r=A.x(t.H),q=this
 var $async$Z4=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:s=2
-return A.q(q.a.CH("/admin/users/"+a+"/approve-verification",t.z),$async$Z4)
+return A.q(q.a.CH("admin/users/"+a+"/approve-verification",t.z),$async$Z4)
 case 2:return A.v(null,r)}})
 return A.w($async$Z4,r)}}
 A.aKl.prototype={
@@ -181248,7 +181248,7 @@ var $async$WV=A.t(function(c,d){if(c===1)return A.u(d,r)
 for(;;)switch(s){case 0:o=t.N
 n=A
 s=3
-return A.q(p.a.uB("/auth/login",A.a9(["email",a,"password",b],o,o),t.z),$async$WV)
+return A.q(p.a.uB("auth/login",A.a9(["email",a,"password",b],o,o),t.z),$async$WV)
 case 3:q=n.bVp(d.a)
 s=1
 break
@@ -181261,7 +181261,7 @@ for(;;)switch(s){case 0:o=t.z
 n=A.c07(A.a9(["username",e,"email",c,"password",d,"displayName",b,"dateOfBirth",a.wL()],t.N,o))
 m=A
 s=3
-return A.q(p.a.uB("/auth/register",n,o),$async$Yd)
+return A.q(p.a.uB("auth/register",n,o),$async$Yd)
 case 3:q=m.bVp(g.a)
 s=1
 break
@@ -181270,14 +181270,14 @@ return A.w($async$Yd,r)},
 MK(){var s=0,r=A.x(t.H),q=this
 var $async$MK=A.t(function(a,b){if(a===1)return A.u(b,r)
 for(;;)switch(s){case 0:s=2
-return A.q(q.a.CH("/auth/logout",t.z),$async$MK)
+return A.q(q.a.CH("auth/logout",t.z),$async$MK)
 case 2:return A.v(null,r)}})
 return A.w($async$MK,r)},
 OL(){var s=0,r=A.x(t.ui),q,p=this,o
 var $async$OL=A.t(function(a,b){if(a===1)return A.u(b,r)
 for(;;)switch(s){case 0:o=A
 s=3
-return A.q(p.a.uU("/auth/me",t.z),$async$OL)
+return A.q(p.a.uU("auth/me",t.z),$async$OL)
 case 3:q=o.au6(b.a)
 s=1
 break
@@ -181289,7 +181289,7 @@ var $async$Z3=A.t(function(c,d){if(c===1)return A.u(d,r)
 for(;;)switch(s){case 0:o=t.N
 n=A
 s=3
-return A.q(p.a.uB("/auth/2fa/verify",A.a9(["email",a,"code",b],o,o),t.z),$async$Z3)
+return A.q(p.a.uB("auth/2fa/verify",A.a9(["email",a,"code",b],o,o),t.z),$async$Z3)
 case 3:q=n.bVp(d.a)
 s=1
 break
@@ -181301,7 +181301,7 @@ var $async$Uw=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:o=t.z
 n=J
 s=3
-return A.q(p.a.qW("/auth/check-username",A.a9(["username",a],t.N,o),o),$async$Uw)
+return A.q(p.a.qW("auth/check-username",A.a9(["username",a],t.N,o),o),$async$Uw)
 case 3:o=n.E(c.a,"available")
 q=o==null?!1:o
 s=1
@@ -181315,7 +181315,7 @@ for(;;)switch(s){case 0:o=t.N
 n=t.z
 m=J
 s=3
-return A.q(p.a.qW("/auth/suggest-usernames",A.a9(["username",a],o,n),n),$async$PK)
+return A.q(p.a.qW("auth/suggest-usernames",A.a9(["username",a],o,n),n),$async$PK)
 case 3:n=m.E(c.a,"suggestions")
 q=A.ha(n==null?[]:n,!0,o)
 s=1
@@ -181327,7 +181327,7 @@ bui(a){var s=0,r=A.x(t.H),q=this,p
 var $async$W8=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:p=t.N
 s=2
-return A.q(q.a.uB("/auth/forgot-password",A.a9(["email",a],p,p),t.z),$async$W8)
+return A.q(q.a.uB("auth/forgot-password",A.a9(["email",a],p,p),t.z),$async$W8)
 case 2:return A.v(null,r)}})
 return A.w($async$W8,r)},
 Yr(a,b){return this.bD5(a,b)},
@@ -181335,7 +181335,7 @@ bD5(a,b){var s=0,r=A.x(t.H),q=this,p
 var $async$Yr=A.t(function(c,d){if(c===1)return A.u(d,r)
 for(;;)switch(s){case 0:p=t.N
 s=2
-return A.q(q.a.uB("/auth/reset-password",A.a9(["token",a,"password",b],p,p),t.z),$async$Yr)
+return A.q(q.a.uB("auth/reset-password",A.a9(["token",a,"password",b],p,p),t.z),$async$Yr)
 case 2:return A.v(null,r)}})
 return A.w($async$Yr,r)}}
 A.j3.prototype={
@@ -182425,7 +182425,7 @@ n=A.C(t.N,o)
 n.m(0,"limit",20)
 m=A
 s=3
-return A.q(p.a.qW("/feed",n,o),$async$OG)
+return A.q(p.a.qW("feed",n,o),$async$OG)
 case 3:q=m.au5(b.a)
 s=1
 break
@@ -182445,7 +182445,7 @@ k=g
 if(k!=null)J.c6(m,l,k)
 J.c6(m,"limit",f)
 s=7
-return A.q(n.a.qW("/feed/following",m,i),$async$OI)
+return A.q(n.a.qW("feed/following",m,i),$async$OI)
 case 7:j=b
 m=A.au5(j.a)
 q=m
@@ -182478,7 +182478,7 @@ if(b!=null)o.m(0,"hashtags",b)
 if(d!=null)o.m(0,"parentPostId",d)
 n=A
 s=3
-return A.q(p.a.uB("/posts",o,t.z),$async$Lb)
+return A.q(p.a.uB("posts",o,t.z),$async$Lb)
 case 3:q=n.a4V(f.a)
 s=1
 break
@@ -182491,7 +182491,7 @@ n=A.C(t.N,o)
 n.m(0,"limit",20)
 m=A
 s=3
-return A.q(p.a.qW("/explore",n,o),$async$HK)
+return A.q(p.a.qW("explore",n,o),$async$HK)
 case 3:q=m.au5(b.a)
 s=1
 break
@@ -182502,7 +182502,7 @@ aHC(a){var s=0,r=A.x(t.Yl),q,p=this,o
 var $async$OQ=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:o=A
 s=3
-return A.q(p.a.uU("/posts/"+a,t.z),$async$OQ)
+return A.q(p.a.uU("posts/"+a,t.z),$async$OQ)
 case 3:q=o.a4V(c.a)
 s=1
 break
@@ -182512,14 +182512,14 @@ WP(a){return this.bxr(a)},
 bxr(a){var s=0,r=A.x(t.H),q=this
 var $async$WP=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:s=2
-return A.q(q.a.CH("/posts/"+a+"/like",t.z),$async$WP)
+return A.q(q.a.CH("posts/"+a+"/like",t.z),$async$WP)
 case 2:return A.v(null,r)}})
 return A.w($async$WP,r)},
 YO(a){return this.bEj(a)},
 bEj(a){var s=0,r=A.x(t.H),q=this
 var $async$YO=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:s=2
-return A.q(q.a.ax5("/posts/"+a+"/like",t.z),$async$YO)
+return A.q(q.a.ax5("posts/"+a+"/like",t.z),$async$YO)
 case 2:return A.v(null,r)}})
 return A.w($async$YO,r)},
 OR(a){return this.aHD(a)},
@@ -182527,7 +182527,7 @@ aHD(a){var s=0,r=A.x(t.JI),q,p=this,o
 var $async$OR=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:o=A
 s=3
-return A.q(p.a.uU("/posts/"+a+"/replies",t.z),$async$OR)
+return A.q(p.a.uU("posts/"+a+"/replies",t.z),$async$OR)
 case 3:q=o.au5(c.a)
 s=1
 break
@@ -182537,7 +182537,7 @@ Ym(a){return this.bCW(a)},
 bCW(a){var s=0,r=A.x(t.H),q=this
 var $async$Ym=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:s=2
-return A.q(q.a.CH("/posts/"+a+"/repost",t.z),$async$Ym)
+return A.q(q.a.CH("posts/"+a+"/repost",t.z),$async$Ym)
 case 2:return A.v(null,r)}})
 return A.w($async$Ym,r)}}
 A.bPK.prototype={
@@ -183547,7 +183547,7 @@ var $async$OC=A.t(function(a,b){if(a===1)return A.u(b,r)
 for(;;)switch(s){case 0:o=J
 n=t._
 s=3
-return A.q(p.a.uU("/conversations",t.z),$async$OC)
+return A.q(p.a.uU("conversations",t.z),$async$OC)
 case 3:q=o.eJ(n.a(b.a),new A.b4W(),t.fs).de(0)
 s=1
 break
@@ -183561,7 +183561,7 @@ n=A.C(t.N,o)
 n.m(0,"limit",30)
 m=A
 s=3
-return A.q(p.a.qW("/conversations/"+a+"/messages",n,o),$async$OM)
+return A.q(p.a.qW("conversations/"+a+"/messages",n,o),$async$OM)
 case 3:q=m.cpR(c.a)
 s=1
 break
@@ -183575,7 +183575,7 @@ o=A.C(o,o)
 o.m(0,"content",b)
 n=A
 s=3
-return A.q(p.a.uB("/conversations/"+a+"/messages",o,t.z),$async$Pi)
+return A.q(p.a.uB("conversations/"+a+"/messages",o,t.z),$async$Pi)
 case 3:q=n.bVq(d.a)
 s=1
 break
@@ -183587,7 +183587,7 @@ var $async$PG=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:o=t.N
 n=A
 s=3
-return A.q(p.a.uB("/conversations/start",A.a9(["userId",a],o,o),t.z),$async$PG)
+return A.q(p.a.uB("conversations/start",A.a9(["userId",a],o,o),t.z),$async$PG)
 case 3:q=n.c50(c.a)
 s=1
 break
@@ -183858,7 +183858,7 @@ n=A.C(t.N,o)
 n.m(0,"limit",20)
 m=A
 s=3
-return A.q(p.a.qW("/notifications",n,o),$async$ON)
+return A.q(p.a.qW("notifications",n,o),$async$ON)
 case 3:q=m.cpS(b.a)
 s=1
 break
@@ -183868,14 +183868,14 @@ Uj(a){return this.bny(a)},
 bny(a){var s=0,r=A.x(t.H),q=this
 var $async$Uj=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:s=2
-return A.q(q.a.CH("/notifications/"+a+"/blur",t.z),$async$Uj)
+return A.q(q.a.CH("notifications/"+a+"/blur",t.z),$async$Uj)
 case 2:return A.v(null,r)}})
 return A.w($async$Uj,r)},
 V8(a){return this.brH(a)},
 brH(a){var s=0,r=A.x(t.H),q=this
 var $async$V8=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:s=2
-return A.q(q.a.CH("/notifications/"+a+"/delete-photo",t.z),$async$V8)
+return A.q(q.a.CH("notifications/"+a+"/delete-photo",t.z),$async$V8)
 case 2:return A.v(null,r)}})
 return A.w($async$V8,r)}}
 A.O3.prototype={
@@ -184014,7 +184014,7 @@ A.OO.prototype={
 P_(a){return this.aHU(a)},
 aHU(a){var s=0,r=A.x(t.ui),q,p=this,o,n
 var $async$P_=A.t(function(b,c){if(b===1)return A.u(c,r)
-for(;;)switch(s){case 0:o=a==="me"?"/users/me":"/users/"+a
+for(;;)switch(s){case 0:o=a==="me"?"users/me":"users/"+a
 n=A
 s=3
 return A.q(p.a.uU(o,t.z),$async$P_)
@@ -184031,7 +184031,7 @@ n=A.C(t.N,o)
 n.m(0,"limit",20)
 m=A
 s=3
-return A.q(p.a.qW("/users/"+a+"/posts",n,o),$async$OZ)
+return A.q(p.a.qW("users/"+a+"/posts",n,o),$async$OZ)
 case 3:q=m.au5(c.a)
 s=1
 break
@@ -184041,14 +184041,14 @@ W7(a){return this.bud(a)},
 bud(a){var s=0,r=A.x(t.H),q=this
 var $async$W7=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:s=2
-return A.q(q.a.CH("/users/"+a+"/follow",t.z),$async$W7)
+return A.q(q.a.CH("users/"+a+"/follow",t.z),$async$W7)
 case 2:return A.v(null,r)}})
 return A.w($async$W7,r)},
 YN(a){return this.bEg(a)},
 bEg(a){var s=0,r=A.x(t.H),q=this
 var $async$YN=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:s=2
-return A.q(q.a.ax5("/users/"+a+"/follow",t.z),$async$YN)
+return A.q(q.a.ax5("users/"+a+"/follow",t.z),$async$YN)
 case 2:return A.v(null,r)}})
 return A.w($async$YN,r)},
 YW(a,b,c,d,e){return this.bEt(a,b,c,d,e)},
@@ -184062,7 +184062,7 @@ if(a!=null)o.m(0,"avatarUrl",a)
 if(c!=null)o.m(0,"coverUrl",c)
 n=A
 s=3
-return A.q(p.a.He("/users/me",null,o,null,null,A.aRg("PUT",null),null,t.z),$async$YW)
+return A.q(p.a.He("users/me",null,o,null,null,A.aRg("PUT",null),null,t.z),$async$YW)
 case 3:q=n.au6(g.a)
 s=1
 break
@@ -184755,7 +184755,7 @@ var $async$Pa=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:o=t.z
 n=A
 s=3
-return A.q(p.a.qW("/search",A.a9(["q",a,"type","all"],t.N,o),o),$async$Pa)
+return A.q(p.a.qW("search",A.a9(["q",a,"type","all"],t.N,o),o),$async$Pa)
 case 3:q=n.cpT(c.a)
 s=1
 break
@@ -184907,7 +184907,7 @@ var $async$OV=A.t(function(a,b){if(a===1)return A.u(b,r)
 for(;;)switch(s){case 0:o=J
 n=t._
 s=3
-return A.q(p.a.uU("/stories",t.z),$async$OV)
+return A.q(p.a.uU("stories",t.z),$async$OV)
 case 3:q=o.eJ(n.a(b.a),new A.bjD(),t.x4).de(0)
 s=1
 break
@@ -184929,7 +184929,7 @@ var $async$P0=A.t(function(b,c){if(b===1)return A.u(c,r)
 for(;;)switch(s){case 0:o=J
 n=t._
 s=3
-return A.q(p.a.uU("/users/"+a+"/stories",t.z),$async$P0)
+return A.q(p.a.uU("users/"+a+"/stories",t.z),$async$P0)
 case 3:q=o.eJ(n.a(c.a),new A.bjE(),t.vF).de(0)
 s=1
 break
@@ -184947,7 +184947,7 @@ if(b!=null)o.m(0,"content",b)
 if(a!=null)o.m(0,"backgroundColor",a)
 n=A
 s=3
-return A.q(p.a.uB("/stories",o,t.z),$async$Le)
+return A.q(p.a.uB("stories",o,t.z),$async$Le)
 case 3:q=n.bVr(f.a)
 s=1
 break
