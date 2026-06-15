@@ -17,21 +17,6 @@ public class WebConfig implements WebMvcConfigurer {
     private String uploadDir;
 
     @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-        // Forward to index.html for any path that doesn't have a dot (not a static file)
-        // and isn't an API call.
-        // We explicitly avoid /api and /uploads
-        registry.addViewController("/{path:[^\\.]*}")
-                .setViewName("forward:/index.html");
-
-        registry.addViewController("/{path1:[^\\.]*}/{path2:[^\\.]*}")
-                .setViewName("forward:/index.html");
-
-        registry.addViewController("/{path1:[^\\.]*}/{path2:[^\\.]*}/{path3:[^\\.]*}")
-                .setViewName("forward:/index.html");
-    }
-
-    @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path uploadPath = Paths.get(uploadDir);
         String uploadAbsolutePath = uploadPath.toFile().getAbsolutePath();
