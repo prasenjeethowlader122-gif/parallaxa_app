@@ -5,6 +5,7 @@ import com.parallaxa.api.dto.LoginRequest;
 import com.parallaxa.api.dto.MapResponse;
 import com.parallaxa.api.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
@@ -28,13 +30,14 @@ public class AuthController {
             MediaType.APPLICATION_JSON_VALUE
     })
     public ResponseEntity<?> register(
-            @RequestParam String username,
-            @RequestParam String email,
-            @RequestParam String password,
-            @RequestParam String displayName,
-            @RequestParam(required = false) String dateOfBirth,
-            @RequestParam(name = "faceImage", required = false) MultipartFile faceImage
+            @RequestPart("username") String username,
+            @RequestPart("email") String email,
+            @RequestPart("password") String password,
+            @RequestPart("displayName") String displayName,
+            @RequestPart(value = "dateOfBirth", required = false) String dateOfBirth,
+            @RequestPart(value = "faceImage", required = false) MultipartFile faceImage
     ) {
+        log.info("Registration attempt for username: {}, email: {}", username, email);
         try {
             AuthResponse response = authService.register(
                     username, email, password, displayName, dateOfBirth, faceImage);
