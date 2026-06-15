@@ -140,7 +140,7 @@ class ImagePreviewScreen extends StatelessWidget {
             imageUrl: imageUrl,
             fit: BoxFit.contain,
             placeholder: (context, error) => const CircularProgressIndicator(),
-            errorWidget: (_, __, ___) => const HugeIcon(
+            errorWidget: (_, _, _) => const HugeIcon(
               icon: HugeIcons.strokeRoundedAlertCircle,
               color: Colors.white,
             ),

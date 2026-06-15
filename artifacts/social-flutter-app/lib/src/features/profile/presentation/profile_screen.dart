@@ -657,7 +657,7 @@ class _EmptyTab extends StatelessWidget {
           Icon(
             icon,
             size: 44,
-            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 14),
           Text(

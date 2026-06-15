@@ -37,10 +37,11 @@ class _AccountVerificationScreenState
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 

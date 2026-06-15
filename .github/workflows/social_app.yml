@@ -3,7 +3,7 @@ name: Flutter Build APK
 on:
   push:
     branches:
-      - nomain
+      - main
       - master
     tags:
       - "v*.*.*"
@@ -38,6 +38,18 @@ jobs:
       - name: Generate code (build_runner)
         working-directory: artifacts/social-flutter-app
         run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: ✨ Format
+        working-directory: artifacts/social-flutter-app
+        run: dart format .
+
+      - name: 🔎 Analyze
+        working-directory: artifacts/social-flutter-app
+        run: flutter analyze
+
+      - name: 🧪 Run Unit Tests
+        working-directory: artifacts/social-flutter-app
+        run: flutter test
 
       - name: Build APK
         working-directory: artifacts/social-flutter-app

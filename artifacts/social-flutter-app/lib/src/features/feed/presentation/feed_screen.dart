@@ -113,7 +113,9 @@ class _FeedList extends ConsumerWidget {
               Icon(
                 Symbols.wifi_off,
                 size: 44,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -150,7 +152,9 @@ class _FeedList extends ConsumerWidget {
                   Icon(
                     Symbols.notes,
                     size: 48,
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.3,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(

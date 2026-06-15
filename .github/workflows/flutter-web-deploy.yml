@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Web
         working-directory: artifacts/social-flutter-app
-        run: flutter build web --release --base-href /social-app/
+        run: flutter build web --release --base-href /
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4

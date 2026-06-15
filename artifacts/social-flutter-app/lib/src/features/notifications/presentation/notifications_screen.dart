@@ -304,7 +304,7 @@ class _NotificationRow extends ConsumerWidget {
                     width: 44,
                     height: 44,
                     fit: BoxFit.cover,
-                    errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                    errorWidget: (_, _, _) => const SizedBox.shrink(),
                   ),
                 ),
               if (isUnread) ...[

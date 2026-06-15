@@ -88,8 +88,8 @@ class ConversationsScreen extends ConsumerWidget {
                         Icon(
                           Symbols.chat,
                           size: 52,
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                            0.5,
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.5,
                           ),
                         ),
                         const SizedBox(height: 16),
