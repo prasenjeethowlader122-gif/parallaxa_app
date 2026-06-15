@@ -19,16 +19,23 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         // Forward to index.html for any path that doesn't have a dot (not a static file)
-        // and isn't an API call.
-        // We explicitly avoid /api and /uploads
-        registry.addViewController("/{path:[^\\.]*}")
-                .setViewName("forward:/index.html");
+        // and isn't an API call or upload.
+        // The regex [^\\.]* ensures it doesn't match filenames with extensions.
+        // We use specific patterns to avoid matching /api/** and /uploads/**
 
-        registry.addViewController("/{path1:[^\\.]*}/{path2:[^\\.]*}")
-                .setViewName("forward:/index.html");
+        String forwardToIndex = "forward:/index.html";
 
-        registry.addViewController("/{path1:[^\\.]*}/{path2:[^\\.]*}/{path3:[^\\.]*}")
-                .setViewName("forward:/index.html");
+        // Level 1: /something (but not /api or /uploads)
+        registry.addViewController("/{path:^(?!api|uploads)[^\\.]*}")
+                .setViewName(forwardToIndex);
+
+        // Level 2: /something/else (but not /api/** or /uploads/**)
+        registry.addViewController("/{path1:^(?!api|uploads)[^\\.]*}/{path2:[^\\.]*}")
+                .setViewName(forwardToIndex);
+
+        // Level 3: /a/b/c (but not /api/** or /uploads/**)
+        registry.addViewController("/{path1:^(?!api|uploads)[^\\.]*}/{path2:[^\\.]*}/{path3:[^\\.]*}")
+                .setViewName(forwardToIndex);
     }
 
     @Override

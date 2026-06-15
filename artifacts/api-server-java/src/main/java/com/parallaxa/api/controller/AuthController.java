@@ -70,6 +70,27 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<?> getMe(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(authService.mapToDto(
+                authService.getUserById(userDetails.getUsername())));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+        // Stub implementation
+        return ResponseEntity.ok(Map.of("message", "Reset link sent if email exists"));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+        // Stub implementation
+        return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+    }
+
     @GetMapping("/check-username")
     public ResponseEntity<Map<String, Boolean>> checkUsername(@RequestParam String username) {
         boolean available = authService.isUsernameAvailable(username.toLowerCase().trim());

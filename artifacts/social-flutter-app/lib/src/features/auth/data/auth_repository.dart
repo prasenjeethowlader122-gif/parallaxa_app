@@ -18,7 +18,7 @@ class AuthRepository {
 
   Future<AuthResponse> login(String email, String password) async {
     final response = await _dio.post(
-      '/auth/login',
+      'auth/login',
       data: {'email': email, 'password': password},
     );
     return AuthResponse.fromJson(response.data);
@@ -53,22 +53,22 @@ class AuthRepository {
       );
     }
 
-    final response = await _dio.post('/auth/register', data: formData);
+    final response = await _dio.post('auth/register', data: formData);
     return AuthResponse.fromJson(response.data);
   }
 
   Future<void> logout() async {
-    await _dio.post('/auth/logout');
+    await _dio.post('auth/logout');
   }
 
   Future<User> getMe() async {
-    final response = await _dio.get('/auth/me');
+    final response = await _dio.get('auth/me');
     return User.fromJson(response.data);
   }
 
   Future<AuthResponse> verify2FA(String email, String code) async {
     final response = await _dio.post(
-      '/auth/2fa/verify',
+      'auth/2fa/verify',
       data: {'email': email, 'code': code},
     );
     return AuthResponse.fromJson(response.data);
@@ -76,7 +76,7 @@ class AuthRepository {
 
   Future<bool> checkUsername(String username) async {
     final response = await _dio.get(
-      '/auth/check-username',
+      'auth/check-username',
       queryParameters: {'username': username},
     );
     return response.data['available'] ?? false;
@@ -84,19 +84,19 @@ class AuthRepository {
 
   Future<List<String>> suggestUsernames(String username) async {
     final response = await _dio.get(
-      '/auth/suggest-usernames',
+      'auth/suggest-usernames',
       queryParameters: {'username': username},
     );
     return List<String>.from(response.data['suggestions'] ?? []);
   }
 
   Future<void> forgotPassword(String email) async {
-    await _dio.post('/auth/forgot-password', data: {'email': email});
+    await _dio.post('auth/forgot-password', data: {'email': email});
   }
 
   Future<void> resetPassword(String token, String password) async {
     await _dio.post(
-      '/auth/reset-password',
+      'auth/reset-password',
       data: {'token': token, 'password': password},
     );
   }

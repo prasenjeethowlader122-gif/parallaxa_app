@@ -29,8 +29,11 @@ class PostRepository {
 
   Future<PostPage> getFeed({String? cursor, int limit = 20}) async {
     final response = await _dio.get(
-      '/feed',
-      queryParameters: {'cursor': ?cursor, 'limit': limit},
+      'feed',
+      queryParameters: {
+        'cursor': ?cursor,
+        'limit': limit,
+      },
     );
     return PostPage.fromJson(response.data);
   }
@@ -38,8 +41,11 @@ class PostRepository {
   Future<PostPage> getFollowingFeed({String? cursor, int limit = 20}) async {
     try {
       final response = await _dio.get(
-        '/feed/following',
-        queryParameters: {'cursor': ?cursor, 'limit': limit},
+        'feed/following',
+        queryParameters: {
+          'cursor': ?cursor,
+          'limit': limit,
+        },
       );
       return PostPage.fromJson(response.data);
     } catch (_) {
@@ -56,7 +62,7 @@ class PostRepository {
     String? parentPostId,
   }) async {
     final response = await _dio.post(
-      '/posts',
+      'posts',
       data: {
         'content': ?content,
         'imageUrl': ?imageUrl,
@@ -71,36 +77,39 @@ class PostRepository {
 
   Future<PostPage> getExplorePosts({String? cursor, int limit = 20}) async {
     final response = await _dio.get(
-      '/explore',
-      queryParameters: {'cursor': ?cursor, 'limit': limit},
+      'explore',
+      queryParameters: {
+        'cursor': ?cursor,
+        'limit': limit,
+      },
     );
     return PostPage.fromJson(response.data);
   }
 
   Future<Post> getPost(String postId) async {
-    final response = await _dio.get('/posts/$postId');
+    final response = await _dio.get('posts/$postId');
     return Post.fromJson(response.data);
   }
 
   Future<void> likePost(String postId) async {
-    await _dio.post('/posts/$postId/like');
+    await _dio.post('posts/$postId/like');
   }
 
   Future<void> unlikePost(String postId) async {
-    await _dio.delete('/posts/$postId/like');
+    await _dio.delete('posts/$postId/like');
   }
 
   Future<void> deletePost(String postId) async {
-    await _dio.delete('/posts/$postId');
+    await _dio.delete('posts/$postId');
   }
 
   Future<PostPage> getPostReplies(String postId) async {
-    final response = await _dio.get('/posts/$postId/replies');
+    final response = await _dio.get('posts/$postId/replies');
     return PostPage.fromJson(response.data);
   }
 
   Future<void> repostPost(String postId) async {
-    await _dio.post('/posts/$postId/repost');
+    await _dio.post('posts/$postId/repost');
   }
 }
 
