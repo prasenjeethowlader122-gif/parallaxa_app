@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../data/auth_repository.dart';
 import '../../../core/api_client.dart';
@@ -27,11 +25,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _dateOfBirthController = TextEditingController();
   final _passwordController = TextEditingController();
-  File? _faceImage;
-  final _picker = ImagePicker();
 
   int _step = 0;
-  final int _totalSteps = 6;
+  final int _totalSteps = 5;
   bool _isLoading = false;
   bool _showPassword = false;
   bool _acceptTerms = false;
@@ -49,10 +45,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     {"title": "Your birthday", "subtitle": "You must be at least 18 years old"},
     {"title": "Contact info", "subtitle": "Enter your email address"},
     {"title": "Secure it", "subtitle": "Create a strong password"},
-    {
-      "title": "Face Register",
-      "subtitle": "Optional — add a photo or skip this step",
-    },
     {
       "title": "Username",
       "subtitle": "Pick a unique username for your profile",
@@ -114,7 +106,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       } else if (_passwordController.text.length < 6) {
         newErrors['password'] = "Password must be at least 6 characters";
       }
-    } else if (_step == 5) {
+    } else if (_step == 4) {
       if (_usernameController.text.trim().isEmpty) {
         newErrors['username'] = "Username is required";
       } else if (_usernameController.text.trim().length < 3) {
@@ -213,7 +205,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         dateOfBirth: DateFormat(
           'yyyy-MM-dd',
         ).parse(_dateOfBirthController.text.trim()),
-        faceImagePath: _faceImage?.path,
       );
 
       if (response.token != null) {
@@ -242,49 +233,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } finally {
       ref.read(processingProvider.notifier).hide();
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _pickFaceImage() async {
-    final theme = Theme.of(context);
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(
-                Symbols.photo_camera,
-                color: theme.colorScheme.onSurface,
-              ),
-              title: const Text('Take a Photo'),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
-            ListTile(
-              leading: Icon(Symbols.image, color: theme.colorScheme.onSurface),
-              title: const Text('Choose from Gallery'),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (source != null) {
-      final pickedFile = await _picker.pickImage(
-        source: source,
-        maxWidth: 1000,
-        maxHeight: 1000,
-        imageQuality: 85,
-      );
-
-      if (pickedFile != null) {
-        setState(() {
-          _faceImage = File(pickedFile.path);
-          _errors.remove('face');
-        });
-      }
     }
   }
 
@@ -417,100 +365,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           constraints: const BoxConstraints(),
         ),
       );
-    } else if (_step == 4) {
-      return Column(
-        key: const ValueKey(4),
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 10),
-          GestureDetector(
-            onTap: _isLoading ? null : _pickFaceImage,
-            child: Container(
-              width: 160,
-              height: 160,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainer,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: _errors['face'] != null
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.outline,
-                  width: 2,
-                ),
-                image: _faceImage != null
-                    ? DecorationImage(
-                        image: FileImage(_faceImage!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-              ),
-              child: _faceImage == null
-                  ? Icon(
-                      Symbols.person_add,
-                      size: 60,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    )
-                  : null,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.tertiaryContainer.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              "Optional — you can skip this step",
-              style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.onTertiaryContainer,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton.icon(
-            onPressed: _isLoading ? null : _pickFaceImage,
-            icon: const Icon(Symbols.photo_camera, size: 18),
-            label: Text(_faceImage == null ? "Capture Face" : "Retake Photo"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.colorScheme.surfaceContainer,
-              foregroundColor: theme.colorScheme.onSurface,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          ),
-          if (_faceImage != null) ...[
-            const SizedBox(height: 10),
-            TextButton.icon(
-              onPressed: _isLoading
-                  ? null
-                  : () => setState(() => _faceImage = null),
-              icon: Icon(Symbols.delete, size: 16,
-                  color: theme.colorScheme.error),
-              label: Text("Remove photo",
-                  style: TextStyle(color: theme.colorScheme.error)),
-            ),
-          ],
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              "Your face data helps protect your privacy and identify you in photos uploaded by others.",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.5,
-              ),
-            ),
-          ),
-        ],
-      );
     } else {
       return Column(
-        key: const ValueKey(5),
+        key: const ValueKey(4),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FloatingLabelInput(
@@ -894,36 +751,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                 ),
               ),
-
-              // Skip button — only visible on the face registration step
-              if (_step == 4) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () {
-                            setState(() {
-                              _faceImage = null;
-                              _errors.remove('face');
-                              _step++;
-                            });
-                          },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: Text(
-                      'Skip for now',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
 
               if (_step == 0) ...[
                 Padding(
