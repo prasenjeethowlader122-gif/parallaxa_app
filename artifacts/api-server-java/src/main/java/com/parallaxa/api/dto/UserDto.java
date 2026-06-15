@@ -1,5 +1,6 @@
 package com.parallaxa.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,11 +20,17 @@ public class UserDto {
     private String bio;
     private String avatarUrl;
     private String website;
+
+    @JsonProperty("isVerified")
     private boolean isVerified;
+
     private String verificationStatus;
     private String role;
     private boolean twoFactorEnabled;
+
+    @JsonProperty("isPrivate")
     private boolean isPrivate;
+
     private int followersCount;
     private int followingCount;
     private int postsCount;

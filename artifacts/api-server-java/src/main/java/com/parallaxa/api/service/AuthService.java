@@ -108,16 +108,17 @@ public class AuthService {
         var user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
+        // Check frozen status before verifying password to avoid leaking credential validity
+        if (user.isFrozen()) {
+            throw new IllegalStateException("Account is frozen");
+        }
+
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(normalizedEmail, request.getPassword())
             );
         } catch (Exception e) {
             throw new BadCredentialsException("Invalid credentials");
-        }
-
-        if (user.isFrozen()) {
-            throw new IllegalStateException("Account is frozen");
         }
 
         if (user.isTwoFactorEnabled()) {
@@ -216,6 +217,10 @@ public class AuthService {
     public AuthResponse verify2FA(String email, String code) {
         User user = userRepository.findByEmail(email.trim().toLowerCase())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.isFrozen()) {
+            throw new IllegalStateException("Account is frozen");
+        }
 
         if (!user.isTwoFactorEnabled()) {
             throw new RuntimeException("2FA not enabled for this user");

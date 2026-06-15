@@ -26,8 +26,7 @@ public class AuthController {
 
     @PostMapping(value = "/register", consumes = {
             MediaType.MULTIPART_FORM_DATA_VALUE,
-            MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            MediaType.APPLICATION_JSON_VALUE
+            MediaType.APPLICATION_FORM_URLENCODED_VALUE
     })
     public ResponseEntity<?> register(
             @RequestPart("username") String username,

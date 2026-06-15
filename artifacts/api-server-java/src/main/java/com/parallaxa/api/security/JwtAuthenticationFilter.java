@@ -8,20 +8,20 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(
@@ -30,25 +30,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userId;
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
-        jwt = authHeader.substring(7);
-        try {
-            userId = jwtService.extractUserId(jwt);
-            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // In our case, UserDetailsService is configured to look up by email, but the JWT subject is userId.
-                // We need a way to look up by ID for the filter if we want to follow standard Spring Security flow.
-                // Alternatively, we can just trust the JWT and create a simple UserDetails.
 
-                // For simplicity in this migration, let's create a UserDetails directly from the ID
-                UserDetails userDetails = org.springframework.security.core.userdetails.User
-                        .withUsername(userId)
-                        .password("") // password not needed for token-based auth
-                        .authorities(new String[]{})
+        final String jwt = authHeader.substring(7);
+        try {
+            final String userId = jwtService.extractUserId(jwt);
+            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = User.withUsername(userId)
+                        .password("")
+                        .authorities(List.of())
                         .build();
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
@@ -57,14 +50,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             null,
                             userDetails.getAuthorities()
                     );
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
         } catch (Exception e) {
-            // Token invalid or expired
+            // Token is invalid or expired — request continues unauthenticated
         }
         filterChain.doFilter(request, response);
     }
