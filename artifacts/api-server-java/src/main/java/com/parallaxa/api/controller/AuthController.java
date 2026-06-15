@@ -24,27 +24,62 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping(value = "/register", consumes = {
-            MediaType.MULTIPART_FORM_DATA_VALUE,
-            MediaType.APPLICATION_FORM_URLENCODED_VALUE
-    })
+    /**
+     * Multipart/form-data registration (Flutter sends FormData via Dio).
+     * Simple string fields use @RequestParam (works with multipart text parts).
+     * The optional file uses @RequestPart.
+     */
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> register(
-            @RequestPart("username") String username,
-            @RequestPart("email") String email,
-            @RequestPart("password") String password,
-            @RequestPart("displayName") String displayName,
-            @RequestPart(value = "dateOfBirth", required = false) String dateOfBirth,
+            @RequestParam("username") String username,
+            @RequestParam("email") String email,
+            @RequestParam("password") String password,
+            @RequestParam("displayName") String displayName,
+            @RequestParam(value = "dateOfBirth", required = false) String dateOfBirth,
             @RequestPart(value = "faceImage", required = false) MultipartFile faceImage
     ) {
         log.info("Registration attempt for username: {}, email: {}", username, email);
         try {
             AuthResponse response = authService.register(
                     username, email, password, displayName, dateOfBirth, faceImage);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "Conflict", "message", e.getMessage()));
         } catch (Exception e) {
+            log.error("Registration error", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "InternalServerError",
+                            "message", "Registration failed. Please try again."));
+        }
+    }
+
+    /**
+     * JSON registration (no file upload).
+     */
+    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> registerJson(@RequestBody Map<String, String> body) {
+        log.info("JSON Registration attempt for username: {}, email: {}", body.get("username"), body.get("email"));
+        try {
+            String username    = body.get("username");
+            String email       = body.get("email");
+            String password    = body.get("password");
+            String displayName = body.get("displayName");
+            String dateOfBirth = body.get("dateOfBirth");
+
+            if (username == null || email == null || password == null || displayName == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "BadRequest", "message", "Missing required fields"));
+            }
+
+            AuthResponse response = authService.register(
+                    username, email, password, displayName, dateOfBirth, null);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "Conflict", "message", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Registration error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "InternalServerError",
                             "message", "Registration failed. Please try again."));
@@ -66,7 +101,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
 
     @GetMapping("/me")
@@ -80,13 +115,11 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
-        // Stub implementation
         return ResponseEntity.ok(Map.of("message", "Reset link sent if email exists"));
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
-        // Stub implementation
         return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
     }
 

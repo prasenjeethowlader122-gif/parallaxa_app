@@ -1,7 +1,6 @@
 package com.parallaxa.api.config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.slf4j.Logger;
@@ -19,18 +18,17 @@ public class DatabaseConfig {
 
     @Bean
     @Primary
-    @ConditionalOnProperty(name = "DATABASE_URL")
     public DataSource dataSource(
-            @Value("${DATABASE_URL}") String databaseUrl,
-            @Value("${DATABASE_USER:#{null}}") String dbUser,
-            @Value("${DATABASE_PASSWORD:#{null}}") String dbPassword) throws URISyntaxException {
+            @Value("${DATABASE_URL}") String databaseUrl) throws URISyntaxException {
         String url = databaseUrl;
-        String username = dbUser;
-        String password = dbPassword;
+        String username = null;
+        String password = null;
 
         if (url.startsWith("postgres://") || url.startsWith("postgresql://")) {
             URI dbUri = new URI(url);
-            url = "jdbc:postgresql://" + dbUri.getHost() + (dbUri.getPort() != -1 ? ":" + dbUri.getPort() : "") + dbUri.getPath();
+            url = "jdbc:postgresql://" + dbUri.getHost()
+                    + (dbUri.getPort() != -1 ? ":" + dbUri.getPort() : "")
+                    + dbUri.getPath();
 
             if (dbUri.getQuery() != null) {
                 url += "?" + dbUri.getQuery();
@@ -38,32 +36,25 @@ public class DatabaseConfig {
 
             String userInfo = dbUri.getUserInfo();
             if (userInfo != null && userInfo.contains(":")) {
-                String[] parts = userInfo.split(":");
+                String[] parts = userInfo.split(":", 2);
                 username = parts[0];
                 password = parts[1];
             }
         }
 
-        DataSourceBuilder<?> builder = DataSourceBuilder.create().url(url);
-        if (username != null) {
-            builder.username(username);
-        }
-        if (password != null) {
-            builder.password(password);
-        }
+        DataSourceBuilder<?> builder = DataSourceBuilder.create()
+                .driverClassName("org.postgresql.Driver")
+                .url(url);
 
-        if (url.startsWith("jdbc:postgresql:")) {
-            builder.driverClassName("org.postgresql.Driver");
-        }
+        if (username != null) builder.username(username);
+        if (password != null) builder.password(password);
 
-        logger.info("Connecting to database with URL: {}", maskUrl(url));
-
+        logger.info("Connecting to database: {}", maskUrl(url));
         return builder.build();
     }
 
     private String maskUrl(String url) {
         if (url == null) return null;
-        // Basic masking of password in JDBC URL if present
         return url.replaceAll(":([^/@:]+)@", ":****@");
     }
 }
