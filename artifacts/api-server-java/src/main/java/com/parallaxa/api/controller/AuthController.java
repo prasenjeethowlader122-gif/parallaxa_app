@@ -14,7 +14,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -44,8 +46,10 @@ public class AuthController {
                     username, email, password, displayName, dateOfBirth, faceImage);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Conflict", "message", e.getMessage()));
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Conflict");
+            error.put("message", Objects.requireNonNullElse(e.getMessage(), "Conflict"));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
         } catch (Exception e) {
             log.error("Registration error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -76,8 +80,10 @@ public class AuthController {
                     username, email, password, displayName, dateOfBirth, null);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Conflict", "message", e.getMessage()));
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Conflict");
+            error.put("message", Objects.requireNonNullElse(e.getMessage(), "Conflict"));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
         } catch (Exception e) {
             log.error("Registration error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -91,8 +97,10 @@ public class AuthController {
         try {
             return ResponseEntity.ok(authService.login(request));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Forbidden", "message", e.getMessage()));
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Forbidden");
+            error.put("message", Objects.requireNonNullElse(e.getMessage(), "Forbidden"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Unauthorized", "message", "Invalid credentials"));

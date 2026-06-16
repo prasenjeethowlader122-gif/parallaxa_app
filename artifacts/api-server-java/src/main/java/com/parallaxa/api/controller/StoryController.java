@@ -30,7 +30,7 @@ public class StoryController {
     ) {
         String mediaUrl = (String) body.get("mediaUrl");
         String mediaType = (String) body.get("mediaType");
-        int duration = body.get("duration") != null ? (int) body.get("duration") : 5;
+        int duration = body.get("duration") != null ? ((Number) body.get("duration")).intValue() : 5;
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(storyService.createStory(userDetails.getUsername(), mediaUrl, mediaType, duration));

@@ -38,12 +38,12 @@ public class StoryService {
         for (Map.Entry<String, List<Story>> entry : grouped.entrySet()) {
             User storyUser = userRepository.findById(entry.getKey()).orElseThrow();
             Map<String, Object> group = new HashMap<>();
-            group.put("user", Map.of(
-                    "id", storyUser.getId(),
-                    "username", storyUser.getUsername(),
-                    "displayName", storyUser.getDisplayName(),
-                    "avatarUrl", storyUser.getAvatarUrl() != null ? storyUser.getAvatarUrl() : ""
-            ));
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("id", storyUser.getId());
+            userMap.put("username", storyUser.getUsername());
+            userMap.put("displayName", storyUser.getDisplayName());
+            userMap.put("avatarUrl", storyUser.getAvatarUrl() != null ? storyUser.getAvatarUrl() : "");
+            group.put("user", userMap);
             group.put("stories", entry.getValue().stream().map(this::mapToDto).collect(Collectors.toList()));
             group.put("hasUnviewed", true); // Simplified
             result.add(group);
@@ -67,15 +67,15 @@ public class StoryService {
     }
 
     private Map<String, Object> mapToDto(Story story) {
-        return Map.of(
-                "id", story.getId(),
-                "userId", story.getUser().getId(),
-                "mediaUrl", story.getMediaUrl(),
-                "mediaType", story.getMediaType(),
-                "duration", story.getDuration(),
-                "viewsCount", story.getViewsCount(),
-                "createdAt", story.getCreatedAt() != null ? story.getCreatedAt() : LocalDateTime.now(),
-                "expiresAt", story.getExpiresAt()
-        );
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", story.getId());
+        dto.put("userId", story.getUser().getId());
+        dto.put("mediaUrl", story.getMediaUrl());
+        dto.put("mediaType", story.getMediaType());
+        dto.put("duration", story.getDuration());
+        dto.put("viewsCount", story.getViewsCount());
+        dto.put("createdAt", story.getCreatedAt() != null ? story.getCreatedAt() : LocalDateTime.now());
+        dto.put("expiresAt", story.getExpiresAt());
+        return dto;
     }
 }
