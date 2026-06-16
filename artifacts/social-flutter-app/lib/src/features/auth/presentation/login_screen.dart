@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../data/auth_repository.dart';
+import '../data/auth_provider.dart';
 import '../../../core/api_client.dart';
 import '../../../core/processing_provider.dart';
 import 'widgets/floating_label_input.dart';
@@ -128,6 +129,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (userId != null) {
       await storage.setCurrentUserId(userId);
     }
+
+    // Update reactive auth state
+    try {
+      final user = await ref.read(authRepositoryProvider).getMe();
+      ref.read(authStateProvider.notifier).setAuth(token, user);
+    } catch (_) {
+      ref.read(authStateProvider.notifier).setAuth(token, null);
+    }
+
     if (mounted) context.go('/feed');
   }
 

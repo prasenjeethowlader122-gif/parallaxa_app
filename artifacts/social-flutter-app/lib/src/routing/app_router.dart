@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hugeicons/hugeicons.dart';
-import '../core/api_client.dart';
 import '../core/app_colors.dart';
+import '../features/auth/data/auth_provider.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
@@ -34,12 +34,12 @@ import '../features/auth/presentation/two_factor_setup_screen.dart';
 import '../features/auth/domain/user.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final storageService = ref.watch(storageServiceProvider);
+  final authState = ref.watch(authStateProvider);
 
   return GoRouter(
     initialLocation: '/splash',
     redirect: (context, state) {
-      final token = storageService.getAuthToken();
+      final token = authState.token;
       final loc = state.matchedLocation;
 
       if (loc == '/splash') return null;

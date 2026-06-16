@@ -7,6 +7,7 @@ import '../../../core/theme_provider.dart';
 import '../../../core/localization_provider.dart';
 import '../../../core/app_colors.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../auth/data/auth_provider.dart';
 import '../../../core/api_client.dart';
 import '../../../core/processing_provider.dart';
 import 'widgets/user_avatar.dart';
@@ -40,6 +41,7 @@ class SettingsScreen extends ConsumerWidget {
         await ref.read(authRepositoryProvider).logout();
       } catch (_) {}
       await ref.read(storageServiceProvider).clearAll();
+      ref.read(authStateProvider.notifier).clearAuth();
       ref.read(processingProvider.notifier).hide();
       if (context.mounted) context.go('/login');
     }

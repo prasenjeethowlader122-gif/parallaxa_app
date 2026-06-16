@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'storage_service.dart';
+import '../features/auth/data/auth_provider.dart';
 
 final storageServiceProvider = Provider<StorageService>((ref) {
   throw UnimplementedError('StorageService must be initialized in main()');
@@ -37,6 +38,7 @@ final dioProvider = Provider<Dio>((ref) {
       onError: (e, handler) async {
         if (e.response?.statusCode == 401) {
           await storageService.clearAll();
+          ref.read(authStateProvider.notifier).clearAuth();
         }
         return handler.next(e);
       },
