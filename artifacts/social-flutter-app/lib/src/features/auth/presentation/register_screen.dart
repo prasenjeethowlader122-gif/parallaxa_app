@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import '../data/auth_repository.dart';
+import '../data/auth_provider.dart';
 import '../../../core/api_client.dart';
 import '../../../core/processing_provider.dart';
 import '../../../core/localization_provider.dart';
@@ -182,8 +183,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
         if (mounted) setState(() => _usernameSuggestions = suggestions);
       }
-    } catch (_) {
-      if (mounted) setState(() => _usernameAvailable = null);
+    } catch (e) {
+      debugPrint('Error checking username: $e');
+      if (mounted) {
+        setState(() {
+          _usernameAvailable = null;
+          _errors['username'] = "Error checking username availability";
+        });
+      }
     } finally {
       if (mounted) setState(() => _checkingUsername = false);
     }
@@ -213,21 +220,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (response.user != null) {
           await storage.setCurrentUserId(response.user!.id);
         }
+
+        // Update reactive auth state
+        ref.read(authStateProvider.notifier).setAuth(
+          response.token!,
+          response.user,
+        );
+
         if (mounted) context.go('/feed');
       }
     } catch (e) {
       if (mounted) {
         String errorMessage = "Registration failed. Please try again.";
+        Map<String, String> newErrors = {};
+
         if (e is DioException) {
-          errorMessage =
-              e.response?.data['message'] ??
-              e.response?.data['error'] ??
-              errorMessage;
+          final data = e.response?.data;
+          errorMessage = data?['message'] ?? data?['error'] ?? errorMessage;
+
+          if (e.response?.statusCode == 409) {
+            if (errorMessage.contains('Email')) {
+              _step = 2; // Jump back to email step
+              newErrors['email'] = errorMessage;
+            } else if (errorMessage.contains('Username')) {
+              _step = 4; // Stay/Jump to username step
+              newErrors['username'] = errorMessage;
+              _usernameAvailable = false;
+            }
+          }
         } else if (e.toString().contains('409')) {
           errorMessage = "Username or email already taken";
         }
+
         setState(() {
-          _errors = {'general': errorMessage};
+          _errors = newErrors.isEmpty ? {'general': errorMessage} : newErrors;
         });
       }
     } finally {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/domain/user.dart';
+import '../../auth/data/auth_provider.dart';
 import '../../feed/domain/post.dart';
 import '../../feed/presentation/post_card.dart';
 import '../data/profile_repository.dart';
@@ -86,6 +87,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       await ref.read(authRepositoryProvider).logout();
     } catch (_) {}
     await ref.read(storageServiceProvider).clearAll();
+    ref.read(authStateProvider.notifier).clearAuth();
     ref.read(processingProvider.notifier).hide();
     if (mounted) context.go('/login');
   }

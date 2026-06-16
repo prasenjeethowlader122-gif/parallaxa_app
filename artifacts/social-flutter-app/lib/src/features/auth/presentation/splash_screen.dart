@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart' hide LinearGradient;
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
+import '../data/auth_repository.dart';
+import '../data/auth_provider.dart';
+import '../../../core/storage_service.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -39,12 +43,35 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _controller.forward();
+    _initializeApp();
+  }
 
-    Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        context.go('/feed');
+  Future<void> _initializeApp() async {
+    final authRepo = ref.read(authRepositoryProvider);
+    final authNotifier = ref.read(authStateProvider.notifier);
+    final storage = ref.read(storageServiceProvider);
+    final token = storage.getAuthToken();
+
+    if (token != null) {
+      try {
+        final user = await authRepo.getMe();
+        authNotifier.setAuth(token, user);
+      } catch (e) {
+        await storage.clearAll();
+        authNotifier.clearAuth();
       }
-    });
+    }
+
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (mounted) {
+      final state = ref.read(authStateProvider);
+      if (state.token != null) {
+        context.go('/feed');
+      } else {
+        context.go('/login');
+      }
+    }
   }
 
   @override
