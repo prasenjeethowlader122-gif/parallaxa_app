@@ -18,8 +18,20 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> getUser(@PathVariable String userId) {
-        return ResponseEntity.ok(userService.getUser(userId));
+    public ResponseEntity<UserDto> getUser(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String userId
+    ) {
+        String id = "me".equals(userId) ? userDetails.getUsername() : userId;
+        return ResponseEntity.ok(userService.getUser(id));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserDto> updateProfile(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody Map<String, Object> updates
+    ) {
+        return ResponseEntity.ok(userService.updateProfile(userDetails.getUsername(), updates));
     }
 
     @PostMapping("/{userId}/follow")

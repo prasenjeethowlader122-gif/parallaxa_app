@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -18,9 +20,27 @@ public class UserService {
     private final AuthService authService;
 
     public UserDto getUser(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user;
+        if ("me".equals(userId)) {
+            throw new RuntimeException("Me alias should be handled by calling with actual ID");
+        } else {
+            user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        }
         return authService.mapToDto(user);
+    }
+
+    @Transactional
+    public UserDto updateProfile(String userId, Map<String, Object> updates) {
+        User user = userRepository.findById(userId).orElseThrow();
+
+        if (updates.containsKey("displayName")) user.setDisplayName((String) updates.get("displayName"));
+        if (updates.containsKey("bio")) user.setBio((String) updates.get("bio"));
+        if (updates.containsKey("website")) user.setWebsite((String) updates.get("website"));
+        if (updates.containsKey("avatarUrl")) user.setAvatarUrl((String) updates.get("avatarUrl"));
+        if (updates.containsKey("isPrivate")) user.setPrivate((Boolean) updates.get("isPrivate"));
+
+        return authService.mapToDto(userRepository.save(user));
     }
 
     @Transactional

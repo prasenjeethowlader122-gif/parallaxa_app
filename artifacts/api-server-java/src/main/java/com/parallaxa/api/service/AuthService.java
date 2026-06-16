@@ -237,6 +237,34 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
+    public void forgotPassword(String email) {
+        String normalizedEmail = email.trim().toLowerCase();
+        userRepository.findByEmail(normalizedEmail).ifPresent(user -> {
+            String token = UUID.randomUUID().toString();
+            user.setResetPasswordToken(token);
+            user.setResetPasswordExpires(LocalDateTime.now().plusHours(1));
+            userRepository.save(user);
+            // In a real app, send an email here.
+            System.out.println("RESET TOKEN for " + normalizedEmail + ": " + token);
+        });
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        User user = userRepository.findByResetPasswordToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired token"));
+
+        if (user.getResetPasswordExpires().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Invalid or expired token");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setResetPasswordToken(null);
+        user.setResetPasswordExpires(null);
+        userRepository.save(user);
+    }
+
     public User getUserById(String id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));

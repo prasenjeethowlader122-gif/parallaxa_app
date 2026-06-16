@@ -18,7 +18,10 @@ class NotificationRepository {
   }) async {
     final response = await _dio.get(
       'notifications',
-      queryParameters: {'cursor': ?cursor, 'limit': limit},
+      queryParameters: {
+        if (cursor != null) 'cursor': cursor,
+        'limit': limit,
+      },
     );
     return NotificationPage.fromJson(response.data);
   }

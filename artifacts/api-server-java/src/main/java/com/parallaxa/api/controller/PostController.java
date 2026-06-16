@@ -59,4 +59,50 @@ public class PostController {
     ) {
         return ResponseEntity.ok(postService.unlikePost(userDetails.getUsername(), postId).getData());
     }
+
+    @PostMapping("/posts/{postId}/repost")
+    public ResponseEntity<PostDto> repostPost(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String postId
+    ) {
+        return ResponseEntity.ok(postService.repostPost(userDetails.getUsername(), postId));
+    }
+
+    @GetMapping("/posts/{postId}/replies")
+    public ResponseEntity<PageResponse<PostDto>> getPostReplies(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String postId
+    ) {
+        String userId = userDetails != null ? userDetails.getUsername() : null;
+        return ResponseEntity.ok(postService.getPostReplies(postId, userId));
+    }
+
+    @DeleteMapping("/posts/{postId}")
+    public ResponseEntity<Void> deletePost(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String postId
+    ) {
+        postService.deletePost(userDetails.getUsername(), postId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/explore")
+    public ResponseEntity<PageResponse<PostDto>> getExplorePosts(@AuthenticationPrincipal UserDetails userDetails) {
+        String userId = userDetails != null ? userDetails.getUsername() : null;
+        return ResponseEntity.ok(postService.getExplorePosts(userId));
+    }
+
+    @GetMapping("/users/{userId}/posts")
+    public ResponseEntity<PageResponse<PostDto>> getUserPosts(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String userId
+    ) {
+        String currentUserId = userDetails != null ? userDetails.getUsername() : null;
+        return ResponseEntity.ok(postService.getUserPosts(currentUserId, userId));
+    }
+
+    @GetMapping("/posts/saved")
+    public ResponseEntity<PageResponse<PostDto>> getSavedPosts(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(postService.getSavedPosts(userDetails.getUsername()));
+    }
 }

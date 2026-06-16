@@ -140,6 +140,77 @@ public class PostService {
         return MapResponse.builder().put("message", "Unliked").build();
     }
 
+    @Transactional
+    public PostDto repostPost(String userId, String postId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        Post originalPost = postRepository.findById(postId).orElseThrow();
+
+        Post repost = Post.builder()
+                .id(UUID.randomUUID().toString())
+                .author(user)
+                .repostOf(originalPost)
+                .build();
+
+        Post savedRepost = postRepository.save(repost);
+        originalPost.setRepostsCount(originalPost.getRepostsCount() + 1);
+        postRepository.save(originalPost);
+
+        return mapToDto(savedRepost, userId);
+    }
+
+    public PageResponse<PostDto> getPostReplies(String postId, String userId) {
+        Post parentPost = postRepository.findById(postId).orElseThrow();
+        PageRequest pageRequest = PageRequest.of(0, 50);
+        Page<Post> replies = postRepository.findByParentPostAndIsArchivedFalseOrderByCreatedAtDesc(parentPost, pageRequest);
+
+        return PageResponse.<PostDto>builder()
+                .posts(replies.getContent().stream().map(p -> mapToDto(p, userId)).collect(Collectors.toList()))
+                .build();
+    }
+
+    @Transactional
+    public void deletePost(String userId, String postId) {
+        Post post = postRepository.findById(postId).orElseThrow();
+        if (!post.getAuthor().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+        postRepository.delete(post);
+    }
+
+    public PageResponse<PostDto> getSavedPosts(String userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        PageRequest pageRequest = PageRequest.of(0, 50);
+        Page<SavedPost> savedPosts = savedPostRepository.findByUserOrderByCreatedAtDesc(user, pageRequest);
+
+        return PageResponse.<PostDto>builder()
+                .posts(savedPosts.getContent().stream().map(sp -> mapToDto(sp.getPost(), userId)).collect(Collectors.toList()))
+                .build();
+    }
+
+    public PageResponse<PostDto> getExplorePosts(String userId) {
+        PageRequest pageRequest = PageRequest.of(0, 20);
+        Page<Post> posts = postRepository.findByParentPostIsNullAndIsArchivedFalseOrderByCreatedAtDesc(pageRequest);
+        return PageResponse.<PostDto>builder()
+                .posts(posts.getContent().stream().map(p -> mapToDto(p, userId)).collect(Collectors.toList()))
+                .build();
+    }
+
+    public PageResponse<PostDto> getUserPosts(String userId, String targetUserId) {
+        User targetUser;
+        if ("me".equals(targetUserId)) {
+            targetUser = userRepository.findById(userId).orElseThrow();
+        } else {
+            targetUser = userRepository.findById(targetUserId).orElseThrow();
+        }
+
+        PageRequest pageRequest = PageRequest.of(0, 50);
+        Page<Post> posts = postRepository.findByAuthorAndParentPostIsNullAndIsArchivedFalseOrderByCreatedAtDesc(targetUser, pageRequest);
+
+        return PageResponse.<PostDto>builder()
+                .posts(posts.getContent().stream().map(p -> mapToDto(p, userId)).collect(Collectors.toList()))
+                .build();
+    }
+
     public PostDto mapToDto(Post post, String currentUserId) {
         boolean isLiked = false;
         boolean isSaved = false;
