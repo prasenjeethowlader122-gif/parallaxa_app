@@ -23,6 +23,7 @@ public class PostService {
     private final SavedPostRepository savedPostRepository;
     private final FollowRepository followRepository;
     private final HashtagRepository hashtagRepository;
+    private final NotificationRepository notificationRepository;
 
     public PageResponse<PostDto> getFeed(String userId, int limit) {
         PageRequest pageRequest = PageRequest.of(0, limit);
@@ -74,6 +75,18 @@ public class PostService {
         if (parentPost != null) {
             parentPost.setRepliesCount(parentPost.getRepliesCount() + 1);
             postRepository.save(parentPost);
+
+            // Create notification for reply
+            if (!parentPost.getAuthor().getId().equals(userId)) {
+                notificationRepository.save(Notification.builder()
+                        .id(UUID.randomUUID().toString())
+                        .user(parentPost.getAuthor())
+                        .fromUser(user)
+                        .type("reply")
+                        .post(parentPost)
+                        .commentContent(request.getContent())
+                        .build());
+            }
         } else {
             user.setPostsCount(user.getPostsCount() + 1);
             userRepository.save(user);
@@ -123,7 +136,43 @@ public class PostService {
         post.setLikesCount(post.getLikesCount() + 1);
         postRepository.save(post);
 
+        // Create notification for like
+        if (!post.getAuthor().getId().equals(userId)) {
+            notificationRepository.save(Notification.builder()
+                    .id(UUID.randomUUID().toString())
+                    .user(post.getAuthor())
+                    .fromUser(user)
+                    .type("like")
+                    .post(post)
+                    .build());
+        }
+
         return MapResponse.builder().put("message", "Liked").build();
+    }
+
+    @Transactional
+    public MapResponse savePost(String userId, String postId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        Post post = postRepository.findById(postId).orElseThrow();
+
+        if (savedPostRepository.existsByUserAndPost(user, post)) {
+            return MapResponse.builder().put("message", "Already saved").build();
+        }
+
+        SavedPost saved = SavedPost.builder().user(user).post(post).build();
+        savedPostRepository.save(saved);
+
+        return MapResponse.builder().put("message", "Saved").build();
+    }
+
+    @Transactional
+    public MapResponse unsavePost(String userId, String postId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        Post post = postRepository.findById(postId).orElseThrow();
+
+        savedPostRepository.findByUserAndPost(user, post).ifPresent(savedPostRepository::delete);
+
+        return MapResponse.builder().put("message", "Unsaved").build();
     }
 
     @Transactional
@@ -154,6 +203,17 @@ public class PostService {
         Post savedRepost = postRepository.save(repost);
         originalPost.setRepostsCount(originalPost.getRepostsCount() + 1);
         postRepository.save(originalPost);
+
+        // Create notification for repost
+        if (!originalPost.getAuthor().getId().equals(userId)) {
+            notificationRepository.save(Notification.builder()
+                    .id(UUID.randomUUID().toString())
+                    .user(originalPost.getAuthor())
+                    .fromUser(user)
+                    .type("repost")
+                    .post(originalPost)
+                    .build());
+        }
 
         return mapToDto(savedRepost, userId);
     }

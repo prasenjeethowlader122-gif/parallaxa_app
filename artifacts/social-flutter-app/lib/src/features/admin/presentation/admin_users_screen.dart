@@ -34,6 +34,23 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
     }
   }
 
+  Future<void> _toggleFreeze(User user) async {
+    try {
+      if (user.isFrozen == true) {
+        await ref.read(adminRepositoryProvider).unfreezeUser(user.id);
+      } else {
+        await ref.read(adminRepositoryProvider).freezeUser(user.id);
+      }
+      ref.invalidate(adminUsersProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(adminUsersProvider);
@@ -124,15 +141,16 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                       ),
                       itemBuilder: (context) => [
                         PopupMenuItem(
+                          onTap: () => _toggleFreeze(user),
                           child: Text(
                             user.isFrozen == true ? 'Unfreeze' : 'Freeze',
                           ),
-                          onTap: () {
-                            // Logic
-                          },
                         ),
-                        const PopupMenuItem(
-                          child: Text(
+                        PopupMenuItem(
+                          onTap: () async {
+                            // Implement delete in repository if needed
+                          },
+                          child: const Text(
                             'Delete User',
                             style: TextStyle(color: Colors.red),
                           ),

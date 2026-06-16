@@ -10,8 +10,7 @@ class BookmarksScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Assuming a bookmarksProvider exists or can be created in PostRepository
-    final bookmarksAsync = ref.watch(publicFeedProvider); // Placeholder
+    final bookmarksAsync = ref.watch(savedPostsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,

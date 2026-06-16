@@ -22,6 +22,11 @@ final trendingFeedProvider = FutureProvider<List<Post>>((ref) async {
   return page.posts;
 });
 
+final savedPostsProvider = FutureProvider<List<Post>>((ref) async {
+  final page = await ref.watch(postRepositoryProvider).getSavedPosts();
+  return page.posts;
+});
+
 class PostRepository {
   final Dio _dio;
 
@@ -30,10 +35,7 @@ class PostRepository {
   Future<PostPage> getFeed({String? cursor, int limit = 20}) async {
     final response = await _dio.get(
       'feed',
-      queryParameters: {
-        if (cursor != null) 'cursor': cursor,
-        'limit': limit,
-      },
+      queryParameters: {'cursor': ?cursor, 'limit': limit},
     );
     return PostPage.fromJson(response.data);
   }
@@ -42,10 +44,7 @@ class PostRepository {
     try {
       final response = await _dio.get(
         'feed/following',
-        queryParameters: {
-          if (cursor != null) 'cursor': cursor,
-          'limit': limit,
-        },
+        queryParameters: {'cursor': ?cursor, 'limit': limit},
       );
       return PostPage.fromJson(response.data);
     } catch (_) {
@@ -64,12 +63,12 @@ class PostRepository {
     final response = await _dio.post(
       'posts',
       data: {
-        if (content != null) 'content': content,
-        if (imageUrl != null) 'imageUrl': imageUrl,
-        if (videoUrl != null) 'videoUrl': videoUrl,
-        if (location != null) 'location': location,
-        if (hashtags != null) 'hashtags': hashtags,
-        if (parentPostId != null) 'parentPostId': parentPostId,
+        'content': ?content,
+        'imageUrl': ?imageUrl,
+        'videoUrl': ?videoUrl,
+        'location': ?location,
+        'hashtags': ?hashtags,
+        'parentPostId': ?parentPostId,
       },
     );
     return Post.fromJson(response.data);
@@ -78,10 +77,7 @@ class PostRepository {
   Future<PostPage> getExplorePosts({String? cursor, int limit = 20}) async {
     final response = await _dio.get(
       'explore',
-      queryParameters: {
-        if (cursor != null) 'cursor': cursor,
-        'limit': limit,
-      },
+      queryParameters: {'cursor': ?cursor, 'limit': limit},
     );
     return PostPage.fromJson(response.data);
   }
@@ -110,6 +106,19 @@ class PostRepository {
 
   Future<void> repostPost(String postId) async {
     await _dio.post('posts/$postId/repost');
+  }
+
+  Future<PostPage> getSavedPosts() async {
+    final response = await _dio.get('posts/saved');
+    return PostPage.fromJson(response.data);
+  }
+
+  Future<void> savePost(String postId) async {
+    await _dio.post('posts/$postId/save');
+  }
+
+  Future<void> unsavePost(String postId) async {
+    await _dio.delete('posts/$postId/save');
   }
 }
 

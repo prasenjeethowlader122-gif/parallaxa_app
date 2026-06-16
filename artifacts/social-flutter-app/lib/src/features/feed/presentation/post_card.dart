@@ -72,8 +72,23 @@ class _PostCardState extends ConsumerState<PostCard> {
     }
   }
 
-  void _toggleSave() {
-    setState(() => _isSaved = !_isSaved);
+  Future<void> _toggleSave() async {
+    final newState = !_isSaved;
+    setState(() => _isSaved = newState);
+    try {
+      if (newState) {
+        await ref.read(postRepositoryProvider).savePost(widget.post.id);
+      } else {
+        await ref.read(postRepositoryProvider).unsavePost(widget.post.id);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaved = !newState);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save: ${e.toString()}')),
+        );
+      }
+    }
   }
 
   Future<void> _toggleRepost() async {

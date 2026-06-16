@@ -3,14 +3,17 @@ package com.parallaxa.api.service;
 import com.parallaxa.api.dto.MapResponse;
 import com.parallaxa.api.dto.UserDto;
 import com.parallaxa.api.entity.Follow;
+import com.parallaxa.api.entity.Notification;
 import com.parallaxa.api.entity.User;
 import com.parallaxa.api.repository.FollowRepository;
+import com.parallaxa.api.repository.NotificationRepository;
 import com.parallaxa.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +21,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final AuthService authService;
+    private final NotificationRepository notificationRepository;
 
     public UserDto getUser(String userId) {
         User user;
@@ -63,6 +67,14 @@ public class UserService {
         following.setFollowersCount(following.getFollowersCount() + 1);
         userRepository.save(follower);
         userRepository.save(following);
+
+        // Create notification for follow
+        notificationRepository.save(Notification.builder()
+                .id(UUID.randomUUID().toString())
+                .user(following)
+                .fromUser(follower)
+                .type("follow")
+                .build());
 
         return MapResponse.builder().put("message", "Followed").build();
     }

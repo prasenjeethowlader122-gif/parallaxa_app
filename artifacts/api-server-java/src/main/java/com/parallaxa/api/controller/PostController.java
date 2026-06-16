@@ -105,4 +105,20 @@ public class PostController {
     public ResponseEntity<PageResponse<PostDto>> getSavedPosts(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(postService.getSavedPosts(userDetails.getUsername()));
     }
+
+    @PostMapping("/posts/{postId}/save")
+    public ResponseEntity<Map<String, Object>> savePost(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String postId
+    ) {
+        return ResponseEntity.ok(postService.savePost(userDetails.getUsername(), postId).getData());
+    }
+
+    @DeleteMapping("/posts/{postId}/save")
+    public ResponseEntity<Map<String, Object>> unsavePost(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String postId
+    ) {
+        return ResponseEntity.ok(postService.unsavePost(userDetails.getUsername(), postId).getData());
+    }
 }
