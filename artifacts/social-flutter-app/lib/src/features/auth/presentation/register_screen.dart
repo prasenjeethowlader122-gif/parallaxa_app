@@ -222,10 +222,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         }
 
         // Update reactive auth state
-        ref.read(authStateProvider.notifier).setAuth(
-          response.token!,
-          response.user,
-        );
+        ref
+            .read(authStateProvider.notifier)
+            .setAuth(response.token!, response.user);
 
         if (mounted) context.go('/feed');
       }

@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import '../data/auth_repository.dart';
 import '../data/auth_provider.dart';
-import '../../../core/storage_service.dart';
+import '../../../core/api_client.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
