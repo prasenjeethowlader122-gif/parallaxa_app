@@ -15,7 +15,7 @@ class DatabaseConfigTest {
     @Test
     void testPostgresUrlConversion() throws URISyntaxException {
         String databaseUrl = "postgres://user:pass@host:5432/db";
-        DataSource dataSource = databaseConfig.dataSource(databaseUrl);
+        DataSource dataSource = databaseConfig.dataSource(databaseUrl, "", "", "");
 
         assertTrue(dataSource instanceof HikariDataSource);
         HikariDataSource hikari = (HikariDataSource) dataSource;
@@ -29,7 +29,7 @@ class DatabaseConfigTest {
     @Test
     void testPostgresqlUrlConversion() throws URISyntaxException {
         String databaseUrl = "postgresql://user:pass@host:5432/db?sslmode=require";
-        DataSource dataSource = databaseConfig.dataSource(databaseUrl);
+        DataSource dataSource = databaseConfig.dataSource(databaseUrl, "", "", "");
 
         assertTrue(dataSource instanceof HikariDataSource);
         HikariDataSource hikari = (HikariDataSource) dataSource;
@@ -42,11 +42,23 @@ class DatabaseConfigTest {
     @Test
     void testStandardJdbcUrl() throws URISyntaxException {
         String databaseUrl = "jdbc:postgresql://host:5432/db";
-        DataSource dataSource = databaseConfig.dataSource(databaseUrl);
+        DataSource dataSource = databaseConfig.dataSource(databaseUrl, "", "", "");
 
         assertTrue(dataSource instanceof HikariDataSource);
         HikariDataSource hikari = (HikariDataSource) dataSource;
 
         assertEquals("jdbc:postgresql://host:5432/db", hikari.getJdbcUrl());
+    }
+
+    @Test
+    void testSpringFallback() throws URISyntaxException {
+        String springUrl = "jdbc:h2:mem:testdb";
+        DataSource dataSource = databaseConfig.dataSource("", springUrl, "sa", "");
+
+        assertTrue(dataSource instanceof HikariDataSource);
+        HikariDataSource hikari = (HikariDataSource) dataSource;
+
+        assertEquals("jdbc:h2:mem:testdb", hikari.getJdbcUrl());
+        assertEquals("sa", hikari.getUsername());
     }
 }
