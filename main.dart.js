@@ -180877,7 +180877,7 @@ A.bQO.prototype={
 $1(a){throw A.i(A.eG("StorageService must be initialized in main()"))},
 $S:1051}
 A.bOj.prototype={
-$1(a){var s,r=a.cJ($.om(),t.Y7),q=A.cfM("https://parallaxa-app-t5p2.onrender.com/api/",B.HI,B.HI),p=new A.ak7(A.d([B.a7t],t.i6))
+$1(a){var s,r=a.cJ($.om(),t.Y7),q=A.cfM("https://parallaxa-backend.onrender.com/api/",B.HI,B.HI),p=new A.ak7(A.d([B.a7t],t.i6))
 p.L(p,B.dPo)
 s=new A.ah1($,p,$,new A.aWT(51200),!1)
 s.i_$=q
