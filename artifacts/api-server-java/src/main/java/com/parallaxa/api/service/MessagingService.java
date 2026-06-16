@@ -31,12 +31,12 @@ public class MessagingService {
             User otherUser = c.getUser1().getId().equals(userId) ? c.getUser2() : c.getUser1();
             Map<String, Object> map = new HashMap<>();
             map.put("id", c.getId());
-            map.put("participant", Map.of(
-                    "id", otherUser.getId(),
-                    "username", otherUser.getUsername(),
-                    "displayName", otherUser.getDisplayName(),
-                    "avatarUrl", otherUser.getAvatarUrl() != null ? otherUser.getAvatarUrl() : ""
-            ));
+            Map<String, Object> participantMap = new HashMap<>();
+            participantMap.put("id", otherUser.getId());
+            participantMap.put("username", otherUser.getUsername());
+            participantMap.put("displayName", otherUser.getDisplayName());
+            participantMap.put("avatarUrl", otherUser.getAvatarUrl() != null ? otherUser.getAvatarUrl() : "");
+            map.put("participant", participantMap);
             map.put("updatedAt", c.getUpdatedAt());
             // Last message could be added here
             return map;
@@ -62,15 +62,16 @@ public class MessagingService {
         Message savedMessage = messageRepository.save(message);
 
         // Broadcast the message to the conversation room
+        Map<String, Object> messageData = new HashMap<>();
+        messageData.put("id", savedMessage.getId());
+        messageData.put("conversationId", conversationId);
+        messageData.put("senderId", senderId);
+        messageData.put("content", content != null ? content : "");
+        messageData.put("mediaUrl", mediaUrl != null ? mediaUrl : "");
+        messageData.put("createdAt", savedMessage.getCreatedAt() != null ? savedMessage.getCreatedAt() : LocalDateTime.now());
+
         socketIOServer.getRoomOperations("conversation:" + conversationId)
-                .sendEvent("new_message", Map.of(
-                        "id", savedMessage.getId(),
-                        "conversationId", conversationId,
-                        "senderId", senderId,
-                        "content", content != null ? content : "",
-                        "mediaUrl", mediaUrl != null ? mediaUrl : "",
-                        "createdAt", savedMessage.getCreatedAt() != null ? savedMessage.getCreatedAt() : LocalDateTime.now()
-                ));
+                .sendEvent("new_message", messageData);
 
         return savedMessage;
     }

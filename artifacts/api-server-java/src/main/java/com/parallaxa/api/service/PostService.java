@@ -82,6 +82,7 @@ public class PostService {
         // Handle hashtags
         if (request.getHashtags() != null) {
             for (String tagName : request.getHashtags()) {
+                if (tagName == null) continue;
                 String name = tagName.toLowerCase().replace("#", "");
                 if (name.isEmpty()) continue;
 
