@@ -123,12 +123,27 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+        }
+        authService.forgotPassword(email);
         return ResponseEntity.ok(Map.of("message", "Reset link sent if email exists"));
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
-        return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+        String token = body.get("token");
+        String password = body.get("password");
+        if (token == null || password == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Token and password are required"));
+        }
+        try {
+            authService.resetPassword(token, password);
+            return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+        }
     }
 
     @GetMapping("/check-username")

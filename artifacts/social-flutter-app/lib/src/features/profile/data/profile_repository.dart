@@ -50,12 +50,12 @@ class ProfileRepository {
     final response = await _dio.put(
       'users/me',
       data: {
-        'displayName': ?displayName,
-        'bio': ?bio,
-        'website': ?website,
-        'avatarUrl': ?avatarUrl,
-        'coverUrl': ?coverUrl,
-        'isPrivate': ?isPrivate,
+        if (displayName != null) 'displayName': displayName,
+        if (bio != null) 'bio': bio,
+        if (website != null) 'website': website,
+        if (avatarUrl != null) 'avatarUrl': avatarUrl,
+        if (coverUrl != null) 'coverUrl': coverUrl,
+        if (isPrivate != null) 'isPrivate': isPrivate,
       },
     );
     return User.fromJson(response.data);

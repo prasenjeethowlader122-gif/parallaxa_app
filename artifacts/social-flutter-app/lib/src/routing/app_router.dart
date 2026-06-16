@@ -33,23 +33,39 @@ import '../features/profile/presentation/about_screen.dart';
 import '../features/auth/presentation/two_factor_setup_screen.dart';
 import '../features/auth/domain/user.dart';
 
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen(authStateProvider, (previous, next) {
+      notifyListeners();
+    });
+  }
+
+  String? redirect(BuildContext context, GoRouterState state) {
+    final authState = _ref.read(authStateProvider);
+    final token = authState.token;
+    final loc = state.matchedLocation;
+
+    if (loc == '/splash') return null;
+
+    final isAuth =
+        loc == '/login' || loc == '/register' || loc == '/forgot-password';
+
+    if (token == null && !isAuth) return '/login';
+    if (token != null && isAuth) return '/feed';
+
+    return null;
+  }
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final notifier = RouterNotifier(ref);
 
   return GoRouter(
     initialLocation: '/splash',
-    redirect: (context, state) {
-      final token = authState.token;
-      final loc = state.matchedLocation;
-
-      if (loc == '/splash') return null;
-
-      final isAuth =
-          loc == '/login' || loc == '/register' || loc == '/forgot-password';
-      if (token == null && !isAuth) return '/login';
-      if (token != null && isAuth) return '/feed';
-      return null;
-    },
+    refreshListenable: notifier,
+    redirect: notifier.redirect,
     routes: [
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),

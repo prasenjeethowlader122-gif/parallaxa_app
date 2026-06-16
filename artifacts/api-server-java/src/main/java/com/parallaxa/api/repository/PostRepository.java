@@ -22,4 +22,6 @@ public interface PostRepository extends JpaRepository<Post, String> {
     Page<Post> findByParentPostAndIsArchivedFalseOrderByCreatedAtDesc(Post parentPost, Pageable pageable);
 
     List<Post> findByParentPostInAndIsArchivedFalseOrderByCreatedAtDesc(Collection<Post> parentPosts);
+
+    List<Post> findByContentContainingIgnoreCaseAndParentPostIsNullAndIsArchivedFalse(String content);
 }
