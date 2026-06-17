@@ -32,13 +32,14 @@ services:
       - key: FIREBASE_SERVICE_ACCOUNT
         value: ""
 
-  # ── Frontend: Flutter Web ────────────────────────────────────
+  # ── Frontend: Next.js Web ────────────────────────────────────
   - type: web
     name: parallaxa-frontend
     runtime: docker
     dockerfilePath: ./Dockerfile.frontend
     dockerContext: .
     plan: free
+    healthCheckPath: /
     envVars:
       - key: API_BASE_URL
         # Replace with your actual backend Render URL after first deploy
