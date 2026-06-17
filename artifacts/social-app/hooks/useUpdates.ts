@@ -8,8 +8,14 @@ export function useUpdates() {
 
     async function checkUpdates() {
       try {
+        console.log("[Updates] Checking for updates...");
+        console.log(`[Updates] Runtime version: ${Updates.runtimeVersion}`);
+        console.log(`[Updates] Channel: ${Updates.channel}`);
+        console.log(`[Updates] Current update ID: ${Updates.updateId}`);
+
         const update = await Updates.checkForUpdateAsync();
         if (update.isAvailable) {
+          console.log(`[Updates] Update available! ID: ${update.manifest?.id}`);
           await Updates.fetchUpdateAsync();
           Alert.alert(
             "Update Available",
