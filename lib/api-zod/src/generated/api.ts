@@ -59,6 +59,7 @@ export const LoginResponse = zod.object({
   "isFrozen": zod.boolean().optional(),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
+  "location": zod.string().nullish(),
   "followersCount": zod.number(),
   "followingCount": zod.number(),
   "postsCount": zod.number(),
@@ -122,6 +123,7 @@ export const GetMeResponse = zod.object({
   "isFrozen": zod.boolean().optional(),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
+  "location": zod.string().nullish(),
   "followersCount": zod.number(),
   "followingCount": zod.number(),
   "postsCount": zod.number(),
@@ -240,6 +242,7 @@ export const Verify2FAResponse = zod.object({
   "isFrozen": zod.boolean().optional(),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
+  "location": zod.string().nullish(),
   "followersCount": zod.number(),
   "followingCount": zod.number(),
   "postsCount": zod.number(),
@@ -256,6 +259,43 @@ export const Verify2FAResponse = zod.object({
 export const RequestVerificationResponse = zod.object({
   "message": zod.string()
 })
+
+
+/**
+ * @summary Get admin dashboard statistics
+ */
+export const GetAdminStatsResponse = zod.object({
+  "users": zod.number(),
+  "posts": zod.number(),
+  "stories": zod.number()
+})
+
+
+/**
+ * @summary Get all users for administration
+ */
+export const GetAllUsersResponseItem = zod.object({
+  "id": zod.string(),
+  "username": zod.string(),
+  "email": zod.string(),
+  "displayName": zod.string(),
+  "bio": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "isVerified": zod.boolean(),
+  "verificationStatus": zod.enum(['none', 'pending', 'verified']),
+  "role": zod.enum(['user', 'admin']).optional(),
+  "isFrozen": zod.boolean().optional(),
+  "twoFactorEnabled": zod.boolean(),
+  "isPrivate": zod.boolean(),
+  "location": zod.string().nullish(),
+  "followersCount": zod.number(),
+  "followingCount": zod.number(),
+  "postsCount": zod.number(),
+  "dateOfBirth": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const GetAllUsersResponse = zod.array(GetAllUsersResponseItem)
 
 
 /**
@@ -327,6 +367,7 @@ export const GetUserResponse = zod.object({
   "isFrozen": zod.boolean().optional(),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
+  "location": zod.string().nullish(),
   "followersCount": zod.number(),
   "followingCount": zod.number(),
   "postsCount": zod.number(),
@@ -367,6 +408,7 @@ export const UpdateUserResponse = zod.object({
   "isFrozen": zod.boolean().optional(),
   "twoFactorEnabled": zod.boolean(),
   "isPrivate": zod.boolean(),
+  "location": zod.string().nullish(),
   "followersCount": zod.number(),
   "followingCount": zod.number(),
   "postsCount": zod.number(),
@@ -414,7 +456,8 @@ export const GetUserPostsResponse = zod.object({
   "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "repostOf": zod.unknown().optional()
 })),
   "nextCursor": zod.string().nullish()
 })
@@ -440,6 +483,8 @@ export const GetUserStoriesResponseItem = zod.object({
   "count": zod.number()
 })),
   "myReaction": zod.string().nullish(),
+  "content": zod.string().nullish(),
+  "backgroundColor": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "expiresAt": zod.coerce.date()
 })
@@ -585,7 +630,8 @@ export const GetPostResponse = zod.object({
   "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "repostOf": zod.unknown().optional()
 })
 
 
@@ -640,7 +686,8 @@ export const GetRepliesResponse = zod.object({
   "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "repostOf": zod.unknown().optional()
 })),
   "nextCursor": zod.string().nullish()
 })
@@ -729,7 +776,8 @@ export const GetFeedResponse = zod.object({
   "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "repostOf": zod.unknown().optional()
 })),
   "nextCursor": zod.string().nullish()
 })
@@ -770,7 +818,8 @@ export const GetExplorePostsResponse = zod.object({
   "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "repostOf": zod.unknown().optional()
 })),
   "nextCursor": zod.string().nullish()
 })
@@ -801,6 +850,8 @@ export const GetStoriesResponseItem = zod.object({
   "count": zod.number()
 })),
   "myReaction": zod.string().nullish(),
+  "content": zod.string().nullish(),
+  "backgroundColor": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "expiresAt": zod.coerce.date()
 })),
@@ -817,7 +868,9 @@ export const createStoryBodyDurationDefault = 5;
 export const CreateStoryBody = zod.object({
   "mediaUrl": zod.string(),
   "mediaType": zod.enum(['image', 'video']),
-  "duration": zod.number().default(createStoryBodyDurationDefault)
+  "duration": zod.number().default(createStoryBodyDurationDefault),
+  "content": zod.string().optional(),
+  "backgroundColor": zod.string().optional()
 })
 
 
@@ -891,7 +944,8 @@ export const GetNotificationsResponse = zod.object({
   "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "repostOf": zod.unknown().optional()
 }).nullish(),
   "commentContent": zod.string().nullish(),
   "isRead": zod.boolean(),
@@ -1068,7 +1122,8 @@ export const SearchResponse = zod.object({
   "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "repostOf": zod.unknown().optional()
 })),
   "hashtags": zod.array(zod.object({
   "name": zod.string(),
@@ -1112,7 +1167,8 @@ export const GetSavedPostsResponse = zod.object({
   "commentsCount": zod.number().optional().describe('Alias for repliesCount'),
   "isLiked": zod.boolean(),
   "isSaved": zod.boolean(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "repostOf": zod.unknown().optional()
 })),
   "nextCursor": zod.string().nullish()
 })

@@ -379,6 +379,54 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get admin dashboard statistics
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Admin stats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: integer
+                  posts:
+                    type: integer
+                  stories:
+                    type: integer
+                required: [users, posts, stories]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Forbidden - Admin only
+
+  /admin/users:
+    get:
+      operationId: getAllUsers
+      tags: [admin]
+      summary: Get all users for administration
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Forbidden - Admin only
+
   /admin/users/{userId}/freeze:
     post:
       operationId: freezeUser
@@ -1240,6 +1288,9 @@ components:
           type: boolean
         isPrivate:
           type: boolean
+        location:
+          type: string
+          nullable: true
         followersCount:
           type: integer
         followingCount:
@@ -1353,6 +1404,9 @@ components:
         createdAt:
           type: string
           format: date-time
+        repostOf:
+          $ref: "#/components/schemas/Post"
+          nullable: true
       required: [id, author, hashtags, likesCount, repliesCount, isLiked, isSaved, createdAt]
 
     CreatePostInput:
@@ -1418,6 +1472,12 @@ components:
         myReaction:
           type: string
           nullable: true
+        content:
+          type: string
+          nullable: true
+        backgroundColor:
+          type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -1450,6 +1510,10 @@ components:
         duration:
           type: integer
           default: 5
+        content:
+          type: string
+        backgroundColor:
+          type: string
       required: [mediaUrl, mediaType]
 
     Notification:

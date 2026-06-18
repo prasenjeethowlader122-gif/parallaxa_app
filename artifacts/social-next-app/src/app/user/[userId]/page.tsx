@@ -12,6 +12,7 @@ import { ArrowLeft, Calendar, MapPin, Link as LinkIcon, Loader2, Verified, Setti
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
 export default function ProfilePage() {
@@ -25,19 +26,19 @@ export default function ProfilePage() {
 
   const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ["user", userId],
-    queryFn: () => getUser({ userId }),
+    queryFn: () => getUser(userId),
   });
 
   const { data: posts, isLoading: isPostsLoading } = useQuery({
     queryKey: ["user-posts", userId],
-    queryFn: () => getUserPosts({ userId, limit: 30 }),
+    queryFn: () => getUserPosts(userId),
   });
 
   const followMutation = useMutation({
-    mutationFn: () => user?.isFollowing ? unfollowUser({ userId: user.id }) : followUser({ userId: user.id }),
+    mutationFn: () => user?.isFollowing ? unfollowUser(user!.id) : followUser(user!.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user", userId] });
-      toast.success(user?.isFollowing ? `Unfollowed @${user.username}` : `Following @${user.username}`);
+      toast.success(user?.isFollowing ? `Unfollowed @${user?.username}` : `Following @${user?.username}`);
     }
   });
 
@@ -60,17 +61,16 @@ export default function ProfilePage() {
           <ArrowLeft size={20} />
         </Button>
         <div>
-           <h1 className="text-xl font-extrabold tracking-tight leading-tight">{user.firstName} {user.lastName}</h1>
+           <h1 className="text-xl font-extrabold tracking-tight leading-tight">{user.displayName}</h1>
            <p className="text-xs text-slate-500 font-medium">{user.postsCount || 0} posts</p>
         </div>
       </div>
 
       <div className="h-40 bg-slate-200 relative">
-         {user.banner && <img src={user.banner} className="w-full h-full object-cover" alt="Banner" />}
          <div className="absolute -bottom-16 left-4">
             <Avatar className="h-32 w-32 border-4 border-white shadow-sm">
-               <AvatarImage src={user.avatar || ""} />
-               <AvatarFallback className="text-4xl">{user.firstName?.[0]}</AvatarFallback>
+               <AvatarImage src={user.avatarUrl || ""} />
+               <AvatarFallback className="text-4xl">{user.displayName?.[0]}</AvatarFallback>
             </Avatar>
          </div>
       </div>
@@ -108,7 +108,7 @@ export default function ProfilePage() {
 
          <div className="mt-8">
             <div className="flex items-center gap-1">
-               <h2 className="text-2xl font-extrabold tracking-tight">{user.firstName} {user.lastName}</h2>
+               <h2 className="text-2xl font-extrabold tracking-tight">{user.displayName}</h2>
                {user.role === "admin" && <Verified className="w-5 h-5 text-blue-500 fill-blue-500" />}
             </div>
             <p className="text-slate-500 font-medium">@{user.username}</p>

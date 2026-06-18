@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      await resetPassword({ token, newPassword });
+      await resetPassword({ token, password: newPassword });
       setStep(3);
       toast.success("Password reset successfully");
     } catch (err: any) {

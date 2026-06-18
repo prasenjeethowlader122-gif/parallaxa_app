@@ -27,8 +27,9 @@ export default function StoryCreatePage() {
     setIsLoading(true);
     try {
       await createStory({
+        mediaUrl: "",
+        mediaType: "image", // Using image type for text stories with background
         content: content.trim(),
-        type: "TEXT",
         backgroundColor: COLORS[colorIndex]
       });
       toast.success("Story shared!");

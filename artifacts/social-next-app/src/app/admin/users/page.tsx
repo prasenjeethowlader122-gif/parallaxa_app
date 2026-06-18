@@ -24,7 +24,7 @@ export default function AdminUsersPage() {
 
   const freezeMutation = useMutation({
     mutationFn: ({ userId, isFrozen }: { userId: string, isFrozen: boolean }) =>
-      isFrozen ? unfreezeUser({ userId }) : freezeUser({ userId }),
+      isFrozen ? unfreezeUser(userId) : freezeUser(userId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       toast.success(`User ${variables.isFrozen ? "unfrozen" : "frozen"} successfully`);
@@ -65,12 +65,12 @@ export default function AdminUsersPage() {
                <div key={user.id} className="p-4 border-b border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors">
                   <div className="flex items-center gap-3">
                      <Avatar className="h-12 w-12 border border-slate-100">
-                        <AvatarImage src={user.avatar || ""} />
-                        <AvatarFallback>{user.firstName?.[0]}</AvatarFallback>
+                        <AvatarImage src={user.avatarUrl || ""} />
+                        <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
                      </Avatar>
                      <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-1">
-                           <span className="font-bold text-[15px] truncate">{user.firstName} {user.lastName}</span>
+                           <span className="font-bold text-[15px] truncate">{user.displayName}</span>
                            {user.isFrozen && <ShieldAlert size={14} className="text-red-500" />}
                         </div>
                         <span className="text-slate-500 text-sm truncate">@{user.username}</span>

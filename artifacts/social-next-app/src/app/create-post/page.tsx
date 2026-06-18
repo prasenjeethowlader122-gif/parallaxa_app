@@ -27,7 +27,7 @@ export default function CreatePostPage() {
     try {
       await createPost({
         content: content.trim(),
-        image: image || undefined,
+        imageUrl: image || undefined,
         hashtags: [], // Extracted server-side normally
       });
       toast.success("Post published!");
@@ -55,8 +55,8 @@ export default function CreatePostPage() {
 
       <div className="p-4 flex gap-3">
         <Avatar className="h-10 w-10">
-          <AvatarImage src={user?.avatar || ""} />
-          <AvatarFallback>{user?.firstName?.[0]}</AvatarFallback>
+          <AvatarImage src={user?.avatarUrl || ""} />
+          <AvatarFallback>{user?.displayName?.[0]}</AvatarFallback>
         </Avatar>
         <div className="flex-1 flex flex-col">
           <Textarea
