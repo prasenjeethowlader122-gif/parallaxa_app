@@ -2,6 +2,7 @@
   "name": "social-next-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -58,6 +59,7 @@
     "react-day-picker": "^9.5.1",
     "react-resizable-panels": "^2.1.7",
     "recharts": "^2.15.1",
+    "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2"
   },
   "devDependencies": {
