@@ -27,16 +27,16 @@ export default function ChatPage() {
   });
 
   const conversation = convData?.find(c => c.id === conversationId);
-  const participant = conversation?.participants.find(p => p.id !== currentUser?.id);
+  const participant = conversation?.participant;
 
   const { data: messagePage, isLoading } = useQuery({
     queryKey: ["messages", conversationId],
-    queryFn: () => getMessages({ conversationId, limit: 100 }),
+    queryFn: () => getMessages(conversationId, { limit: 100 }),
     refetchInterval: 5000,
   });
 
   const sendMutation = useMutation({
-    mutationFn: (text: string) => sendMessage({ conversationId, content: text }),
+    mutationFn: (text: string) => sendMessage(conversationId, { content: text }),
     onSuccess: () => {
       setContent("");
       queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
@@ -65,11 +65,11 @@ export default function ChatPage() {
           </Button>
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
-               <AvatarImage src={participant?.avatar || ""} />
-               <AvatarFallback>{participant?.firstName?.[0]}</AvatarFallback>
+               <AvatarImage src={participant?.avatarUrl || ""} />
+               <AvatarFallback>{participant?.displayName?.[0]}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-               <span className="font-bold text-[15px] leading-none">{participant?.firstName} {participant?.lastName}</span>
+               <span className="text-sm font-bold leading-tight">{participant?.displayName}</span>
                <span className="text-[11px] text-slate-500 font-medium">@{participant?.username}</span>
             </div>
           </div>
@@ -89,9 +89,9 @@ export default function ChatPage() {
             </div>
          ) : (
             messagePage?.messages?.map((msg, i) => {
-               const isMe = msg.sender.id === currentUser?.id;
+                const isMe = msg.senderId === currentUser?.id;
                const nextMsg = messagePage.messages[i + 1];
-               const showAvatar = !isMe && (!nextMsg || nextMsg.sender.id !== msg.sender.id);
+                const showAvatar = !isMe && (!nextMsg || nextMsg.senderId !== msg.senderId);
 
                return (
                   <div
@@ -106,8 +106,8 @@ export default function ChatPage() {
                            <div className="w-8 h-8 flex-shrink-0">
                               {showAvatar && (
                                  <Avatar className="h-8 w-8">
-                                    <AvatarImage src={msg.sender.avatar || ""} />
-                                    <AvatarFallback>{msg.sender.firstName?.[0]}</AvatarFallback>
+                     <AvatarImage src={participant?.avatarUrl || ""} />
+                     <AvatarFallback>{participant?.displayName?.[0]}</AvatarFallback>
                                  </Avatar>
                               )}
                            </div>

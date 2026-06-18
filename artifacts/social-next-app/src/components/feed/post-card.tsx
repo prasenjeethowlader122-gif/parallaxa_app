@@ -30,7 +30,7 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
   const queryClient = useQueryClient();
 
   const likeMutation = useMutation({
-    mutationFn: () => post.isLiked ? unlikePost({ postId: post.id }) : likePost({ postId: post.id }),
+    mutationFn: () => post.isLiked ? unlikePost(post.id) : likePost(post.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["feed"] });
       queryClient.invalidateQueries({ queryKey: ["post", post.id] });
@@ -38,7 +38,7 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
   });
 
   const saveMutation = useMutation({
-    mutationFn: () => post.isSaved ? unsavePost({ postId: post.id }) : savePost({ postId: post.id }),
+    mutationFn: () => post.isSaved ? unsavePost(post.id) : savePost(post.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["feed"] });
       queryClient.invalidateQueries({ queryKey: ["post", post.id] });
@@ -69,8 +69,8 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
       <div className="flex gap-3">
         <Link href={`/user/${author.id}`} onClick={e => e.stopPropagation()}>
           <Avatar className="h-10 w-10 border border-slate-100">
-            <AvatarImage src={author.avatar || ""} />
-            <AvatarFallback>{author.firstName?.[0]}{author.lastName?.[0]}</AvatarFallback>
+            <AvatarImage src={author.avatarUrl || ""} />
+            <AvatarFallback>{author.displayName?.[0]}</AvatarFallback>
           </Avatar>
         </Link>
 
@@ -82,9 +82,9 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
                 className="font-bold hover:underline truncate"
                 onClick={e => e.stopPropagation()}
               >
-                {author.firstName} {author.lastName}
+                {author.displayName}
               </Link>
-              {author.role === "admin" && <Verified className="w-4 h-4 text-blue-500 fill-blue-500" />}
+              {author.isVerified && <Verified className="w-4 h-4 text-blue-500 fill-blue-500" />}
               <span className="text-slate-500 text-sm truncate">@{author.username}</span>
               <span className="text-slate-400 text-sm">· {timeAgo}</span>
             </div>
@@ -97,10 +97,10 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
             {post.content}
           </div>
 
-          {post.image && (
+          {post.imageUrl && (
             <div className="rounded-2xl overflow-hidden border border-slate-100 mb-3 bg-slate-100">
               <img
-                src={post.image}
+                src={post.imageUrl}
                 alt="Post media"
                 className="w-full h-auto object-cover max-h-[512px]"
               />
@@ -111,8 +111,8 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
              <div className="border border-slate-200 rounded-2xl p-3 mb-3 hover:bg-slate-50">
                 <div className="flex items-center gap-2 mb-2">
                    <Avatar className="h-5 w-5">
-                      <AvatarImage src={post.repostOf.author.avatar || ""} />
-                      <AvatarFallback>{post.repostOf.author.firstName?.[0]}</AvatarFallback>
+                      <AvatarImage src={post.repostOf.author.avatarUrl || ""} />
+                      <AvatarFallback>{post.repostOf.author.displayName?.[0]}</AvatarFallback>
                    </Avatar>
                    <span className="font-bold text-sm">@{post.repostOf.author.username}</span>
                 </div>

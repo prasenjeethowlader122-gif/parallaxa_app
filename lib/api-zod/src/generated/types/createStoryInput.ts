@@ -11,4 +11,6 @@ export interface CreateStoryInput {
   mediaUrl: string;
   mediaType: CreateStoryInputMediaType;
   duration?: number;
+  content?: string;
+  backgroundColor?: string;
 }

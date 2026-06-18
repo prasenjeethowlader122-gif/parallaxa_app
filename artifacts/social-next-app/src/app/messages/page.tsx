@@ -63,7 +63,7 @@ export default function MessagesPage() {
             </div>
          ) : (
             conversations?.map((conv) => {
-               const participant = conv.participants.find(p => p.id !== currentUser?.id) || conv.participants[0];
+                const participant = conv.participant;
                const lastMessage = conv.lastMessage;
                const timeAgo = lastMessage ? formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: false }) : "";
 
@@ -74,13 +74,13 @@ export default function MessagesPage() {
                      className="flex gap-3 p-4 hover:bg-slate-50 transition-colors border-b border-slate-100/50"
                   >
                      <Avatar className="h-12 w-12 flex-shrink-0">
-                        <AvatarImage src={participant.avatar || ""} />
-                        <AvatarFallback>{participant.firstName?.[0]}</AvatarFallback>
+                        <AvatarImage src={participant.avatarUrl || ""} />
+                        <AvatarFallback>{participant.displayName?.[0]}</AvatarFallback>
                      </Avatar>
                      <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                            <div className="flex items-center gap-1 min-w-0">
-                              <span className="font-bold text-[15px] truncate">{participant.firstName} {participant.lastName}</span>
+                              <span className="font-bold text-[15px] truncate">{participant.displayName}</span>
                               <span className="text-slate-500 text-[15px] truncate">@{participant.username}</span>
                               <span className="text-slate-400 text-sm">· {timeAgo}</span>
                            </div>

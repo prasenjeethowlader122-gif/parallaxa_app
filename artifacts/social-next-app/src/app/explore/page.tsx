@@ -67,7 +67,7 @@ export default function ExplorePage() {
                     <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
                  </div>
               ) : (
-                 data?.map((post) => (
+                  data?.posts.map((post) => (
                     <Link key={post.id} href={`/post/${post.id}`}>
                        <PostCard post={post} />
                     </Link>

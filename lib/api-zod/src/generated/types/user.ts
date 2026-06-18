@@ -22,6 +22,7 @@ export interface User {
   isFrozen?: boolean;
   twoFactorEnabled: boolean;
   isPrivate: boolean;
+  location?: string | null;
   followersCount: number;
   followingCount: number;
   postsCount: number;

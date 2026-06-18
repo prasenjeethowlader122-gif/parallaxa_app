@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { getUserStories } from "@workspace/api-client-react";
+import { getUserStories, getUser } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { X, ChevronLeft, ChevronRight, Loader2, Send } from "lucide-react";
@@ -18,10 +18,17 @@ export default function StoryViewPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
 
-  const { data: stories, isLoading } = useQuery({
+  const { data: stories, isLoading: storiesLoading } = useQuery({
     queryKey: ["stories", userId],
-    queryFn: () => getUserStories({ userId }),
+    queryFn: () => getUserStories(userId),
   });
+
+  const { data: user, isLoading: userLoading } = useQuery({
+    queryKey: ["user", userId],
+    queryFn: () => getUser(userId),
+  });
+
+  const isLoading = storiesLoading || userLoading;
 
   const currentStory = stories?.[currentIndex];
 
@@ -95,12 +102,12 @@ export default function StoryViewPage() {
         <div className="absolute top-8 left-4 right-4 z-20 flex items-center justify-between">
            <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10 border border-white/20">
-                 <AvatarImage src={currentStory?.user.avatar || ""} />
-                 <AvatarFallback>{currentStory?.user.firstName?.[0]}</AvatarFallback>
+                 <AvatarImage src={user?.avatarUrl || ""} />
+                 <AvatarFallback>{user?.displayName?.[0]}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
                  <span className="text-white font-bold text-sm">
-                    {currentStory?.user.firstName} {currentStory?.user.lastName}
+                    {user?.displayName}
                  </span>
                  <span className="text-white/60 text-xs font-medium">
                     {currentStory ? formatDistanceToNow(new Date(currentStory.createdAt), { addSuffix: true }) : ""}
@@ -114,17 +121,10 @@ export default function StoryViewPage() {
 
         {/* Content */}
         <div className="w-full h-full relative flex items-center justify-center">
-           {currentStory?.type === "IMAGE" ? (
+           {currentStory?.mediaType === "image" ? (
               <img src={currentStory.mediaUrl} className="w-full h-full object-contain lg:object-cover" alt="Story content" />
            ) : (
-              <div
-                className="w-full h-full flex items-center justify-center p-8 text-center"
-                style={{ backgroundColor: currentStory?.backgroundColor || "#3b82f6" }}
-              >
-                 <p className="text-white text-3xl font-extrabold leading-tight tracking-tight">
-                    {currentStory?.content}
-                 </p>
-              </div>
+              <video src={currentStory?.mediaUrl} className="w-full h-full object-contain lg:object-cover" autoPlay muted playsInline />
            )}
 
            {/* Tap Controls */}

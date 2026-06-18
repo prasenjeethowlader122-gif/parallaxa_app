@@ -22,16 +22,16 @@ export default function PostDetailPage() {
 
   const { data: post, isLoading: isPostLoading } = useQuery({
     queryKey: ["post", postId],
-    queryFn: () => getPost({ postId }),
+    queryFn: () => getPost(postId),
   });
 
   const { data: replies, isLoading: isRepliesLoading } = useQuery({
     queryKey: ["replies", postId],
-    queryFn: () => getReplies({ postId }),
+    queryFn: () => getReplies(postId),
   });
 
   const replyMutation = useMutation({
-    mutationFn: (content: string) => createPost({ content, parentId: postId }),
+    mutationFn: (content: string) => createPost({ content, parentPostId: postId }),
     onSuccess: () => {
       setReplyContent("");
       queryClient.invalidateQueries({ queryKey: ["post", postId] });
@@ -63,8 +63,8 @@ export default function PostDetailPage() {
 
       <div className="p-4 border-b border-slate-100 flex gap-3">
          <Avatar className="h-10 w-10">
-           <AvatarImage src={user?.avatar || ""} />
-           <AvatarFallback>{user?.firstName?.[0]}</AvatarFallback>
+           <AvatarImage src={user?.avatarUrl || ""} />
+           <AvatarFallback>{user?.displayName?.[0]}</AvatarFallback>
          </Avatar>
          <div className="flex-1 flex flex-col gap-2">
             <Textarea
@@ -91,7 +91,7 @@ export default function PostDetailPage() {
                <Loader2 className="h-6 w-6 animate-spin text-slate-300" />
             </div>
          ) : (
-            replies?.map((reply) => (
+            replies?.posts.map((reply) => (
                <PostCard key={reply.id} post={reply} />
             ))
          )}

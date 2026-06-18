@@ -100,8 +100,11 @@ export default function RegisterPage() {
 
     try {
       const response = await register({
-        ...formData,
-        role: "user",
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        displayName: `${formData.firstName} ${formData.lastName}`,
+        dateOfBirth: formData.birthday ? new Date(formData.birthday).toISOString() : new Date().toISOString(),
       });
 
       if (response.token) {

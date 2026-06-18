@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, FileText, Heart, Activity, ArrowUpRight, ArrowDownRight, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
@@ -54,21 +55,21 @@ export default function AdminDashboardPage() {
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatsCard
                title="Total Users"
-               value={stats?.usersCount || 0}
+               value={stats?.users || 0}
                icon={Users}
                trend="+12%"
                isPositive={true}
             />
             <StatsCard
                title="Total Posts"
-               value={stats?.postsCount || 0}
+               value={stats?.posts || 0}
                icon={FileText}
                trend="+8%"
                isPositive={true}
             />
             <StatsCard
-               title="Total Likes"
-               value={stats?.likesCount || 0}
+               title="Total Stories"
+               value={stats?.stories || 0}
                icon={Heart}
                trend="-3%"
                isPositive={false}

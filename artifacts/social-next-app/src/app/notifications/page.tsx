@@ -62,10 +62,10 @@ export default function NotificationsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                      <div className="flex gap-2 items-center mb-1">
-                        <Link href={`/user/${notif.sender.id}`}>
+                        <Link href={`/user/${notif.fromUser.id}`}>
                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={notif.sender.avatar || ""} />
-                              <AvatarFallback>{notif.sender.firstName?.[0]}</AvatarFallback>
+                              <AvatarImage src={notif.fromUser.avatarUrl || ""} />
+                              <AvatarFallback>{notif.fromUser.displayName?.[0]}</AvatarFallback>
                            </Avatar>
                         </Link>
                         <p className="text-sm font-medium text-slate-500">
@@ -73,7 +73,7 @@ export default function NotificationsPage() {
                         </p>
                      </div>
                      <p className="text-[15px] leading-relaxed">
-                        <span className="font-bold">{notif.sender.firstName} {notif.sender.lastName}</span> {notif.content}
+                        <span className="font-bold">{notif.fromUser.displayName}</span> {notif.type.toLowerCase()}ed your content
                      </p>
                   </div>
                </div>
