@@ -48,10 +48,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full py-6 px-4">
       <div className="flex items-center gap-3 px-2 mb-8">
-        <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-xl">
-          P
-        </div>
-        <span className="text-2xl font-bold tracking-tight">Parallaxa</span>
+        <img src="/parallaxa-logo.svg" className="w-10 h-10 dark:hidden" alt="Logo" />
+        <img src="/parallaxa-logo-white.svg" className="w-10 h-10 hidden dark:block" alt="Logo" />
+        <img src="/text-logo-dark.svg" className="h-6 dark:hidden" alt="Parallaxa" />
+        <img src="/text-logo.svg" className="h-6 hidden dark:block" alt="Parallaxa" />
       </div>
 
       <nav className="space-y-1">
@@ -65,8 +65,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "flex items-center gap-4 px-4 py-3 rounded-full transition-colors",
                 isActive
-                  ? "bg-slate-100 font-bold text-slate-900"
-                  : "text-slate-600 hover:bg-slate-50"
+                  ? "bg-muted font-extrabold text-foreground"
+                  : "text-muted-foreground font-medium hover:bg-muted/50"
               )}
             >
               <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
@@ -129,7 +129,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile Header */}
-        <header className="lg:hidden h-14 border-b border-slate-100 flex items-center justify-between px-4 sticky top-0 bg-white z-10">
+        <header className="lg:hidden h-14 border-b border-border flex items-center justify-between px-4 sticky top-0 bg-background z-10">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
@@ -141,14 +141,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </SheetContent>
           </Sheet>
 
-          <div className="font-bold text-xl">Parallaxa</div>
+          <img src="/text-logo-dark.svg" className="h-6 dark:hidden" alt="Parallaxa" />
+          <img src="/text-logo.svg" className="h-6 hidden dark:block" alt="Parallaxa" />
 
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Search size={22} />
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
+              <Search size={20} />
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Bell size={22} />
+            <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
+              <Bell size={20} />
+            </Button>
+            <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
+              <Mail size={20} />
             </Button>
           </div>
         </header>

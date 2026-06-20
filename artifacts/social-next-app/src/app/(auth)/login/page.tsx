@@ -71,16 +71,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md border-none shadow-xl">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-             <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-500/20">
-               P
-             </div>
+             <img src="/parallaxa-logo.svg" className="w-14 h-14 dark:hidden" alt="Logo" />
+             <img src="/parallaxa-logo-white.svg" className="w-14 h-14 hidden dark:block" alt="Logo" />
           </div>
           <CardTitle className="text-3xl font-extrabold tracking-tight">Welcome back</CardTitle>
-          <CardDescription className="text-slate-500 font-medium">
+          <CardDescription className="text-muted-foreground font-medium">
             Sign in to continue to your account
           </CardDescription>
         </CardHeader>
@@ -98,12 +97,12 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email"
                       type="email"
                       placeholder="name@example.com"
-                      className="pl-10 h-12 rounded-xl border-slate-200 focus:ring-blue-500"
+                      className="pl-10"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -116,17 +115,17 @@ export default function LoginPage() {
                     <Label htmlFor="password">Password</Label>
                     <Link
                       href="/forgot-password"
-                      className="text-sm font-bold text-blue-600 hover:text-blue-700"
+                      className="text-sm font-bold text-primary hover:underline"
                     >
                       Forgot password?
                     </Link>
                   </div>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      className="pl-10 pr-10 h-12 rounded-xl border-slate-200 focus:ring-blue-500"
+                      className="pl-10 pr-10"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -135,7 +134,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -146,13 +145,13 @@ export default function LoginPage() {
               <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <Label htmlFor="totp">6-digit 2FA Code</Label>
                 <div className="relative">
-                  <Shield className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="totp"
                     type="text"
                     placeholder="000000"
                     maxLength={6}
-                    className="pl-10 h-12 rounded-xl border-slate-200 focus:ring-blue-500 text-center text-2xl tracking-[0.5em] font-mono"
+                    className="pl-10 h-11 text-center text-2xl tracking-[0.5em] font-mono"
                     value={totp}
                     onChange={(e) => setTotp(e.target.value)}
                     required
@@ -163,7 +162,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowTotpInput(false)}
-                  className="text-sm font-bold text-blue-600 hover:text-blue-700 w-full text-center py-2"
+                  className="text-sm font-bold text-primary hover:underline w-full text-center py-2"
                 >
                   ← Back to password
                 </button>
@@ -173,14 +172,14 @@ export default function LoginPage() {
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className="w-full h-12 rounded-xl text-base font-bold bg-slate-900 hover:bg-slate-800"
+              className="w-full h-12"
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
-            <div className="text-center text-sm text-slate-500 font-medium">
+            <div className="text-center text-sm text-muted-foreground font-medium">
               Don't have an account?{" "}
-              <Link href="/register" className="text-blue-600 font-bold hover:underline">
+              <Link href="/register" className="text-primary font-bold hover:underline">
                 Sign up
               </Link>
             </div>
