@@ -20,13 +20,24 @@ export default function SplashPage() {
   }, [isLoading, token, router]);
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center bg-white">
-      <div className="w-20 h-20 bg-blue-500 rounded-[24px] flex items-center justify-center text-white font-bold text-4xl shadow-2xl shadow-blue-500/30 animate-pulse">
-        P
+    <div className="h-screen w-screen flex flex-col items-center justify-center bg-background">
+      <div className="relative">
+        <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
+        <img
+          src="/parallaxa-logo.svg"
+          className="w-24 h-24 relative z-10 animate-bounce dark:hidden"
+          alt="Logo"
+        />
+        <img
+          src="/parallaxa-logo-white.svg"
+          className="w-24 h-24 relative z-10 animate-bounce hidden dark:block"
+          alt="Logo"
+        />
       </div>
       <div className="mt-8 flex flex-col items-center">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Parallaxa</h1>
-        <Loader2 className="mt-4 h-6 w-6 animate-spin text-slate-300" />
+        <img src="/text-logo-dark.svg" className="h-10 dark:hidden" alt="Parallaxa" />
+        <img src="/text-logo.svg" className="h-10 hidden dark:block" alt="Parallaxa" />
+        <Loader2 className="mt-6 h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     </div>
   );

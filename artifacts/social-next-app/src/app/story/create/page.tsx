@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const COLORS = [
-  "#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#000000"
+  "#673ab7", "#2196f3", "#4caf50", "#ff9800", "#e91e63", "#f44336", "#009688", "#3f51b5"
 ];
 
 export default function StoryCreatePage() {
@@ -61,7 +61,7 @@ export default function StoryCreatePage() {
                   <Palette size={20} />
                </Button>
                <Button
-                  className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-6"
+                  className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-6 h-10"
                   disabled={!content.trim() || isLoading}
                   onClick={handleCreate}
                >

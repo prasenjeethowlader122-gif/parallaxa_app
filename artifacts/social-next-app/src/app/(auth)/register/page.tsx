@@ -133,7 +133,6 @@ export default function RegisterPage() {
                 placeholder="John"
                 value={formData.firstName}
                 onChange={(e) => updateFormData("firstName", e.target.value)}
-                className="h-12 rounded-xl"
                 autoFocus
               />
             </div>
@@ -144,7 +143,6 @@ export default function RegisterPage() {
                 placeholder="Doe"
                 value={formData.lastName}
                 onChange={(e) => updateFormData("lastName", e.target.value)}
-                className="h-12 rounded-xl"
               />
             </div>
           </div>
@@ -155,13 +153,13 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="birthday">Birthday</Label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="birthday"
                   type="date"
                   value={formData.birthday}
                   onChange={(e) => updateFormData("birthday", e.target.value)}
-                  className="pl-10 h-12 rounded-xl"
+                  className="pl-10"
                   autoFocus
                 />
               </div>
@@ -174,14 +172,14 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="name@example.com"
                   value={formData.email}
                   onChange={(e) => updateFormData("email", e.target.value)}
-                  className="pl-10 h-12 rounded-xl"
+                  className="pl-10"
                   autoFocus
                 />
               </div>
@@ -194,17 +192,17 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
                   value={formData.password}
                   onChange={(e) => updateFormData("password", e.target.value)}
-                  className="pl-10 h-12 rounded-xl"
+                  className="pl-10"
                   autoFocus
                 />
               </div>
-              <p className="text-xs text-slate-500">Minimum 6 characters</p>
+              <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
             </div>
           </div>
         );
@@ -214,19 +212,19 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="username"
                   placeholder="johndoe"
                   value={formData.username}
                   onChange={(e) => updateFormData("username", e.target.value.toLowerCase())}
-                  className="pl-10 h-12 rounded-xl"
+                  className="pl-10"
                   autoFocus
                 />
               </div>
             </div>
             <div className="pt-2">
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 By clicking "Complete Registration", you agree to our Terms of Service and Privacy Policy.
               </p>
             </div>
@@ -236,7 +234,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md border-none shadow-xl">
         <CardHeader>
           <div className="flex items-center justify-between mb-4">
@@ -246,20 +244,20 @@ export default function RegisterPage() {
                     key={i}
                     className={cn(
                       "h-1.5 rounded-full transition-all duration-300",
-                      i <= step ? "bg-blue-500" : "bg-slate-200",
+                      i <= step ? "bg-primary" : "bg-muted",
                       i === step ? "w-8" : "w-4"
                     )}
                   />
                 ))}
              </div>
-             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                Step {step + 1} of 5
              </span>
           </div>
           <CardTitle className="text-2xl font-extrabold tracking-tight">
             {STEPS[step].title}
           </CardTitle>
-          <CardDescription className="text-slate-500 font-medium text-base">
+          <CardDescription className="text-muted-foreground font-medium text-base">
             {STEPS[step].description}
           </CardDescription>
         </CardHeader>
@@ -279,7 +277,7 @@ export default function RegisterPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-12 w-12 p-0 rounded-xl border-slate-200"
+                  className="h-12 w-12 p-0"
                   onClick={prevStep}
                   disabled={isLoading}
                 >
@@ -288,16 +286,16 @@ export default function RegisterPage() {
               )}
               <Button
                 type="submit"
-                className="flex-1 h-12 rounded-xl text-base font-bold bg-slate-900 hover:bg-slate-800"
+                className="flex-1 h-12"
                 disabled={isLoading}
               >
                 {step === 4 ? (isLoading ? "Creating account..." : "Complete Registration") : "Continue"}
                 {step < 4 && <ChevronRight className="ml-2" size={20} />}
               </Button>
             </div>
-            <div className="text-center text-sm text-slate-500 font-medium">
+            <div className="text-center text-sm text-muted-foreground font-medium">
               Already have an account?{" "}
-              <Link href="/login" className="text-blue-600 font-bold hover:underline">
+              <Link href="/login" className="text-primary font-bold hover:underline">
                 Sign in
               </Link>
             </div>

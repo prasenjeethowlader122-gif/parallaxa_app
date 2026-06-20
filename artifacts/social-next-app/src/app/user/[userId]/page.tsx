@@ -55,20 +55,20 @@ export default function ProfilePage() {
   const joinDate = user.createdAt ? format(new Date(user.createdAt), "MMMM yyyy") : "Unknown";
 
   return (
-    <div className="flex flex-col min-h-full">
-      <div className="h-14 flex items-center px-4 sticky top-0 bg-white/80 backdrop-blur-md z-10 border-b border-slate-100">
+    <div className="flex flex-col min-h-full bg-background">
+      <div className="h-14 flex items-center px-4 sticky top-0 bg-background/80 backdrop-blur-md z-10 border-b border-border">
         <Button variant="ghost" size="icon" className="rounded-full mr-4" onClick={() => router.back()}>
           <ArrowLeft size={20} />
         </Button>
         <div>
            <h1 className="text-xl font-extrabold tracking-tight leading-tight">{user.displayName}</h1>
-           <p className="text-xs text-slate-500 font-medium">{user.postsCount || 0} posts</p>
+           <p className="text-xs text-muted-foreground font-medium">{user.postsCount || 0} posts</p>
         </div>
       </div>
 
-      <div className="h-40 bg-slate-200 relative">
+      <div className="h-40 bg-muted relative">
          <div className="absolute -bottom-16 left-4">
-            <Avatar className="h-32 w-32 border-4 border-white shadow-sm">
+            <Avatar className="h-32 w-32 border-4 border-background shadow-sm">
                <AvatarImage src={user.avatarUrl || ""} />
                <AvatarFallback className="text-4xl">{user.displayName?.[0]}</AvatarFallback>
             </Avatar>
@@ -79,24 +79,24 @@ export default function ProfilePage() {
          <div className="flex justify-end mb-4">
             {isMe ? (
                <div className="flex gap-2">
-                  <Button variant="outline" className="rounded-full font-bold border-slate-200" asChild>
+                  <Button variant="outline" className="rounded-full font-bold border-border" asChild>
                      <Link href="/settings">
                         <Settings size={18} className="mr-2" />
                         Settings
                      </Link>
                   </Button>
-                  <Button variant="outline" className="rounded-full font-bold border-slate-200" asChild>
+                  <Button variant="outline" className="rounded-full font-bold border-border" asChild>
                      <Link href="/profile/edit">Edit Profile</Link>
                   </Button>
                </div>
             ) : (
                <div className="flex gap-2">
-                  <Button variant="outline" size="icon" className="rounded-full border-slate-200">
+                  <Button variant="outline" size="icon" className="rounded-full border-border">
                      <Mail size={18} />
                   </Button>
                   <Button
                      variant={user.isFollowing ? "outline" : "default"}
-                     className={cn("rounded-full font-bold px-6", !user.isFollowing && "bg-slate-900")}
+                     className={cn("rounded-full font-bold px-6")}
                      onClick={() => followMutation.mutate()}
                      disabled={followMutation.isPending}
                   >
@@ -109,14 +109,14 @@ export default function ProfilePage() {
          <div className="mt-8">
             <div className="flex items-center gap-1">
                <h2 className="text-2xl font-extrabold tracking-tight">{user.displayName}</h2>
-               {user.role === "admin" && <Verified className="w-5 h-5 text-blue-500 fill-blue-500" />}
+               {user.role === "admin" && <Verified className="w-5 h-5 text-primary fill-primary" />}
             </div>
-            <p className="text-slate-500 font-medium">@{user.username}</p>
+            <p className="text-muted-foreground font-medium">@{user.username}</p>
          </div>
 
-         {user.bio && <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap">{user.bio}</p>}
+         {user.bio && <p className="mt-3 text-[15px] leading-[1.4] whitespace-pre-wrap">{user.bio}</p>}
 
-         <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-slate-500 text-[15px]">
+         <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-muted-foreground text-[15px]">
             {user.location && (
                <div className="flex items-center gap-1">
                   <MapPin size={16} />
@@ -137,22 +137,22 @@ export default function ProfilePage() {
 
          <div className="flex gap-5 mt-4">
             <button className="hover:underline flex gap-1 items-center">
-               <span className="font-bold text-slate-900">{user.followingCount || 0}</span>
-               <span className="text-slate-500">Following</span>
+               <span className="font-extrabold text-foreground">{user.followingCount || 0}</span>
+               <span className="text-muted-foreground">Following</span>
             </button>
             <button className="hover:underline flex gap-1 items-center">
-               <span className="font-bold text-slate-900">{user.followersCount || 0}</span>
-               <span className="text-slate-500">Followers</span>
+               <span className="font-extrabold text-foreground">{user.followersCount || 0}</span>
+               <span className="text-muted-foreground">Followers</span>
             </button>
          </div>
       </div>
 
       <Tabs defaultValue="posts" className="w-full">
-        <TabsList className="w-full h-12 bg-transparent border-b border-slate-100 rounded-none p-0">
-          <TabsTrigger value="posts" className="flex-1 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent font-bold">Posts</TabsTrigger>
-          <TabsTrigger value="replies" className="flex-1 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent font-bold">Replies</TabsTrigger>
-          <TabsTrigger value="media" className="flex-1 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent font-bold">Media</TabsTrigger>
-          <TabsTrigger value="likes" className="flex-1 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent font-bold">Likes</TabsTrigger>
+        <TabsList className="w-full h-12 bg-transparent border-b border-border rounded-none p-0">
+          <TabsTrigger value="posts" className="flex-1 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-extrabold">Posts</TabsTrigger>
+          <TabsTrigger value="replies" className="flex-1 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-extrabold">Replies</TabsTrigger>
+          <TabsTrigger value="media" className="flex-1 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-extrabold">Media</TabsTrigger>
+          <TabsTrigger value="likes" className="flex-1 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-extrabold">Likes</TabsTrigger>
         </TabsList>
         <TabsContent value="posts" className="mt-0">
            {isPostsLoading ? (
