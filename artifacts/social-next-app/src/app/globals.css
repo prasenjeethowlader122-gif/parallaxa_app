@@ -58,8 +58,8 @@
   --border: oklch(0.928 0.011 255.5);
   --input: oklch(0.928 0.011 255.5);
   --ring: oklch(0.63 0.181 243.04);
-  --like: oklch(0.591 0.214 345.195);
-  --saved: oklch(0.634 0.146 240.591);
+  --like: oklch(0.59 0.22 345);
+  --saved: oklch(0.65 0.15 240);
   --radius: 0.875rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);

@@ -6,12 +6,9 @@ import Link from "next/link";
 import { login, verify2FA, getMe } from "@workspace/api-client-react";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Lock, Mail, Shield, Eye, EyeOff } from "lucide-react";
+import { FloatingLabelInput } from "@/components/ui/floating-label-input";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,11 +20,11 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showTotpInput, setShowTotpInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
+    setErrors({});
     setIsLoading(true);
 
     try {
@@ -51,7 +48,7 @@ export default function LoginPage() {
         await onLoginSuccess(response.token, response.user?.id);
       }
     } catch (err: any) {
-      setError(err.data?.message || "Invalid email or password. Please try again.");
+      setErrors({ general: err.data?.message || "Invalid email or password. Please try again." });
     } finally {
       setIsLoading(false);
     }
@@ -59,7 +56,7 @@ export default function LoginPage() {
 
   async function onLoginSuccess(token: string, userId?: string) {
     try {
-      setAuth(token, null); // Initial set to update API client
+      setAuth(token, null);
       const user = await getMe();
       setAuth(token, user);
       toast.success("Welcome back!");
@@ -70,122 +67,140 @@ export default function LoginPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md border-none shadow-xl">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-             <img src="/parallaxa-logo.svg" className="w-14 h-14 dark:hidden" alt="Logo" />
-             <img src="/parallaxa-logo-white.svg" className="w-14 h-14 hidden dark:block" alt="Logo" />
-          </div>
-          <CardTitle className="text-3xl font-extrabold tracking-tight">Welcome back</CardTitle>
-          <CardDescription className="text-muted-foreground font-medium">
-            Sign in to continue to your account
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleLogin}>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive" className="bg-red-50 border-red-100 text-red-600">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="font-semibold">{error}</AlertDescription>
-              </Alert>
-            )}
+  const canSubmit = !isLoading && email.trim() !== "" && password.trim() !== "" && (!showTotpInput || totp.trim().length === 6);
 
-            {!showTotpInput ? (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="name@example.com"
-                      className="pl-10"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <Link
-                      href="/forgot-password"
-                      className="text-sm font-bold text-primary hover:underline"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      className="pl-10 pr-10"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <main className="flex-1 max-w-md mx-auto w-full px-6 py-12">
+        <div className="flex justify-center mb-7 mt-8">
+           <img
+             src="/parallaxa-logo.svg"
+             className="h-[76px] w-auto object-contain dark:hidden"
+             alt="Logo"
+           />
+           <img
+             src="/parallaxa-logo-white.svg"
+             className="h-[76px] w-auto object-contain hidden dark:block"
+             alt="Logo"
+           />
+        </div>
+
+        <h1 className="text-[28px] font-bold text-foreground tracking-tight leading-tight">
+          Welcome back
+        </h1>
+        <p className="text-[15px] font-medium text-muted-foreground mt-2 mb-6">
+          Sign in to continue to your account
+        </p>
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          {errors.general && (
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 animate-in fade-in zoom-in-95">
+              <span className="material-symbols-outlined !text-[20px] mt-0.5">error</span>
+              <p className="text-[14px] font-semibold leading-tight">{errors.general}</p>
+            </div>
+          )}
+
+          {!showTotpInput ? (
+            <div className={cn("space-y-4 transition-opacity", isLoading && "opacity-50")}>
+              <FloatingLabelInput
+                id="email"
+                label="Email Address"
+                type="email"
+                icon={<span className="material-symbols-outlined !text-[20px]">mail</span>}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+
+              <div className="relative">
+                <FloatingLabelInput
+                  id="password"
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  icon={<span className="material-symbols-outlined !text-[20px]">lock</span>}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  right={
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      <span className="material-symbols-outlined !text-[20px]">
+                        {showPassword ? "visibility_off" : "visibility"}
+                      </span>
                     </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <Label htmlFor="totp">6-digit 2FA Code</Label>
-                <div className="relative">
-                  <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="totp"
-                    type="text"
-                    placeholder="000000"
-                    maxLength={6}
-                    className="pl-10 h-11 text-center text-2xl tracking-[0.5em] font-mono"
-                    value={totp}
-                    onChange={(e) => setTotp(e.target.value)}
-                    required
-                    autoFocus
-                    disabled={isLoading}
-                  />
-                </div>
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end -mt-2 pb-6">
+                <Link
+                  href="/forgot-password"
+                  className="text-[14px] font-bold text-primary hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <FloatingLabelInput
+                label="6-digit 2FA Code"
+                type="text"
+                maxLength={6}
+                icon={<span className="material-symbols-outlined !text-[20px]">shield</span>}
+                value={totp}
+                onChange={(e) => setTotp(e.target.value)}
+                required
+                autoFocus
+                disabled={isLoading}
+              />
+              <div className="text-center">
                 <button
                   type="button"
                   onClick={() => setShowTotpInput(false)}
-                  className="text-sm font-bold text-primary hover:underline w-full text-center py-2"
+                  className="text-[14px] font-bold text-primary hover:underline"
                 >
                   ← Back to password
                 </button>
               </div>
-            )}
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button
-              type="submit"
-              className="w-full h-12"
-              disabled={isLoading}
-            >
-              {isLoading ? "Signing in..." : "Sign in"}
-            </Button>
-            <div className="text-center text-sm text-muted-foreground font-medium">
-              Don't have an account?{" "}
-              <Link href="/register" className="text-primary font-bold hover:underline">
-                Sign up
-              </Link>
             </div>
-          </CardFooter>
+          )}
+
+          <Button
+            type="submit"
+            className="w-full h-[54px] rounded-full text-[16px] font-bold bg-foreground text-background hover:bg-foreground/90 shadow-none transition-transform active:scale-[0.98]"
+            disabled={!canSubmit}
+          >
+            {isLoading ? (
+              <div className="h-5 w-5 border-2 border-background/30 border-t-background rounded-full animate-spin" />
+            ) : (
+              "Sign in"
+            )}
+          </Button>
+
+          <div className="text-center pt-3">
+             <p className="text-[14px] font-medium text-muted-foreground">
+               Don't have an account?{" "}
+               <Link href="/register" className="text-primary font-bold hover:underline">
+                 Sign up
+               </Link>
+             </p>
+          </div>
         </form>
-      </Card>
+
+        <div className="mt-12 text-center">
+          <p className="text-[12px] font-medium text-muted-foreground/60 leading-relaxed">
+            By signing in, you agree to our{" "}
+            <span className="text-primary font-bold">Terms of Service</span> and{" "}
+            <span className="text-primary font-bold">Privacy Policy</span>.
+          </p>
+        </div>
+      </main>
     </div>
   );
 }
