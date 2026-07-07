@@ -30,7 +30,6 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["feed"] });
       queryClient.invalidateQueries({ queryKey: ["post", post.id] });
-      toast.success(post.isSaved ? "Post unsaved" : "Post saved");
     }
   });
 
@@ -44,6 +43,13 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
     e.preventDefault();
     e.stopPropagation();
     saveMutation.mutate();
+  };
+
+  const handleRepost = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Repost functionality pending API client update
+    toast.info("Repost functionality coming soon");
   };
 
   const isRepost = !!post.repostOf;
@@ -62,10 +68,24 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
     return `${days}d`;
   };
 
+  const renderContent = (content: string) => {
+    const parts = content.split(/((?:@|#)\w+|(?:https?:\/\/[^\s]+))/);
+    return parts.map((part, i) => {
+      if (part.startsWith("#") || part.startsWith("@") || part.startsWith("http")) {
+        return (
+          <span key={i} className="text-primary font-medium hover:underline cursor-pointer">
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <div className={cn(
-      "border-b border-border px-4 py-3 transition-colors bg-background",
-      !isDetail && "hover:bg-muted/30 cursor-pointer"
+      "border-b-[0.5px] border-border px-4 py-3 transition-colors bg-background",
+      !isDetail && "hover:bg-muted/5 cursor-pointer"
     )}>
       {isRepost && (
         <div className="flex items-center gap-2 ml-8 mb-2 text-muted-foreground">
@@ -76,7 +96,7 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
 
       <div className="flex gap-3">
         <Link href={`/user/${author.id}`} onClick={e => e.stopPropagation()}>
-          <Avatar className="h-10 w-10">
+          <Avatar className="h-10 w-10 border-none shadow-none">
             <AvatarImage src={author.avatarUrl || ""} className="object-cover" />
             <AvatarFallback>{author.displayName?.[0]}</AvatarFallback>
           </Avatar>
@@ -94,7 +114,7 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
                   {author.displayName}
                 </Link>
                 {author.isVerified && (
-                  <span className="material-symbols-outlined !text-[16px] text-primary fill-1">verified</span>
+                  <span className="material-symbols-outlined !text-[16px] text-[#1D9BF0] fill-1">verified</span>
                 )}
                 <span className="text-muted-foreground text-[13px]">· {timeAgo(displayPost.createdAt)}</span>
               </div>
@@ -105,12 +125,14 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
             </Button>
           </div>
 
-          <div className="text-[15px] leading-[1.4] text-foreground mt-2 mb-3 whitespace-pre-wrap">
-            {displayPost.content}
-          </div>
+          {displayPost.content && (
+            <div className="text-[15px] leading-[1.4] text-foreground mt-2 mb-3 whitespace-pre-wrap">
+              {renderContent(displayPost.content)}
+            </div>
+          )}
 
           {displayPost.imageUrl && (
-            <div className="rounded-xl overflow-hidden border border-border mb-3 bg-muted">
+            <div className="rounded-[12px] overflow-hidden border-[0.5px] border-border mb-3 bg-muted">
               <img
                 src={displayPost.imageUrl}
                 alt="Post media"
@@ -119,22 +141,25 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
             </div>
           )}
 
-          <div className="flex items-center justify-between max-w-sm text-muted-foreground -ml-2">
-            <button className="flex items-center gap-1.5 px-2 py-1 rounded-full hover:text-primary hover:bg-primary/5 transition-colors group">
+          <div className="flex items-center justify-between max-w-sm text-muted-foreground -ml-2 pt-1">
+            <button className="flex items-center gap-1.5 px-2 py-1 rounded-full hover:text-primary transition-colors group">
               <span className="material-symbols-outlined !text-[20px] group-active:scale-90 transition-transform">chat</span>
               {displayPost.repliesCount > 0 && (
                 <span className="text-[13px]">{displayPost.repliesCount}</span>
               )}
             </button>
 
-            <button className="flex items-center gap-1.5 px-2 py-1 rounded-full hover:text-green-500 hover:bg-green-500/5 transition-colors group">
+            <button
+              className="flex items-center gap-1.5 px-2 py-1 rounded-full hover:text-green-500 transition-colors group"
+              onClick={handleRepost}
+            >
               <span className="material-symbols-outlined !text-[20px] group-active:scale-90 transition-transform">repeat</span>
             </button>
 
             <button
               className={cn(
                 "flex items-center gap-1.5 px-2 py-1 rounded-full transition-colors group",
-                displayPost.isLiked ? "text-like" : "hover:text-like hover:bg-like/5"
+                displayPost.isLiked ? "text-like" : "hover:text-like"
               )}
               onClick={handleLike}
             >
@@ -152,7 +177,7 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
             <button
               className={cn(
                 "flex items-center gap-1.5 px-2 py-1 rounded-full transition-colors group",
-                displayPost.isSaved ? "text-saved" : "hover:text-saved hover:bg-saved/5"
+                displayPost.isSaved ? "text-saved" : "hover:text-saved"
               )}
               onClick={handleSave}
             >
@@ -162,7 +187,7 @@ export function PostCard({ post, isDetail = false }: PostCardProps) {
               )}>bookmark</span>
             </button>
 
-            <button className="flex items-center gap-1.5 px-2 py-1 rounded-full hover:text-primary hover:bg-primary/5 transition-colors group">
+            <button className="flex items-center gap-1.5 px-2 py-1 rounded-full hover:text-primary transition-colors group">
               <span className="material-symbols-outlined !text-[20px]">share</span>
             </button>
           </div>

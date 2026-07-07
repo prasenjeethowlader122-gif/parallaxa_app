@@ -3,14 +3,10 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { register, getMe, checkUsername } from "@workspace/api-client-react";
+import { register, getMe } from "@workspace/api-client-react";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, User, Mail, Lock, Calendar, CheckCircle2, ChevronRight, ChevronLeft } from "lucide-react";
+import { FloatingLabelInput } from "@/components/ui/floating-label-input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -36,11 +32,11 @@ export default function RegisterPage() {
     username: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    setError(null);
+    setErrors(prev => ({ ...prev, [field]: "" }));
   };
 
   const nextStep = () => {
@@ -52,40 +48,32 @@ export default function RegisterPage() {
   const prevStep = () => setStep(s => s - 1);
 
   const validateCurrentStep = () => {
+    const newErrors: Record<string, string> = {};
     switch (step) {
       case 0:
-        if (!formData.firstName || !formData.lastName) {
-          setError("First and last name are required");
-          return false;
-        }
-        return true;
+        if (!formData.firstName) newErrors.firstName = "First name is required";
+        if (!formData.lastName) newErrors.lastName = "Last name is required";
+        break;
       case 1:
-        if (!formData.birthday) {
-          setError("Birthday is required");
-          return false;
-        }
-        return true;
+        if (!formData.birthday) newErrors.birthday = "Birthday is required";
+        break;
       case 2:
         if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-          setError("Valid email is required");
-          return false;
+          newErrors.email = "Valid email is required";
         }
-        return true;
+        break;
       case 3:
         if (formData.password.length < 6) {
-          setError("Password must be at least 6 characters");
-          return false;
+          newErrors.password = "Password must be at least 6 characters";
         }
-        return true;
+        break;
       case 4:
-        if (!formData.username) {
-          setError("Username is required");
-          return false;
-        }
-        return true;
-      default:
-        return true;
+        if (!formData.username) newErrors.username = "Username is required";
+        break;
     }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   async function handleRegister(e: React.FormEvent) {
@@ -95,7 +83,7 @@ export default function RegisterPage() {
       return;
     }
 
-    setError(null);
+    setErrors({});
     setIsLoading(true);
 
     try {
@@ -115,7 +103,7 @@ export default function RegisterPage() {
         router.push("/feed");
       }
     } catch (err: any) {
-      setError(err.data?.message || "Registration failed. Please try again.");
+      setErrors({ general: err.data?.message || "Registration failed. Please try again." });
     } finally {
       setIsLoading(false);
     }
@@ -126,182 +114,172 @@ export default function RegisterPage() {
       case 0:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input
-                id="firstName"
-                placeholder="John"
-                value={formData.firstName}
-                onChange={(e) => updateFormData("firstName", e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input
-                id="lastName"
-                placeholder="Doe"
-                value={formData.lastName}
-                onChange={(e) => updateFormData("lastName", e.target.value)}
-              />
-            </div>
+            <FloatingLabelInput
+              id="firstName"
+              label="First Name"
+              icon={<span className="material-symbols-outlined !text-[20px]">person</span>}
+              value={formData.firstName}
+              onChange={(e) => updateFormData("firstName", e.target.value)}
+              error={errors.firstName}
+              autoFocus
+            />
+            <FloatingLabelInput
+              id="lastName"
+              label="Last Name"
+              icon={<span className="material-symbols-outlined !text-[20px]">person</span>}
+              value={formData.lastName}
+              onChange={(e) => updateFormData("lastName", e.target.value)}
+              error={errors.lastName}
+            />
           </div>
         );
       case 1:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="space-y-2">
-              <Label htmlFor="birthday">Birthday</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="birthday"
-                  type="date"
-                  value={formData.birthday}
-                  onChange={(e) => updateFormData("birthday", e.target.value)}
-                  className="pl-10"
-                  autoFocus
-                />
-              </div>
-            </div>
+            <FloatingLabelInput
+              id="birthday"
+              label="Birthday"
+              type="date"
+              icon={<span className="material-symbols-outlined !text-[20px]">calendar_today</span>}
+              value={formData.birthday}
+              onChange={(e) => updateFormData("birthday", e.target.value)}
+              error={errors.birthday}
+              autoFocus
+            />
           </div>
         );
       case 2:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={formData.email}
-                  onChange={(e) => updateFormData("email", e.target.value)}
-                  className="pl-10"
-                  autoFocus
-                />
-              </div>
-            </div>
+            <FloatingLabelInput
+              id="email"
+              label="Email Address"
+              type="email"
+              icon={<span className="material-symbols-outlined !text-[20px]">mail</span>}
+              value={formData.email}
+              onChange={(e) => updateFormData("email", e.target.value)}
+              error={errors.email}
+              autoFocus
+            />
           </div>
         );
       case 3:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => updateFormData("password", e.target.value)}
-                  className="pl-10"
-                  autoFocus
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
-            </div>
+            <FloatingLabelInput
+              id="password"
+              label="Password"
+              type="password"
+              icon={<span className="material-symbols-outlined !text-[20px]">lock</span>}
+              value={formData.password}
+              onChange={(e) => updateFormData("password", e.target.value)}
+              error={errors.password}
+              autoFocus
+            />
           </div>
         );
       case 4:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="username"
-                  placeholder="johndoe"
-                  value={formData.username}
-                  onChange={(e) => updateFormData("username", e.target.value.toLowerCase())}
-                  className="pl-10"
-                  autoFocus
-                />
-              </div>
-            </div>
-            <div className="pt-2">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                By clicking "Complete Registration", you agree to our Terms of Service and Privacy Policy.
-              </p>
-            </div>
+            <FloatingLabelInput
+              id="username"
+              label="Username"
+              icon={<span className="material-symbols-outlined !text-[20px]">alternate_email</span>}
+              value={formData.username}
+              onChange={(e) => updateFormData("username", e.target.value.toLowerCase())}
+              error={errors.username}
+              autoFocus
+            />
           </div>
         );
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md border-none shadow-xl">
-        <CardHeader>
-          <div className="flex items-center justify-between mb-4">
-             <div className="flex items-center gap-2">
-                {STEPS.map((_, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "h-1.5 rounded-full transition-all duration-300",
-                      i <= step ? "bg-primary" : "bg-muted",
-                      i === step ? "w-8" : "w-4"
-                    )}
-                  />
-                ))}
-             </div>
-             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-               Step {step + 1} of 5
-             </span>
-          </div>
-          <CardTitle className="text-2xl font-extrabold tracking-tight">
-            {STEPS[step].title}
-          </CardTitle>
-          <CardDescription className="text-muted-foreground font-medium text-base">
-            {STEPS[step].description}
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleRegister}>
-          <CardContent className="min-h-[140px]">
-            {error && (
-              <Alert variant="destructive" className="mb-4 bg-red-50 border-red-100 text-red-600">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="font-semibold">{error}</AlertDescription>
-              </Alert>
-            )}
+    <div className="min-h-screen bg-background flex flex-col">
+      <main className="flex-1 max-w-md mx-auto w-full px-6 py-12">
+        <div className="flex items-center justify-between mb-8 mt-4">
+           <div className="flex items-center gap-1.5">
+              {STEPS.map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "h-1.5 rounded-full transition-all duration-300",
+                    i <= step ? "bg-primary" : "bg-muted",
+                    i === step ? "w-8" : "w-3"
+                  )}
+                />
+              ))}
+           </div>
+           <span className="text-[12px] font-bold text-muted-foreground uppercase tracking-widest">
+             Step {step + 1} of 5
+           </span>
+        </div>
+
+        <h1 className="text-[28px] font-bold text-foreground tracking-tight leading-tight">
+          {STEPS[step].title}
+        </h1>
+        <p className="text-[15px] font-medium text-muted-foreground mt-2 mb-8">
+          {STEPS[step].description}
+        </p>
+
+        <form onSubmit={handleRegister} className="space-y-6">
+          {errors.general && (
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600">
+              <span className="material-symbols-outlined !text-[20px] mt-0.5">error</span>
+              <p className="text-[14px] font-semibold leading-tight">{errors.general}</p>
+            </div>
+          )}
+
+          <div className="min-h-[140px]">
             {renderStep()}
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="flex gap-3 w-full">
-              {step > 0 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-12 w-12 p-0"
-                  onClick={prevStep}
-                  disabled={isLoading}
-                >
-                  <ChevronLeft size={20} />
-                </Button>
-              )}
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            {step > 0 && (
               <Button
-                type="submit"
-                className="flex-1 h-12"
+                type="button"
+                variant="outline"
+                className="h-[54px] w-[54px] p-0 rounded-full border-slate-200"
+                onClick={prevStep}
                 disabled={isLoading}
               >
-                {step === 4 ? (isLoading ? "Creating account..." : "Complete Registration") : "Continue"}
-                {step < 4 && <ChevronRight className="ml-2" size={20} />}
+                <span className="material-symbols-outlined">chevron_left</span>
               </Button>
-            </div>
-            <div className="text-center text-sm text-muted-foreground font-medium">
+            )}
+            <Button
+              type="submit"
+              className={cn(
+                "flex-1 h-[54px] rounded-full text-[16px] font-bold shadow-none transition-transform active:scale-[0.98]",
+                step === 4 ? "bg-foreground text-background hover:bg-foreground/90" : "bg-primary text-white hover:bg-primary/90"
+              )}
+              disabled={isLoading}
+            >
+              {step === 4 ? (isLoading ? "Creating account..." : "Complete Registration") : "Continue"}
+              {step < 4 && <span className="material-symbols-outlined ml-2">chevron_right</span>}
+            </Button>
+          </div>
+
+          <div className="text-center pt-4">
+            <p className="text-[14px] font-medium text-muted-foreground">
               Already have an account?{" "}
               <Link href="/login" className="text-primary font-bold hover:underline">
                 Sign in
               </Link>
-            </div>
-          </CardFooter>
+            </p>
+          </div>
         </form>
-      </Card>
+
+        {step === 4 && (
+          <div className="mt-12 text-center animate-in fade-in duration-500">
+            <p className="text-[12px] font-medium text-muted-foreground/60 leading-relaxed">
+              By clicking "Complete Registration", you agree to our{" "}
+              <span className="text-primary font-bold">Terms of Service</span> and{" "}
+              <span className="text-primary font-bold">Privacy Policy</span>.
+            </p>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
