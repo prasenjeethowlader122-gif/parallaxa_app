@@ -1,7 +1,7 @@
 package com.parallaxa.api.security;
 
 import com.corundumstudio.socketio.SocketIOServer;
-import com.parallaxa.api.security.JwtService;
+import com.parallaxa.api.repository.ConversationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -14,6 +14,7 @@ public class SocketRunner implements CommandLineRunner {
 
     private final SocketIOServer server;
     private final JwtService jwtService;
+    private final ConversationRepository conversationRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -31,8 +32,20 @@ public class SocketRunner implements CommandLineRunner {
         });
 
         server.addEventListener("join_conversation", String.class, (client, conversationId, ackSender) -> {
-            client.joinRoom("conversation:" + conversationId);
-            log.info("Client {} joined conversation: {}", client.getSessionId(), conversationId);
+            String userId = client.get("userId");
+            if (userId == null) {
+                log.warn("Unauthorized join_conversation: no authenticated userId associated with client={}", client.getSessionId());
+                return;
+            }
+            conversationRepository.findById(conversationId)
+                .filter(c -> c.getUser1().getId().equals(userId) || c.getUser2().getId().equals(userId))
+                .ifPresentOrElse(
+                    c -> {
+                        client.joinRoom("conversation:" + conversationId);
+                        log.info("Client {} (userId={}) joined conversation: {}", client.getSessionId(), userId, conversationId);
+                    },
+                    () -> log.warn("Unauthorized join attempt: user={} conv={}", userId, conversationId)
+                );
         });
 
         server.start();

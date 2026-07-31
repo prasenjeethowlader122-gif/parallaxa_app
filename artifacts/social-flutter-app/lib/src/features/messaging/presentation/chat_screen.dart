@@ -5,7 +5,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import '../data/message_repository.dart';
 import '../domain/message.dart';
-import '../../../core/api_client.dart';
+import '../../auth/data/auth_provider.dart';
 
 final chatMessagesProvider = FutureProvider.family<MessagePage, String>((
   ref,
@@ -60,8 +60,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _messageController.clear();
     setState(() => _isSending = true);
 
-    final storageService = ref.read(storageServiceProvider);
-    final currentUserId = storageService.getCurrentUserId() ?? '';
+    final currentUserId = ref.read(authStateProvider).user?.id ?? '';
 
     final optimistic = Message(
       id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
@@ -107,8 +106,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final messagesAsync = ref.watch(
       chatMessagesProvider(widget.conversationId),
     );
-    final storageService = ref.read(storageServiceProvider);
-    final currentUserId = storageService.getCurrentUserId() ?? '';
+    final currentUserId = ref.read(authStateProvider).user?.id ?? '';
 
     return Scaffold(
       appBar: AppBar(

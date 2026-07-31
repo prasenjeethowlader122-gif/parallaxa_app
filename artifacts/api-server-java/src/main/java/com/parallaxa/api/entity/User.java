@@ -1,5 +1,6 @@
 package com.parallaxa.api.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -24,6 +25,7 @@ public class User {
     @Column(unique = true)
     private String email;
 
+    @JsonIgnore
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
@@ -65,12 +67,14 @@ public class User {
     @Column(name = "date_of_birth")
     private LocalDateTime dateOfBirth;
 
+    @JsonIgnore
     @Column(name = "reset_password_token")
     private String resetPasswordToken;
 
     @Column(name = "reset_password_expires")
     private LocalDateTime resetPasswordExpires;
 
+    @JsonIgnore
     @Column(name = "two_factor_secret")
     private String twoFactorSecret;
 

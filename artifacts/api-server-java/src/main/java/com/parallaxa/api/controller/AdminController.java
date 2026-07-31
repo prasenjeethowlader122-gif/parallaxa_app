@@ -1,5 +1,6 @@
 package com.parallaxa.api.controller;
 
+import com.parallaxa.api.dto.AdminUserDto;
 import com.parallaxa.api.entity.User;
 import com.parallaxa.api.repository.PostRepository;
 import com.parallaxa.api.repository.StoryRepository;
@@ -33,7 +34,9 @@ public class AdminController {
 
     @GetMapping("/users")
     public ResponseEntity<Map<String, Object>> getUsers() {
-        List<User> users = userRepository.findAll();
+        List<AdminUserDto> users = userRepository.findAll().stream()
+                .map(AdminUserDto::from)
+                .toList();
         return ResponseEntity.ok(Map.of("users", users));
     }
 

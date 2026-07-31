@@ -1,5 +1,6 @@
 package com.parallaxa.api.controller;
 
+import com.parallaxa.api.dto.MessageDto;
 import com.parallaxa.api.entity.Conversation;
 import com.parallaxa.api.entity.Message;
 import com.parallaxa.api.service.MessagingService;
@@ -33,18 +34,34 @@ public class MessagingController {
                 .body(messagingService.startConversation(userDetails.getUsername(), body.get("userId")));
     }
 
+    @GetMapping("/conversations/{conversationId}/messages")
+    public ResponseEntity<Map<String, Object>> getMessages(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String conversationId,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "30") int limit
+    ) {
+        return ResponseEntity.ok(messagingService.getMessages(
+                userDetails.getUsername(),
+                conversationId,
+                cursor,
+                limit
+        ));
+    }
+
     @PostMapping("/conversations/{conversationId}/messages")
-    public ResponseEntity<Message> sendMessage(
+    public ResponseEntity<MessageDto> sendMessage(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String conversationId,
             @RequestBody Map<String, String> body
     ) {
+        Message message = messagingService.sendMessage(
+                userDetails.getUsername(),
+                conversationId,
+                body.get("content"),
+                body.get("mediaUrl")
+        );
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(messagingService.sendMessage(
-                        userDetails.getUsername(),
-                        conversationId,
-                        body.get("content"),
-                        body.get("mediaUrl")
-                ));
+                .body(MessageDto.from(message));
     }
 }
