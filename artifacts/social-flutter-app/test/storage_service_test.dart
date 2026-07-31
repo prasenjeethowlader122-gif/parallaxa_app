@@ -38,9 +38,7 @@ void main() {
     late MockFlutterSecureStorage mockSecure;
 
     setUp(() async {
-      SharedPreferences.setMockInitialValues({
-        'theme_mode': 'dark',
-      });
+      SharedPreferences.setMockInitialValues({'theme_mode': 'dark'});
       final prefs = await SharedPreferences.getInstance();
       mockSecure = MockFlutterSecureStorage();
       storageService = StorageService(prefs, secure: mockSecure);

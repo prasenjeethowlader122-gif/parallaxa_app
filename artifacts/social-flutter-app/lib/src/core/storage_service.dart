@@ -5,8 +5,10 @@ class StorageService {
   final SharedPreferences _prefs;
   final FlutterSecureStorage _secure;
 
-  StorageService(this._prefs, {FlutterSecureStorage secure = const FlutterSecureStorage()})
-      : _secure = secure;
+  StorageService(
+    this._prefs, {
+    FlutterSecureStorage secure = const FlutterSecureStorage(),
+  }) : _secure = secure;
 
   static const _authTokenKey = 'auth_token';
   static const _currentUserIdKey = 'current_user_id';
