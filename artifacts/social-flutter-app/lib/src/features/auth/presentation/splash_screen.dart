@@ -52,6 +52,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final storage = ref.read(storageServiceProvider);
     final token = await storage.getAuthToken();
 
+    // ignore: unnecessary_null_comparison
     if (token != null) {
       try {
         final user = await authRepo.getMe();
