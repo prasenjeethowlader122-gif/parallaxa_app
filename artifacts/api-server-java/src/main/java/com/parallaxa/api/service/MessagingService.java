@@ -1,6 +1,7 @@
 package com.parallaxa.api.service;
 
 import com.corundumstudio.socketio.SocketIOServer;
+import com.parallaxa.api.dto.MessageDto;
 import com.parallaxa.api.entity.Conversation;
 import com.parallaxa.api.entity.Message;
 import com.parallaxa.api.entity.User;
@@ -8,6 +9,7 @@ import com.parallaxa.api.repository.ConversationRepository;
 import com.parallaxa.api.repository.MessageRepository;
 import com.parallaxa.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,14 @@ public class MessagingService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final SocketIOServer socketIOServer;
+
+    private void assertParticipant(Conversation c, String userId) {
+        boolean isParticipant = c.getUser1().getId().equals(userId)
+                              || c.getUser2().getId().equals(userId);
+        if (!isParticipant) {
+            throw new AccessDeniedException("আপনি এই কথোপকথনের অংশ নন");
+        }
+    }
 
     public List<Map<String, Object>> getConversations(String userId) {
         User user = userRepository.findById(userId).orElseThrow();
@@ -38,14 +48,44 @@ public class MessagingService {
             participantMap.put("avatarUrl", otherUser.getAvatarUrl() != null ? otherUser.getAvatarUrl() : "");
             map.put("participant", participantMap);
             map.put("updatedAt", c.getUpdatedAt());
-            // Last message could be added here
+
+            // Last message mapping
+            Optional<Message> lastMsgOpt = messageRepository.findTopByConversationOrderByCreatedAtDesc(c);
+            if (lastMsgOpt.isPresent()) {
+                map.put("lastMessage", MessageDto.from(lastMsgOpt.get()));
+            } else {
+                map.put("lastMessage", null);
+            }
+            map.put("unreadCount", 0);
+
             return map;
         }).collect(Collectors.toList());
     }
 
+    public Map<String, Object> getMessages(String userId, String conversationId, String cursor, int limit) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Conversation not found"));
+        assertParticipant(conversation, userId);
+
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, limit);
+        org.springframework.data.domain.Page<Message> messagePage = messageRepository.findByConversationOrderByCreatedAtDesc(conversation, pageable);
+
+        List<MessageDto> messageDtos = messagePage.getContent().stream()
+                .map(MessageDto::from)
+                .collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("messages", messageDtos);
+        response.put("nextCursor", null);
+        return response;
+    }
+
     @Transactional
     public Message sendMessage(String senderId, String conversationId, String content, String mediaUrl) {
-        Conversation conversation = conversationRepository.findById(conversationId).orElseThrow();
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Conversation not found"));
+        assertParticipant(conversation, senderId);
+
         User sender = userRepository.findById(senderId).orElseThrow();
 
         Message message = Message.builder()

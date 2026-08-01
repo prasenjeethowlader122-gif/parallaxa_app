@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/user.dart';
-import '../../../core/api_client.dart';
 
 class AuthState {
   final String? token;
@@ -21,8 +20,10 @@ class AuthState {
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
-    final storage = ref.watch(storageServiceProvider);
-    return AuthState(token: storage.getAuthToken());
+    // Returns an initial empty state. The SplashScreen is responsible for
+    // reading the token asynchronously from secure storage on startup and
+    // setting it via setAuth().
+    return AuthState();
   }
 
   void setAuth(String token, User? user) {

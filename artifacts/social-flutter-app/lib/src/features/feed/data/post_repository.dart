@@ -30,10 +30,7 @@ class PostRepository {
   Future<PostPage> getFeed({String? cursor, int limit = 20}) async {
     final response = await _dio.get(
       'feed',
-      queryParameters: {
-        if (cursor != null) 'cursor': cursor,
-        'limit': limit,
-      },
+      queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
     );
     return PostPage.fromJson(response.data);
   }
@@ -42,10 +39,7 @@ class PostRepository {
     try {
       final response = await _dio.get(
         'feed/following',
-        queryParameters: {
-          if (cursor != null) 'cursor': cursor,
-          'limit': limit,
-        },
+        queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
       );
       return PostPage.fromJson(response.data);
     } catch (_) {
@@ -78,10 +72,7 @@ class PostRepository {
   Future<PostPage> getExplorePosts({String? cursor, int limit = 20}) async {
     final response = await _dio.get(
       'explore',
-      queryParameters: {
-        if (cursor != null) 'cursor': cursor,
-        'limit': limit,
-      },
+      queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
     );
     return PostPage.fromJson(response.data);
   }

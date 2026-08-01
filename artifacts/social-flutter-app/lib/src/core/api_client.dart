@@ -28,8 +28,9 @@ final dioProvider = Provider<Dio>((ref) {
 
   dio.interceptors.add(
     InterceptorsWrapper(
-      onRequest: (options, handler) {
-        final token = storageService.getAuthToken();
+      onRequest: (options, handler) async {
+        final token = await storageService.getAuthToken();
+        // ignore: unnecessary_null_comparison
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }

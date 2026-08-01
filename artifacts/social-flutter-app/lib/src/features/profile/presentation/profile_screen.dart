@@ -44,9 +44,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   String get effectiveUserId => widget.userId;
 
   bool get isOwnProfile {
-    final storage = ref.read(storageServiceProvider);
-    final currentId = storage.getCurrentUserId();
-    return widget.userId == 'me' || widget.userId == currentId;
+    final currentUser = ref.read(authStateProvider).user;
+    return widget.userId == 'me' || widget.userId == currentUser?.id;
   }
 
   @override
