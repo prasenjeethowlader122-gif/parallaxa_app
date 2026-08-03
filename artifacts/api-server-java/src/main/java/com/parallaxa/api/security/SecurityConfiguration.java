@@ -50,7 +50,14 @@ public class SecurityConfiguration {
                                 "/icons/**",
                                 "/assets/**",
                                 "/*.js",
-                                "/*.css"
+                                "/*.css",
+                                "/api/feed",
+                                "/api/explore",
+                                "/api/search",
+                                "/api/posts/{postId}",
+                                "/api/posts/{postId}/replies",
+                                "/api/users/{userId}",
+                                "/api/users/{userId}/posts"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

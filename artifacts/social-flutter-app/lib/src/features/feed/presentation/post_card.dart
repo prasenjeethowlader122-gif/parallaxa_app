@@ -7,6 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:any_link_preview/any_link_preview.dart';
 import '../data/post_repository.dart';
 import '../domain/post.dart';
+import '../../auth/data/auth_provider.dart';
 import '../../../core/app_colors.dart';
 import '../../../core/localization_provider.dart';
 import '../../profile/presentation/widgets/user_avatar.dart';
@@ -47,6 +48,16 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   Future<void> _toggleLike() async {
+    final authState = ref.read(authStateProvider);
+    if (authState.isGuest) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in to like posts.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     if (_isLiking) return;
     setState(() {
       _isLiking = true;
@@ -73,10 +84,30 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   void _toggleSave() {
+    final authState = ref.read(authStateProvider);
+    if (authState.isGuest) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in to bookmark posts.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     setState(() => _isSaved = !_isSaved);
   }
 
   Future<void> _toggleRepost() async {
+    final authState = ref.read(authStateProvider);
+    if (authState.isGuest) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in to repost posts.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     if (_isReposting) return;
     setState(() {
       _isReposting = true;

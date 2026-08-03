@@ -380,6 +380,46 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 12),
 
+              // Continue as Guest Button
+              SizedBox(
+                height: 54,
+                child: OutlinedButton(
+                  onPressed: () {
+                    ref.read(authStateProvider.notifier).setGuest();
+                    context.go('/feed');
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                      color: theme.colorScheme.outline,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(27),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Symbols.person,
+                        size: 20,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Continue as Guest',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // Sign Up CTA
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
