@@ -45,6 +45,7 @@ class RouterNotifier extends ChangeNotifier {
   String? redirect(BuildContext context, GoRouterState state) {
     final authState = _ref.read(authStateProvider);
     final token = authState.token;
+    final isGuest = authState.isGuest;
     final loc = state.matchedLocation;
 
     if (loc == '/splash') return null;
@@ -52,8 +53,24 @@ class RouterNotifier extends ChangeNotifier {
     final isAuth =
         loc == '/login' || loc == '/register' || loc == '/forgot-password';
 
-    if (token == null && !isAuth) return '/login';
+    if (token == null && !isGuest && !isAuth) return '/login';
     if (token != null && isAuth) return '/feed';
+
+    if (isGuest) {
+      final restricted = [
+        '/messages',
+        '/notifications',
+        '/bookmarks',
+        '/create-post',
+        '/two-factor-setup',
+        '/account-verification',
+        '/admin',
+        '/admin/users',
+      ];
+      if (restricted.any((path) => loc.startsWith(path)) || (loc == '/profile' && state.pathParameters['userId'] == 'me')) {
+        return '/login';
+      }
+    }
 
     return null;
   }

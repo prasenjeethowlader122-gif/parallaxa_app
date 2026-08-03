@@ -26,6 +26,17 @@ public class PostController {
         return ResponseEntity.ok(postService.getFeed(userId, limit));
     }
 
+    @GetMapping("/feed/following")
+    public ResponseEntity<PageResponse<PostDto>> getFollowingFeed(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "20") int limit
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(postService.getFollowingFeed(userDetails.getUsername(), limit));
+    }
+
     @PostMapping("/posts")
     public ResponseEntity<PostDto> createPost(
             @AuthenticationPrincipal UserDetails userDetails,

@@ -70,6 +70,7 @@ public class AuthService {
                 .dateOfBirth(dateOfBirth)
                 .avatarUrl(avatarUrl)
                 .role("user")
+                .createdAt(LocalDateTime.now())
                 .build();
 
         userRepository.save(user);
@@ -288,7 +289,7 @@ public class AuthService {
                 .followingCount(user.getFollowingCount())
                 .postsCount(user.getPostsCount())
                 .dateOfBirth(user.getDateOfBirth())
-                .createdAt(user.getCreatedAt())
+                .createdAt(user.getCreatedAt() != null ? user.getCreatedAt() : LocalDateTime.now())
                 .build();
     }
 }

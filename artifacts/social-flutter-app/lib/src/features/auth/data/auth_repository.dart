@@ -2,12 +2,27 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api_client.dart';
 import '../domain/user.dart';
+import 'auth_provider.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.watch(dioProvider));
 });
 
-final currentUserProvider = FutureProvider<User>((ref) {
+final currentUserProvider = FutureProvider<User>((ref) async {
+  final authState = ref.watch(authStateProvider);
+  if (authState.isGuest) {
+    return User(
+      id: 'guest',
+      username: 'guest',
+      email: 'guest@parallaxa.com',
+      displayName: 'Guest User',
+      isVerified: false,
+      followersCount: 0,
+      followingCount: 0,
+      postsCount: 0,
+      createdAt: DateTime.now(),
+    );
+  }
   return ref.watch(authRepositoryProvider).getMe();
 });
 

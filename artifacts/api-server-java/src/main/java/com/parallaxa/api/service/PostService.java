@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -25,23 +26,94 @@ public class PostService {
     private final HashtagRepository hashtagRepository;
 
     public PageResponse<PostDto> getFeed(String userId, int limit) {
-        PageRequest pageRequest = PageRequest.of(0, limit);
-        Page<Post> posts;
+        PageRequest pageRequest = PageRequest.of(0, 200); // Fetch top 200 root posts for dynamic ML ranking
+        Page<Post> postsPage = postRepository.findByParentPostIsNullAndIsArchivedFalseOrderByCreatedAtDesc(pageRequest);
+        List<Post> posts = new ArrayList<>(postsPage.getContent());
 
         if (userId != null) {
-            User user = userRepository.findById(userId).orElse(null);
-            if (user != null) {
-                List<User> following = followRepository.findByFollower(user).stream()
+            User currentUser = userRepository.findById(userId).orElse(null);
+            if (currentUser != null) {
+                List<User> following = followRepository.findByFollower(currentUser).stream()
                         .map(Follow::getFollowing)
                         .collect(Collectors.toList());
-                following.add(user);
-                posts = postRepository.findByAuthorInAndParentPostIsNullAndIsArchivedFalseOrderByCreatedAtDesc(following, pageRequest);
+
+                posts.sort((p1, p2) -> {
+                    double score1 = calculateMLScore(p1, currentUser, following);
+                    double score2 = calculateMLScore(p2, currentUser, following);
+                    return Double.compare(score2, score1); // Descending score
+                });
             } else {
-                posts = postRepository.findByParentPostIsNullAndIsArchivedFalseOrderByCreatedAtDesc(pageRequest);
+                posts.sort((p1, p2) -> {
+                    double score1 = calculateMLScore(p1, null, null);
+                    double score2 = calculateMLScore(p2, null, null);
+                    return Double.compare(score2, score1);
+                });
             }
         } else {
-            posts = postRepository.findByParentPostIsNullAndIsArchivedFalseOrderByCreatedAtDesc(pageRequest);
+            posts.sort((p1, p2) -> {
+                double score1 = calculateMLScore(p1, null, null);
+                double score2 = calculateMLScore(p2, null, null);
+                return Double.compare(score2, score1);
+            });
         }
+
+        List<Post> rankedSublist = posts.stream()
+                .limit(limit)
+                .collect(Collectors.toList());
+
+        return PageResponse.<PostDto>builder()
+                .posts(rankedSublist.stream().map(p -> mapToDto(p, userId)).collect(Collectors.toList()))
+                .build();
+    }
+
+    private double calculateMLScore(Post post, User currentUser, List<User> following) {
+        // Engagement weight scoring (Likes=3.0, Reposts=5.0, Replies=4.0)
+        double engagement = (post.getLikesCount() * 3.0) + (post.getRepostsCount() * 5.0) + (post.getRepliesCount() * 4.0);
+
+        // Time decay calculation (hours passed since creation)
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime createdAt = post.getCreatedAt() != null ? post.getCreatedAt() : now;
+        long secondsPassed = java.time.Duration.between(createdAt, now).getSeconds();
+        double hoursPassed = Math.max(0.0, secondsPassed / 3600.0);
+
+        // Hacker News gravity formula: score = (U + 1) / (T + 2)^G, where gravity G = 1.5
+        double score = (engagement + 1.0) / Math.pow(hoursPassed + 2.0, 1.5);
+
+        // Personalization boosts
+        if (currentUser != null) {
+            // Social graph boost: boost posts from followed creators
+            if (following != null && following.contains(post.getAuthor())) {
+                score *= 2.5;
+            }
+            // Self-relevancy boost: slight boost to own posts
+            if (post.getAuthor().getId().equals(currentUser.getId())) {
+                score *= 1.5;
+            }
+        }
+
+        return score;
+    }
+
+    public PageResponse<PostDto> getFollowingFeed(String userId, int limit) {
+        if (userId == null) {
+            return PageResponse.<PostDto>builder().posts(new ArrayList<>()).build();
+        }
+
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return PageResponse.<PostDto>builder().posts(new ArrayList<>()).build();
+        }
+
+        PageRequest pageRequest = PageRequest.of(0, limit);
+        List<User> following = followRepository.findByFollower(user).stream()
+                .map(Follow::getFollowing)
+                .collect(Collectors.toList());
+
+        if (following.isEmpty()) {
+            return PageResponse.<PostDto>builder().posts(new ArrayList<>()).build();
+        }
+
+        Page<Post> posts = postRepository.findByAuthorInAndParentPostIsNullAndIsArchivedFalseOrderByCreatedAtDesc(following, pageRequest);
 
         return PageResponse.<PostDto>builder()
                 .posts(posts.getContent().stream().map(p -> mapToDto(p, userId)).collect(Collectors.toList()))
@@ -54,7 +126,7 @@ public class PostService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Post parentPost = null;
-        if (request.getParentPostId() != null) {
+        if (request.getParentPostId() != null && !request.getParentPostId().trim().isEmpty()) {
             parentPost = postRepository.findById(request.getParentPostId())
                     .orElseThrow(() -> new RuntimeException("Parent post not found"));
         }
@@ -67,6 +139,7 @@ public class PostService {
                 .imageUrl(request.getImageUrl())
                 .videoUrl(request.getVideoUrl())
                 .location(request.getLocation())
+                .createdAt(LocalDateTime.now())
                 .build();
 
         Post savedPost = postRepository.save(post);
@@ -249,7 +322,7 @@ public class PostService {
                 .isLiked(isLiked)
                 .isSaved(isSaved)
                 .hashtags(new ArrayList<>()) // Simplified
-                .createdAt(post.getCreatedAt())
+                .createdAt(post.getCreatedAt() != null ? post.getCreatedAt() : LocalDateTime.now())
                 .repostOf(post.getRepostOf() != null ? mapToDto(post.getRepostOf(), currentUserId) : null)
                 .build();
     }

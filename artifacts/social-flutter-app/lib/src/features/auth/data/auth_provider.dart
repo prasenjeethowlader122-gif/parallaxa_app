@@ -5,14 +5,16 @@ class AuthState {
   final String? token;
   final User? user;
   final bool isLoading;
+  final bool isGuest;
 
-  AuthState({this.token, this.user, this.isLoading = false});
+  AuthState({this.token, this.user, this.isLoading = false, this.isGuest = false});
 
-  AuthState copyWith({String? token, User? user, bool? isLoading}) {
+  AuthState copyWith({String? token, User? user, bool? isLoading, bool? isGuest}) {
     return AuthState(
       token: token ?? this.token,
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
+      isGuest: isGuest ?? this.isGuest,
     );
   }
 }
@@ -27,7 +29,11 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   void setAuth(String token, User? user) {
-    state = AuthState(token: token, user: user);
+    state = AuthState(token: token, user: user, isGuest: false);
+  }
+
+  void setGuest() {
+    state = AuthState(isGuest: true);
   }
 
   void clearAuth() {
