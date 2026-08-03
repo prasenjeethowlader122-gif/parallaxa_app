@@ -67,7 +67,8 @@ class RouterNotifier extends ChangeNotifier {
         '/admin',
         '/admin/users',
       ];
-      if (restricted.any((path) => loc.startsWith(path)) || (loc == '/profile' && state.pathParameters['userId'] == 'me')) {
+      if (restricted.any((path) => loc.startsWith(path)) ||
+          (loc == '/profile' && state.pathParameters['userId'] == 'me')) {
         return '/login';
       }
     }

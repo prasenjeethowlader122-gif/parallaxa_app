@@ -90,9 +90,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(val
-              ? 'Your account is now private.'
-              : 'Your account is now public.'),
+            content: Text(
+              val
+                  ? 'Your account is now private.'
+                  : 'Your account is now public.',
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -124,7 +126,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Clear App Cache'),
-        content: const Text('Are you sure you want to clear the app cache and temporary files? This will free up system space.'),
+        content: const Text(
+          'Are you sure you want to clear the app cache and temporary files? This will free up system space.',
+        ),
         actions: [
           TextButton(
             child: const Text('Cancel'),
@@ -141,7 +145,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     if (confirmed == true && mounted) {
       ref.read(processingProvider.notifier).show("Clearing Cache...");
-      await Future.delayed(const Duration(milliseconds: 800)); // Simulate file cleanup
+      await Future.delayed(
+        const Duration(milliseconds: 800),
+      ); // Simulate file cleanup
       ref.read(processingProvider.notifier).hide();
 
       if (mounted) {
@@ -149,7 +155,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Success'),
-            content: const Text('App cache cleared successfully! 18.4 MB of temporary storage was freed.'),
+            content: const Text(
+              'App cache cleared successfully! 18.4 MB of temporary storage was freed.',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
@@ -332,24 +340,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
                     )
                   : _latency != null
-                      ? Text(
-                          _latency == -1 ? 'Timeout' : '$_latency ms',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: _latency == -1
-                                ? Colors.red
-                                : (_latency! < 150 ? Colors.green : Colors.orange),
-                          ),
-                        )
-                      : const HugeIcon(
-                          icon: HugeIcons.strokeRoundedInformationCircle,
-                          size: 18,
-                          color: AppColors.mutedForeground,
-                        ),
+                  ? Text(
+                      _latency == -1 ? 'Timeout' : '$_latency ms',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: _latency == -1
+                            ? Colors.red
+                            : (_latency! < 150 ? Colors.green : Colors.orange),
+                      ),
+                    )
+                  : const HugeIcon(
+                      icon: HugeIcons.strokeRoundedInformationCircle,
+                      size: 18,
+                      color: AppColors.mutedForeground,
+                    ),
             ),
             _SettingsTile(
               icon: HugeIcons.strokeRoundedDelete01,
@@ -376,9 +387,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         const SizedBox(height: 4),
                         Text('Email: ${me.email}'),
                         const SizedBox(height: 4),
-                        Text('2FA Status: ${me.twoFactorEnabled == true ? "Enabled" : "Disabled"}'),
+                        Text(
+                          '2FA Status: ${me.twoFactorEnabled == true ? "Enabled" : "Disabled"}',
+                        ),
                         const SizedBox(height: 4),
-                        Text('Platform: ${kIsWeb ? "Web Browser" : defaultTargetPlatform.name}'),
+                        Text(
+                          'Platform: ${kIsWeb ? "Web Browser" : defaultTargetPlatform.name}',
+                        ),
                         const SizedBox(height: 4),
                         const Text('API Environment: Production (Render)'),
                       ],
@@ -450,7 +465,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   context: context,
                   builder: (ctx) => AlertDialog(
                     title: const Text('Help & Support'),
-                    content: const Text('For support queries or bug reports, please email us at support@parallaxa.com. We typically respond within 24 hours.'),
+                    content: const Text(
+                      'For support queries or bug reports, please email us at support@parallaxa.com. We typically respond within 24 hours.',
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),

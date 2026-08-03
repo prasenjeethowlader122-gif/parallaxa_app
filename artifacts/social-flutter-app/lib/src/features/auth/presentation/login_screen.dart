@@ -389,7 +389,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     context.go('/feed');
                   },
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: theme.colorScheme.outline, width: 1.5),
+                    side: BorderSide(
+                      color: theme.colorScheme.outline,
+                      width: 1.5,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(27),
                     ),
@@ -397,7 +400,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Symbols.person, size: 20, color: theme.colorScheme.onSurface),
+                      Icon(
+                        Symbols.person,
+                        size: 20,
+                        color: theme.colorScheme.onSurface,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Continue as Guest',

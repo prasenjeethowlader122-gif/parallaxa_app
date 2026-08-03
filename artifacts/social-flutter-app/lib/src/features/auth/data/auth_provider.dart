@@ -7,9 +7,19 @@ class AuthState {
   final bool isLoading;
   final bool isGuest;
 
-  AuthState({this.token, this.user, this.isLoading = false, this.isGuest = false});
+  AuthState({
+    this.token,
+    this.user,
+    this.isLoading = false,
+    this.isGuest = false,
+  });
 
-  AuthState copyWith({String? token, User? user, bool? isLoading, bool? isGuest}) {
+  AuthState copyWith({
+    String? token,
+    User? user,
+    bool? isLoading,
+    bool? isGuest,
+  }) {
     return AuthState(
       token: token ?? this.token,
       user: user ?? this.user,
