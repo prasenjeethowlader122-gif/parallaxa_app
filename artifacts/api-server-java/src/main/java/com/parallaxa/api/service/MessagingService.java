@@ -56,27 +56,56 @@ public class MessagingService {
             } else {
                 map.put("lastMessage", null);
             }
-            map.put("unreadCount", 0);
+
+            long unreadCount = messageRepository.countByConversationAndIsReadFalseAndSenderNot(c, user);
+            map.put("unreadCount", unreadCount);
 
             return map;
         }).collect(Collectors.toList());
     }
 
+    @Transactional
     public Map<String, Object> getMessages(String userId, String conversationId, String cursor, int limit) {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Conversation not found"));
         assertParticipant(conversation, userId);
 
+        // Mark unread messages from the other user as read on fetch
+        User user = userRepository.findById(userId).orElseThrow();
+        User otherUser = conversation.getUser1().getId().equals(userId) ? conversation.getUser2() : conversation.getUser1();
+        List<Message> unread = messageRepository.findByConversationAndIsReadFalseAndSender(conversation, otherUser);
+        if (!unread.isEmpty()) {
+            unread.forEach(m -> m.setRead(true));
+            messageRepository.saveAll(unread);
+        }
+
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, limit);
-        org.springframework.data.domain.Page<Message> messagePage = messageRepository.findByConversationOrderByCreatedAtDesc(conversation, pageable);
+        org.springframework.data.domain.Page<Message> messagePage;
+
+        if (cursor != null && !cursor.trim().isEmpty()) {
+            Optional<Message> cursorMsgOpt = messageRepository.findById(cursor);
+            if (cursorMsgOpt.isPresent()) {
+                messagePage = messageRepository.findByConversationAndCreatedAtLessThanOrderByCreatedAtDesc(
+                        conversation, cursorMsgOpt.get().getCreatedAt(), pageable);
+            } else {
+                messagePage = messageRepository.findByConversationOrderByCreatedAtDesc(conversation, pageable);
+            }
+        } else {
+            messagePage = messageRepository.findByConversationOrderByCreatedAtDesc(conversation, pageable);
+        }
 
         List<MessageDto> messageDtos = messagePage.getContent().stream()
                 .map(MessageDto::from)
                 .collect(Collectors.toList());
 
+        String nextCursor = null;
+        if (!messagePage.isEmpty()) {
+            nextCursor = messagePage.getContent().get(messagePage.getContent().size() - 1).getId();
+        }
+
         Map<String, Object> response = new HashMap<>();
         response.put("messages", messageDtos);
-        response.put("nextCursor", null);
+        response.put("nextCursor", nextCursor);
         return response;
     }
 

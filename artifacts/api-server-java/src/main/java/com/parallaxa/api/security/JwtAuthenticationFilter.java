@@ -22,6 +22,7 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final com.parallaxa.api.repository.UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(
@@ -39,19 +40,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             final String userId = jwtService.extractUserId(jwt);
             if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = User.withUsername(userId)
-                        .password("")
-                        .authorities(List.of())
-                        .build();
+                com.parallaxa.api.entity.User dbUser = userRepository.findById(userId).orElse(null);
+                if (dbUser != null) {
+                    var authorities = new java.util.ArrayList<org.springframework.security.core.GrantedAuthority>();
+                    if ("admin".equalsIgnoreCase(dbUser.getRole())) {
+                        authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN"));
+                    }
 
-                if (jwtService.isTokenValid(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    UserDetails userDetails = User.withUsername(userId)
+                            .password("")
+                            .authorities(authorities)
+                            .build();
+
+                    if (jwtService.isTokenValid(jwt, userDetails)) {
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
                 }
             }
         } catch (Exception e) {

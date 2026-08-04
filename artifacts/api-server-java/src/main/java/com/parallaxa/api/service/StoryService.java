@@ -45,11 +45,23 @@ public class StoryService {
             userMap.put("avatarUrl", storyUser.getAvatarUrl() != null ? storyUser.getAvatarUrl() : "");
             group.put("user", userMap);
             group.put("stories", entry.getValue().stream().map(this::mapToDto).collect(Collectors.toList()));
-            group.put("hasUnviewed", true); // Simplified
+
+            // Dynamically calculate hasUnviewed if there are active stories in the list with viewsCount = 0
+            boolean hasUnviewed = entry.getValue().stream().anyMatch(s -> s.getViewsCount() == 0);
+            group.put("hasUnviewed", hasUnviewed);
+
             result.add(group);
         }
 
         return result;
+    }
+
+    @Transactional
+    public void viewStory(String storyId) {
+        storyRepository.findById(storyId).ifPresent(story -> {
+            story.setViewsCount(story.getViewsCount() + 1);
+            storyRepository.save(story);
+        });
     }
 
     @Transactional

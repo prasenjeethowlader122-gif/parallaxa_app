@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class LoginRateLimitFilter extends OncePerRequestFilter {
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
+    private long lastCleanup = System.currentTimeMillis();
 
     private Bucket newBucket() {
         return Bucket.builder()
@@ -32,7 +33,23 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String uri = req.getRequestURI();
         if (uri != null && uri.matches(".*\\/api\\/auth\\/(login|register|2fa\\/verify)")) {
-            String key = req.getRemoteAddr();
+            // Lazy eviction of buckets map once an hour to prevent memory leak
+            long now = System.currentTimeMillis();
+            synchronized (buckets) {
+                if (now - lastCleanup > java.time.Duration.ofHours(1).toMillis()) {
+                    buckets.clear();
+                    lastCleanup = now;
+                }
+            }
+
+            // Identify client IP behind proxy (e.g. Nginx, Cloudflare) via X-Forwarded-For
+            String key = req.getHeader("X-Forwarded-For");
+            if (key != null && !key.isEmpty()) {
+                key = key.split(",")[0].trim();
+            } else {
+                key = req.getRemoteAddr();
+            }
+
             if (key == null || key.isEmpty()) {
                 key = "unknown";
             }

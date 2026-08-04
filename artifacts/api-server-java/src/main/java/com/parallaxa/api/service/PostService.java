@@ -24,11 +24,32 @@ public class PostService {
     private final SavedPostRepository savedPostRepository;
     private final FollowRepository followRepository;
     private final HashtagRepository hashtagRepository;
+    private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
 
     public PageResponse<PostDto> getFeed(String userId, int limit) {
         PageRequest pageRequest = PageRequest.of(0, 200); // Fetch top 200 root posts for dynamic ML ranking
         Page<Post> postsPage = postRepository.findByParentPostIsNullAndIsArchivedFalseOrderByCreatedAtDesc(pageRequest);
         List<Post> posts = new ArrayList<>(postsPage.getContent());
+
+        // Filter private accounts out of public feed unless followed
+        posts = posts.stream().filter(p -> {
+            User author = p.getAuthor();
+            if (!author.isPrivate()) {
+                return true;
+            }
+            if (userId == null) {
+                return false;
+            }
+            if (author.getId().equals(userId)) {
+                return true;
+            }
+            User currentUser = userRepository.findById(userId).orElse(null);
+            if (currentUser == null) {
+                return false;
+            }
+            return followRepository.existsByFollowerAndFollowing(currentUser, author);
+        }).collect(Collectors.toList());
 
         if (userId != null) {
             User currentUser = userRepository.findById(userId).orElse(null);
@@ -61,8 +82,25 @@ public class PostService {
                 .limit(limit)
                 .collect(Collectors.toList());
 
+        java.util.Set<String> likedPostIds = new java.util.HashSet<>();
+        java.util.Set<String> savedPostIds = new java.util.HashSet<>();
+        java.util.Set<String> followedAuthorIds = new java.util.HashSet<>();
+
+        if (userId != null) {
+            User currentUser = userRepository.findById(userId).orElse(null);
+            if (currentUser != null) {
+                likedPostIds = likeRepository.findByUser(currentUser).stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
+                savedPostIds = savedPostRepository.findByUser(currentUser).stream().map(sp -> sp.getPost().getId()).collect(Collectors.toSet());
+                followedAuthorIds = followRepository.findByFollower(currentUser).stream().map(f -> f.getFollowing().getId()).collect(Collectors.toSet());
+            }
+        }
+
+        final java.util.Set<String> finalLiked = likedPostIds;
+        final java.util.Set<String> finalSaved = savedPostIds;
+        final java.util.Set<String> finalFollowed = followedAuthorIds;
+
         return PageResponse.<PostDto>builder()
-                .posts(rankedSublist.stream().map(p -> mapToDto(p, userId)).collect(Collectors.toList()))
+                .posts(rankedSublist.stream().map(p -> mapToDto(p, userId, finalLiked, finalSaved, finalFollowed)).collect(Collectors.toList()))
                 .build();
     }
 
@@ -115,8 +153,20 @@ public class PostService {
 
         Page<Post> posts = postRepository.findByAuthorInAndParentPostIsNullAndIsArchivedFalseOrderByCreatedAtDesc(following, pageRequest);
 
+        java.util.Set<String> likedPostIds = new java.util.HashSet<>();
+        java.util.Set<String> savedPostIds = new java.util.HashSet<>();
+        java.util.Set<String> followedAuthorIds = new java.util.HashSet<>();
+
+        likedPostIds = likeRepository.findByUser(user).stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
+        savedPostIds = savedPostRepository.findByUser(user).stream().map(sp -> sp.getPost().getId()).collect(Collectors.toSet());
+        followedAuthorIds = following.stream().map(User::getId).collect(Collectors.toSet());
+
+        final java.util.Set<String> finalLiked = likedPostIds;
+        final java.util.Set<String> finalSaved = savedPostIds;
+        final java.util.Set<String> finalFollowed = followedAuthorIds;
+
         return PageResponse.<PostDto>builder()
-                .posts(posts.getContent().stream().map(p -> mapToDto(p, userId)).collect(Collectors.toList()))
+                .posts(posts.getContent().stream().map(p -> mapToDto(p, userId, finalLiked, finalSaved, finalFollowed)).collect(Collectors.toList()))
                 .build();
     }
 
@@ -131,32 +181,11 @@ public class PostService {
                     .orElseThrow(() -> new RuntimeException("Parent post not found"));
         }
 
-        Post post = Post.builder()
-                .id(UUID.randomUUID().toString())
-                .author(user)
-                .parentPost(parentPost)
-                .content(request.getContent())
-                .imageUrl(request.getImageUrl())
-                .videoUrl(request.getVideoUrl())
-                .location(request.getLocation())
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        Post savedPost = postRepository.save(post);
-
-        if (parentPost != null) {
-            parentPost.setRepliesCount(parentPost.getRepliesCount() + 1);
-            postRepository.save(parentPost);
-        } else {
-            user.setPostsCount(user.getPostsCount() + 1);
-            userRepository.save(user);
-        }
-
-        // Handle hashtags
+        List<Hashtag> postHashtags = new ArrayList<>();
         if (request.getHashtags() != null) {
             for (String tagName : request.getHashtags()) {
                 if (tagName == null) continue;
-                String name = tagName.toLowerCase().replace("#", "");
+                String name = tagName.toLowerCase().replace("#", "").trim();
                 if (name.isEmpty()) continue;
 
                 Hashtag hashtag = hashtagRepository.findByName(name)
@@ -168,8 +197,33 @@ public class PostService {
 
                 hashtag.setPostCount(hashtag.getPostCount() + 1);
                 hashtagRepository.save(hashtag);
-                // In a full implementation, we'd also have a many-to-many relationship table
+                postHashtags.add(hashtag);
             }
+        }
+
+        Post post = Post.builder()
+                .id(UUID.randomUUID().toString())
+                .author(user)
+                .parentPost(parentPost)
+                .content(request.getContent())
+                .imageUrl(request.getImageUrl())
+                .videoUrl(request.getVideoUrl())
+                .location(request.getLocation())
+                .hashtags(postHashtags)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Post savedPost = postRepository.save(post);
+
+        if (parentPost != null) {
+            parentPost.setRepliesCount(parentPost.getRepliesCount() + 1);
+            postRepository.save(parentPost);
+
+            // Trigger reply notification
+            notificationService.createNotification(parentPost.getAuthor(), user, "reply", parentPost, savedPost.getId(), savedPost.getContent());
+        } else {
+            user.setPostsCount(user.getPostsCount() + 1);
+            userRepository.save(user);
         }
 
         return mapToDto(savedPost, userId);
@@ -196,6 +250,9 @@ public class PostService {
         post.setLikesCount(post.getLikesCount() + 1);
         postRepository.save(post);
 
+        // Trigger like notification
+        notificationService.createNotification(post.getAuthor(), user, "like", post, null, null);
+
         return MapResponse.builder().put("message", "Liked").build();
     }
 
@@ -218,6 +275,10 @@ public class PostService {
         User user = userRepository.findById(userId).orElseThrow();
         Post originalPost = postRepository.findById(postId).orElseThrow();
 
+        if (postRepository.existsByAuthorAndRepostOf(user, originalPost)) {
+            throw new IllegalArgumentException("আপনি ইতিমধ্যে এই পোস্টটি রিপোস্ট করেছেন।");
+        }
+
         Post repost = Post.builder()
                 .id(UUID.randomUUID().toString())
                 .author(user)
@@ -228,6 +289,9 @@ public class PostService {
         originalPost.setRepostsCount(originalPost.getRepostsCount() + 1);
         postRepository.save(originalPost);
 
+        // Trigger repost notification
+        notificationService.createNotification(originalPost.getAuthor(), user, "repost", originalPost, savedRepost.getId(), null);
+
         return mapToDto(savedRepost, userId);
     }
 
@@ -236,17 +300,72 @@ public class PostService {
         PageRequest pageRequest = PageRequest.of(0, 50);
         Page<Post> replies = postRepository.findByParentPostAndIsArchivedFalseOrderByCreatedAtDesc(parentPost, pageRequest);
 
+        java.util.Set<String> likedPostIds = new java.util.HashSet<>();
+        java.util.Set<String> savedPostIds = new java.util.HashSet<>();
+        java.util.Set<String> followedAuthorIds = new java.util.HashSet<>();
+
+        if (userId != null) {
+            User currentUser = userRepository.findById(userId).orElse(null);
+            if (currentUser != null) {
+                likedPostIds = likeRepository.findByUser(currentUser).stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
+                savedPostIds = savedPostRepository.findByUser(currentUser).stream().map(sp -> sp.getPost().getId()).collect(Collectors.toSet());
+                followedAuthorIds = followRepository.findByFollower(currentUser).stream().map(f -> f.getFollowing().getId()).collect(Collectors.toSet());
+            }
+        }
+
+        final java.util.Set<String> finalLiked = likedPostIds;
+        final java.util.Set<String> finalSaved = savedPostIds;
+        final java.util.Set<String> finalFollowed = followedAuthorIds;
+
         return PageResponse.<PostDto>builder()
-                .posts(replies.getContent().stream().map(p -> mapToDto(p, userId)).collect(Collectors.toList()))
+                .posts(replies.getContent().stream().map(p -> mapToDto(p, userId, finalLiked, finalSaved, finalFollowed)).collect(Collectors.toList()))
                 .build();
     }
 
     @Transactional
     public void deletePost(String userId, String postId) {
-        Post post = postRepository.findById(postId).orElseThrow();
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
         if (!post.getAuthor().getId().equals(userId)) {
             throw new RuntimeException("Unauthorized");
         }
+
+        // Decrement counters
+        if (post.getParentPost() != null) {
+            Post parent = post.getParentPost();
+            parent.setRepliesCount(Math.max(0, parent.getRepliesCount() - 1));
+            postRepository.save(parent);
+        } else {
+            User author = post.getAuthor();
+            author.setPostsCount(Math.max(0, author.getPostsCount() - 1));
+            userRepository.save(author);
+        }
+
+        // 1. Delete associated Likes
+        likeRepository.deleteByPost(post);
+
+        // 2. Delete associated SavedPosts
+        savedPostRepository.deleteByPost(post);
+
+        // 3. Delete notifications referring to this post
+        notificationRepository.deleteByPost(post);
+
+        // 4. Handle replies (delete them)
+        List<Post> replies = postRepository.findByParentPost(post);
+        for (Post reply : replies) {
+            likeRepository.deleteByPost(reply);
+            savedPostRepository.deleteByPost(reply);
+            notificationRepository.deleteByPost(reply);
+            postRepository.delete(reply);
+        }
+
+        // 5. Handle reposts referring to this post (set repostOf to null)
+        List<Post> reposts = postRepository.findByRepostOf(post);
+        for (Post repost : reposts) {
+            repost.setRepostOf(null);
+            postRepository.save(repost);
+        }
+
         postRepository.delete(post);
     }
 
@@ -255,46 +374,150 @@ public class PostService {
         PageRequest pageRequest = PageRequest.of(0, 50);
         Page<SavedPost> savedPosts = savedPostRepository.findByUserOrderByCreatedAtDesc(user, pageRequest);
 
+        java.util.Set<String> likedPostIds = new java.util.HashSet<>();
+        java.util.Set<String> savedPostIds = new java.util.HashSet<>();
+        java.util.Set<String> followedAuthorIds = new java.util.HashSet<>();
+
+        likedPostIds = likeRepository.findByUser(user).stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
+        savedPostIds = savedPostRepository.findByUser(user).stream().map(sp -> sp.getPost().getId()).collect(Collectors.toSet());
+        followedAuthorIds = followRepository.findByFollower(user).stream().map(f -> f.getFollowing().getId()).collect(Collectors.toSet());
+
+        final java.util.Set<String> finalLiked = likedPostIds;
+        final java.util.Set<String> finalSaved = savedPostIds;
+        final java.util.Set<String> finalFollowed = followedAuthorIds;
+
         return PageResponse.<PostDto>builder()
-                .posts(savedPosts.getContent().stream().map(sp -> mapToDto(sp.getPost(), userId)).collect(Collectors.toList()))
+                .posts(savedPosts.getContent().stream().map(sp -> mapToDto(sp.getPost(), userId, finalLiked, finalSaved, finalFollowed)).collect(Collectors.toList()))
                 .build();
     }
 
     public PageResponse<PostDto> getExplorePosts(String userId) {
-        PageRequest pageRequest = PageRequest.of(0, 20);
-        Page<Post> posts = postRepository.findByParentPostIsNullAndIsArchivedFalseOrderByCreatedAtDesc(pageRequest);
+        PageRequest pageRequest = PageRequest.of(0, 100);
+        Page<Post> postsPage = postRepository.findByParentPostIsNullAndIsArchivedFalseOrderByCreatedAtDesc(pageRequest);
+
+        List<Post> posts = postsPage.getContent().stream().filter(p -> {
+            User author = p.getAuthor();
+            if (!author.isPrivate()) {
+                return true;
+            }
+            if (userId == null) {
+                return false;
+            }
+            if (author.getId().equals(userId)) {
+                return true;
+            }
+            User currentUser = userRepository.findById(userId).orElse(null);
+            if (currentUser == null) {
+                return false;
+            }
+            return followRepository.existsByFollowerAndFollowing(currentUser, author);
+        }).limit(20).collect(Collectors.toList());
+
+        java.util.Set<String> likedPostIds = new java.util.HashSet<>();
+        java.util.Set<String> savedPostIds = new java.util.HashSet<>();
+        java.util.Set<String> followedAuthorIds = new java.util.HashSet<>();
+
+        if (userId != null) {
+            User currentUser = userRepository.findById(userId).orElse(null);
+            if (currentUser != null) {
+                likedPostIds = likeRepository.findByUser(currentUser).stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
+                savedPostIds = savedPostRepository.findByUser(currentUser).stream().map(sp -> sp.getPost().getId()).collect(Collectors.toSet());
+                followedAuthorIds = followRepository.findByFollower(currentUser).stream().map(f -> f.getFollowing().getId()).collect(Collectors.toSet());
+            }
+        }
+
+        final java.util.Set<String> finalLiked = likedPostIds;
+        final java.util.Set<String> finalSaved = savedPostIds;
+        final java.util.Set<String> finalFollowed = followedAuthorIds;
+
         return PageResponse.<PostDto>builder()
-                .posts(posts.getContent().stream().map(p -> mapToDto(p, userId)).collect(Collectors.toList()))
+                .posts(posts.stream().map(p -> mapToDto(p, userId, finalLiked, finalSaved, finalFollowed)).collect(Collectors.toList()))
                 .build();
     }
 
     public PageResponse<PostDto> getUserPosts(String userId, String targetUserId) {
         User targetUser;
         if ("me".equals(targetUserId)) {
+            if (userId == null) {
+                throw new org.springframework.security.access.AccessDeniedException("Unauthorized");
+            }
             targetUser = userRepository.findById(userId).orElseThrow();
         } else {
             targetUser = userRepository.findById(targetUserId).orElseThrow();
         }
 
+        if (targetUser.isPrivate()) {
+            if (userId == null) {
+                throw new org.springframework.security.access.AccessDeniedException("This account is private");
+            }
+            if (!targetUser.getId().equals(userId)) {
+                User currentUser = userRepository.findById(userId).orElse(null);
+                if (currentUser == null || !followRepository.existsByFollowerAndFollowing(currentUser, targetUser)) {
+                    throw new org.springframework.security.access.AccessDeniedException("This account is private");
+                }
+            }
+        }
+
         PageRequest pageRequest = PageRequest.of(0, 50);
         Page<Post> posts = postRepository.findByAuthorAndParentPostIsNullAndIsArchivedFalseOrderByCreatedAtDesc(targetUser, pageRequest);
 
+        java.util.Set<String> likedPostIds = new java.util.HashSet<>();
+        java.util.Set<String> savedPostIds = new java.util.HashSet<>();
+        java.util.Set<String> followedAuthorIds = new java.util.HashSet<>();
+
+        if (userId != null) {
+            User currentUser = userRepository.findById(userId).orElse(null);
+            if (currentUser != null) {
+                likedPostIds = likeRepository.findByUser(currentUser).stream().map(l -> l.getPost().getId()).collect(Collectors.toSet());
+                savedPostIds = savedPostRepository.findByUser(currentUser).stream().map(sp -> sp.getPost().getId()).collect(Collectors.toSet());
+                followedAuthorIds = followRepository.findByFollower(currentUser).stream().map(f -> f.getFollowing().getId()).collect(Collectors.toSet());
+            }
+        }
+
+        final java.util.Set<String> finalLiked = likedPostIds;
+        final java.util.Set<String> finalSaved = savedPostIds;
+        final java.util.Set<String> finalFollowed = followedAuthorIds;
+
         return PageResponse.<PostDto>builder()
-                .posts(posts.getContent().stream().map(p -> mapToDto(p, userId)).collect(Collectors.toList()))
+                .posts(posts.getContent().stream().map(p -> mapToDto(p, userId, finalLiked, finalSaved, finalFollowed)).collect(Collectors.toList()))
                 .build();
     }
 
     public PostDto mapToDto(Post post, String currentUserId) {
+        return mapToDto(post, currentUserId, null, null, null);
+    }
+
+    public PostDto mapToDto(Post post, String currentUserId, java.util.Set<String> likedPostIds, java.util.Set<String> savedPostIds, java.util.Set<String> followedAuthorIds) {
         boolean isLiked = false;
         boolean isSaved = false;
         boolean isFollowing = false;
 
         if (currentUserId != null) {
-            User currentUser = userRepository.findById(currentUserId).orElse(null);
-            if (currentUser != null) {
-                isLiked = likeRepository.existsByUserAndPost(currentUser, post);
-                isSaved = savedPostRepository.existsByUserAndPost(currentUser, post);
-                isFollowing = followRepository.existsByFollowerAndFollowing(currentUser, post.getAuthor());
+            if (likedPostIds != null) {
+                isLiked = likedPostIds.contains(post.getId());
+            } else {
+                User currentUser = userRepository.findById(currentUserId).orElse(null);
+                if (currentUser != null) {
+                    isLiked = likeRepository.existsByUserAndPost(currentUser, post);
+                }
+            }
+
+            if (savedPostIds != null) {
+                isSaved = savedPostIds.contains(post.getId());
+            } else {
+                User currentUser = userRepository.findById(currentUserId).orElse(null);
+                if (currentUser != null) {
+                    isSaved = savedPostRepository.existsByUserAndPost(currentUser, post);
+                }
+            }
+
+            if (followedAuthorIds != null) {
+                isFollowing = followedAuthorIds.contains(post.getAuthor().getId());
+            } else {
+                User currentUser = userRepository.findById(currentUserId).orElse(null);
+                if (currentUser != null) {
+                    isFollowing = followRepository.existsByFollowerAndFollowing(currentUser, post.getAuthor());
+                }
             }
         }
 
@@ -321,9 +544,9 @@ public class PostService {
                 .commentsCount(post.getRepliesCount())
                 .isLiked(isLiked)
                 .isSaved(isSaved)
-                .hashtags(new ArrayList<>()) // Simplified
+                .hashtags(post.getHashtags() != null ? post.getHashtags().stream().map(Hashtag::getName).collect(Collectors.toList()) : new ArrayList<>())
                 .createdAt(post.getCreatedAt() != null ? post.getCreatedAt() : LocalDateTime.now())
-                .repostOf(post.getRepostOf() != null ? mapToDto(post.getRepostOf(), currentUserId) : null)
+                .repostOf(post.getRepostOf() != null ? mapToDto(post.getRepostOf(), currentUserId, likedPostIds, savedPostIds, followedAuthorIds) : null)
                 .build();
     }
 }

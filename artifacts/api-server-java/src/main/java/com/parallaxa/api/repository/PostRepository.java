@@ -24,4 +24,10 @@ public interface PostRepository extends JpaRepository<Post, String> {
     List<Post> findByParentPostInAndIsArchivedFalseOrderByCreatedAtDesc(Collection<Post> parentPosts);
 
     List<Post> findByContentContainingIgnoreCaseAndParentPostIsNullAndIsArchivedFalse(String content);
+
+    List<Post> findByRepostOf(Post post);
+
+    List<Post> findByParentPost(Post parentPost);
+
+    boolean existsByAuthorAndRepostOf(User author, Post repostOf);
 }

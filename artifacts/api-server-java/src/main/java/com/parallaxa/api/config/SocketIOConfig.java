@@ -19,6 +19,7 @@ public class SocketIOConfig {
         Configuration config = new Configuration();
         config.setHostname(host);
         config.setPort(port);
+        config.setOrigin("*"); // Explicitly configure CORS allowed origins to allow web clients to connect securely
         return new SocketIOServer(config);
     }
 }

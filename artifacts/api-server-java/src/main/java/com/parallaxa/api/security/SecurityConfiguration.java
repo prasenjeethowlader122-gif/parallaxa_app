@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,6 +22,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
@@ -37,6 +40,7 @@ public class SecurityConfiguration {
                                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // Public endpoints: auth and static assets
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/api/healthz",
@@ -50,15 +54,21 @@ public class SecurityConfiguration {
                                 "/icons/**",
                                 "/assets/**",
                                 "/*.js",
-                                "/*.css",
-                                "/api/feed",
-                                "/api/explore",
-                                "/api/search",
-                                "/api/posts/{postId}",
-                                "/api/posts/{postId}/replies",
-                                "/api/users/{userId}",
-                                "/api/users/{userId}/posts"
+                                "/*.css"
                         ).permitAll()
+                        // Authenticated endpoints that must not match wildcard GET permitAlls
+                        .requestMatchers(HttpMethod.GET, "/api/posts/saved").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // Public read-only endpoints (restricted strictly to GET method)
+                        .requestMatchers(HttpMethod.GET, "/api/feed").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/explore").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/posts/{postId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/posts/{postId}/replies").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/{userId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/{userId}/posts").permitAll()
+                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

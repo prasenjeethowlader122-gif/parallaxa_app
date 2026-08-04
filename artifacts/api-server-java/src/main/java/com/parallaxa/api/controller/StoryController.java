@@ -23,6 +23,12 @@ public class StoryController {
         return ResponseEntity.ok(storyService.getStories(userDetails.getUsername()));
     }
 
+    @PostMapping("/{storyId}/view")
+    public ResponseEntity<Void> viewStory(@PathVariable String storyId) {
+        storyService.viewStory(storyId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping
     public ResponseEntity<Story> createStory(
             @AuthenticationPrincipal UserDetails userDetails,
