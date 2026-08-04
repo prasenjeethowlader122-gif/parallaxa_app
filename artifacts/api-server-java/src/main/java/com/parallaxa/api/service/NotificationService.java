@@ -2,6 +2,7 @@ package com.parallaxa.api.service;
 
 import com.parallaxa.api.entity.Notification;
 import com.parallaxa.api.entity.User;
+import com.parallaxa.api.entity.Post;
 import com.parallaxa.api.repository.NotificationRepository;
 import com.parallaxa.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,6 +23,28 @@ import java.util.stream.Collectors;
 public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+
+    @Transactional
+    public void createNotification(User user, User fromUser, String type, Post post, String commentId, String commentContent) {
+        if (user == null || fromUser == null) {
+            return;
+        }
+        if (user.getId().equals(fromUser.getId())) {
+            return; // Don't notify self
+        }
+        Notification notification = Notification.builder()
+                .id(UUID.randomUUID().toString())
+                .user(user)
+                .fromUser(fromUser)
+                .type(type)
+                .post(post)
+                .commentId(commentId)
+                .commentContent(commentContent)
+                .isRead(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+        notificationRepository.save(notification);
+    }
 
     public List<Map<String, Object>> getNotifications(String userId, int limit) {
         User user = userRepository.findById(userId).orElseThrow();

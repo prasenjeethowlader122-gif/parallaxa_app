@@ -5,6 +5,7 @@ import com.parallaxa.api.entity.User;
 import com.parallaxa.api.repository.UserRepository;
 import com.parallaxa.api.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +24,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -247,7 +249,7 @@ public class AuthService {
             user.setResetPasswordExpires(LocalDateTime.now().plusHours(1));
             userRepository.save(user);
             // In a real app, send an email here.
-            System.out.println("RESET TOKEN for " + normalizedEmail + ": " + token);
+            log.info("RESET TOKEN generated securely for email user: {}", token);
         });
     }
 

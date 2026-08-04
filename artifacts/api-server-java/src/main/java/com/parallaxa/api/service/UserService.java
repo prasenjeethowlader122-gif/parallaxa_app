@@ -18,6 +18,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final AuthService authService;
+    private final NotificationService notificationService;
 
     public UserDto getUser(String userId) {
         User user;
@@ -63,6 +64,9 @@ public class UserService {
         following.setFollowersCount(following.getFollowersCount() + 1);
         userRepository.save(follower);
         userRepository.save(following);
+
+        // Trigger notification
+        notificationService.createNotification(following, follower, "follow", null, null, null);
 
         return MapResponse.builder().put("message", "Followed").build();
     }

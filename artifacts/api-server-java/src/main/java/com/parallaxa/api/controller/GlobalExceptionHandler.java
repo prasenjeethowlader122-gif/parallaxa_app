@@ -37,4 +37,41 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+        Map<String, Object> body = new HashMap<>();
+        String message = ex.getMessage();
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        String error = "Internal Server Error";
+
+        if (message != null) {
+            String lower = message.toLowerCase();
+            if (lower.contains("not found")) {
+                status = HttpStatus.NOT_FOUND;
+                error = "Not Found";
+            } else if (lower.contains("unauthorized") || lower.contains("permission") || lower.contains("not the owner")) {
+                status = HttpStatus.UNAUTHORIZED;
+                error = "Unauthorized";
+            } else if (lower.contains("forbidden") || lower.contains("access denied") || lower.contains("private")) {
+                status = HttpStatus.FORBIDDEN;
+                error = "Forbidden";
+            } else if (lower.contains("already") || lower.contains("invalid") || lower.contains("bad") || lower.contains("cannot")) {
+                status = HttpStatus.BAD_REQUEST;
+                error = "Bad Request";
+            }
+        }
+
+        body.put("error", error);
+        body.put("message", message);
+        return ResponseEntity.status(status).body(body);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleAllOtherExceptions(Exception ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", "Internal Server Error");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
 }
