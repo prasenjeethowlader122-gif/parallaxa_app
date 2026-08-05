@@ -1,5 +1,6 @@
 package com.parallaxa.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +27,12 @@ public class PostDto {
     private int repostsCount;
     private int repliesCount;
     private int commentsCount;
+
+    @JsonProperty("isLiked")
     private boolean isLiked;
+
+    @JsonProperty("isSaved")
     private boolean isSaved;
+
     private LocalDateTime createdAt;
 }
