@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../data/post_repository.dart';
 import 'post_card.dart';
-import '../../stories/presentation/widgets/story_bar.dart';
 import '../../../core/widgets/ad_banner_widget.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
@@ -36,7 +35,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
 
     return Column(
       children: [
-        const StoryBar(),
         // ── Tab bar ──────────────────────────────────────────────────
         Container(
           decoration: BoxDecoration(color: theme.scaffoldBackgroundColor),

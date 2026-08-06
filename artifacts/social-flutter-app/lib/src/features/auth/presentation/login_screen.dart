@@ -208,27 +208,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.errorContainer.withValues(
-                      alpha: 0.2,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.zero,
                     border: Border.all(
-                      color: theme.colorScheme.error.withValues(alpha: 0.5),
+                      color: Colors.black,
+                      width: 1.5,
                     ),
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Symbols.error,
-                        color: theme.colorScheme.error,
+                        color: Colors.black,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           _errors['general']!,
-                          style: TextStyle(
-                            color: theme.colorScheme.error,
+                          style: const TextStyle(
+                            color: Colors.black,
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
@@ -252,6 +251,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   textInputAction: TextInputAction.next,
                   editable: !_isLoading && !_showTotpInput,
                   onChanged: (_) => setState(() => _errors.remove('email')),
+                  isAuthStyle: true,
                 ),
               ),
 
@@ -272,6 +272,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onFieldSubmitted: (_) {
                     if (!_showTotpInput) _handleLogin();
                   },
+                  isAuthStyle: true,
                   right: IconButton(
                     onPressed: () =>
                         setState(() => _showPassword = !_showPassword),
@@ -323,6 +324,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   editable: !_isLoading,
                   onChanged: (_) => setState(() => _errors.remove('general')),
                   onFieldSubmitted: (_) => _handleLogin(),
+                  isAuthStyle: true,
                 ),
                 Align(
                   alignment: Alignment.center,
@@ -353,8 +355,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: ElevatedButton(
                   onPressed: _canSubmit ? _handleLogin : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.onSurface,
-                    foregroundColor: theme.colorScheme.surface,
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(27),
                     ),
@@ -389,8 +391,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     context.go('/feed');
                   },
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(
-                      color: theme.colorScheme.outline,
+                    foregroundColor: Colors.black,
+                    side: const BorderSide(
+                      color: Colors.black,
                       width: 1.5,
                     ),
                     shape: RoundedRectangleBorder(

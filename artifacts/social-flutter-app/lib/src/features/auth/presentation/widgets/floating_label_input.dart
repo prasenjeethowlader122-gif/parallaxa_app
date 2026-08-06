@@ -21,6 +21,7 @@ class FloatingLabelInput extends StatefulWidget {
   final TextCapitalization textCapitalization;
   final bool autoCorrect;
   final int? maxLines;
+  final bool isAuthStyle;
 
   const FloatingLabelInput({
     super.key,
@@ -42,6 +43,7 @@ class FloatingLabelInput extends StatefulWidget {
     this.textCapitalization = TextCapitalization.none,
     this.autoCorrect = true,
     this.maxLines = 1,
+    this.isAuthStyle = false,
   });
 
   @override
@@ -127,11 +129,15 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
     final isFocused = _focusNode.hasFocus;
     final hasError = widget.error != null;
 
-    final Color borderColor = hasError
-        ? const Color(0xFFFCA5A5)
-        : isFocused
-        ? AppColors.primary
-        : AppColors.slate200;
+    final Color borderColor = widget.isAuthStyle
+        ? (hasError ? const Color(0xFFDC2626) : Colors.black)
+        : (hasError
+            ? const Color(0xFFFCA5A5)
+            : isFocused
+                ? AppColors.primary
+                : AppColors.slate200);
+
+    final double borderRadiusVal = widget.isAuthStyle ? 28.0 : 16.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,9 +149,12 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
             Container(
               constraints: const BoxConstraints(minHeight: 56),
               decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: borderColor, width: 1.5),
+                color: widget.isAuthStyle ? Colors.white : Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(borderRadiusVal),
+                border: Border.all(
+                  color: borderColor,
+                  width: widget.isAuthStyle ? 2.0 : 1.5,
+                ),
               ),
               child: Row(
                 children: [
@@ -155,20 +164,24 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                       child: widget.icon is IconData
                           ? Icon(
                               widget.icon as IconData,
-                              color: isFocused
-                                  ? AppColors.primary
-                                  : hasError
-                                  ? const Color(0xFFDC2626)
-                                  : AppColors.slate500,
+                              color: widget.isAuthStyle
+                                  ? Colors.black
+                                  : (isFocused
+                                      ? AppColors.primary
+                                      : hasError
+                                          ? const Color(0xFFDC2626)
+                                          : AppColors.slate500),
                               size: 20,
                             )
                           : HugeIcon(
                               icon: widget.icon,
-                              color: isFocused
-                                  ? AppColors.primary
-                                  : hasError
-                                  ? const Color(0xFFDC2626)
-                                  : AppColors.slate500,
+                              color: widget.isAuthStyle
+                                  ? Colors.black
+                                  : (isFocused
+                                      ? AppColors.primary
+                                      : hasError
+                                          ? const Color(0xFFDC2626)
+                                          : AppColors.slate500),
                               size: 20,
                             ),
                     ),
@@ -190,12 +203,14 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                         maxLength: widget.maxLength,
                         textCapitalization: widget.textCapitalization,
                         autocorrect: widget.autoCorrect,
-                        cursorColor: AppColors.primary,
+                        cursorColor: widget.isAuthStyle ? Colors.black : AppColors.primary,
                         style: TextStyle(
                           fontSize: 16,
-                          color: isFocused || _textController.text.isNotEmpty
-                              ? Theme.of(context).textTheme.bodyLarge?.color
-                              : AppColors.slate900,
+                          color: widget.isAuthStyle
+                              ? Colors.black
+                              : (isFocused || _textController.text.isNotEmpty
+                                  ? Theme.of(context).textTheme.bodyLarge?.color
+                                  : AppColors.slate900),
                           fontWeight: FontWeight.w500,
                         ),
                         decoration: InputDecoration(
@@ -229,7 +244,7 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                   top: 16 - (_animation.value * 26),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    color: Theme.of(context).scaffoldBackgroundColor,
+                    color: widget.isAuthStyle ? Colors.white : Theme.of(context).scaffoldBackgroundColor,
                     child: Text(
                       widget.label,
                       style: TextStyle(
@@ -237,8 +252,8 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                         color: hasError
                             ? const Color(0xFFDC2626)
                             : isFocused
-                            ? AppColors.primary
-                            : AppColors.slate400,
+                            ? (widget.isAuthStyle ? Colors.black : AppColors.primary)
+                            : (widget.isAuthStyle ? Colors.black54 : AppColors.slate400),
                         fontWeight: _animation.value > 0
                             ? FontWeight.w600
                             : FontWeight.w500,

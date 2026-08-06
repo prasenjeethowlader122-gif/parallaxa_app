@@ -33,35 +33,40 @@ public class MessagingService {
         }
     }
 
+    public Map<String, Object> mapConversation(Conversation c, String userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        User otherUser = c.getUser1().getId().equals(userId) ? c.getUser2() : c.getUser1();
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", c.getId());
+        Map<String, Object> participantMap = new HashMap<>();
+        participantMap.put("id", otherUser.getId());
+        participantMap.put("username", otherUser.getUsername());
+        participantMap.put("displayName", otherUser.getDisplayName());
+        participantMap.put("avatarUrl", otherUser.getAvatarUrl() != null ? otherUser.getAvatarUrl() : "");
+        map.put("participant", participantMap);
+        map.put("updatedAt", c.getUpdatedAt());
+
+        // Last message mapping
+        Optional<Message> lastMsgOpt = messageRepository.findTopByConversationOrderByCreatedAtDesc(c);
+        if (lastMsgOpt.isPresent()) {
+            map.put("lastMessage", MessageDto.from(lastMsgOpt.get()));
+        } else {
+            map.put("lastMessage", null);
+        }
+
+        long unreadCount = messageRepository.countByConversationAndIsReadFalseAndSenderNot(c, user);
+        map.put("unreadCount", unreadCount);
+
+        return map;
+    }
+
     public List<Map<String, Object>> getConversations(String userId) {
         User user = userRepository.findById(userId).orElseThrow();
         List<Conversation> conversations = conversationRepository.findByUserOrderByUpdatedAtDesc(user);
 
-        return conversations.stream().map(c -> {
-            User otherUser = c.getUser1().getId().equals(userId) ? c.getUser2() : c.getUser1();
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", c.getId());
-            Map<String, Object> participantMap = new HashMap<>();
-            participantMap.put("id", otherUser.getId());
-            participantMap.put("username", otherUser.getUsername());
-            participantMap.put("displayName", otherUser.getDisplayName());
-            participantMap.put("avatarUrl", otherUser.getAvatarUrl() != null ? otherUser.getAvatarUrl() : "");
-            map.put("participant", participantMap);
-            map.put("updatedAt", c.getUpdatedAt());
-
-            // Last message mapping
-            Optional<Message> lastMsgOpt = messageRepository.findTopByConversationOrderByCreatedAtDesc(c);
-            if (lastMsgOpt.isPresent()) {
-                map.put("lastMessage", MessageDto.from(lastMsgOpt.get()));
-            } else {
-                map.put("lastMessage", null);
-            }
-
-            long unreadCount = messageRepository.countByConversationAndIsReadFalseAndSenderNot(c, user);
-            map.put("unreadCount", unreadCount);
-
-            return map;
-        }).collect(Collectors.toList());
+        return conversations.stream()
+                .map(c -> mapConversation(c, userId))
+                .collect(Collectors.toList());
     }
 
     @Transactional

@@ -74,9 +74,11 @@ public class PostController {
     @PostMapping("/posts/{postId}/repost")
     public ResponseEntity<PostDto> repostPost(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String postId
+            @PathVariable String postId,
+            @RequestBody(required = false) Map<String, String> body
     ) {
-        return ResponseEntity.ok(postService.repostPost(userDetails.getUsername(), postId));
+        String content = (body != null) ? body.get("content") : null;
+        return ResponseEntity.ok(postService.repostPost(userDetails.getUsername(), postId, content));
     }
 
     @GetMapping("/posts/{postId}/replies")

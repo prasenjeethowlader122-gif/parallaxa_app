@@ -135,6 +135,11 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                         : null,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 56),
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
                     ),
                     child: _isLoading
                         ? const CupertinoActivityIndicator(color: Colors.white)

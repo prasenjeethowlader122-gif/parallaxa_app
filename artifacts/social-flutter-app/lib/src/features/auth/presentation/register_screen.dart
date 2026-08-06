@@ -307,6 +307,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         editable: !_isLoading,
         onChanged: (_) => setState(() => _errors.remove('displayName')),
         onFieldSubmitted: (_) => _goNext(),
+        isAuthStyle: true,
       );
     } else if (_step == 1) {
       return Column(
@@ -323,6 +324,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 error: _errors['dateOfBirth'],
                 keyboardType: TextInputType.none,
                 editable: false,
+                isAuthStyle: true,
               ),
             ),
           ),
@@ -364,6 +366,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         editable: !_isLoading,
         onChanged: (_) => setState(() => _errors.remove('email')),
         onFieldSubmitted: (_) => _goNext(),
+        isAuthStyle: true,
       );
     } else if (_step == 3) {
       return FloatingLabelInput(
@@ -377,6 +380,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         editable: !_isLoading,
         onChanged: (_) => setState(() => _errors.remove('password')),
         onFieldSubmitted: (_) => _goNext(),
+        isAuthStyle: true,
         right: IconButton(
           onPressed: () => setState(() => _showPassword = !_showPassword),
           icon: Icon(
@@ -404,6 +408,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             editable: !_isLoading,
             onChanged: _onUsernameChanged,
             onFieldSubmitted: (_) => _handleRegister(),
+            isAuthStyle: true,
             right: _checkingUsername
                 ? SizedBox(
                     width: 18,
@@ -622,27 +627,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.errorContainer.withValues(
-                      alpha: 0.2,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.zero,
                     border: Border.all(
-                      color: theme.colorScheme.error.withValues(alpha: 0.5),
+                      color: Colors.black,
+                      width: 1.5,
                     ),
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Symbols.error,
-                        color: theme.colorScheme.error,
+                        color: Colors.black,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           _errors['general']!,
-                          style: TextStyle(
-                            color: theme.colorScheme.error,
+                          style: const TextStyle(
+                            color: Colors.black,
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
@@ -740,8 +744,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ? null
                       : (isLastStep ? _handleRegister : _goNext),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.onSurface,
-                    foregroundColor: theme.colorScheme.surface,
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(27),
                     ),
