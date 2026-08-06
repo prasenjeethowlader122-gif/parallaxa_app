@@ -1,13 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hugeicons/hugeicons.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../data/auth_repository.dart';
+import '../data/auth_provider.dart';
 import '../../../core/api_client.dart';
-import '../../../core/app_colors.dart';
 import '../../../core/processing_provider.dart';
 import 'widgets/floating_label_input.dart';
 
@@ -130,6 +129,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (userId != null) {
       await storage.setCurrentUserId(userId);
     }
+
+    // Update reactive auth state
+    try {
+      final user = await ref.read(authRepositoryProvider).getMe();
+      ref.read(authStateProvider.notifier).setAuth(token, user);
+    } catch (_) {
+      ref.read(authStateProvider.notifier).setAuth(token, null);
+    }
+
     if (mounted) context.go('/feed');
   }
 
@@ -143,6 +151,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -155,33 +164,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               const SizedBox(height: 48),
 
-              // Logo — capped to screen width to prevent overflow on small devices
+              // Logo
               Center(
                 child: SvgPicture.asset(
                   'assets/images/parallaxa-logo.svg',
                   width: (screenWidth - 80).clamp(120.0, 200.0),
                   height: 76,
                   fit: BoxFit.contain,
+                  colorFilter: ColorFilter.mode(
+                    theme.colorScheme.primary,
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
               const SizedBox(height: 28),
 
               // Heading
-              const Text(
+              Text(
                 'Welcome back',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.slate900,
+                  color: theme.colorScheme.onSurface,
                   letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Sign in to continue to your account',
                 style: TextStyle(
                   fontSize: 15,
-                  color: AppColors.slate500,
+                  color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -195,23 +208,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFCA5A5)),
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.zero,
+                    border: Border.all(color: Colors.black, width: 1.5),
                   ),
                   child: Row(
                     children: [
-                      const HugeIcon(
-                        icon: HugeIcons.strokeRoundedAlertCircle,
-                        color: Color(0xFFDC2626),
-                        size: 20,
-                      ),
+                      const Icon(Symbols.error, color: Colors.black, size: 20),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           _errors['general']!,
                           style: const TextStyle(
-                            color: Color(0xFFDC2626),
+                            color: Colors.black,
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
@@ -223,27 +232,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 16),
               ],
 
-              // Email Input — dimmed during 2FA step
+              // Email Input
               Opacity(
                 opacity: _showTotpInput ? 0.45 : 1.0,
                 child: FloatingLabelInput(
                   label: "Email Address",
-                  icon: HugeIcons.strokeRoundedMail01,
+                  icon: Symbols.mail,
                   controller: _emailController,
                   error: _errors['email'],
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   editable: !_isLoading && !_showTotpInput,
                   onChanged: (_) => setState(() => _errors.remove('email')),
+                  isAuthStyle: true,
                 ),
               ),
 
-              // Password Input — dimmed during 2FA step
+              // Password Input
               Opacity(
                 opacity: _showTotpInput ? 0.45 : 1.0,
                 child: FloatingLabelInput(
                   label: "Password",
-                  icon: HugeIcons.strokeRoundedLockPassword,
+                  icon: Symbols.lock,
                   controller: _passwordController,
                   error: _errors['password'],
                   secureTextEntry: !_showPassword,
@@ -255,17 +265,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onFieldSubmitted: (_) {
                     if (!_showTotpInput) _handleLogin();
                   },
+                  isAuthStyle: true,
                   right: IconButton(
                     onPressed: () =>
                         setState(() => _showPassword = !_showPassword),
-                    icon: HugeIcon(
-                      icon: _showPassword
-                          ? HugeIcons.strokeRoundedViewOffSlash
-                          : HugeIcons.strokeRoundedView,
+                    icon: Icon(
+                      _showPassword
+                          ? Symbols.visibility_off
+                          : Symbols.visibility,
                       color: _errors['password'] != null
-                          ? const Color(0xFFDC2626)
-                          : AppColors.slate500,
-                      size: 18,
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurfaceVariant,
+                      size: 20,
                     ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -273,7 +284,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
 
-              // Forgot Password link (hidden in 2FA mode)
+              // Forgot Password link
               if (!_showTotpInput)
                 Align(
                   alignment: Alignment.centerRight,
@@ -281,10 +292,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     padding: const EdgeInsets.only(bottom: 24),
                     child: GestureDetector(
                       onTap: () => context.push('/forgot-password'),
-                      child: const Text(
+                      child: Text(
                         'Forgot password?',
                         style: TextStyle(
-                          color: Color(0xFF0095F6),
+                          color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                         ),
@@ -297,7 +308,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (_showTotpInput) ...[
                 FloatingLabelInput(
                   label: "6-digit 2FA Code",
-                  icon: HugeIcons.strokeRoundedShield01,
+                  icon: Symbols.shield,
                   controller: _totpController,
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.done,
@@ -306,6 +317,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   editable: !_isLoading,
                   onChanged: (_) => setState(() => _errors.remove('general')),
                   onFieldSubmitted: (_) => _handleLogin(),
+                  isAuthStyle: true,
                 ),
                 Align(
                   alignment: Alignment.center,
@@ -317,10 +329,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         _totpController.clear();
                         _errors = {};
                       }),
-                      child: const Text(
+                      child: Text(
                         '← Back to password',
                         style: TextStyle(
-                          color: Color(0xFF0095F6),
+                          color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                         ),
@@ -342,15 +354,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       borderRadius: BorderRadius.circular(27),
                     ),
                     elevation: 0,
-                    disabledBackgroundColor: AppColors.slate200,
-                    disabledForegroundColor: AppColors.slate400,
                   ),
                   child: _isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 22,
                           width: 22,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
+                            color: theme.colorScheme.surface,
                             strokeWidth: 2.5,
                           ),
                         )
@@ -365,24 +375,62 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 12),
 
+              // Continue as Guest Button
+              SizedBox(
+                height: 54,
+                child: OutlinedButton(
+                  onPressed: () {
+                    ref.read(authStateProvider.notifier).setGuest();
+                    context.go('/feed');
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.black,
+                    side: const BorderSide(color: Colors.black, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(27),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Symbols.person,
+                        size: 20,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Continue as Guest',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // Sign Up CTA
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
+                  Text(
                     "Don't have an account? ",
                     style: TextStyle(
-                      color: AppColors.slate600,
+                      color: theme.colorScheme.onSurfaceVariant,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   GestureDetector(
                     onTap: () => context.push('/register'),
-                    child: const Text(
+                    child: Text(
                       'Sign up',
                       style: TextStyle(
-                        color: Color(0xFF0095F6),
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w800,
                         fontSize: 14,
                       ),
@@ -392,31 +440,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
 
               const SizedBox(height: 32),
-              const Text.rich(
+              Text.rich(
                 TextSpan(
                   text: 'By signing in, you agree to our ',
                   children: [
                     TextSpan(
                       text: 'Terms of Service',
                       style: TextStyle(
-                        color: Color(0xFF0095F6),
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    TextSpan(text: ' and '),
+                    const TextSpan(text: ' and '),
                     TextSpan(
                       text: 'Privacy Policy',
                       style: TextStyle(
-                        color: Color(0xFF0095F6),
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    TextSpan(text: '.'),
+                    const TextSpan(text: '.'),
                   ],
                 ),
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: AppColors.slate400,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.6,
+                  ),
                   fontSize: 12,
                   height: 1.5,
                   fontWeight: FontWeight.w500,

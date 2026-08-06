@@ -1,0 +1,43 @@
+# ============================================================
+# Dockerfile.backend — Spring Boot API Server (Java 21)
+# Build:   docker build -f Dockerfile.backend -t parallaxa-backend .
+# Run:     docker run -p 8080:8080 --env-file .env parallaxa-backend
+# ============================================================
+
+# ── Stage 1: Build JAR with Maven ────────────────────────────
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
+
+WORKDIR /app
+
+# Copy pom.xml first — dependencies layer cached separately
+COPY artifacts/api-server-java/pom.xml .
+RUN mvn dependency:go-offline -q
+
+# Copy source and build
+COPY artifacts/api-server-java/src ./src
+RUN mvn clean package -DskipTests -q
+
+# ── Stage 2: Lean production image ───────────────────────────
+FROM eclipse-temurin:21-jre AS runner
+
+# Install netcat for wait-for-db script
+RUN apt-get update && apt-get install -y --no-install-recommends netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+RUN mkdir -p /app/uploads
+
+COPY --from=builder /app/target/*.jar app.jar
+
+# Startup script: wait for Postgres, then launch Spring Boot
+COPY docker/entrypoint.backend.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENV PORT=8080
+ENV SPRING_PROFILES_ACTIVE=prod
+
+EXPOSE 8080
+EXPOSE 9092
+
+ENTRYPOINT ["/entrypoint.sh"]

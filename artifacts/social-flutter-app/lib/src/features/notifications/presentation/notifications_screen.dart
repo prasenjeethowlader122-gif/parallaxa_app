@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -54,7 +53,7 @@ class NotificationsScreen extends ConsumerWidget {
           strokeWidth: 2,
         ),
       ),
-      error: (_, __) => const Center(
+      error: (context, error) => const Center(
         child: Text(
           'Could not load notifications',
           style: TextStyle(color: AppColors.mutedForeground),
@@ -305,7 +304,7 @@ class _NotificationRow extends ConsumerWidget {
                     width: 44,
                     height: 44,
                     fit: BoxFit.cover,
-                    errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                    errorWidget: (_, _, _) => const SizedBox.shrink(),
                   ),
                 ),
               if (isUnread) ...[

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -37,7 +36,7 @@ class BookmarksScreen extends ConsumerWidget {
                   HugeIcon(
                     icon: HugeIcons.strokeRoundedBookmark01,
                     size: 64,
-                    color: AppColors.mutedForeground.withOpacity(0.5),
+                    color: AppColors.mutedForeground.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   const Text(

@@ -1,51 +1,162 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:rive/rive.dart' hide LinearGradient;
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
+import '../data/auth_repository.dart';
+import '../data/auth_provider.dart';
+import '../../../core/api_client.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 2), () {
-      if (mounted) {
-        context.go('/feed');
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _controller.forward();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    final authRepo = ref.read(authRepositoryProvider);
+    final authNotifier = ref.read(authStateProvider.notifier);
+    final storage = ref.read(storageServiceProvider);
+    final token = await storage.getAuthToken();
+
+    // ignore: unnecessary_null_comparison
+    if (token != null) {
+      try {
+        final user = await authRepo.getMe();
+        authNotifier.setAuth(token, user);
+      } catch (e) {
+        await storage.clearAll();
+        authNotifier.clearAuth();
       }
-    });
+    }
+
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (mounted) {
+      final state = ref.read(authStateProvider);
+      if (state.token != null) {
+        context.go('/feed');
+      } else {
+        context.go('/login');
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          Center(
-            child: SvgPicture.asset(
-              'assets/images/parallaxa-logo.svg',
-              height: 200,
-              fit: BoxFit.contain,
+          // Background Gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [const Color(0xFF0F172A), const Color(0xFF1E293B)]
+                    : [const Color(0xFFFFFFFF), const Color(0xFFF1F5F9)],
+              ),
             ),
           ),
+
+          // Logo and App Name
+          Center(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: 180,
+                          width: 180,
+                          child: RiveAnimation.asset(
+                            'assets/rive/splash.riv',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Parallaxa',
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 3,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // Bottom Version Text
           Positioned(
             bottom: 40,
             left: 0,
             right: 0,
             child: Center(
-              child: Text(
-                'Parallaxa',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[400],
-                  letterSpacing: 1.2,
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Text(
+                  'v1.0.0',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.4),
+                    letterSpacing: 2,
+                  ),
                 ),
               ),
             ),

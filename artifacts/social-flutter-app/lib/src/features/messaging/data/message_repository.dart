@@ -13,7 +13,7 @@ class MessageRepository {
   MessageRepository(this._dio);
 
   Future<List<Conversation>> getConversations() async {
-    final response = await _dio.get('/conversations');
+    final response = await _dio.get('conversations');
     return (response.data as List)
         .map((e) => Conversation.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -25,8 +25,8 @@ class MessageRepository {
     int limit = 30,
   }) async {
     final response = await _dio.get(
-      '/conversations/$conversationId/messages',
-      queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
+      'conversations/$conversationId/messages',
+      queryParameters: {'cursor': ?cursor, 'limit': limit},
     );
     return MessagePage.fromJson(response.data);
   }
@@ -37,18 +37,15 @@ class MessageRepository {
     String? mediaUrl,
   }) async {
     final response = await _dio.post(
-      '/conversations/$conversationId/messages',
-      data: {
-        if (content != null) 'content': content,
-        if (mediaUrl != null) 'mediaUrl': mediaUrl,
-      },
+      'conversations/$conversationId/messages',
+      data: {'content': ?content, 'mediaUrl': ?mediaUrl},
     );
     return Message.fromJson(response.data);
   }
 
   Future<Conversation> startConversation(String userId) async {
     final response = await _dio.post(
-      '/conversations/start',
+      'conversations/start',
       data: {'userId': userId},
     );
     return Conversation.fromJson(response.data);

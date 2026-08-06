@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web"]
+modules = ["nodejs-20", "java-graalvm22.3"]
 [agent]
 expertMode = true
 stack = "BEST_EFFORT_FALLBACK"
@@ -21,6 +21,10 @@ args = "Start application"
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "Start Backend"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start Java Backend"
 
 [[workflows.workflow]]
 name = "Start application"
@@ -46,6 +50,18 @@ task = "shell.exec"
 args = "cd artifacts/api-server && PORT=3000 pnpm run dev"
 waitForPort = 3000
 
+[[workflows.workflow]]
+name = "Start Java Backend"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd artifacts/api-server-java && PORT=8000 mvn spring-boot:run"
+waitForPort = 8000
+
 [[ports]]
 localPort = 3000
 externalPort = 3000
@@ -53,6 +69,18 @@ externalPort = 3000
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[[ports]]
+localPort = 9092
+externalPort = 3001
 
 [deployment]
 deploymentTarget = "autoscale"

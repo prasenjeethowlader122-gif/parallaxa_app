@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'storage_service.dart';
+import '../features/auth/data/auth_provider.dart';
 
 final storageServiceProvider = Provider<StorageService>((ref) {
   throw UnimplementedError('StorageService must be initialized in main()');
@@ -10,7 +11,7 @@ class AppConfig {
   static const String appName = 'Parallaxa';
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://parallaxa-app-t5p2.onrender.com/api',
+    defaultValue: 'https://parallaxa-backend.onrender.com/api/',
   );
 }
 
@@ -27,8 +28,9 @@ final dioProvider = Provider<Dio>((ref) {
 
   dio.interceptors.add(
     InterceptorsWrapper(
-      onRequest: (options, handler) {
-        final token = storageService.getAuthToken();
+      onRequest: (options, handler) async {
+        final token = await storageService.getAuthToken();
+        // ignore: unnecessary_null_comparison
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
@@ -37,6 +39,7 @@ final dioProvider = Provider<Dio>((ref) {
       onError: (e, handler) async {
         if (e.response?.statusCode == 401) {
           await storageService.clearAll();
+          ref.read(authStateProvider.notifier).clearAuth();
         }
         return handler.next(e);
       },

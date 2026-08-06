@@ -22,6 +22,8 @@ class User {
   final int postsCount;
   final DateTime? dateOfBirth;
   final DateTime createdAt;
+  final bool hasStory;
+  final bool hasUnviewedStory;
 
   User({
     required this.id,
@@ -42,6 +44,8 @@ class User {
     required this.postsCount,
     this.dateOfBirth,
     required this.createdAt,
+    this.hasStory = false,
+    this.hasUnviewedStory = false,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);

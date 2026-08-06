@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -164,9 +163,9 @@ class _ExploreGrid extends ConsumerWidget {
                       ? CachedNetworkImage(
                           imageUrl: post.imageUrl!,
                           fit: BoxFit.cover,
-                          placeholder: (_, __) =>
+                          placeholder: (context, error) =>
                               Container(color: AppColors.muted),
-                          errorWidget: (_, __, ___) => Container(
+                          errorWidget: (_, _, _) => Container(
                             color: AppColors.muted,
                             child: const HugeIcon(
                               icon: HugeIcons.strokeRoundedImage01,
@@ -199,7 +198,7 @@ class _ExploreGrid extends ConsumerWidget {
           strokeWidth: 2,
         ),
       ),
-      error: (_, __) => const Center(
+      error: (context, error) => const Center(
         child: Text(
           'Could not load explore',
           style: TextStyle(color: AppColors.mutedForeground),
@@ -440,7 +439,7 @@ class _SearchResults extends ConsumerWidget {
           strokeWidth: 2,
         ),
       ),
-      error: (_, __) => const Center(
+      error: (context, error) => const Center(
         child: Text(
           'Search failed',
           style: TextStyle(color: AppColors.mutedForeground),

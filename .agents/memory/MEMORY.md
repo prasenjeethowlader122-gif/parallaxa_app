@@ -1,0 +1,1 @@
+- [Java Backend Setup](java-backend-setup.md) — port 8000, Java 17, @RequestParam for FormData fields, DatabaseConfig without @ConditionalOnProperty

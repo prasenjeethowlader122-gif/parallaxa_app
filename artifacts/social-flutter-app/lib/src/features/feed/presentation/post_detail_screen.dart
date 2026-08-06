@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,12 +33,28 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   bool _isSubmitting = false;
   String? _replyTargetId;
   String? _replyTargetUsername;
+  bool _isTranslating = false;
+  String? _translatedContent;
 
   @override
   void dispose() {
     _commentController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _translatePost(String content) async {
+    if (_isTranslating) return;
+    setState(() => _isTranslating = true);
+    // Simulate translation with a delay
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) {
+      setState(() {
+        _translatedContent =
+            "This is a simulated translation of the post: $content";
+        _isTranslating = false;
+      });
+    }
   }
 
   Future<void> _submitComment() async {
@@ -123,6 +138,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     data: (post) => _ParentPostView(
                       post: post,
                       onReply: () => _onReply(post.id, post.author.username),
+                      onTranslate: () => _translatePost(post.content ?? ""),
+                      isTranslating: _isTranslating,
+                      translatedContent: _translatedContent,
                       formatDate: _formatFullDate,
                       fmtCount: _fmtCount,
                     ),
@@ -143,7 +161,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.05),
+                        color: AppColors.primary.withValues(alpha: 0.05),
                         border: const Border(
                           bottom: BorderSide(
                             color: AppColors.border,
@@ -265,12 +283,18 @@ class _CommentNode {
 class _ParentPostView extends StatelessWidget {
   final Post post;
   final VoidCallback onReply;
+  final VoidCallback onTranslate;
+  final bool isTranslating;
+  final String? translatedContent;
   final String Function(DateTime) formatDate;
   final String Function(int) fmtCount;
 
   const _ParentPostView({
     required this.post,
     required this.onReply,
+    required this.onTranslate,
+    required this.isTranslating,
+    this.translatedContent,
     required this.formatDate,
     required this.fmtCount,
   });
@@ -342,9 +366,50 @@ class _ParentPostView extends StatelessWidget {
         if (post.content != null && post.content!.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Text(
-              post.content!,
-              style: const TextStyle(fontSize: 18, height: 1.4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  post.content!,
+                  style: const TextStyle(fontSize: 18, height: 1.4),
+                ),
+                if (translatedContent != null) ...[
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  Text(
+                    translatedContent!,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      height: 1.4,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: onTranslate,
+                  child: Row(
+                    children: [
+                      const HugeIcon(
+                        icon: HugeIcons.strokeRoundedTranslate,
+                        size: 14,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        isTranslating ? 'Translating...' : 'Translate Post',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -363,6 +428,13 @@ class _ParentPostView extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+
+        // Nested original post if Quote Repost
+        if (post.repostOf != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: _NestedOriginalPost(post: post.repostOf!),
           ),
 
         // Timestamp
@@ -467,6 +539,76 @@ class _ParentPostView extends StatelessWidget {
         ),
         const Divider(height: 1),
       ],
+    );
+  }
+}
+
+class _NestedOriginalPost extends StatelessWidget {
+  final Post post;
+  const _NestedOriginalPost({required this.post});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(top: 8, bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              UserAvatar(uri: post.author.avatarUrl, size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  post.author.displayName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '@${post.author.username}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          if (post.content != null && post.content!.isNotEmpty)
+            Text(
+              post.content!,
+              style: const TextStyle(fontSize: 13),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          if (post.imageUrl != null) ...[
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: CachedNetworkImage(
+                  imageUrl: post.imageUrl!,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

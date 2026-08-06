@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:flutter/cupertino.dart';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -61,7 +61,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         builder: (context) => ProImageEditor.file(
           File(image.path),
           callbacks: ProImageEditorCallbacks(
-            onImageEditingComplete: (bytes) async {
+            onImageEditingComplete: (Uint8List bytes) async {
               // In a real app, upload bytes to storage and get URL
               // Here we mock it by using the local path for preview
               setState(() {
@@ -71,7 +71,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   _newCoverUrl = image.path;
                 }
               });
-              Navigator.pop(context);
+              if (context.mounted) Navigator.pop(context);
             },
           ),
         ),
@@ -116,7 +116,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           TextButton(
             onPressed: _isSaving ? null : _saveProfile,
             child: _isSaving
-                ? const CupertinoActivityIndicator()
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Text(
                     'Save',
                     style: TextStyle(fontWeight: FontWeight.bold),
@@ -145,7 +149,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                   Positioned.fill(
                     child: Container(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       child: const Center(
                         child: HugeIcon(
                           icon: HugeIcons.strokeRoundedCamera01,
@@ -201,7 +205,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         shape: BoxShape.circle,
                       ),
                       child: const HugeIcon(

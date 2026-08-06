@@ -14,7 +14,7 @@ class ProfileRepository {
   ProfileRepository(this._dio);
 
   Future<User> getUserProfile(String userId) async {
-    final path = userId == 'me' ? '/users/me' : '/users/$userId';
+    final path = userId == 'me' ? 'users/me' : 'users/$userId';
     final response = await _dio.get(path);
     return User.fromJson(response.data);
   }
@@ -25,18 +25,18 @@ class ProfileRepository {
     int limit = 20,
   }) async {
     final response = await _dio.get(
-      '/users/$userId/posts',
-      queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
+      'users/$userId/posts',
+      queryParameters: {'cursor': ?cursor, 'limit': limit},
     );
     return PostPage.fromJson(response.data);
   }
 
   Future<void> followUser(String userId) async {
-    await _dio.post('/users/$userId/follow');
+    await _dio.post('users/$userId/follow');
   }
 
   Future<void> unfollowUser(String userId) async {
-    await _dio.delete('/users/$userId/follow');
+    await _dio.delete('users/$userId/follow');
   }
 
   Future<User> updateProfile({
@@ -48,14 +48,14 @@ class ProfileRepository {
     bool? isPrivate,
   }) async {
     final response = await _dio.put(
-      '/users/me',
+      'users/me',
       data: {
-        if (displayName != null) 'displayName': displayName,
-        if (bio != null) 'bio': bio,
-        if (website != null) 'website': website,
-        if (avatarUrl != null) 'avatarUrl': avatarUrl,
-        if (coverUrl != null) 'coverUrl': coverUrl,
-        if (isPrivate != null) 'isPrivate': isPrivate,
+        'displayName': ?displayName,
+        'bio': ?bio,
+        'website': ?website,
+        'avatarUrl': ?avatarUrl,
+        'coverUrl': ?coverUrl,
+        'isPrivate': ?isPrivate,
       },
     );
     return User.fromJson(response.data);

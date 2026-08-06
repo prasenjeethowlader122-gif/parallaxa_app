@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
-import '../data/auth_repository.dart';
 import '../../../core/app_colors.dart';
 
 class TwoFactorSetupScreen extends ConsumerStatefulWidget {
@@ -136,6 +135,11 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                         : null,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 56),
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
                     ),
                     child: _isLoading
                         ? const CupertinoActivityIndicator(color: Colors.white)

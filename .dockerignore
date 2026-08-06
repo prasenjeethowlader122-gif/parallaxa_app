@@ -10,7 +10,4 @@ coverage
 .env
 .env.*
 !.env.example
-artifacts/social-app/node_modules
-artifacts/social-app/.expo
-artifacts/social-app/static-build
-artifacts/social-app/dist
+artifacts/social-flutter-app/build/

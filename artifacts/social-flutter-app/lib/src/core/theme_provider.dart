@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api_client.dart';
-import 'storage_service.dart';
 
 final themeProvider = NotifierProvider<ThemeNotifier, ThemeMode>(() {
   return ThemeNotifier();

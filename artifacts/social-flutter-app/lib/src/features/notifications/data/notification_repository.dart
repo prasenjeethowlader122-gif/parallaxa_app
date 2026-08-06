@@ -17,26 +17,26 @@ class NotificationRepository {
     int limit = 20,
   }) async {
     final response = await _dio.get(
-      '/notifications',
-      queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': limit},
+      'notifications',
+      queryParameters: {'cursor': ?cursor, 'limit': limit},
     );
     return NotificationPage.fromJson(response.data);
   }
 
   Future<void> markAsRead() async {
-    await _dio.post('/notifications/read');
+    await _dio.post('notifications/read');
   }
 
   Future<int> getUnreadCount() async {
-    final response = await _dio.get('/notifications/unread-count');
+    final response = await _dio.get('notifications/unread-count');
     return response.data['count'] as int;
   }
 
   Future<void> blurFace(String notificationId) async {
-    await _dio.post('/notifications/$notificationId/blur');
+    await _dio.post('notifications/$notificationId/blur');
   }
 
   Future<void> deletePhoto(String notificationId) async {
-    await _dio.post('/notifications/$notificationId/delete-photo');
+    await _dio.post('notifications/$notificationId/delete-photo');
   }
 }

@@ -6,8 +6,10 @@ import { usersTable } from "./users";
 export const storiesTable = pgTable("stories", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
-  mediaUrl: text("media_url").notNull(),
+  mediaUrl: text("media_url"),
   mediaType: text("media_type").notNull().default("image"),
+  content: text("content"),
+  backgroundColor: text("background_color"),
   duration: integer("duration").notNull().default(5),
   viewsCount: integer("views_count").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),

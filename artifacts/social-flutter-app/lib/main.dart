@@ -58,31 +58,56 @@ class MainApp extends ConsumerWidget {
       builder: (context, child) {
         return OTAUpdateListener(child: ProcessingOverlay(child: child!));
       },
-      theme: _buildTheme(Brightness.light),
-      darkTheme: _buildTheme(Brightness.dark),
+      theme: _buildTheme(Brightness.light, locale: locale),
+      darkTheme: _buildTheme(Brightness.dark, locale: locale),
     );
   }
 
-  ThemeData _buildTheme(Brightness brightness) {
+  ThemeData _buildTheme(Brightness brightness, {Locale? locale}) {
     final isDark = brightness == Brightness.dark;
-    final baseColor = isDark ? Colors.white : AppColors.textPrimary;
-    final bgColor = isDark ? const Color(0xFF0F172A) : AppColors.background;
-    final cardColor = isDark ? const Color(0xFF1E293B) : AppColors.card;
-    final borderColor = isDark ? const Color(0xFF334155) : AppColors.border;
+    final baseColor = isDark ? Colors.white : AppColors.foreground;
+    final bgColor = isDark ? AppColors.darkBackground : AppColors.background;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.card;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.border;
+    final mutedColor = isDark ? AppColors.darkMuted : AppColors.muted;
+    final mutedForeground = isDark
+        ? AppColors.darkMutedForeground
+        : AppColors.mutedForeground;
+
+    final isBangla = locale?.languageCode == 'bn';
+    final textTheme = isBangla
+        ? GoogleFonts.hindSiliguriTextTheme().apply(
+            bodyColor: baseColor,
+            displayColor: baseColor,
+          )
+        : GoogleFonts.ubuntuTextTheme().apply(
+            bodyColor: baseColor,
+            displayColor: baseColor,
+          );
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      fontFamily: isBangla
+          ? GoogleFonts.hindSiliguri().fontFamily
+          : GoogleFonts.ubuntu().fontFamily,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         brightness: brightness,
         surface: bgColor,
+        onSurface: baseColor,
+        primary: AppColors.primary,
+        outline: borderColor,
+        surfaceContainer: cardColor,
       ),
       scaffoldBackgroundColor: bgColor,
-      textTheme: GoogleFonts.ubuntuTextTheme().apply(
-        bodyColor: baseColor,
-        displayColor: baseColor,
-      ),
+      textTheme: textTheme,
+
+      // Icon Theme
+      iconTheme: IconThemeData(color: baseColor, size: 24),
+
+      // Default Material Symbols settings
+      extensions: const [],
 
       // AppBar
       appBarTheme: AppBarTheme(
@@ -90,12 +115,24 @@ class MainApp extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: GoogleFonts.ubuntu(
-          fontWeight: FontWeight.w700,
-          fontSize: 20,
-          color: baseColor,
-        ),
+        centerTitle: false,
+        titleTextStyle:
+            (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
+              fontWeight: FontWeight.w700,
+              fontSize: 20,
+              color: baseColor,
+            ),
         iconTheme: IconThemeData(color: baseColor),
+      ),
+
+      // Card
+      cardTheme: CardThemeData(
+        color: cardColor,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: borderColor, width: 0.5),
+        ),
       ),
 
       // Elevated button defaults
@@ -104,10 +141,13 @@ class MainApp extends ConsumerWidget {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
-          shape: const StadiumBorder(),
-          textStyle: GoogleFonts.ubuntu(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
             fontWeight: FontWeight.w700,
-            fontSize: 15,
+            fontSize: 16,
           ),
         ),
       ),
@@ -117,8 +157,10 @@ class MainApp extends ConsumerWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: baseColor,
           side: BorderSide(color: borderColor),
-          shape: const StadiumBorder(),
-          textStyle: GoogleFonts.ubuntu(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
             fontWeight: FontWeight.w700,
             fontSize: 14,
           ),
@@ -129,8 +171,8 @@ class MainApp extends ConsumerWidget {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          textStyle: GoogleFonts.ubuntu(
-            fontWeight: FontWeight.w500,
+          textStyle: (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
+            fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
         ),
@@ -139,7 +181,7 @@ class MainApp extends ConsumerWidget {
       // Input decoration
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark ? const Color(0xFF1E293B) : AppColors.muted,
+        fillColor: mutedColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -152,14 +194,8 @@ class MainApp extends ConsumerWidget {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
-        hintStyle: TextStyle(
-          color: isDark ? Colors.grey : AppColors.mutedForeground,
-          fontSize: 15,
-        ),
-        labelStyle: TextStyle(
-          color: isDark ? Colors.grey : AppColors.mutedForeground,
-          fontSize: 14,
-        ),
+        hintStyle: TextStyle(color: mutedForeground, fontSize: 15),
+        labelStyle: TextStyle(color: mutedForeground, fontSize: 14),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
@@ -178,25 +214,35 @@ class MainApp extends ConsumerWidget {
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        elevation: 6,
+        elevation: 4,
         shape: CircleBorder(),
       ),
 
       // Tabs
       tabBarTheme: TabBarThemeData(
         labelColor: baseColor,
-        unselectedLabelColor: isDark ? Colors.grey : AppColors.mutedForeground,
-        indicatorColor: baseColor,
+        unselectedLabelColor: mutedForeground,
+        indicatorColor: AppColors.primary,
         indicatorSize: TabBarIndicatorSize.label,
         dividerColor: Colors.transparent,
-        labelStyle: GoogleFonts.ubuntu(
+        labelStyle: (isBangla ? GoogleFonts.hindSiliguri : GoogleFonts.ubuntu)(
           fontWeight: FontWeight.w700,
           fontSize: 15,
         ),
-        unselectedLabelStyle: GoogleFonts.ubuntu(
-          fontWeight: FontWeight.w400,
-          fontSize: 15,
-        ),
+        unselectedLabelStyle: (isBangla
+            ? GoogleFonts.hindSiliguri
+            : GoogleFonts.ubuntu)(fontWeight: FontWeight.w400, fontSize: 15),
+      ),
+
+      // Bottom Navigation Bar
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: bgColor,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: mutedForeground,
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
       ),
     );
   }

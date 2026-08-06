@@ -41,33 +41,33 @@ class AdminRepository {
   AdminRepository(this._dio);
 
   Future<void> freezeUser(String userId) async {
-    await _dio.post('/admin/users/$userId/freeze');
+    await _dio.post('admin/users/$userId/freeze');
   }
 
   Future<void> unfreezeUser(String userId) async {
-    await _dio.post('/admin/users/$userId/unfreeze');
+    await _dio.post('admin/users/$userId/unfreeze');
   }
 
   Future<void> approveVerification(String userId) async {
-    await _dio.post('/admin/users/$userId/approve-verification');
+    await _dio.post('admin/users/$userId/approve-verification');
   }
 
   Future<void> deletePost(String postId) async {
-    await _dio.delete('/admin/posts/$postId');
+    await _dio.delete('admin/posts/$postId');
   }
 
   Future<AdminStats> getStats() async {
-    final response = await _dio.get('/admin/stats');
+    final response = await _dio.get('admin/stats');
     return AdminStats.fromJson(response.data);
   }
 
   Future<List<User>> getUsers() async {
-    final response = await _dio.get('/admin/users');
+    final response = await _dio.get('admin/users');
     final data = response.data['users'] as List;
     return data.map((u) => User.fromJson(u)).toList();
   }
 
   Future<void> verifyUser(String userId) async {
-    await _dio.post('/admin/users/$userId/approve-verification');
+    await _dio.post('admin/users/$userId/approve-verification');
   }
 }

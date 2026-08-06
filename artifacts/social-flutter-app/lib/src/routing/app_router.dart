@@ -1,11 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hugeicons/hugeicons.dart';
-import '../core/api_client.dart';
 import '../core/app_colors.dart';
+import '../features/auth/data/auth_provider.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
@@ -23,8 +22,6 @@ import '../features/feed/presentation/post_detail_screen.dart';
 import '../features/feed/presentation/image_preview_screen.dart';
 import '../features/admin/presentation/admin_dashboard_screen.dart';
 import '../features/admin/presentation/admin_users_screen.dart';
-import '../features/stories/presentation/story_view_screen.dart';
-import '../features/stories/presentation/story_create_screen.dart';
 import '../features/profile/presentation/edit_profile_screen.dart';
 import '../features/profile/presentation/bookmarks_screen.dart';
 import '../features/profile/presentation/account_verification_screen.dart';
@@ -34,23 +31,57 @@ import '../features/profile/presentation/about_screen.dart';
 import '../features/auth/presentation/two_factor_setup_screen.dart';
 import '../features/auth/domain/user.dart';
 
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen(authStateProvider, (previous, next) {
+      notifyListeners();
+    });
+  }
+
+  String? redirect(BuildContext context, GoRouterState state) {
+    final authState = _ref.read(authStateProvider);
+    final token = authState.token;
+    final isGuest = authState.isGuest;
+    final loc = state.matchedLocation;
+
+    if (loc == '/splash') return null;
+
+    final isAuth =
+        loc == '/login' || loc == '/register' || loc == '/forgot-password';
+
+    if (token == null && !isGuest && !isAuth) return '/login';
+    if (token != null && isAuth) return '/feed';
+
+    if (isGuest) {
+      final restricted = [
+        '/messages',
+        '/notifications',
+        '/bookmarks',
+        '/create-post',
+        '/two-factor-setup',
+        '/account-verification',
+        '/admin',
+        '/admin/users',
+      ];
+      if (restricted.any((path) => loc.startsWith(path)) ||
+          (loc == '/profile' && state.pathParameters['userId'] == 'me')) {
+        return '/login';
+      }
+    }
+
+    return null;
+  }
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final storageService = ref.watch(storageServiceProvider);
+  final notifier = RouterNotifier(ref);
 
   return GoRouter(
     initialLocation: '/splash',
-    redirect: (context, state) {
-      final token = storageService.getAuthToken();
-      final loc = state.matchedLocation;
-
-      if (loc == '/splash') return null;
-
-      final isAuth =
-          loc == '/login' || loc == '/register' || loc == '/forgot-password';
-      if (token == null && !isAuth) return '/login';
-      if (token != null && isAuth) return '/feed';
-      return null;
-    },
+    refreshListenable: notifier,
+    redirect: notifier.redirect,
     routes: [
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
@@ -89,15 +120,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/users',
         builder: (_, _) => const AdminUsersScreen(),
-      ),
-      GoRoute(
-        path: '/stories/:userId',
-        builder: (_, state) =>
-            StoryViewScreen(userId: state.pathParameters['userId']!),
-      ),
-      GoRoute(
-        path: '/story/create',
-        builder: (_, _) => const StoryCreateScreen(),
       ),
       GoRoute(
         path: '/user/:userId',
@@ -202,10 +224,7 @@ class _ParallaxaAppBar extends StatelessWidget implements PreferredSizeWidget {
         height: 26,
         width: 148,
         fit: BoxFit.contain,
-        colorFilter: const ColorFilter.mode(
-          Color(0xFF1877F2), // Facebook Blue
-          BlendMode.srcIn,
-        ),
+        colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
       ),
       actions: [
         IconButton(
@@ -274,7 +293,7 @@ class _AppDrawer extends StatelessWidget {
                     width: 148,
                     fit: BoxFit.contain,
                     colorFilter: const ColorFilter.mode(
-                      Color(0xFF1877F2), // Facebook Blue
+                      Colors.black,
                       BlendMode.srcIn,
                     ),
                   ),

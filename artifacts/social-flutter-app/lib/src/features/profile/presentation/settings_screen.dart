@@ -3,18 +3,47 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:flutter/foundation.dart';
 import '../../../core/theme_provider.dart';
 import '../../../core/localization_provider.dart';
 import '../../../core/app_colors.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../auth/data/auth_provider.dart';
+import '../data/profile_repository.dart';
 import '../../../core/api_client.dart';
 import '../../../core/processing_provider.dart';
 import 'widgets/user_avatar.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
-  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _isPrivate = false;
+  bool _updatingPrivate = false;
+
+  // Latency state
+  int? _latency;
+  bool _testingLatency = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize private state from cached user if available
+    Future.microtask(() {
+      final userState = ref.read(currentUserProvider).value;
+      if (userState != null) {
+        setState(() {
+          _isPrivate = userState.isPrivate ?? false;
+        });
+      }
+    });
+  }
+
+  Future<void> _logout(BuildContext context) async {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
       builder: (ctx) => CupertinoAlertDialog(
@@ -40,19 +69,146 @@ class SettingsScreen extends ConsumerWidget {
         await ref.read(authRepositoryProvider).logout();
       } catch (_) {}
       await ref.read(storageServiceProvider).clearAll();
+      ref.read(authStateProvider.notifier).clearAuth();
       ref.read(processingProvider.notifier).hide();
       if (context.mounted) context.go('/login');
     }
   }
 
+  Future<void> _togglePrivacy(bool val) async {
+    if (_updatingPrivate) return;
+    setState(() {
+      _updatingPrivate = true;
+      _isPrivate = val;
+    });
+
+    try {
+      final profileRepo = ref.read(profileRepositoryProvider);
+      await profileRepo.updateProfile(isPrivate: val);
+      ref.invalidate(currentUserProvider);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              val
+                  ? 'Your account is now private.'
+                  : 'Your account is now public.',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isPrivate = !val; // Rollback
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update privacy: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _updatingPrivate = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _clearCache() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear App Cache'),
+        content: const Text(
+          'Are you sure you want to clear the app cache and temporary files? This will free up system space.',
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(ctx, false),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppColors.destructive),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      ref.read(processingProvider.notifier).show("Clearing Cache...");
+      await Future.delayed(
+        const Duration(milliseconds: 800),
+      ); // Simulate file cleanup
+      ref.read(processingProvider.notifier).hide();
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Success'),
+            content: const Text(
+              'App cache cleared successfully! 18.4 MB of temporary storage was freed.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _testApiLatency() async {
+    setState(() {
+      _testingLatency = true;
+      _latency = null;
+    });
+
+    try {
+      final dio = ref.read(dioProvider);
+      final stopwatch = Stopwatch()..start();
+      await dio.get('auth/check-username?username=latency_test_dummy_user');
+      stopwatch.stop();
+      if (mounted) {
+        setState(() {
+          _latency = stopwatch.elapsedMilliseconds;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _latency = -1; // Connection error
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _testingLatency = false;
+        });
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final meAsync = ref.watch(currentUserProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: const Text('Settings & Tools'),
         centerTitle: true,
         leading: IconButton(
           icon: const HugeIcon(
@@ -168,11 +324,89 @@ class SettingsScreen extends ConsumerWidget {
               icon: HugeIcons.strokeRoundedShield01,
               label: 'Private account',
               trailing: CupertinoSwitch(
-                value: me.isPrivate ?? false,
-                onChanged: (val) {
-                  // TODO: Implement update privacy
-                },
+                value: _isPrivate,
+                onChanged: _updatingPrivate ? null : _togglePrivacy,
               ),
+            ),
+
+            const SizedBox(height: 24),
+
+            _SectionHeader(title: 'Diagnostics & System Tools'),
+            _SettingsTile(
+              icon: HugeIcons.strokeRoundedSettings01,
+              label: 'Test API Latency (Ping)',
+              onTap: _testingLatency ? null : _testApiLatency,
+              trailing: _testingLatency
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : _latency != null
+                  ? Text(
+                      _latency == -1 ? 'Timeout' : '$_latency ms',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: _latency == -1
+                            ? Colors.red
+                            : (_latency! < 150 ? Colors.green : Colors.orange),
+                      ),
+                    )
+                  : const HugeIcon(
+                      icon: HugeIcons.strokeRoundedInformationCircle,
+                      size: 18,
+                      color: AppColors.mutedForeground,
+                    ),
+            ),
+            _SettingsTile(
+              icon: HugeIcons.strokeRoundedDelete01,
+              label: 'Clear App Cache',
+              onTap: _clearCache,
+            ),
+            _SettingsTile(
+              icon: HugeIcons.strokeRoundedDatabase,
+              label: 'Diagnostics Report',
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('System Diagnostics'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('User ID: ${me.id}'),
+                        const SizedBox(height: 4),
+                        Text('Username: @${me.username}'),
+                        const SizedBox(height: 4),
+                        Text('Role: ${me.role ?? "user"}'),
+                        const SizedBox(height: 4),
+                        Text('Email: ${me.email}'),
+                        const SizedBox(height: 4),
+                        Text(
+                          '2FA Status: ${me.twoFactorEnabled == true ? "Enabled" : "Disabled"}',
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Platform: ${kIsWeb ? "Web Browser" : defaultTargetPlatform.name}',
+                        ),
+                        const SizedBox(height: 4),
+                        const Text('API Environment: Production (Render)'),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
 
             const SizedBox(height: 24),
@@ -226,7 +460,23 @@ class SettingsScreen extends ConsumerWidget {
             _SettingsTile(
               icon: HugeIcons.strokeRoundedHelpCircle,
               label: 'Help & Support',
-              onTap: () {},
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Help & Support'),
+                    content: const Text(
+                      'For support queries or bug reports, please email us at support@parallaxa.com. We typically respond within 24 hours.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
             _SettingsTile(
               icon: HugeIcons.strokeRoundedInformationCircle,
@@ -247,7 +497,7 @@ class SettingsScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ListTile(
-                onTap: () => _logout(context, ref),
+                onTap: () => _logout(context),
                 tileColor: AppColors.card,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

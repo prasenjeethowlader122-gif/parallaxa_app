@@ -19,6 +19,8 @@ export interface Story {
   isViewed: boolean;
   reactions: StoryReactionsItem[];
   myReaction?: string | null;
+  content?: string | null;
+  backgroundColor?: string | null;
   createdAt: Date;
   expiresAt: Date;
 }

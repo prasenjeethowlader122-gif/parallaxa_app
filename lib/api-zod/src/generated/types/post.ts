@@ -5,6 +5,7 @@
  * SocialApp API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { Post as __Post } from './post';
 import type { UserSummary } from './userSummary';
 
 export interface Post {
@@ -25,4 +26,5 @@ export interface Post {
   isLiked: boolean;
   isSaved: boolean;
   createdAt: Date;
+  repostOf?: Post | null;
 }

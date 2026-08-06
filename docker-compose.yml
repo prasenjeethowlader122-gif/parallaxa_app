@@ -1,39 +1,86 @@
 version: "3.9"
 
+# ──────────────────────────────────────────────────────────────
+# Parallaxa — split deployment (local dev / self-hosted)
+#
+# Services:
+#   postgres   — managed PostgreSQL database
+#   backend    — Spring Boot API server (Dockerfile.backend, port 8080)
+#   frontend   — Flutter Web + Nginx   (Dockerfile.frontend, port 80)
+#
+# Quick start:
+#   cp .env.example .env   # fill in JWT_SECRET & API_BASE_URL
+#   docker compose up --build
+#
+# Deploy each service separately:
+#   docker compose up --build backend
+#   docker compose up --build frontend
+# ──────────────────────────────────────────────────────────────
+
 services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
-    container_name: socialapp_db
+    container_name: parallaxa_db
     environment:
-      POSTGRES_USER: socialapp
-      POSTGRES_PASSWORD: socialapp_secret
-      POSTGRES_DB: socialapp
+      POSTGRES_USER:     ${POSTGRES_USER:-parallaxa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-parallaxa_secret}
+      POSTGRES_DB:       ${POSTGRES_DB:-parallaxa}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U socialapp -d socialapp"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-parallaxa} -d ${POSTGRES_DB:-parallaxa}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-  api:
+  # ── Backend (Spring Boot / Java 21) ────────────────────────
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: socialapp_api
+      dockerfile: Dockerfile.backend
+    container_name: parallaxa_backend
     ports:
       - "8080:8080"
+      - "9092:9092"
     environment:
-      PORT: 8080
-      DATABASE_URL: postgres://socialapp:socialapp_secret@postgres:5432/socialapp
-      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
-      NODE_ENV: production
+      PORT:        8080
+      DATABASE_URL: postgresql://${POSTGRES_USER:-parallaxa}:${POSTGRES_PASSWORD:-parallaxa_secret}@postgres:5432/${POSTGRES_DB:-parallaxa}
+      JWT_SECRET:  ${JWT_SECRET}
+      FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT:-}
+      SPRING_PROFILES_ACTIVE: prod
     depends_on:
       postgres:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/healthz || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # ── Frontend (Flutter Web → Nginx) ──────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        API_BASE_URL: ${API_BASE_URL:-http://localhost:8080/api}
+    container_name: parallaxa_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
         condition: service_healthy
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  uploads_data:

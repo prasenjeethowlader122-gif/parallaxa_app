@@ -20,6 +20,7 @@ export * from './disable2FABody';
 export * from './enable2FABody';
 export * from './errorResponse';
 export * from './forgotPasswordBody';
+export * from './getAdminStats200';
 export * from './getExplorePostsParams';
 export * from './getFeedParams';
 export * from './getFollowersParams';

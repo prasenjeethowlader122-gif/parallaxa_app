@@ -58,8 +58,6 @@ export const UserRole = {
 } as const;
 
 export interface User {
-  hasStory?: boolean;
-  hasUnviewedStory?: boolean;
   id: string;
   username: string;
   email: string;
@@ -73,6 +71,7 @@ export interface User {
   isFrozen?: boolean;
   twoFactorEnabled: boolean;
   isPrivate: boolean;
+  location?: string | null;
   followersCount: number;
   followingCount: number;
   postsCount: number;
@@ -87,8 +86,6 @@ export interface AuthResponse {
 }
 
 export interface UserSummary {
-  hasStory?: boolean;
-  hasUnviewedStory?: boolean;
   id: string;
   username: string;
   displayName: string;
@@ -133,6 +130,7 @@ export interface Post {
   isLiked: boolean;
   isSaved: boolean;
   createdAt: string;
+  repostOf?: Post | null;
 }
 
 export interface CreatePostInput {
@@ -174,6 +172,8 @@ export interface Story {
   isViewed: boolean;
   reactions: StoryReactionsItem[];
   myReaction?: string | null;
+  content?: string | null;
+  backgroundColor?: string | null;
   createdAt: string;
   expiresAt: string;
 }
@@ -196,6 +196,8 @@ export interface CreateStoryInput {
   mediaUrl: string;
   mediaType: CreateStoryInputMediaType;
   duration?: number;
+  content?: string;
+  backgroundColor?: string;
 }
 
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
@@ -337,6 +339,12 @@ export type Disable2FABody = {
 export type Verify2FABody = {
   email: string;
   code: string;
+};
+
+export type GetAdminStats200 = {
+  users: number;
+  posts: number;
+  stories: number;
 };
 
 export type GetUserPostsParams = {
