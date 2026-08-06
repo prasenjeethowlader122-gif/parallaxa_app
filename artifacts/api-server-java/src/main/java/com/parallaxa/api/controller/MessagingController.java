@@ -26,12 +26,13 @@ public class MessagingController {
     }
 
     @PostMapping("/conversations/start")
-    public ResponseEntity<Conversation> startConversation(
+    public ResponseEntity<Map<String, Object>> startConversation(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> body
     ) {
+        Conversation c = messagingService.startConversation(userDetails.getUsername(), body.get("userId"));
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(messagingService.startConversation(userDetails.getUsername(), body.get("userId")));
+                .body(messagingService.mapConversation(c, userDetails.getUsername()));
     }
 
     @GetMapping("/conversations/{conversationId}/messages")

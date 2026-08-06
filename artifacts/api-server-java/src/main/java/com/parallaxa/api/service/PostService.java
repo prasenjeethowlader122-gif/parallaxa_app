@@ -272,6 +272,11 @@ public class PostService {
 
     @Transactional
     public PostDto repostPost(String userId, String postId) {
+        return repostPost(userId, postId, null);
+    }
+
+    @Transactional
+    public PostDto repostPost(String userId, String postId, String content) {
         User user = userRepository.findById(userId).orElseThrow();
         Post originalPost = postRepository.findById(postId).orElseThrow();
 
@@ -283,6 +288,7 @@ public class PostService {
                 .id(UUID.randomUUID().toString())
                 .author(user)
                 .repostOf(originalPost)
+                .content(content)
                 .build();
 
         Post savedRepost = postRepository.save(repost);

@@ -22,8 +22,6 @@ import '../features/feed/presentation/post_detail_screen.dart';
 import '../features/feed/presentation/image_preview_screen.dart';
 import '../features/admin/presentation/admin_dashboard_screen.dart';
 import '../features/admin/presentation/admin_users_screen.dart';
-import '../features/stories/presentation/story_view_screen.dart';
-import '../features/stories/presentation/story_create_screen.dart';
 import '../features/profile/presentation/edit_profile_screen.dart';
 import '../features/profile/presentation/bookmarks_screen.dart';
 import '../features/profile/presentation/account_verification_screen.dart';
@@ -122,15 +120,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/users',
         builder: (_, _) => const AdminUsersScreen(),
-      ),
-      GoRoute(
-        path: '/stories/:userId',
-        builder: (_, state) =>
-            StoryViewScreen(userId: state.pathParameters['userId']!),
-      ),
-      GoRoute(
-        path: '/story/create',
-        builder: (_, _) => const StoryCreateScreen(),
       ),
       GoRoute(
         path: '/user/:userId',

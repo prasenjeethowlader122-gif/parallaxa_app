@@ -430,6 +430,13 @@ class _ParentPostView extends StatelessWidget {
             ),
           ),
 
+        // Nested original post if Quote Repost
+        if (post.repostOf != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: _NestedOriginalPost(post: post.repostOf!),
+          ),
+
         // Timestamp
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -532,6 +539,76 @@ class _ParentPostView extends StatelessWidget {
         ),
         const Divider(height: 1),
       ],
+    );
+  }
+}
+
+class _NestedOriginalPost extends StatelessWidget {
+  final Post post;
+  const _NestedOriginalPost({required this.post});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(top: 8, bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              UserAvatar(uri: post.author.avatarUrl, size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  post.author.displayName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '@${post.author.username}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          if (post.content != null && post.content!.isNotEmpty)
+            Text(
+              post.content!,
+              style: const TextStyle(fontSize: 13),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          if (post.imageUrl != null) ...[
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: CachedNetworkImage(
+                  imageUrl: post.imageUrl!,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

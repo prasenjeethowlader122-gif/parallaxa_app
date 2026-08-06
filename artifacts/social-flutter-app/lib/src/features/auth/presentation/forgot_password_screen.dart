@@ -207,14 +207,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFCA5A5)),
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.zero,
+                    border: Border.all(color: Colors.black, width: 1.5),
                   ),
                   child: Text(
                     _errors['general']!,
                     style: const TextStyle(
-                      color: Color(0xFFDC2626),
+                      color: Colors.black,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
@@ -233,6 +233,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   textInputAction: TextInputAction.done,
                   editable: !_isLoading,
                   onFieldSubmitted: (_) => _handleForgotPassword(),
+                  isAuthStyle: true,
                 )
               else ...[
                 FloatingLabelInput(
@@ -242,6 +243,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   error: _errors['token'],
                   textInputAction: TextInputAction.next,
                   editable: !_isLoading,
+                  isAuthStyle: true,
                 ),
                 FloatingLabelInput(
                   label: "New Password",
@@ -252,6 +254,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   textInputAction: TextInputAction.done,
                   editable: !_isLoading,
                   onFieldSubmitted: (_) => _handleResetPassword(),
+                  isAuthStyle: true,
                   right: IconButton(
                     onPressed: () =>
                         setState(() => _showPassword = !_showPassword),

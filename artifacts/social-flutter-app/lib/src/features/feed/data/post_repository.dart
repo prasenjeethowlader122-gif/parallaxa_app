@@ -99,8 +99,11 @@ class PostRepository {
     return PostPage.fromJson(response.data);
   }
 
-  Future<void> repostPost(String postId) async {
-    await _dio.post('posts/$postId/repost');
+  Future<void> repostPost(String postId, {String? content}) async {
+    await _dio.post(
+      'posts/$postId/repost',
+      data: content != null && content.isNotEmpty ? {'content': content} : null,
+    );
   }
 }
 

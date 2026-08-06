@@ -108,13 +108,70 @@ class _PostCardState extends ConsumerState<PostCard> {
       );
       return;
     }
+
+    final captionController = TextEditingController();
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Repost'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Add an optional caption to repost with thoughts:',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: captionController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'What\'s on your mind?',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop({
+                  'repost': true,
+                  'caption': captionController.text.trim(),
+                });
+              },
+              child: const Text('Repost'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == null) return;
+
+    final caption = result['caption'] as String?;
+
     if (_isReposting) return;
     setState(() {
       _isReposting = true;
       _repostCount += 1;
     });
     try {
-      await ref.read(postRepositoryProvider).repostPost(widget.post.id);
+      await ref
+          .read(postRepositoryProvider)
+          .repostPost(widget.post.id, content: caption);
     } catch (e) {
       if (mounted) {
         setState(() => _repostCount -= 1);
@@ -142,10 +199,15 @@ class _PostCardState extends ConsumerState<PostCard> {
     final theme = Theme.of(context);
 
     final isRepost = widget.post.repostOf != null;
+    final isQuoteRepost =
+        isRepost &&
+        widget.post.content != null &&
+        widget.post.content!.isNotEmpty;
     final displayPost = isRepost ? widget.post.repostOf! : widget.post;
+    final mainPost = isQuoteRepost ? widget.post : displayPost;
 
     return GestureDetector(
-      onTap: widget.onTap ?? () => context.push('/post/${displayPost.id}'),
+      onTap: widget.onTap ?? () => context.push('/post/${mainPost.id}'),
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -158,7 +220,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (isRepost) ...[
+            if (isRepost && !isQuoteRepost) ...[
               Padding(
                 padding: const EdgeInsets.only(left: 32, bottom: 8),
                 child: Row(
@@ -188,12 +250,12 @@ class _PostCardState extends ConsumerState<PostCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GestureDetector(
-                  onTap: () => context.push('/user/${displayPost.author.id}'),
+                  onTap: () => context.push('/user/${mainPost.author.id}'),
                   child: UserAvatar(
-                    uri: displayPost.author.avatarUrl,
+                    uri: mainPost.author.avatarUrl,
                     size: 40,
-                    hasStory: displayPost.author.hasStory,
-                    hasUnviewedStory: displayPost.author.hasUnviewedStory,
+                    hasStory: mainPost.author.hasStory,
+                    hasUnviewedStory: mainPost.author.hasUnviewedStory,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -205,11 +267,10 @@ class _PostCardState extends ConsumerState<PostCard> {
                         children: [
                           Flexible(
                             child: GestureDetector(
-                              onTap: () => context.push(
-                                '/user/${displayPost.author.id}',
-                              ),
+                              onTap: () =>
+                                  context.push('/user/${mainPost.author.id}'),
                               child: Text(
-                                displayPost.author.displayName,
+                                mainPost.author.displayName,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
@@ -218,7 +279,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                               ),
                             ),
                           ),
-                          if (displayPost.author.isVerified) ...[
+                          if (mainPost.author.isVerified) ...[
                             const SizedBox(width: 4),
                             const Icon(
                               Symbols.verified,
@@ -229,7 +290,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                           ],
                           const SizedBox(width: 4),
                           Text(
-                            '· ${_timeAgo(displayPost.createdAt)}',
+                            '· ${_timeAgo(mainPost.createdAt)}',
                             style: TextStyle(
                               fontSize: 13,
                               color: theme.colorScheme.onSurfaceVariant,
@@ -238,7 +299,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                         ],
                       ),
                       Text(
-                        '@${displayPost.author.username}',
+                        '@${mainPost.author.username}',
                         style: TextStyle(
                           fontSize: 13,
                           color: theme.colorScheme.onSurfaceVariant,
@@ -260,67 +321,71 @@ class _PostCardState extends ConsumerState<PostCard> {
             const SizedBox(height: 8),
 
             // Content
-            if (displayPost.content != null &&
-                displayPost.content!.isNotEmpty) ...[
-              _ContentText(content: displayPost.content!),
+            if (mainPost.content != null && mainPost.content!.isNotEmpty) ...[
+              _ContentText(content: mainPost.content!),
               const SizedBox(height: 8),
             ],
 
-            // Image or Link Preview
-            if (displayPost.imageUrl != null) ...[
-              const SizedBox(height: 4),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: GestureDetector(
-                  onLongPress: () => context.push(
-                    '/image-preview',
-                    extra: displayPost.imageUrl,
-                  ),
-                  child: CachedNetworkImage(
-                    imageUrl: displayPost.imageUrl!,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: theme.colorScheme.surfaceContainerHighest,
+            // Quote Repost Nested Card
+            if (isQuoteRepost) _NestedOriginalPost(post: widget.post.repostOf!),
+
+            // Image or Link Preview (for non-quote repost)
+            if (!isQuoteRepost) ...[
+              if (displayPost.imageUrl != null) ...[
+                const SizedBox(height: 4),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: GestureDetector(
+                    onLongPress: () => context.push(
+                      '/image-preview',
+                      extra: displayPost.imageUrl,
                     ),
-                    errorWidget: (context, url, error) => Container(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      child: const Icon(Symbols.image),
+                    child: CachedNetworkImage(
+                      imageUrl: displayPost.imageUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        child: const Icon(Symbols.image),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-            ] else if (displayPost.content != null) ...[
-              Builder(
-                builder: (context) {
-                  final url = _extractUrl(displayPost.content!);
-                  if (url != null) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 4.0, bottom: 8.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: AnyLinkPreview(
-                          link: url,
-                          cache: const Duration(days: 7),
-                          backgroundColor: theme.colorScheme.surfaceContainer,
-                          errorWidget: const SizedBox.shrink(),
-                          boxShadow: const [],
-                          titleStyle: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                          bodyStyle: TextStyle(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: 12,
+                const SizedBox(height: 12),
+              ] else if (displayPost.content != null) ...[
+                Builder(
+                  builder: (context) {
+                    final url = _extractUrl(displayPost.content!);
+                    if (url != null) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4.0, bottom: 8.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: AnyLinkPreview(
+                            link: url,
+                            cache: const Duration(days: 7),
+                            backgroundColor: theme.colorScheme.surfaceContainer,
+                            errorWidget: const SizedBox.shrink(),
+                            boxShadow: const [],
+                            titleStyle: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                            bodyStyle: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
             ],
 
             // ── Action row ──
@@ -454,6 +519,76 @@ class _LikeAction extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _NestedOriginalPost extends StatelessWidget {
+  final Post post;
+  const _NestedOriginalPost({required this.post});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(top: 8, bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              UserAvatar(uri: post.author.avatarUrl, size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  post.author.displayName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '@${post.author.username}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          if (post.content != null && post.content!.isNotEmpty)
+            Text(
+              post.content!,
+              style: const TextStyle(fontSize: 13),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          if (post.imageUrl != null) ...[
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: CachedNetworkImage(
+                  imageUrl: post.imageUrl!,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
