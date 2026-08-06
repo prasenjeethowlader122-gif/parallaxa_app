@@ -132,10 +132,10 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
     final Color borderColor = widget.isAuthStyle
         ? (hasError ? const Color(0xFFDC2626) : Colors.black)
         : (hasError
-            ? const Color(0xFFFCA5A5)
-            : isFocused
-                ? AppColors.primary
-                : AppColors.slate200);
+              ? const Color(0xFFFCA5A5)
+              : isFocused
+              ? AppColors.primary
+              : AppColors.slate200);
 
     final double borderRadiusVal = widget.isAuthStyle ? 28.0 : 16.0;
 
@@ -149,7 +149,9 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
             Container(
               constraints: const BoxConstraints(minHeight: 56),
               decoration: BoxDecoration(
-                color: widget.isAuthStyle ? Colors.white : Theme.of(context).cardColor,
+                color: widget.isAuthStyle
+                    ? Colors.white
+                    : Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(borderRadiusVal),
                 border: Border.all(
                   color: borderColor,
@@ -167,10 +169,10 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                               color: widget.isAuthStyle
                                   ? Colors.black
                                   : (isFocused
-                                      ? AppColors.primary
-                                      : hasError
-                                          ? const Color(0xFFDC2626)
-                                          : AppColors.slate500),
+                                        ? AppColors.primary
+                                        : hasError
+                                        ? const Color(0xFFDC2626)
+                                        : AppColors.slate500),
                               size: 20,
                             )
                           : HugeIcon(
@@ -178,10 +180,10 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                               color: widget.isAuthStyle
                                   ? Colors.black
                                   : (isFocused
-                                      ? AppColors.primary
-                                      : hasError
-                                          ? const Color(0xFFDC2626)
-                                          : AppColors.slate500),
+                                        ? AppColors.primary
+                                        : hasError
+                                        ? const Color(0xFFDC2626)
+                                        : AppColors.slate500),
                               size: 20,
                             ),
                     ),
@@ -203,14 +205,18 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                         maxLength: widget.maxLength,
                         textCapitalization: widget.textCapitalization,
                         autocorrect: widget.autoCorrect,
-                        cursorColor: widget.isAuthStyle ? Colors.black : AppColors.primary,
+                        cursorColor: widget.isAuthStyle
+                            ? Colors.black
+                            : AppColors.primary,
                         style: TextStyle(
                           fontSize: 16,
                           color: widget.isAuthStyle
                               ? Colors.black
                               : (isFocused || _textController.text.isNotEmpty
-                                  ? Theme.of(context).textTheme.bodyLarge?.color
-                                  : AppColors.slate900),
+                                    ? Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.color
+                                    : AppColors.slate900),
                           fontWeight: FontWeight.w500,
                         ),
                         decoration: InputDecoration(
@@ -244,7 +250,9 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                   top: 16 - (_animation.value * 26),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    color: widget.isAuthStyle ? Colors.white : Theme.of(context).scaffoldBackgroundColor,
+                    color: widget.isAuthStyle
+                        ? Colors.white
+                        : Theme.of(context).scaffoldBackgroundColor,
                     child: Text(
                       widget.label,
                       style: TextStyle(
@@ -252,8 +260,12 @@ class _FloatingLabelInputState extends State<FloatingLabelInput>
                         color: hasError
                             ? const Color(0xFFDC2626)
                             : isFocused
-                            ? (widget.isAuthStyle ? Colors.black : AppColors.primary)
-                            : (widget.isAuthStyle ? Colors.black54 : AppColors.slate400),
+                            ? (widget.isAuthStyle
+                                  ? Colors.black
+                                  : AppColors.primary)
+                            : (widget.isAuthStyle
+                                  ? Colors.black54
+                                  : AppColors.slate400),
                         fontWeight: _animation.value > 0
                             ? FontWeight.w600
                             : FontWeight.w500,

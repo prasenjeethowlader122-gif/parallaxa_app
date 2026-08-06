@@ -629,18 +629,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   decoration: BoxDecoration(
                     color: Colors.transparent,
                     borderRadius: BorderRadius.zero,
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 1.5,
-                    ),
+                    border: Border.all(color: Colors.black, width: 1.5),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Symbols.error,
-                        color: Colors.black,
-                        size: 20,
-                      ),
+                      const Icon(Symbols.error, color: Colors.black, size: 20),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(

@@ -209,10 +209,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   decoration: BoxDecoration(
                     color: Colors.transparent,
                     borderRadius: BorderRadius.zero,
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 1.5,
-                    ),
+                    border: Border.all(color: Colors.black, width: 1.5),
                   ),
                   child: Text(
                     _errors['general']!,

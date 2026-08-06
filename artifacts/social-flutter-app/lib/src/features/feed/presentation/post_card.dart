@@ -121,7 +121,10 @@ class _PostCardState extends ConsumerState<PostCard> {
             children: [
               const Text(
                 'Add an optional caption to repost with thoughts:',
-                style: TextStyle(fontSize: 14, color: AppColors.mutedForeground),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.mutedForeground,
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -166,7 +169,9 @@ class _PostCardState extends ConsumerState<PostCard> {
       _repostCount += 1;
     });
     try {
-      await ref.read(postRepositoryProvider).repostPost(widget.post.id, content: caption);
+      await ref
+          .read(postRepositoryProvider)
+          .repostPost(widget.post.id, content: caption);
     } catch (e) {
       if (mounted) {
         setState(() => _repostCount -= 1);
@@ -194,7 +199,10 @@ class _PostCardState extends ConsumerState<PostCard> {
     final theme = Theme.of(context);
 
     final isRepost = widget.post.repostOf != null;
-    final isQuoteRepost = isRepost && widget.post.content != null && widget.post.content!.isNotEmpty;
+    final isQuoteRepost =
+        isRepost &&
+        widget.post.content != null &&
+        widget.post.content!.isNotEmpty;
     final displayPost = isRepost ? widget.post.repostOf! : widget.post;
     final mainPost = isQuoteRepost ? widget.post : displayPost;
 
@@ -259,9 +267,8 @@ class _PostCardState extends ConsumerState<PostCard> {
                         children: [
                           Flexible(
                             child: GestureDetector(
-                              onTap: () => context.push(
-                                '/user/${mainPost.author.id}',
-                              ),
+                              onTap: () =>
+                                  context.push('/user/${mainPost.author.id}'),
                               child: Text(
                                 mainPost.author.displayName,
                                 style: const TextStyle(
@@ -314,15 +321,13 @@ class _PostCardState extends ConsumerState<PostCard> {
             const SizedBox(height: 8),
 
             // Content
-            if (mainPost.content != null &&
-                mainPost.content!.isNotEmpty) ...[
+            if (mainPost.content != null && mainPost.content!.isNotEmpty) ...[
               _ContentText(content: mainPost.content!),
               const SizedBox(height: 8),
             ],
 
             // Quote Repost Nested Card
-            if (isQuoteRepost)
-              _NestedOriginalPost(post: widget.post.repostOf!),
+            if (isQuoteRepost) _NestedOriginalPost(post: widget.post.repostOf!),
 
             // Image or Link Preview (for non-quote repost)
             if (!isQuoteRepost) ...[
@@ -544,14 +549,20 @@ class _NestedOriginalPost extends StatelessWidget {
               Expanded(
                 child: Text(
                   post.author.displayName,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 4),
               Text(
                 '@${post.author.username}',
-                style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
