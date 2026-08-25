@@ -1,146 +1,23 @@
-import { useEffect, useState, type ComponentType } from "react";
+import { useMemo, useState } from "react";
+import { Bell, Bookmark, Compass, Heart, Home, ImagePlus, LogOut, Menu, MessageCircle, MoreHorizontal, PenLine, Plus, Repeat2, Search, Settings, Share2, UserRound, X } from "lucide-react";
+import "./index.css";
 
-import { modules as discoveredModules } from "./.generated/mockup-components";
+type Page = "home" | "explore" | "messages" | "notifications" | "profile" | "settings";
+const posts = [
+  { id: 1, name: "Maya Chen", handle: "@mayachen", time: "2h", text: "A quiet morning, a good cup of coffee, and a fresh perspective. Sometimes that’s all you need.", image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1000&q=85", avatar: "MC", likes: 248, comments: 32 },
+  { id: 2, name: "Arjun Das", handle: "@arjundas", time: "4h", text: "Building something that feels simple is harder than building something complex. Still learning every day.", image: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1000&q=85", avatar: "AD", likes: 186, comments: 18 },
+  { id: 3, name: "Sofia Williams", handle: "@sofiaw", time: "6h", text: "The best ideas usually show up when you stop trying so hard to find them.", image: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1000&q=85", avatar: "SW", likes: 412, comments: 46 },
+];
+const nav = [{ id: "home", label: "Home", icon: Home }, { id: "explore", label: "Explore", icon: Compass }, { id: "messages", label: "Messages", icon: MessageCircle }, { id: "notifications", label: "Notifications", icon: Bell }, { id: "profile", label: "Profile", icon: UserRound } ] as const;
 
-type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
-
-function _resolveComponent(
-  mod: Record<string, unknown>,
-  name: string,
-): ComponentType | undefined {
-  const fns = Object.values(mod).filter(
-    (v) => typeof v === "function",
-  ) as ComponentType[];
-  return (
-    (mod.default as ComponentType) ||
-    (mod.Preview as ComponentType) ||
-    (mod[name] as ComponentType) ||
-    fns[fns.length - 1]
-  );
-}
-
-function PreviewRenderer({
-  componentPath,
-  modules,
-}: {
-  componentPath: string;
-  modules: ModuleMap;
-}) {
-  const [Component, setComponent] = useState<ComponentType | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    setComponent(null);
-    setError(null);
-
-    async function loadComponent(): Promise<void> {
-      const key = `./components/mockups/${componentPath}.tsx`;
-      const loader = modules[key];
-      if (!loader) {
-        setError(`No component found at ${componentPath}.tsx`);
-        return;
-      }
-
-      try {
-        const mod = await loader();
-        if (cancelled) {
-          return;
-        }
-        const name = componentPath.split("/").pop()!;
-        const comp = _resolveComponent(mod, name);
-        if (!comp) {
-          setError(
-            `No exported React component found in ${componentPath}.tsx\n\nMake sure the file has at least one exported function component.`,
-          );
-          return;
-        }
-        setComponent(() => comp);
-      } catch (e) {
-        if (cancelled) {
-          return;
-        }
-
-        const message = e instanceof Error ? e.message : String(e);
-        setError(`Failed to load preview.\n${message}`);
-      }
-    }
-
-    void loadComponent();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [componentPath, modules]);
-
-  if (error) {
-    return (
-      <pre style={{ color: "red", padding: "2rem", fontFamily: "system-ui" }}>
-        {error}
-      </pre>
-    );
-  }
-
-  if (!Component) return null;
-
-  return <Component />;
-}
-
-function getBasePath(): string {
-  return import.meta.env.BASE_URL.replace(/\/$/, "");
-}
-
-function getPreviewExamplePath(): string {
-  const basePath = getBasePath();
-  return `${basePath}/preview/ComponentName`;
-}
-
-function Gallery() {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
-      <div className="text-center max-w-md">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-3">
-          Component Preview Server
-        </h1>
-        <p className="text-gray-500 mb-4">
-          This server renders individual components for the workspace canvas.
-        </p>
-        <p className="text-sm text-gray-400">
-          Access component previews at{" "}
-          <code className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">
-            {getPreviewExamplePath()}
-          </code>
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function getPreviewPath(): string | null {
-  const basePath = getBasePath();
-  const { pathname } = window.location;
-  const local =
-    basePath && pathname.startsWith(basePath)
-      ? pathname.slice(basePath.length) || "/"
-      : pathname;
-  const match = local.match(/^\/preview\/(.+)$/);
-  return match ? match[1] : null;
-}
-
-function App() {
-  const previewPath = getPreviewPath();
-
-  if (previewPath) {
-    return (
-      <PreviewRenderer
-        componentPath={previewPath}
-        modules={discoveredModules}
-      />
-    );
-  }
-
-  return <Gallery />;
-}
-
-export default App;
+function Avatar({ text, big = false }: { text: string; big?: boolean }) { return <div className={`avatar ${big ? "avatar-big" : ""}`}>{text}</div> }
+function TopBar({ onMenu, onPage }: { onMenu: () => void; onPage: (p: Page) => void }) { return <header className="topbar"><button className="icon-btn menu-btn" onClick={onMenu} aria-label="Open menu"><Menu /></button><img src="/assets/text-logo-dark.svg" className="logo" alt="Parallaxa" /><div className="top-search"><Search /><input placeholder="Search Parallaxa" aria-label="Search" /></div><div className="top-actions"><button className="icon-btn" onClick={() => onPage("notifications")} aria-label="Notifications"><Bell /></button><button className="icon-btn" onClick={() => onPage("messages")} aria-label="Messages"><MessageCircle /></button><Avatar text="PD" /></div></header> }
+function Drawer({ open, page, onClose, onPage }: { open: boolean; page: Page; onClose: () => void; onPage: (p: Page) => void }) { return <>{open && <div className="scrim" onClick={onClose} />}<aside className={`drawer ${open ? "open" : ""}`}><div className="drawer-head"><img src="/assets/text-logo-dark.svg" className="logo" alt="Parallaxa" /><button className="icon-btn" onClick={onClose} aria-label="Close menu"><X /></button></div><div className="drawer-profile"><Avatar text="PD" big /><div><strong>Prasenjeet Das</strong><span>@prasenjeet</span></div></div><nav className="drawer-nav">{nav.map(({ id, label, icon: Icon }) => <button key={id} className={page === id ? "active" : ""} onClick={() => { onPage(id); onClose(); }}><Icon />{label}</button>)}<button onClick={() => { onPage("settings"); onClose(); }}><Settings />Settings</button></nav><button className="drawer-logout"><LogOut />Log out</button></aside></> }
+function Stories() { return <div className="stories"><div className="story add"><div><Plus /></div><span>Your story</span></div>{["MC", "AD", "SW", "NK", "JR"].map((x, i) => <div className="story" key={x}><Avatar text={x} /><span>{["Maya", "Arjun", "Sofia", "Nadia", "Jasper"][i]}</span></div>)}</div> }
+function PostCard({ post, onToast }: { post: typeof posts[number]; onToast: (s: string) => void }) { const [liked, setLiked] = useState(false); const [saved, setSaved] = useState(false); return <article className="post"><div className="post-head"><Avatar text={post.avatar} /><div className="identity"><strong>{post.name}</strong><span>{post.handle} · {post.time}</span></div><button className="icon-btn subtle" aria-label="More options"><MoreHorizontal /></button></div><p className="post-text">{post.text}</p><img src={post.image} className="post-image" alt="Post by user" /><div className="post-actions"><button className={liked ? "liked" : ""} onClick={() => setLiked(!liked)}><Heart fill={liked ? "currentColor" : "none"} />{post.likes + (liked ? 1 : 0)}</button><button onClick={() => onToast("Comments are coming soon") }><MessageCircle />{post.comments}</button><button onClick={() => onToast("Post reposted") }><Repeat2 /></button><button className={saved ? "saved" : ""} onClick={() => setSaved(!saved)}><Bookmark fill={saved ? "currentColor" : "none"} /></button><button onClick={() => onToast("Link copied") }><Share2 /></button></div></article> }
+function Feed({ onToast }: { onToast: (s: string) => void }) { const [tab, setTab] = useState("For You"); return <main className="feed"><div className="page-title"><div><h1>Home</h1><p>What’s happening in your world?</p></div><button className="primary"><PenLine />Create post</button></div><Stories /><div className="tabs">{["For You", "Following", "Trending"].map(t => <button className={tab === t ? "selected" : ""} onClick={() => setTab(t)} key={t}>{t}</button>)}</div><div className="composer"><Avatar text="PD" /><button onClick={() => onToast("Composer opened")}>Share something with your community...</button><button className="icon-btn"><ImagePlus /></button></div>{posts.map(p => <PostCard key={p.id} post={p} onToast={onToast} />)}</main> }
+function Explore() { return <main className="feed"><div className="page-title"><div><h1>Explore</h1><p>Discover people and ideas worth following.</p></div></div><div className="explore-grid">{posts.map(p => <div className="explore-card" key={p.id}><img src={p.image} alt="Discover post" /><div><Avatar text={p.avatar} /><strong>{p.name}</strong><span>{p.likes} likes</span></div></div>)}</div></main> }
+function SimplePage({ page }: { page: Page }) { const data = ({ home: ["", ""], explore: ["Explore", ""], messages: ["Messages", "Your conversations will appear here."], notifications: ["Notifications", "You’re all caught up."], profile: ["", ""], settings: ["Settings", "Manage your Parallaxa preferences."] } as Record<Page, [string, string]>)[page]; return <main className="empty-page"><div className="empty-icon">{page === "messages" ? <MessageCircle /> : page === "notifications" ? <Bell /> : <Settings />}</div><h1>{data[0]}</h1><p>{data[1]}</p>{page === "messages" && <button className="primary"><PenLine />New message</button>}</main> }
+function Profile() { return <main className="feed"><div className="profile-cover" /><section className="profile-head"><Avatar text="PD" big /><button className="secondary">Edit profile</button><h1>Prasenjeet Das</h1><p className="muted">@prasenjeet</p><p>Designing thoughtful products and sharing the process along the way.</p><div className="stats"><span><b>248</b>Following</span><span><b>1.2k</b>Followers</span><span><b>86</b>Posts</span></div></section><div className="tabs profile-tabs"><button className="selected">Posts</button><button>Media</button><button>Likes</button></div>{posts.slice(0, 2).map(p => <PostCard key={p.id} post={p} onToast={() => {}} />)}</main> }
+function Login({ onLogin }: { onLogin: () => void }) { const [email, setEmail] = useState(""); return <div className="auth"><img src="/assets/text-logo-dark.svg" className="auth-logo" alt="Parallaxa" /><div className="auth-card"><h1>Welcome back</h1><p>Sign in to continue to Parallaxa</p><label>Email address<input value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></label><label>Password<input type="password" placeholder="Your password" /></label><button className="primary auth-submit" onClick={onLogin}>Sign in</button><div className="auth-divider">or</div><p className="auth-foot">New to Parallaxa? <button onClick={onLogin}>Create an account</button></p></div></div> }
+export default function App() { const [logged, setLogged] = useState(false); const [page, setPage] = useState<Page>("home"); const [drawer, setDrawer] = useState(false); const [toast, setToast] = useState(""); const notify = (s: string) => { setToast(s); window.setTimeout(() => setToast(""), 2200); }; const content = useMemo(() => page === "home" ? <Feed onToast={notify} /> : page === "explore" ? <Explore /> : page === "profile" ? <Profile /> : <SimplePage page={page} />, [page]); if (!logged) return <Login onLogin={() => setLogged(true)} />; return <div className="app"><TopBar onMenu={() => setDrawer(true)} onPage={setPage} /><Drawer open={drawer} page={page} onClose={() => setDrawer(false)} onPage={setPage} /><div className="layout">{content}<aside className="rightbar"><div className="side-card"><h3>Suggested for you</h3>{["Nadia Khan", "Jasper Reed", "Lina Park"].map((x, i) => <div className="suggestion" key={x}><Avatar text={x.split(" ").map(y => y[0]).join("")} /><div><strong>{x}</strong><span>@{x.toLowerCase().replace(" ", "")}</span></div><button>Follow</button></div>)}<button className="show-more">Show more</button></div><p className="footer-note">About · Privacy · Terms · Help<br />© 2026 Parallaxa</p></aside></div>{toast && <div className="toast">{toast}</div>}</div> }
