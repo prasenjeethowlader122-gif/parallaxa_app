@@ -35,19 +35,37 @@ class OTANotifier extends Notifier<OTAState> {
 
     try {
       final status = await _updater.checkForUpdate();
-      if (status == UpdateStatus.outdated) {
-        state = state.copyWith(
-          status: OTAStatus.available,
-          message: "New update available.",
-        );
-        await downloadUpdate();
-      } else {
-        state = state.copyWith(status: OTAStatus.idle);
+      switch (status) {
+        case UpdateStatus.outdated:
+          state = state.copyWith(
+            status: OTAStatus.available,
+            message: "New update available.",
+          );
+          await downloadUpdate();
+          break;
+        case UpdateStatus.restartRequired:
+          state = state.copyWith(
+            status: OTAStatus.downloaded,
+            message: "Update ready. Please restart the app.",
+          );
+          break;
+        case UpdateStatus.unavailable:
+          state = state.copyWith(
+            status: OTAStatus.idle,
+            message: "Shorebird is unavailable.",
+          );
+          break;
+        case UpdateStatus.upToDate:
+          state = state.copyWith(
+            status: OTAStatus.idle,
+            message: "App is up to date.",
+          );
+          break;
       }
     } catch (e) {
       state = state.copyWith(
         status: OTAStatus.error,
-        message: "Failed to check for updates.",
+        message: "Failed to check for updates: $e",
       );
     }
   }

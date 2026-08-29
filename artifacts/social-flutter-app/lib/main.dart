@@ -275,6 +275,8 @@ class _OTAUpdateListenerState extends ConsumerState<OTAUpdateListener> {
           next.message ?? "Update ready. Please restart the app.",
           isPersistent: true,
         );
+      } else if (next.status == OTAStatus.error) {
+        _showSnackBar(next.message ?? "An error occurred during update.");
       }
     });
     return widget.child;
